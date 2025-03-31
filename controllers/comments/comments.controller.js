@@ -16,7 +16,8 @@ const {
   updateDocument,
   Chapter,
   injectUser,
-  injectCommentsReplys
+  injectCommentsReplys,
+  simplifyObject
 } = require('../../utils/imports')
 
 // create router
@@ -215,8 +216,8 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(404, 'comment target not found'))
 
 
-    const result = await createDocument(Comment, req.body)
-
+    let result = await createDocument(Comment, req.body)
+    result = simplifyObject(result)
     result.data = await injectUser([result.data], 'sender')
     result.data = result.data[0]
 
