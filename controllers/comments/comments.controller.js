@@ -138,8 +138,9 @@ router.get('/:target/:id', async (req, res) => {
 
     let comments = await findDocuments(Comment, {
       "target.type": req.params.target,
-      "target.id": req.params.id
-    })
+      "target.id": req.params.id,
+      reply: undefined
+    }, u, u, u, u, u, { _id: -1 })
     comments = await injectUser(comments, 'sender')
     comments = await injectCommentsReplys(comments)
     return res.send(formatResult(u, u, comments))
