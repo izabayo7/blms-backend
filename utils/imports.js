@@ -223,7 +223,7 @@ exports.scheduleEvent = async (date, callback) => {
     schedule.scheduleJob(date, callback);
 }
 
-exports.update_password = async ({ password, user_id }) => {
+exports.update_password = async ({password, user_id}) => {
     const hashedPassword = await this.hashPassword(password);
     await this.updateDocument(this.User, user_id, {
         password: hashedPassword
@@ -409,12 +409,12 @@ exports.removeDocumentVersion = (obj) => {
 
 // get histroy conversations between a user and his contact
 exports.getConversationMessages = async ({
-    user_id,
-    user,
-    conversation_id,
-    lastMessage,
-    limit
-}) => {
+                                             user_id,
+                                             user,
+                                             conversation_id,
+                                             lastMessage,
+                                             limit
+                                         }) => {
     let messages
 
     if (conversation_id !== 'announcements') {
@@ -445,7 +445,7 @@ exports.getConversationMessages = async ({
             messages = await this.findDocuments(this.Message, {
                 $or: [{
                     $and: [
-                        { sender: user_id },
+                        {sender: user_id},
                         {
                             receivers: {
                                 $elemMatch: {
@@ -456,7 +456,7 @@ exports.getConversationMessages = async ({
                     ]
                 }, {
                     $and: [
-                        { sender: conversation_id },
+                        {sender: conversation_id},
                         {
                             receivers: {
                                 $elemMatch: {
@@ -467,7 +467,7 @@ exports.getConversationMessages = async ({
                     ]
                 }, {
                     $and: [
-                        { sender: 'SYSTEM' },
+                        {sender: 'SYSTEM'},
                         {
                             receivers: {
                                 $elemMatch: {
@@ -491,9 +491,8 @@ exports.getConversationMessages = async ({
         }
 
         return await this.replaceUserIds(messages, user_id)
-    }
-    else {
-        const announcements = await this.getUserAnnouncements(user,false,true)
+    } else {
+        const announcements = await this.getUserAnnouncements(user, false, true)
         return announcements
     }
 }
@@ -517,25 +516,25 @@ exports.injectTarget = async (announcements) => {
             case 'course':
                 target = await this.findDocument(this.Course, {
                     _id: announcements[announcementsKey].target.id
-                }, { name: 1 })
+                }, {name: 1})
                 break;
 
             case 'student_group':
                 target = await this.findDocument(User_group, {
                     _id: announcements[announcementsKey].target.id
-                }, { name: 1 })
+                }, {name: 1})
                 break;
 
             case 'faculty':
                 target = await this.findDocument(Faculty_college, {
                     _id: announcements[announcementsKey].target.id
-                }, { name: 1 })
+                }, {name: 1})
                 break;
 
             case 'college':
                 target = await this.findDocument(this.College, {
                     _id: announcements[announcementsKey].target.id
-                }, { name: 1 })
+                }, {name: 1})
                 break;
 
             default:
@@ -546,14 +545,14 @@ exports.injectTarget = async (announcements) => {
     return announcements
 }
 
-exports.addUserViewToAnnouncement = async (user)=>{
+exports.addUserViewToAnnouncement = async (user) => {
     const ids = await this.findTargetIds(user)
     const announcements = await Announcement.find({
         $or: [
-            { "target.id": { $in: ids } },
-            { specific_receivers: user._id.toString() },
+            {"target.id": {$in: ids}},
+            {specific_receivers: user._id.toString()},
         ],
-        viewers: { $nin: user._id.toString() }
+        viewers: {$nin: user._id.toString()}
     })
 
     for (const i in announcements) {
@@ -562,14 +561,14 @@ exports.addUserViewToAnnouncement = async (user)=>{
     }
 }
 
-exports.findTargetIds = async(user)=>{
+exports.findTargetIds = async (user) => {
     const ids = [user.college]
 
     const user_user_group = await User_user_group.find({
         user: user._id.toString(),
         status: "ACTIVE"
-    }, { user_group: 1 }).populate('user_group',
-        { faculty: 1 }
+    }, {user_group: 1}).populate('user_group',
+        {faculty: 1}
     )
 
     user_user_group.map(async (x) => {
@@ -580,9 +579,9 @@ exports.findTargetIds = async(user)=>{
     if (user.category.name === 'STUDENT') {
 
         const courses = await this.Course.find({
-            user_group: { $in: user_user_group.map(x => x.user_group._id.toString()) },
+            user_group: {$in: user_user_group.map(x => x.user_group._id.toString())},
             published: true
-        }, { _id: 1 })
+        }, {_id: 1})
 
         courses.map(async (x) => {
             ids.push(x._id.toString())
@@ -592,61 +591,57 @@ exports.findTargetIds = async(user)=>{
     return ids
 }
 
-exports.getUserAnnouncements = async (user, getOne = false,receivedOnly = false) => {
+exports.getUserAnnouncements = async (user, getOne = false, receivedOnly = false) => {
 
     const ids = await this.findTargetIds(user)
 
     let announcements
     let unreads
     if (getOne) {
-        announcements = await Announcement.findOne(receivedOnly ?{
+        announcements = await Announcement.findOne(receivedOnly ? {
             $or: [
-                { "target.id": { $in: ids } },
-                { specific_receivers: user._id.toString() },
+                {"target.id": {$in: ids}},
+                {specific_receivers: user._id.toString()},
             ],
-            sender:  { $ne: user._id }
-        }:{
+            sender: {$ne: user._id}
+        } : {
             $or: [
-                { "target.id": { $in: ids } },
-                { sender: user._id },
-                { specific_receivers: user._id.toString() },
+                {"target.id": {$in: ids}},
+                {sender: user._id},
+                {specific_receivers: user._id.toString()},
             ]
-        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: -1 }).lean()
+        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({_id: -1}).lean()
         if (!announcements)
-            return { announcement: undefined }
+            return {announcement: undefined}
         announcements = await this.injectUser([announcements], 'sender')
         unreads = await Announcement.find({
             $or: [
-                { "target.id": { $in: ids } },
-                { specific_receivers: user._id.toString() },
+                {"target.id": {$in: ids}},
+                {specific_receivers: user._id.toString()},
             ],
-            viewers: { $nin: user._id.toString() }
+            viewers: {$nin: user._id.toString()}
         }).count()
     } else {
-        announcements = await Announcement.find(receivedOnly ?{
+        announcements = await Announcement.find(receivedOnly ? {
             $or: [
-                { "target.id": { $in: ids } },
-                { specific_receivers: user._id.toString() },
+                {"target.id": {$in: ids}},
+                {specific_receivers: user._id.toString()},
             ],
-            sender:  { $ne: user._id }
-        }:{
-            $or: [
-                { "target.id": { $in: ids } },
-                { sender: user._id },
-                { specific_receivers: user._id.toString() },
-            ]
-        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: receivedOnly ? 1 : -1 }).lean()
+            sender: {$ne: user._id}
+        } : {
+            sender: user._id
+        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({_id: receivedOnly ? 1 : -1}).lean()
         announcements = await this.injectUser(announcements, 'sender')
     }
 
     announcements = await this.injectTarget(announcements)
 
-    return getOne ? { announcement: announcements[0], unreads } : announcements
+    return getOne ? {announcement: announcements[0], unreads} : announcements
 
 }
 
 exports.injectAnnouncementContact = async (contacts, user) => {
-    const { announcement, unreads } = await this.getUserAnnouncements(user, true,true)
+    const {announcement, unreads} = await this.getUserAnnouncements(user, true, true)
 
     if (!announcement)
         return contacts
@@ -814,7 +809,7 @@ exports.replaceUserIds = async (messages, userId) => {
                     if (user_id === userId)
                         messageSegments[messageSegmentsKey] = "You"
                     else {
-                        const __user = await user.findById(user_id, { sur_name: 1, other_names: 1 })
+                        const __user = await user.findById(user_id, {sur_name: 1, other_names: 1})
                         messageSegments[messageSegmentsKey] = __user.sur_name + ' ' + __user.other_names
                     }
                 }
@@ -834,20 +829,20 @@ exports.replaceWithLatestMessages = async (messages, user_id) => {
             messages[messagesKey].group ?
                 {
                     group: messages[messagesKey].group,
-                    _id: { $ne: messages[messagesKey].realId }
+                    _id: {$ne: messages[messagesKey].realId}
                 }
                 :
                 {
-                    _id: { $ne: messages[messagesKey].realId },
+                    _id: {$ne: messages[messagesKey].realId},
                     group: undefined,
                     $or: [
-                        { sender: user_id, "receivers.id": messages[messagesKey].receivers[0].id, },
-                        { sender: messages[messagesKey].receivers[0].id, "receivers.id": user_id },
-                        { sender: user_id, "receivers.id": messages[messagesKey].receivers[1].id, },
-                        { sender: messages[messagesKey].receivers[1].id, "receivers.id": user_id },
+                        {sender: user_id, "receivers.id": messages[messagesKey].receivers[0].id,},
+                        {sender: messages[messagesKey].receivers[0].id, "receivers.id": user_id},
+                        {sender: user_id, "receivers.id": messages[messagesKey].receivers[1].id,},
+                        {sender: messages[messagesKey].receivers[1].id, "receivers.id": user_id},
                     ]
                 }
-        ).sort({ _id: -1 })
+        ).sort({_id: -1})
 
         if (message !== null) {
             messages[messagesKey] = message
@@ -865,41 +860,41 @@ exports.getLatestMessages = async (user_id) => {
             _id: -1
         }
     },
-    {
-        $match: {
-            receivers: {
-                $elemMatch: {
-                    id: user_id
+        {
+            $match: {
+                receivers: {
+                    $elemMatch: {
+                        id: user_id
+                    }
+                },
+                sender: "SYSTEM"
+            }
+        }, {
+            $group: {
+                _id: {
+                    sender: "$sender",
+                    receivers: "$receivers"
+                },
+                realId: {
+                    $first: "$_id"
+                },
+                receivers: {
+                    $first: "$receivers"
+                },
+                sender: {
+                    $first: "$sender"
+                },
+                group: {
+                    $first: "$group"
+                },
+                content: {
+                    $first: "$content"
+                },
+                createdAt: {
+                    $first: "$createdAt"
                 }
-            },
-            sender: "SYSTEM"
-        }
-    }, {
-        $group: {
-            _id: {
-                sender: "$sender",
-                receivers: "$receivers"
-            },
-            realId: {
-                $first: "$_id"
-            },
-            receivers: {
-                $first: "$receivers"
-            },
-            sender: {
-                $first: "$sender"
-            },
-            group: {
-                $first: "$group"
-            },
-            content: {
-                $first: "$content"
-            },
-            createdAt: {
-                $first: "$createdAt"
             }
         }
-    }
     ])
 
     latestMessages = await this.replaceWithLatestMessages(latestMessages, user_id)
@@ -1164,7 +1159,7 @@ exports.injectUser = async (array, property, newProperty) => {
             const user = await this.findDocument(this.User, {
                 _id: array[i][`${property}`]
             })
-            const category = await this.findDocument(this.User_category, { _id: user.category })
+            const category = await this.findDocument(this.User_category, {_id: user.category})
             user.category = category.name
             // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
             array[i][`${name}`] = this._.pick(user, ['email', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
@@ -1480,8 +1475,8 @@ exports.generateAuthToken = async (user) => {
 
 // decodeAuthToken
 exports.decodeAuthToken = async ({
-    token
-}) => {
+                                     token
+                                 }) => {
     return this.jwt.verify(token, this.config.get('auth_key'))
 }
 
@@ -1490,7 +1485,7 @@ exports.base64EncodedImage = /^data:([A-Za-z-+\/]+);base64,(.+)$/;
 
 exports.add_user_details = async (users) => {
     for (const i in users) {
-        const category = await this.findDocument(this.User_category, { _id: users[i].category })
+        const category = await this.findDocument(this.User_category, {_id: users[i].category})
         users[i].category = category.name
         users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email"])
         if (users[i].profile) {
@@ -1504,7 +1499,7 @@ exports.add_user_details = async (users) => {
 const {
     auth
 } = require('../middlewares/auth.middleware');
-const { Announcement } = require('../models/announcements/announcements.model');
+const {Announcement} = require('../models/announcements/announcements.model');
 
 exports.auth = auth
 
@@ -1514,18 +1509,18 @@ exports.random_user_name = async () => {
     let user_name_available = false, user_name
     while (!user_name_available) {
         user_name = `user_${Math.round(Math.random() * 1000000)}`
-        const user = await this.findDocument(this.User, { user_name: user_name })
+        const user = await this.findDocument(this.User, {user_name: user_name})
         if (!user) user_name_available = true
     }
     return user_name
 }
 exports.addMessageDetails = async (msg, id) => {
     // inject sender Info
-    let _user = await this.injectUser([{ id: id }], 'id', 'data')
+    let _user = await this.injectUser([{id: id}], 'id', 'data')
     msg.sender = _user[0].data
 
     if (msg.group) {
-        const group = await this.findDocument(this.Chat_group, { _id: msg.group })
+        const group = await this.findDocument(this.Chat_group, {_id: msg.group})
         msg.group = group.code
     }
     // remove receivers
@@ -1538,7 +1533,7 @@ exports.generateGroupCode = async () => {
     let groupCodeAvailable = false, code
     while (!groupCodeAvailable) {
         code = Math.round(Math.random() * 1000000000)
-        const group = await this.findDocument(this.Chat_group, { code: code })
+        const group = await this.findDocument(this.Chat_group, {code: code})
         if (!group) groupCodeAvailable = true
     }
     return code
@@ -1560,18 +1555,18 @@ exports.injectFaculty_college_year = async (courses) => {
     for (const i in courses) {
         const user_group = await this.findDocument(User_group, {
             _id: courses[i].user_group
-        }, { faculty: 1, name: 1 }, true, false)
+        }, {faculty: 1, name: 1}, true, false)
 
         courses[i].user_group = user_group
 
         const faculty = await this.findDocument(this.Faculty, {
             _id: user_group.faculty
-        }, { _id: 0 }, true, false)
+        }, {_id: 0}, true, false)
         courses[i].user_group.faculty = faculty
 
         const college = await this.findDocument(this.College, {
             _id: faculty.college
-        }, { name: 1, logo: 1 }, true, false)
+        }, {name: 1, logo: 1}, true, false)
 
         courses[i].user_group.faculty.college = college
         if (courses[i].user_group.faculty.college.logo) {
