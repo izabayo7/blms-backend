@@ -1354,6 +1354,20 @@ exports.random_user_name = async () => {
     }
     return user_name
 }
+exports.addMessageDetails = async (msg,id) => {
+    // inject sender Info
+    let _user = await this.injectUser([{id: id}], 'id', 'data')
+    msg.sender = _user[0].data
+
+    if (msg.group) {
+        const group = await this.findDocument(this.Chat_group, {_id: msg.group})
+        msg.group = group.code
+    }
+    // remove receivers
+    if (msg.attachments)
+        msg = this.injectAttachementsMediaPath(msg)
+    return msg
+}
 // make a new group identifier so that names can be re used in colleges
 exports.generateGroupCode = async () => {
     let groupCodeAvailable = false, code

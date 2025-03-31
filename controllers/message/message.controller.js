@@ -1,4 +1,6 @@
 // import dependencies
+const {addMessageDetails} = require("../../utils/imports");
+const {simplifyObject} = require("../../utils/imports");
 const {MyEmitter} = require("../../utils/imports");
 const {upload_audio} = require("../../utils/imports");
 const {upload_single} = require("../../utils/imports");
@@ -251,7 +253,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /message/{id}/attachments:
+ * /message/{receiver}/attachments:
  *   put:
  *     tags:
  *       - Message
@@ -259,16 +261,23 @@ router.post('/', async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *       - name: id
+ *       - name: receiver
  *         in: path
  *         type: string
- *         description: Message's Id
- *       - name: body
- *         description: Fields for a Message
- *         in: body
+ *         description: Message receiver
+ *       - in: formData
+ *         name: file
+ *         type: file
  *         required: true
- *         schema:
- *           $ref: '#/definitions/Message'
+ *         description: attachment to upload
+ *       - in: formData
+ *         name: content
+ *         type: string
+ *         description: message content
+ *       - in: formData
+ *         name: attachments
+ *         type: array
+ *         description: message content
  *     responses:
  *       201:
  *         description: Created
@@ -279,20 +288,34 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/attachements', async (req, res) => {
+router.put('/:receiver/attachements', async (req, res) => {
     try {
-        let {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, "invalid id"))
 
-        const msg = await findDocument(Message, {
-            _id: req.params.id,
-            sender: req.user._id
+        let {content, attachments} = req.body
+        const {receiver} = req.params
+
+        if (content === "")
+            content = undefined
+        if (!attachments.length)
+            attachments = undefined
+
+        const {error} = validate_message({
+            sender: user.user_name,
+            receiver: receiver,
+            content: content,
+            attachments
         })
-        if (!msg)
-            return res.send(formatResult(404, 'message not found'))
+
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+
+        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments)
+
+        result = simplifyObject(result)
+
+        let msg = result.data
+
 
         const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
 
@@ -300,21 +323,20 @@ router.put('/:id/attachements', async (req, res) => {
             dir: path,
         }
 
-        let file_missing = false
-
-        for (const i in msg.attachments) {
-            const file_found = await fs.exists(`${path}/${msg.attachments[i].src}`)
-            if (!file_found) {
-                file_missing = true
-            }
-        }
-        if (!file_missing)
-            return res.send(formatResult(400, 'all attachments for this message were already uploaded'))
-
         upload_multiple(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
-
+            msg = await addMessageDetails(msg,msg.sender)
+            MyEmitter.emit('socket_event', {
+                name: `send_message_${req.user._id}`,
+                data: msg
+            });
+            for (const i in msg.receivers) {
+                MyEmitter.emit('socket_event', {
+                    name: `send_message_${msg.receivers[i].id}`,
+                    data: msg
+                });
+            }
             return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
         })
     } catch (error) {
@@ -357,11 +379,11 @@ router.put('/voiceNote/:receiver', async (req, res) => {
 
         const name = `voice_${req.params.receiver}_${new Date().getTime()}.mp3`
 
-        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u,u,u,[{src: name}])
+        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}])
 
-        if(result.status !== 404)
-        {
-            const msg = result.data
+        if (result.status !== 404) {
+            let msg = result.data
+            msg = simplifyObject(msg)
             const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
 
             req.kuriousStorageData = {
@@ -373,11 +395,17 @@ router.put('/voiceNote/:receiver', async (req, res) => {
                 if (err)
                     return res.send(formatResult(500, err.message))
 
+                msg = await addMessageDetails(msg,msg.sender)
                 MyEmitter.emit('socket_event', {
                     name: `send_message_${req.user._id}`,
                     data: msg
                 });
-
+                for (const i in msg.receivers) {
+                    MyEmitter.emit('socket_event', {
+                        name: `send_message_${msg.receivers[i].id}`,
+                        data: msg
+                    });
+                }
                 return res.send(formatResult(u, 'Happy test bro'))
             })
         } else {

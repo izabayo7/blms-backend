@@ -1,4 +1,5 @@
 const socket_io = require('socket.io')
+const {addMessageDetails} = require("./imports");
 const {injectAttachementsMediaPath} = require("./imports");
 const {addAttachmentMediaPaths} = require("./imports");
 const {countDocuments} = require("./imports");
@@ -137,27 +138,8 @@ module.exports.listen = (app) => {
                 socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})
             }
             if (name === `send_message_${id}`) {
-                data = simplifyObject(data)
-
-                // inject sender Info
-                let _user = await injectUser([{id: id}], 'id', 'data')
-                data.sender = _user[0].data
-
-                if (data.group) {
-                    const group = await findDocument(Chat_group, {_id: data.group})
-                    data.group = group.code
-                }
-                // remove receivers
-
-
-                data = injectAttachementsMediaPath(data)
-
-                data.receivers.forEach(reciever => {
-                    // send the message
-                    socket.broadcast.to(reciever.id).emit('res/message/new', data)
-                })
                 // send success mesage
-                socket.emit('res/message/sent', data)
+                socket.emit(data.sender.user_name === user.user_name ?'res/message/sent' : 'res/message/new', data)
             }
 
         })
@@ -286,23 +268,12 @@ module.exports.listen = (app) => {
 
             result = simplifyObject(result)
 
-            // inject sender Info
-            let _user = await injectUser([{id: id}], 'id', 'data')
-            result.data.sender = _user[0].data
+            result.data = await addMessageDetails(result.data,id)
 
-            if (result.data.group) {
-                const group = await findDocument(Chat_group, {_id: result.data.group})
-                result.data.group = group.code
-            }
-            // remove receivers
-
-            if (!result.data.attachments.length)
-                result.data.receivers.forEach(reciever => {
-                    // send the message
-                    socket.broadcast.to(reciever.id).emit('res/message/new', result.data)
-                })
-            else
-                result.data = injectAttachementsMediaPath(result.data)
+            result.data.receivers.forEach(reciever => {
+                // send the message
+                socket.broadcast.to(reciever.id).emit('res/message/new', result.data)
+            })
 
             // send success mesage
             socket.emit('res/message/sent', result.data)
