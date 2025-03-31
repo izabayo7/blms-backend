@@ -396,25 +396,37 @@ router.put('/:id', auth, async (req, res) => {
         if (!college)
             return res.send(formatResult(404, `College with code ${req.params.id} doens't exist`))
 
-        // check if the name or email were not used
-        college = await findDocument(College, {
-            _id: {
-                $ne: req.params.id
-            },
-            $or: [{
-                email: req.body.email
-            }, {
-                name: req.body.name
-            }, {
-                phone: req.body.phone
-            }]
-        })
+        const arr = []
 
-        if (college) {
-            const phoneFound = req.body.phone == college.phone
-            const nameFound = req.body.name == college.name
-            const emailFound = req.body.email == college.email
-            return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
+        if (req.body.email)
+            arr.push({
+                email: req.body.email
+            })
+
+        if (req.body.name)
+            arr.push({
+                name: req.body.name
+            })
+
+        if (req.body.phone)
+            arr.push({
+                phone: req.body.phone
+            })
+        if (arr.length) {
+            // check if the name or email were not used
+            college = await findDocument(College, {
+                _id: {
+                    $ne: req.params.id
+                },
+                $or: arr
+            })
+
+            if (college) {
+                const phoneFound = req.body.phone == college.phone
+                const nameFound = req.body.name == college.name
+                const emailFound = req.body.email == college.email
+                return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
+            }
         }
 
         let result = await updateDocument(College, req.params.id, req.body)
@@ -623,7 +635,7 @@ router.delete('/:id', auth, async (req, res) => {
  * @param req
  * @param res
  */
-async function checkCollegeNameExistance (req, res) {
+async function checkCollegeNameExistance(req, res) {
     try {
         const college = await College.findOne({name: req.params.college_name, status: 1});
         if (college) return res.send(formatResult(200, 'Name Already Taken', {exists: true}));
