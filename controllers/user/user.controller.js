@@ -489,6 +489,40 @@ router.get('/search', auth, async (req, res) => {
   }
 })
 
+
+/**
+ * @swagger
+ * /user/current:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: Returns a specified user
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/current', auth, async (req, res) => {
+  try {
+    let user = req.user;
+
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    user = await add_user_details([user])
+    user = user[0]
+
+    return res.send(formatResult(u, u, user))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
 /**
  * @swagger
  * /user/{user_name}:
