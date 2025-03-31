@@ -512,14 +512,24 @@ router.delete('/:id', async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         let message = await findDocument(Message, {
-            _id: req.params.id
+            _id: req.params.id,
         })
         if (!message)
             return res.send(formatResult(404, 'message not found'))
 
-        // need to delete all attachments
+        if (message.sender !== req.user._id.toString())
+            return res.send(formatResult(403, 'You can only delete your messages'))
 
         const result = await deleteDocument(Message, req.params.id)
+
+        for (const i in message.attachments) {
+            const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${message.group ? '/groups/' + message.group : 'userFiles/' + req.user._id}/${message.attachments[i].src}`)
+            fs.exists(file_path, (exists) => {
+                if (exists) {
+                    fs.unlink(file_path)
+                }
+            })
+        }
 
         return res.send(result)
     } catch (error) {
