@@ -807,7 +807,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
     if (!user.profile || user.profile !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
-    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`
+    const path = addStorageDirectoryToPath(user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`)
 
     fs.unlink(path, (err) => {
       if (err)
