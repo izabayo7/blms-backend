@@ -122,6 +122,8 @@ router.get('/:id/document', async (req, res) => {
  *     tags:
  *       - Chapter
  *     description: Returns the uploaded_video of a specified Chapter
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter's id
