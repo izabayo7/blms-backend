@@ -444,7 +444,10 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
             return res.send(formatResult(404, 'assignment not found'))
 
         if (assignment.status !== 'PUBLISHED')
-            return res.send(formatResult(404, 'assignment is not available'))
+            return res.send(formatResult(403, 'Submission on this assignment have ended'))
+
+        if(new Date() > new Date(assignment.dueDate))
+            return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
         const user_group = await get_faculty_college_year(assignment)
 
@@ -528,6 +531,9 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
             return res.send(formatResult(404, 'assignment_submission not found'))
 
         if (assignment_submission.assignment.status !== "PUBLISHED")
+            return res.send(formatResult(403, 'Submission on this assignment have ended'))
+
+        if(new Date() > new Date(assignment_submission.assignment.dueDate))
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
         if (req.user.category.name !== 'INSTRUCTOR')
