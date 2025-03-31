@@ -1403,14 +1403,14 @@ exports.autoMarkSelectionQuestions = (questions, answers) => {
             if (answers[i].choosed_options.length) {
                 const rightChoices = questions[i].options.choices.filter((choice) => choice.right);
                 if (questions[i].type.includes("single")) {
-                    if (questions[i].type.includes("file")) {
+                    if (questions[i].type.includes("image")) {
                         answers[i].marks = (answers[i].choosed_options[0].src == rightChoices[0].src) ? questions[i].marks : 0;
                     } else {
                         answers[i].marks = (answers[i].choosed_options[0].text == rightChoices[0].text) ? questions[i].marks : 0;
                     }
                 } else {
                     for (const k in answers[i].choosed_options) {
-                        if (questions[i].type.includes("file")) {
+                        if (questions[i].type.includes("image")) {
                             let checkStatus = rightChoices.filter((choice) => choice.src == answers[i].choosed_options[k].src);
                             if (checkStatus.length > 0) {
                                 answers[i].marks += questions[i].marks / rightChoices.length;

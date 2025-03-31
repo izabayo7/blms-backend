@@ -49,6 +49,8 @@ const {
     Live_session,
     MyEmitter
 } = require('./imports')
+const {Exam_submission} = require("../models/exam_submission/exam_submission.model");
+const {Exam} = require("../models/exams/exam.model");
 
 module.exports.listen = (app) => {
 
@@ -883,6 +885,57 @@ module.exports.listen = (app) => {
             } : attempt)
             if (updateDocument) {
                 socket.emit('progress-saved', {index, end, is_selection_only});
+            }
+
+        });
+        /**
+         * auto save exam-submission while student is working
+         */
+        socket.on('start-exam', async ({
+                                           exam
+                                       }) => {
+
+            let newDocument = new Exam_submission({
+                user: id,
+                exam,
+                used_time: 0,
+                time_started: new Date()
+            })
+            const saveDocument = await newDocument.save()
+            if (saveDocument) {
+                socket.emit('start-exam', saveDocument._id);
+            }
+
+        });
+
+        socket.on('save-exam-progress', async ({
+                                                   index,
+                                                   submission_id,
+                                                   attempt,
+                                                   end,
+                                               }) => {
+            if (!submission_id)
+                return
+
+            const exam = await Exam.findOne({_id: attempt.exam})
+
+            attempt.user = id
+            const {
+                answers,
+                total_marks,
+                is_selection_only
+            } = autoMarkSelectionQuestions(exam.questions, attempt.answers)
+
+            let updateDocument = await Exam_submission.findByIdAndUpdate(submission_id, end ? {
+                answers: answers,
+                used_time: attempt.used_time,
+                auto_submitted: attempt.auto_submitted,
+                total_marks: total_marks,
+                marked: is_selection_only,
+                time_submitted: new Date()
+            } : attempt)
+            if (updateDocument) {
+                socket.emit('exam-progress-saved', {index, end, is_selection_only});
             }
 
         });
