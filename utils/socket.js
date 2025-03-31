@@ -79,7 +79,7 @@ module.exports.listen = (app) => {
       // format the messages
       const formatedMessages = await formatMessages(messages, id)
 
-      // send the messages  
+      // send the messages
       socket.emit('res/message/conversation', {
         conversation: formatedMessages
       });
@@ -109,7 +109,7 @@ module.exports.listen = (app) => {
 
       if (result.data.group) {
         const group = await findDocument(Chat_group, { _id: result.data.group })
-        result.data.group = group.name
+        result.data.group = group.code
       }
 
       result.data.receivers.forEach(reciever => {
@@ -159,7 +159,7 @@ module.exports.listen = (app) => {
       if (!conversation_id) return
 
       let documents
-      const chat_group = await findDocument(Chat_group, { name: conversation_id })
+      const chat_group = await findDocument(Chat_group, { code: conversation_id })
 
       // fetch unread messages in a group
       if (chat_group) {
@@ -190,8 +190,6 @@ module.exports.listen = (app) => {
       }
 
       for (const i in documents) {
-        let allRecieversRead = 1
-
         for (const k in documents[i].receivers) {
           if (documents[i].receivers[k].id == id) {
             documents[i].receivers[k].read = true
