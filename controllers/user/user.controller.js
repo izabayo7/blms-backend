@@ -578,9 +578,18 @@ router.get('/:user_name', auth, async (req, res) => {
         if (!req.query.measure || req.query.measure.toLowerCase() !== 'extended')
             return res.send(formatResult(u, u, user))
 
-        const user_user_groups = User_user_group.find({user: user._id})
+        const user_user_groups = await User_user_group.find({user: user._id, status: "ACTIVE"}, {user_group: 1}).populate('user_group')
 
-        return res.send(formatResult(u, u, user))
+        const user_group_names = []
+
+        user_user_groups.map(x=>{
+            user_group_names.push(x.user_group.name)
+        })
+
+        return res.send(formatResult(u, u, {
+            user,
+            user_groups: user_group_names.join(',')
+        }))
 
     } catch (error) {
         return res.send(formatResult(500, error))
