@@ -28,7 +28,7 @@ const chapter_schema = new mongoose.Schema({
     recorded_video: {
         type: String,
     },
-    uploaded_content_src: {
+    uploaded_content: {
         type: String,
     },
     attachments: [{
