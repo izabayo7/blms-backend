@@ -5,7 +5,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const user_faculty_college_year = new mongoose.Schema({
+const user_faculty_college_year_schema= new mongoose.Schema({
     user: {
         type: String,
         required: true
@@ -20,7 +20,7 @@ const user_faculty_college_year = new mongoose.Schema({
     },
 })
 
-user_faculty_college_year.plugin(timestamps)
+user_faculty_college_year_schema.plugin(timestamps)
 
 // validate user_faculty_college_year
 function validate_user_faculty_college_year(credentials) {
@@ -32,7 +32,7 @@ function validate_user_faculty_college_year(credentials) {
 }
 
 // create user_faculty_college_year model
-const user_faculty_college_year = mongoose.model('user_faculty_college_year', user_faculty_college_year)
+const user_faculty_college_year = mongoose.model('user_faculty_college_year', user_faculty_college_year_schema)
 
 // export the model and the validation function
 module.exports.user_faculty_college_year = user_faculty_college_year

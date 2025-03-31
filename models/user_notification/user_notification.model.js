@@ -4,7 +4,7 @@ const {
     Joi,
     timestamps,
 } = require('../../utils/imports')
-const notificationSchema = new mongoose.Schema({
+const notification_schema = new mongoose.Schema({
     id: {
         type: String,
         required: true,
@@ -16,20 +16,20 @@ const notificationSchema = new mongoose.Schema({
         default: 3
     },
 })
-notificationSchema.plugin(timestamps)
+notification_schema.plugin(timestamps)
 
-const userNotificationSchema = new mongoose.Schema({
+const user_notification_schema = new mongoose.Schema({
     user_id: {
         type: String,
         required: true
     },
-    notifications: [notificationSchema],
+    notifications: [notification_schema],
 })
 
-userNotificationSchema.plugin(timestamps)
+user_notification_schema.plugin(timestamps)
 
 // validate notification
-function validatUserNotification(credentials) {
+function validat_user_notification(credentials) {
     const schema = {
         user_id: Joi.ObjectId().required(),
         notification_id: Joi.ObjectId().required(),
@@ -39,8 +39,8 @@ function validatUserNotification(credentials) {
 }
 
 // create notifications model
-const UserNotification = mongoose.model('User_Notification', userNotificationSchema)
+const user_notification = mongoose.model('User_Notification', user_notification_schema)
 
 // export the model and the validation function
-module.exports.UserNotification = UserNotification
-module.exports.validateUserNotification = validatUserNotification
+module.exports.user_notification = user_notification
+module.exports.validate_user_notification = validat_user_notification

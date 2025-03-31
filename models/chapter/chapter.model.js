@@ -44,9 +44,9 @@ function validate_chapter(credentials) {
     return Joi.validate(credentials, schema)
 }
 
-// create courses model
-const Chapter = mongoose.model('Chapter', chapter_schema)
+// create chapter model
+const chapter = mongoose.model('chapter', chapter_schema)
 
 // export the model and the validation function
-module.exports.Chapter = Chapter
+module.exports.chapter = chapter
 module.exports.validate_chapter = validate_chapter

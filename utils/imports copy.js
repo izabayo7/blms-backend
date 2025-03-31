@@ -22,198 +22,165 @@ module.exports.path = require('path')
 /**
  * models & their functions
  */
-
 const {
-    user,
-    validate_user
-} = require('../models/user/user.model')
-
-module.exports.User = user
-module.exports.validate_user = validate_user
-
+    SuperAdmin,
+    validateSuperAdmin
+} = require('../models/superAdmin/superAdmin.model')
 const {
-    user_category,
-    validate_user_category
-} = require('../models/user_category/user_category.model')
-
-module.exports.User_category = user_category
-module.exports.validate_user_category = validate_user_category
-
+    Admin,
+    validateAdmin
+} = require('../models/admin/admin.model')
 const {
-    user_faculty_college_year,
-    validate_user_faculty_college_year
-} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
-
-module.exports.User_faculty_college_year = user_faculty_college_year
-module.exports.validate_user_faculty_college_year = validate_user_faculty_college_year
-
+    College,
+    validateCollege
+} = require('../models/college/college.model')
 const {
-    user_role,
-    validate_user_role
-} = require('../models/user_role/user_role.model')
-
-module.exports.User_role = user_role
-module.exports.validate_user_role = validate_user_role
-
+    Instructor,
+    validateInstructor
+} = require('../models/instructor/instructor.model')
 const {
-    user_progress,
-    validate_user_progress
-} = require('../models/user_progress/user_progress.model')
-
-module.exports.User_progress = user_progress
-module.exports.validate_user_progress = validate_user_progress
-
+    Student,
+    validateStudent
+} = require('../models/student/student.model')
 const {
-    faculty,
-    validate_faculty
+    Faculty,
+    validateFaculty
 } = require('../models/faculty/faculty.model')
-
-module.exports.Faculty = faculty
-module.exports.validate_faculty = validate_faculty
-
 const {
     facultyCollege,
     validateFacultyCollege
 } = require('../models/faculty_college/faculty_college.model')
-
-module.exports.FacultyCollege = facultyCollege
-module.exports.validateFacultyCollege = validateFacultyCollege
-
 const {
-    faculty_college_year,
-    validate_faculty_college_year
+    facultyCollegeYear,
+    validateFacultyCollegeYear
 } = require('../models/faculty_college_year/faculty_college_year.model')
-
-module.exports.Faculty_college_year = faculty_college_year
-module.exports.validate_faculty_college_year = validate_faculty_college_year
-
 const {
-    college_year,
-    validate_college_year
+    CollegeYear,
+    validateCollegeYear
 } = require('../models/college_year/college_year.model')
-
-module.exports.College_year = college_year
-module.exports.validate_college_year = validate_college_year
-
 const {
-    course,
-    validate_course
+    Course,
+    validateCourse
 } = require('../models/course/course.model')
-
-module.exports.Course = course
-module.exports.validate_course = validate_course
-
 const {
-    chapter,
-    validate_chapter
+    Chapter,
+    validateChapter
 } = require('../models/chapter/chapter.model')
-
-module.exports.Chapter = chapter
-module.exports.validate_chapter = validate_chapter
-
 const {
-    message,
-    validate_message
+    Message,
+    validateMessage
 } = require('../models/message/message.model')
-
-module.exports.Message = message
-module.exports.validate_message = validate_message
-
 const {
-    attachment,
-    validate_attachment
+    Attachment,
+    validateAttachment
 } = require('../models/attachment/attachment.model')
-
-module.exports.Attachment = attachment
-module.exports.validate_attachment = validate_attachment
-
 const {
-    quiz,
-    validate_quiz
+    studentFacultyCollegeYear,
+    validateStudentFacultyCollegeYear
+} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
+const {
+    instructorFacultyCollegeYear,
+    validateInstructorFacultyCollegeYear
+} = require('../models/instructor-faculty-college-year/instructor-faculty-college-year.model')
+const {
+    StudentProgress,
+    validateStudentProgress
+} = require('../models/user_progress/user_progress.model')
+const {
+    Quiz,
+    validateQuiz
 } = require('../models/quiz/quiz.model')
-
-module.exports.Quiz = quiz
-module.exports.validate_quiz = validate_quiz
-
 const {
-    quiz_submision,
-    validate_quiz_submission
+    QuizSubmission,
+    validateQuizSubmission
 } = require('../models/quiz_submission/quiz_submission.model')
-
-module.exports.Quiz_submission = quiz_submision
-module.exports.validate_quiz_submission = validate_quiz_submission
-
-
 const {
     fileFilter
 } = require('./multer/fileFilter')
-
-module.exports.fileFilter = fileFilter
-
 const {
-    chat_group,
-    validate_chat_group
+    chatGroup,
+    validatechatGroup
 } = require('../models/chat_group/chat_group.model')
 
-module.exports.Chat_group = chat_group
-module.exports.validate_chat_group = validate_chat_group
-
 const {
-    notification,
-    validate_notification
+    Notification,
+    validateNotification
 } = require('../models/notification/notification.model')
 
-module.exports.Notification = notification
-module.exports.validate_notification = validate_notification
-
 const {
-    user_notification,
-    validate_user_notification
+    UserNotification,
+    validateUserNotification
 } = require('../models/user_notification/user_notification.model')
 
-module.exports.User_notification = user_notification
-module.exports.validate_user_notification = validate_user_notification
+module.exports.Admin = Admin
+module.exports.validateAdmin = validateAdmin
+module.exports.SuperAdmin = SuperAdmin
+module.exports.validateSuperAdmin = validateSuperAdmin
+module.exports.College = College
+module.exports.validateCollege = validateCollege
+module.exports.Instructor = Instructor
+module.exports.validateInstructor = validateInstructor
+module.exports.Student = Student
+module.exports.validateStudent = validateStudent
+module.exports.Faculty = Faculty
+module.exports.validateFaculty = validateFaculty
+module.exports.FacultyCollege = facultyCollege
+module.exports.validateFacultyCollege = validateFacultyCollege
+module.exports.CollegeYear = CollegeYear
+module.exports.validateCollegeYear = validateCollegeYear
+module.exports.FacultyCollegeYear = facultyCollegeYear
+module.exports.validateFacultyCollegeYear = validateFacultyCollegeYear
+module.exports.Course = Course
+module.exports.validateCourse = validateCourse
+module.exports.Chapter = Chapter
+module.exports.validateChapter = validateChapter
+module.exports.Message = Message
+module.exports.validateMessage = validateMessage
+module.exports.Attachment = Attachment
+module.exports.validateAttachment = validateAttachment
+module.exports.StudentFacultyCollegeYear = studentFacultyCollegeYear
+module.exports.validateStudentFacultyCollegeYear = validateStudentFacultyCollegeYear
+module.exports.InstructorFacultyCollegeYear = instructorFacultyCollegeYear
+module.exports.validateInstructorFacultyCollegeYear = validateInstructorFacultyCollegeYear
+module.exports.StudentProgress = StudentProgress
+module.exports.validateStudentProgress = validateStudentProgress
+module.exports.Quiz = Quiz
+module.exports.validateQuiz = validateQuiz
+module.exports.QuizSubmission = QuizSubmission
+module.exports.validateQuizSubmission = validateQuizSubmission
+module.exports.fileFilter = fileFilter
+module.exports.ChatGroup = chatGroup
+module.exports.validatechatGroup = validatechatGroup
+module.exports.Notification = Notification
+module.exports.validateNotification = validateNotification
+module.exports.UserNotification = UserNotification
+module.exports.validateUserNotification = validateUserNotification
 
 
 /**
  * other functions
  */
 
-/**
- *  returns a formated result (made to avoid console errors caused by statuses and to utilise the results we give)
- * @param {Number} status  Status code
- * @param {String} message Message
- * @param {Object} data Data
- */
-module.exports.formatResult = (status = 200, message = 'OK', data = {}) => {
-    return {
-        status: status,
-        message: message,
-        data: data
-    }
-}
-
-/**
- *  checks if the given id is a mongoose objectId
- * @param {String} id  DocumentId
- */
+// validate mongoIds
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
 
-/**
- *  encrypts the given password
- * @param {String} password  password string
- * @returns {String} hashed_password
- */
+// hash password
 module.exports.hashPassword = async (password) => {
     const salt = await bcrypt.genSalt(10)
     const hashed = await bcrypt.hash(password, salt)
     return hashed
 }
 
-/**
- *  validates the login credentials
- * @param {{email: String, password: String}} credentials  password string
- */
+module.exports.normaliseDate = (date) => {
+    let result = ''
+    for (const i in date) {
+        if (date[i] !== ':' && date[i] !== '.' && date[i] !== '-') {
+            result += date[i]
+        }
+    }
+    return result
+}
+
 module.exports.validateUserLogin = (credentials) => {
     const schema = {
         email: Joi.string().email().required(),
@@ -258,11 +225,6 @@ module.exports.checkRequirements = async (category, body) => {
     return 'alright'
 }
 
-/**
- *  finds a single document with the given id
- * @param {String} id  document id
- * @returns Document
- */
 module.exports.findDocument = async (model, id) => {
     const document = await model.findOne({
         _id: id
@@ -578,78 +540,78 @@ module.exports.getLatestMessages = async (userId) => {
         /** 2 get all latest messages sent to us */
         // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
         let receivedMessages = await Message.aggregate([{
-            $sort: {
-                _id: -1
-            }
-        },
-        {
-            $match: {
-                receivers: {
-                    $elemMatch: {
-                        id: userId
+                $sort: {
+                    _id: -1
+                }
+            },
+            {
+                $match: {
+                    receivers: {
+                        $elemMatch: {
+                            id: userId
+                        }
+                    },
+                    group: undefined
+                }
+            }, {
+                $group: {
+                    _id: "$sender",
+                    realId: {
+                        $first: "$_id"
+                    },
+                    receivers: {
+                        $first: "$receivers"
+                    },
+                    sender: {
+                        $first: "$sender"
+                    },
+                    content: {
+                        $first: "$content"
+                    },
+                    createdAt: {
+                        $first: "$createdAt"
+                    },
+                    read: {
+                        $first: "$read"
                     }
-                },
-                group: undefined
-            }
-        }, {
-            $group: {
-                _id: "$sender",
-                realId: {
-                    $first: "$_id"
-                },
-                receivers: {
-                    $first: "$receivers"
-                },
-                sender: {
-                    $first: "$sender"
-                },
-                content: {
-                    $first: "$content"
-                },
-                createdAt: {
-                    $first: "$createdAt"
-                },
-                read: {
-                    $first: "$read"
                 }
             }
-        }
         ])
         /** 3 get all latest messages we sent */
         // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
         let sentMessages = await Message.aggregate([{
-            $sort: {
-                _id: -1
-            }
-        },
-        {
-            $match: {
-                sender: userId,
-                group: undefined
-            }
-        }, {
-            $group: {
-                _id: "$receivers.id",
-                receivers: {
-                    $first: "$receivers"
-                },
-                realId: {
-                    $first: "$_id"
-                },
-                sender: {
-                    $first: "$sender"
-                },
-                content: {
-                    $first: "$content"
-                },
-                createdAt: {
-                    $first: "$createdAt"
-                },
-                read: {
-                    $first: "$read"
+                $sort: {
+                    _id: -1
+                }
+            },
+            {
+                $match: {
+                    sender: userId,
+                    group: undefined
+                }
+            }, {
+                $group: {
+                    _id: "$receivers.id",
+                    receivers: {
+                        $first: "$receivers"
+                    },
+                    realId: {
+                        $first: "$_id"
+                    },
+                    sender: {
+                        $first: "$sender"
+                    },
+                    content: {
+                        $first: "$content"
+                    },
+                    createdAt: {
+                        $first: "$createdAt"
+                    },
+                    read: {
+                        $first: "$read"
+                    }
                 }
             }
-        }
         ])
         if (sentMessages.length > 0 && receivedMessages.length > 0) {
             soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
@@ -1030,7 +992,6 @@ module.exports.Patterns = {
 const {
     auth
 } = require('../middlewares/auth.middleware')
-
 const {
     admin
 } = require('../middlewares/admin.middleware')

@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    category: {
+    college: {
         type: String,
         required: true
     },
@@ -94,7 +94,7 @@ function validate_user(credentials) {
         gender: Joi.string().min(4).max(6).required(), // regex needed
         password: Joi.string().min(8),
         phone: Joi.string().max(10).min(10).required(), // regex needed
-        email: Joi.email().required(),
+        email: Joi.string().required(), // regex needed
         profile: Joi.string(), // regex needed
         date_of_birth: Joi.date().required(),
         college: Joi.ObjectId().required(),
