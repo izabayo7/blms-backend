@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { Joi } = require('../../utils/imports');
 const { PasswordRegex } = require('../user/user.model');
 
 const resetPassword = mongoose.Schema({
