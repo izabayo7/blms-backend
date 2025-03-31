@@ -21,7 +21,9 @@ const {
   UserNotification,
   injectDoer,
   injectStudentProgress,
-  formatResult
+  formatResult,
+  findDocument,
+  User
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -31,8 +33,15 @@ module.exports.listen = (app) => {
   io.on('connection', async (socket) => {
 
     try {
-      const id = socket.handshake.query.id
-      socket.join(id)
+      const user_name = socket.handshake.query.user_name
+
+      const user = await findDocument(User, { user_name: user_name })
+      if (!user) {
+        socket.error('user not found')
+        socket.disconnect(true)
+      }
+
+      socket.join(user._id)
 
       /**
        * chat events
@@ -41,11 +50,11 @@ module.exports.listen = (app) => {
       // send contacts
       socket.on('/chat/contacts', async () => {
         // get the latest conversations
-        const latestMessages = await getLatestMessages(id)
+        const latestMessages = await getLatestMessages(user._id)
 
         console.log(latestMessages)
         // format the contacts
-        const contacts = await formatContacts(latestMessages, id)
+        const contacts = await formatContacts(latestMessages, user._id)
 
         // send the contacts
         socket.emit('/response/chat/contacts', {
@@ -59,20 +68,17 @@ module.exports.listen = (app) => {
       }) => {
         // get the messages
         const messages = await getConversationMessages({
-          userId: id,
+          user_id: user._id,
           conversation_id: conversation_id,
           lastMessage: lastMessage
         })
 
         // format the messages
-        const formatedMessages = await formatMessages(messages, id)
+        const formatedMessages = await formatMessages(messages, user._id)
 
-        // send the messages
+        // send the messages  
         socket.emit('receive_conversation', {
-          conversation: formatedMessages == [] ? {
-            status: 404,
-            message: "No massage found for these users"
-          } : formatedMessages
+          conversation: formatedMessages
         });
 
       })

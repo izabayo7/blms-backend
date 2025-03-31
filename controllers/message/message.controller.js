@@ -1,6 +1,17 @@
 // import dependencies
-const { validate_message } = require('../../models/message/message.model')
-const { express, multer, fs, Message, Student, Admin, Instructor, validate_message, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student, formatResult, findDocument, User, findDocuments, u, Chat_group, Create_or_update_message, deleteDocument } = require('../../utils/imports')
+const {
+  express,
+  Message,
+  validate_message,
+  validateObjectId,
+  formatResult,
+  findDocument,
+  User,
+  findDocuments,
+  u,
+  Create_or_update_message,
+  deleteDocument
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -93,11 +104,15 @@ router.get('/', async (req, res) => {
  */
 router.get('/user/:user_name/:type', async (req, res) => {
   try {
-    const { error } = validateObjectId(req.params.id)
+    const {
+      error
+    } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let user = await findDocument(User, { _id: req.params.user_name })
+    let user = await findDocument(User, {
+      _id: req.params.user_name
+    })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
 
@@ -109,7 +124,9 @@ router.get('/user/:user_name/:type', async (req, res) => {
     let sent, recieved, result
 
     if (req.params.type.to == 'sent' || req.params.type == 'all')
-      sent = await findDocuments(Message, { sender: user._id })
+      sent = await findDocuments(Message, {
+        sender: user._id
+      })
 
     if (sent.length) {
       for (const i in sent) {
@@ -164,7 +181,9 @@ router.get('/user/:user_name/:type', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { error } = validate_message(req.body)
+    const {
+      error
+    } = validate_message(req.body)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -206,7 +225,9 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    let { error } = validateObjectId(req.params.id)
+    let {
+      error
+    } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
     error = validate_message(req.body)
@@ -247,11 +268,15 @@ router.put('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const { error } = validateObjectId(req.params.id)
+    const {
+      error
+    } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let message = await findDocument(Message, { _id: req.params.id })
+    let message = await findDocument(Message, {
+      _id: req.params.id
+    })
     if (!message)
       return res.send(formatResult(404, 'message not found'))
 

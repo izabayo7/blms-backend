@@ -51,8 +51,6 @@ app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 require('./models/mongodb')
 
 // import controllers
-// const messageController = require('./controllers/message/message.controller')
-// const fileController = require('./controllers/file/file.controller')
 const user_controller = require('./controllers/user/user.controller')
 const user_category_controller = require('./controllers/user_category/user_category.controller')
 const user_role_controller = require('./controllers/user_role/user_role.controller')
@@ -70,6 +68,7 @@ const user_progress_contoller = require('./controllers/user_progress/user_progre
 const notification_controller = require('./controllers/notification/notification.controller')
 const user_notification_controller = require('./controllers/user_notification/user_notification.controller')
 const chat_group_controller = require('./controllers/chat_group/chat_group.controller')
+const message_controller = require('./controllers/message/message.controller')
 
 // use middlewares
 app.use(cors())
@@ -113,6 +112,7 @@ app.use(`${basePath}/user_progress`, user_progress_contoller)
 app.use(`${basePath}/notification`, notification_controller)
 app.use(`${basePath}/user_notification`, user_notification_controller)
 app.use(`${basePath}/chat_group`, chat_group_controller)
+app.use(`${basePath}/chat`, message_controller)
 
 // start the server
 server.listen(port, () => {
