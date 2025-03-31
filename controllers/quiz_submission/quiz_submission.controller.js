@@ -788,50 +788,53 @@ function validateSubmittedAnswers(questions, answers, mode) {
         break;
       }
       i = parseInt(i)
-      if (questions[i].type.includes('select')) {
-        if (!answers[i].choosed_options) {
-          message = `answer ${i + 1} must have choosed_options`
-          break;
-        } else {
-          if (questions[i].type.includes('single') && !answers[i].choosed_options.length > 1) {
-            if (!answers[i].choosed_options.length > 1) {
-              message = `answer ${i + 1} must only one choosed_options`
-              break;
+      // validate questions if it was not auto_submitted
+      if (!questions[i].auto_submitted) {
+        if (questions[i].type.includes('select')) {
+          if (!answers[i].choosed_options) {
+            message = `answer ${i + 1} must have choosed_options`
+            break;
+          } else {
+            if (questions[i].type.includes('single') && !answers[i].choosed_options.length > 1) {
+              if (!answers[i].choosed_options.length > 1) {
+                message = `answer ${i + 1} must only one choosed_options`
+                break;
+              }
+            }
+            for (let k in answers[i].choosed_options) {
+              k = parseInt(k)
+              if (questions[i].type.includes('text') && !answers[i].choosed_options[k].text) {
+                message = `choosed_option ${k + 1} in answer ${i + 1} must contain text`
+                break;
+              } else if (questions[i].type.includes('file') && !answers[i].choosed_options[k].src) {
+                message = `choosed_option ${k + 1} in answer ${i + 1} must contain choosed file src`
+                break;
+              }
+              if (questions[i].type.includes('text') && answers[i].choosed_options[k].src) {
+                message = `choosed_option ${k + 1} in answer ${i + 1} must not contain src`
+                break;
+              } else if (questions[i].type.includes('file') && answers[i].choosed_options[k].text) {
+                message = `choosed_option ${k + 1} in answer ${i + 1} must not contain text`
+                break;
+              }
             }
           }
-          for (let k in answers[i].choosed_options) {
-            k = parseInt(k)
-            if (questions[i].type.includes('text') && !answers[i].choosed_options[k].text) {
-              message = `choosed_option ${k + 1} in answer ${i + 1} must contain text`
-              break;
-            } else if (questions[i].type.includes('file') && !answers[i].choosed_options[k].src) {
-              message = `choosed_option ${k + 1} in answer ${i + 1} must contain choosed file src`
-              break;
-            }
-            if (questions[i].type.includes('text') && answers[i].choosed_options[k].src) {
-              message = `choosed_option ${k + 1} in answer ${i + 1} must not contain src`
-              break;
-            } else if (questions[i].type.includes('file') && answers[i].choosed_options[k].text) {
-              message = `choosed_option ${k + 1} in answer ${i + 1} must not contain text`
-              break;
-            }
+        } else if (questions[i].type === 'open_ended') {
+          if (!answers[i].text) {
+            message = `question ${i + 1} must have text answer`
+            break;
+          } else if (answers[i].src) {
+            message = `answer ${i + 1} must not contain src`
+            break;
           }
-        }
-      } else if (questions[i].type === 'open_ended') {
-        if (!answers[i].text) {
-          message = `question ${i + 1} must have text answer`
-          break;
-        } else if (answers[i].src) {
-          message = `answer ${i + 1} must not contain src`
-          break;
-        }
-      } else if (questions[i].type === 'file_upload') {
-        if (!answers[i].src) {
-          message = `question ${i + 1} must have src of the uploaded file`
-          break;
-        } else if (answers[i].text) {
-          message = `answer ${i + 1} must not contain text`
-          break;
+        } else if (questions[i].type === 'file_upload') {
+          if (!answers[i].src) {
+            message = `question ${i + 1} must have src of the uploaded file`
+            break;
+          } else if (answers[i].text) {
+            message = `answer ${i + 1} must not contain text`
+            break;
+          }
         }
       }
       if (mode === 'marking') {
