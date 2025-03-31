@@ -1284,64 +1284,9 @@ exports.base64EncodedImage = /^data:([A-Za-z-+\/]+);base64,(.+)$/;
 
 exports.add_user_details = async (users) => {
     for (const i in users) {
-        const user_faculty_college_year = await this.findDocument(this.User_faculty_college_year, {
-            user: users[i]._id,
-            status: 1
-        }, {
-            _v: 0
-        })
-
-        if (user_faculty_college_year) {
-            const faculty_college_year = await this.findDocument(this.Faculty_college_year, {
-                _id: user_faculty_college_year.faculty_college_year
-            }, {
-                _v: 0
-            })
-
-            users[i].faculty_college_year = faculty_college_year
-
-            const collegeYear = await this.findDocument(this.College_year, {
-                _id: faculty_college_year.college_year
-            }, {
-                _v: 0
-            })
-            users[i].faculty_college_year.college_year = collegeYear
-
-            const faculty_college = await this.findDocument(this.Faculty_college, {
-                _id: faculty_college_year.faculty_college
-            }, {
-                _v: 0
-            })
-            users[i].faculty_college_year.faculty_college = faculty_college
-
-            const faculty = await this.findDocument(this.Faculty, {
-                _id: faculty_college.faculty
-            }, {
-                _v: 0
-            })
-            users[i].faculty_college_year.faculty_college.faculty = faculty
-        }
-        if (users[i].college) {
-            const college = await this.findDocument(this.College, {
-                _id: users[i].college
-            }, {
-                _v: 0
-            })
-
-            users[i].college = college
-            if (users[i].college.logo) {
-                users[i].college.logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
-            }
-        }
-        // add user category
-        const category = await this.findDocument(this.User_category, {
-            _id: users[i].category
-        }, {
-            _v: 0
-        })
-        users[i].category = category
-
-        // add user profile media path
+        const category = await this.findDocument(this.User_category, {_id: users[i].category})
+        users[i].category = category.name
+        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
         if (users[i].profile) {
             users[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
         }
