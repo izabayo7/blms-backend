@@ -976,7 +976,6 @@ router.post('/login', async (req, res) => {
             }, {
                 phone: req.body.email_user_name_or_phone
             }],
-            "status.disabled": 0
         })
 
         const erroMessage = 'invalid credentials'
@@ -989,6 +988,9 @@ router.post('/login', async (req, res) => {
 
         if (!validPassword)
             return res.send(formatResult(400, erroMessage))
+
+        if (user.status.disabled)
+            return res.send(formatResult(403, "Your account was blocked, please contact your administration."))
 
         let user_category = await findDocument(User_category, {
             _id: user.category
