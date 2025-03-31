@@ -276,6 +276,8 @@ router.get('/user/:user_name', auth, async (req, res) => {
       if (!courses.length)
         return res.send(formatResult(200, undefined, []))
 
+      let coursesWithSubmissions = []
+
       for (const j in courses) {
         // check if there are quizes made by the user
         let quizes = await findDocuments(Quiz, {
@@ -283,8 +285,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
         }, u, u, u, u, u, {
           _id: -1
         })
-        if (!quizes.length)
-          return res.send(formatResult(404, 'quiz_submissions not found'))
+        console.log(quizes)
 
         let foundSubmissions = []
 
@@ -295,7 +296,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
           }, u, u, u, u, u, {
             _id: -1
           })
-
+          console.log(quiz_submissions)
           quizes[i].total_submissions = quiz_submissions.length
 
           if (quiz_submissions.length) {
@@ -322,14 +323,14 @@ router.get('/user/:user_name', auth, async (req, res) => {
             // quizes[i].marking_status += '%'
           }
         }
+        if (foundSubmissions.length) {
+          courses[i].submissions = foundSubmissions
+          coursesWithSubmissions.push(courses[i])
+        }
 
-        if (!foundSubmissions.length)
-          return res.send(formatResult(404, 'quiz_submissions not found'))
-        courses[i].submissions = foundSubmissions
       }
 
-      result = courses
-
+      result = coursesWithSubmissions
     } else {
       // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
