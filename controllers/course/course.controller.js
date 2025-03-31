@@ -768,7 +768,7 @@ router.put('/:id/cover_picture', async (req, res) => {
  */
 router.delete('/:id/cover_picture/:file_name', async (req, res) => {
     try {
-        const {
+        let {
             error
         } = validateObjectId(req.params.id)
         if (error)
@@ -777,7 +777,7 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
         // check if college exist
         const course = await findDocument(Course, {
             _id: req.params.id
-        })
+        }, undefined, false)
         if (!course)
             return res.send(formatResult(404, 'course not found'))
 
@@ -794,10 +794,13 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
 
         const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`
 
+        
         fs.unlink(`${path}/${course.cover_picture}`, (err) => {
-            if (err)
-                return res.send(formatResult(500, err))
+            error = err
         })
+
+        if (error)
+            return res.send(formatResult(500, error))
 
         course.cover_picture = undefined
         await course.save()
