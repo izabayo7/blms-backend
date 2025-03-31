@@ -1421,7 +1421,7 @@ exports.injectFaculty_college_year = async (courses) => {
 
     const faculty = await this.findDocument(this.Faculty, {
       _id: faculty_college.faculty
-    }, { _v: 0 }, true, false)
+    }, { name: 1, _id: 0, _v: 0 }, true, false)
     courses[i].faculty_college_year.faculty_college.faculty = faculty
 
     const college = await this.findDocument(this.College, {
