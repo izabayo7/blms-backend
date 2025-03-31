@@ -946,6 +946,36 @@ async function injectUserFeedback(submissions) {
   return submissions
 }
 
+async function addQuizTarget(quizes) {
+  for (const i in quizes) {
+    if (quizes[i].target.type !== 'faculty_college_year') {
+
+      let chapter, course;
+
+      if (quizes[i].target.type === 'chapter') {
+        chapter = await findDocument(Chapter, {
+          _id: quizes[i].target.id
+        }, u, true)
+        course = await findDocument(Course, {
+          _id: chapter.course
+        })
+      }
+      course = await findDocument(Course, {
+        _id: chapter ? chapter.course : quiz.target.id
+      })
+
+      course = await injectFaculty_college_year([course])
+      course = course[0]
+
+      quizes[i].target.course = _.pick(course, ['name', 'cover_picture', 'createdAt'])
+      quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
+      quizes[i].target.faculty_college_year = course.faculty_college_year
+
+    }
+  }
+  return quizes
+}
+
 async function get_faculty_college_year(quiz_id) {
   let quiz = await findDocument(Quiz, {
     _id: quiz_id
