@@ -1,52 +1,16 @@
-const {Account_payments} = require("../../models/account_payments/account_payments.model");
-const {exist} = require('joi')
 // import dependencies
+const {validate_account_payments} = require("../../models/account_payments/account_payments.model");
+const {Account_payments} = require("../../models/account_payments/account_payments.model");
 const {
     express,
     College,
-    User,
-    fs,
-    validate_college,
-    findDocument,
-    findDocuments,
     formatResult,
     createDocument,
-    updateDocument,
-    deleteDocument,
-    validateObjectId,
-    sendResizedImage,
     u,
-    upload_single_image,
-    addStorageDirectoryToPath,
-    auth
 } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
-
-/**
- * @swagger
- * definitions:
- *   Account_payments:
- *     properties:
- *       _id:
- *         type: string
- *       name:
- *         type: string
- *       email:
- *         type: string
- *       phone:
- *         type: string
- *       location:
- *         type: string
- *       logo:
- *         type: number
- *       disabled:
- *         type: string
- *     required:
- *       - name
- *       - email
- */
 
 /**
  * @swagger
@@ -66,6 +30,25 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', getPaymentHistory)
+
+/**
+ * @swagger
+ * /account_payments/status:
+ *   get:
+ *     tags:
+ *       - Account_payments
+ *     description: Returns the user current payment status
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/status', getPaymentStatus)
 
 
 /**
@@ -109,6 +92,15 @@ router.post('/', createPayment)
  */
 async function createPayment(req, res) {
     try {
+
+        const {
+            error
+        } = validate_account_payments(req.body, 'update')
+
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+
         const college = await College.findOne({_id: req.user.college, status: 1});
         if (college) return res.send(formatResult(404, 'College not found'));
 
@@ -122,6 +114,9 @@ async function createPayment(req, res) {
             method_used: req.body.method_used,
             user: req.user._id,
             amount_paid: req.body.amount_paid,
+            startingDate: req.body.startingDate,
+            periodType: req.body.periodType,
+            periodValue: req.body.periodValue,
             college_plans: [{name: college.plan}],
         }
         if (college.plan !== 'HUGUKA')
@@ -154,6 +149,54 @@ async function getPaymentHistory(req, res) {
     } catch (err) {
         return res.send(formatResult(500, err));
     }
+}
+
+/**
+ * Get account payment status
+ * @param req
+ * @param res
+ */
+async function getPaymentStatus(req, res) {
+    try {
+        const college = await College.findOne({_id: req.user.college, status: 1});
+        if (college) return res.send(formatResult(404, 'College not found'));
+
+        if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan'));
+
+        const payment = await Account_payments.findOne({
+            $or: [{user: req.user._id}, {college: req.user.college}],
+            status: 'ACTIVE'
+        }).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
+
+        if (!payment) return res.send(formatResult(u, 'You don\'t have a payment'));
+
+        // {
+        //     startDate,
+        //         endDate,
+        //         currentBalance
+        // }
+
+        const result = await getPaymentDetailst(payment)
+
+        return res.send(formatResult(200, u, result));
+    } catch (err) {
+        return res.send(formatResult(500, err));
+    }
+}
+
+async function getPaymentDetailst(payment) {
+    const startDate = new Date(payment.createdAt)
+    let endDate
+    let currentBalance
+
+    if (!payment.college) {
+        endDate = new Date(payment.periodType === 'MONTH' ? startDate.setMonth(startDate.getMonth() + payment.periodValue) : startDate.setFullYear(startDate.getFullYear() + payment.periodValue))
+    } else {
+        endDate = undefined
+    }
+
+    return {startDate, endDate, currentBalance}
+
 }
 
 // export the router
