@@ -72,6 +72,7 @@ const chat_group_controller = require('./controllers/chat_group/chat_group.contr
 const message_controller = require('./controllers/message/message.controller')
 const comment_controller = require('./controllers/comments/comments.controller')
 const live_session_controller = require('./controllers/live_session/live_session.controller')
+const { User_invitation_routes } = require('./routes/user_invitations/user_invitations.routes');
 
 // use middlewares
 app.use(cors())
@@ -120,7 +121,7 @@ app.use(`${basePath}/chat_group`, chat_group_controller)
 app.use(`${basePath}/message`, auth, message_controller)
 app.use(`${basePath}/comment`, auth, comment_controller)
 app.use(`${basePath}/live_session`, auth, live_session_controller)
-app.use(`${basePath}/user_invitations`, live_session_controller)
+app.use(`${basePath}/user_invitations`, User_invitation_routes)
 
 // start the server
 server.listen(port, () => {
