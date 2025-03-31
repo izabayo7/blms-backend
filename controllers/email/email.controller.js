@@ -49,13 +49,13 @@ exports.sendInvitationMail = async (email, token) => {
         };
 
         return {
-            sent: await transporter.sendMail(message);
+            sent: await transporter.sendMail(message)
         }
 
     }
     catch (err) {
         return {
-            error: err
+            err: err
         }
     }
 };
