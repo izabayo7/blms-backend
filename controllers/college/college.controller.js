@@ -116,6 +116,42 @@ router.get('/name/:name', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /college/open/{name}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: Returns a specified college by name
+ *     parameters:
+ *       - name: id
+ *         description: College's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/open/:name', async (req, res) => {
+  try {
+    let college = await findDocument(College, {
+      name: req.params.name
+    }, { name: 1, logo: true })
+    if (!college)
+      return res.send(formatResult(404, 'College not found'))
+    college = await injectLogoMediaPaths([college])
+    college = college[0]
+    return res.send(formatResult(u, u, college))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /college/{id}:
  *   get:
  *     tags:
