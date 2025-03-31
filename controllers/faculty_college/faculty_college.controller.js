@@ -21,20 +21,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * definitions:
- *   Faculty_college:
- *     properties:
- *       faculty:
- *         type: string
- *       college:
- *         type: string
- *     required:
- *       - faculty
- *       - college
- */
-
-/**
- * @swagger
  * /faculty_college:
  *   get:
  *     tags:

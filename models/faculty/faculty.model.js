@@ -8,6 +8,29 @@ const {
 
 const paginate = require('mongoose-paginate-v2')
 
+/**
+ * @swagger
+ * definitions:
+ *   Faculty_college:
+ *     properties:
+ *       name:
+ *         type: string
+ *       description:
+ *         type: string
+ *       college:
+ *         type: string
+ *       created_by:
+ *         type: string
+ *       status:
+ *         type: string
+ *         enum: ['ACTIVE', 'INACTIVE']
+ *     required:
+ *       - name
+ *       - college
+ *       - created_by
+ *       - description
+ */
+
 const faculty_schema = new mongoose.Schema({
     college: {
         type: Types.ObjectId,
@@ -22,7 +45,7 @@ const faculty_schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    createdBy: {
+    created_by: {
         type: Types.ObjectId,
         ref: 'user',
         required: true
