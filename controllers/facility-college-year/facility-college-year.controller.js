@@ -7,6 +7,7 @@ const {
   FacilityCollege,
   validateFacilityCollegeYear,
   validateObjectId,
+  removeDocumentVersion
 } = require('../../utils/imports')
 const {
   Facility
@@ -46,10 +47,14 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const facilityCollegeYears = await FacilityCollegeYear.find()
   try {
+    let facilityCollegeYears = await FacilityCollegeYear.find().lean()
+
     if (facilityCollegeYears.length === 0)
       return res.send('facility-facility-college-years list is empty').status(404)
+
+    facilityCollegeYears = await injectDetails(facilityCollegeYears)
+
     return res.send(facilityCollegeYears).status(200)
   } catch (error) {
     return res.send(error).status(500)
@@ -86,15 +91,15 @@ router.get('/college/:id', async (req, res) => {
     if (!college)
       return res.status(404).send(`College with code ${req.params.id} doens't exist`)
 
-    let facilityColleges = await FacilityCollege.find({
+    let facilityCollegeYears = await FacilityCollege.find({
       college: req.params.id
     })
-    if (facilityColleges.length < 1)
+    if (facilityCollegeYears.length < 1)
       return res.send(`facilityCollege in ${college.name} Not Found`)
 
-    let allfacilityCollegeYears = []
+    let foundFacilityCollegeYears = []
 
-    for (const facilityCollege of facilityColleges) {
+    for (const facilityCollege of facilityCollegeYears) {
       const facilityDetails = await Facility.findOne({
         _id: facilityCollege.facility
       })
@@ -105,7 +110,7 @@ router.get('/college/:id', async (req, res) => {
         const yearDetails = await CollegeYear.findOne({
           _id: newFacilityCollegeYear.collegeYear
         })
-        allfacilityCollegeYears.push({
+        foundFacilityCollegeYears.push({
           _id: newFacilityCollegeYear._id,
           facilityCollege: newFacilityCollegeYear.facilityCollege,
           collegeYear: newFacilityCollegeYear.collegeYear,
@@ -113,9 +118,12 @@ router.get('/college/:id', async (req, res) => {
         })
       }
     }
-    if (allfacilityCollegeYears.length < 1)
+    if (foundFacilityCollegeYears.length < 1)
       return res.status(404).send(`There are no Facility College Years in ${college.name}`)
-    return res.send(allfacilityCollegeYears).status(200)
+
+      foundFacilityCollegeYears = await injectDetails(foundFacilityCollegeYears)
+
+    return res.send(foundFacilityCollegeYears).status(200)
   } catch (error) {
     return res.status(500).send(error)
   }
@@ -231,6 +239,23 @@ router.delete('/:id', async (req, res) => {
 
   return res.send(`facilityCollegeYear ${deleteFacilityCollege._id} Successfully deleted`).status(200)
 })
+
+// link the student with his/her current college
+async function injectDetails(facilityCollegeYears) {
+  for (const i in facilityCollegeYears) {
+
+    const facilityCollege = await FacilityCollege.findOne({
+      _id: facilityCollegeYears[i].facilityCollege
+    }).lean()
+    facilityCollegeYears[i].facilityCollege = removeDocumentVersion(facilityCollege)
+
+    const collegeYear = await CollegeYear.findOne({
+      _id: facilityCollegeYears[i].collegeYear
+    }).lean()
+    facilityCollegeYears[i].collegeYear = removeDocumentVersion(collegeYear)
+  }
+  return facilityCollegeYears
+}
 
 // export the router
 module.exports = router

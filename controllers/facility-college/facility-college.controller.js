@@ -5,7 +5,8 @@ const {
   College,
   Facility,
   validateFacilityCollege,
-  validateObjectId
+  validateObjectId,
+  removeDocumentVersion
 } = require('../../utils/imports')
 // create router
 const router = express.Router()
@@ -42,10 +43,11 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const facilityColleges = await FacilityCollege.find()
+  let facilityColleges = await FacilityCollege.find().lean()
   try {
     if (facilityColleges.length === 0)
       return res.send('facility-college list is empty').status(404)
+    facilityColleges = await injectDetails(facilityColleges)
     return res.send(facilityColleges).status(200)
   } catch (error) {
     return res.send(error).status(500)
@@ -162,6 +164,23 @@ router.delete('/:id', async (req, res) => {
 
   return res.send(`facilityCollege ${deleteFacility._id} Successfully deleted`).status(200)
 })
+
+// replace relation ids with their references
+async function injectDetails(facilityColleges) {
+  for (const i in facilityColleges) {
+
+    const facility = await Facility.findOne({
+      _id: facilityColleges[i].facility
+    }).lean()
+    facilityColleges[i].facility = removeDocumentVersion(facility)
+
+    const college = await College.findOne({
+      _id: facilityColleges[i].college
+    }).lean()
+    facilityColleges[i].college = removeDocumentVersion(college)
+  }
+  return facilityColleges
+}
 
 // export the router
 module.exports = router

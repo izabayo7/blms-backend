@@ -14,7 +14,7 @@ const swaggerUi = require("swagger-ui-express");
 const app = express()
 
 const port = process.env.PORT || 7070
-const path = process.env.NODE_ENV === "production" ? `161.35.199.197:${port}` : `localhost:${port}`
+const path = process.env.HOST
 
 const swaggerOptions = {
     swaggerDefinition: {

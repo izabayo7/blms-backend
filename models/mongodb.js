@@ -1,5 +1,5 @@
 const { mongoose } = require('../utils/imports')
-const dbHost = process.env.NODE_ENV === "production" ? process.env.MONGO_URI : `localhost/Kurious`
+const dbHost = process.env.MONGO_URI
 // connect to mongodb server
 mongoose.connect(`mongodb://${dbHost}`, {
   useNewUrlParser: true,

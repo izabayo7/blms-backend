@@ -3,16 +3,13 @@ const {
   express,
   fs,
   Quiz,
-  getCollege,
   Chapter,
   Course,
   Instructor,
   validateQuiz,
   FacilityCollegeYear,
-  auth,
-  _instructor,
   validateObjectId,
-  _student
+  _
 } = require('../../utils/imports')
 const {
   parseInt
@@ -23,32 +20,33 @@ const router = express.Router()
 
 // Get all quiz
 router.get('/', async (req, res) => {
-  const quiz = await Quiz.find()
+  let quizes = await Quiz.find().lean()
   try {
-    if (quiz.length === 0)
+    if (quizes.length === 0)
       return res.status(404).send('Quiz list is empty')
-    return res.status(200).send(quiz)
+    quizes = await injectInstructor(quizes)
+    return res.status(200).send(quizes)
   } catch (error) {
     return res.status(500).send(error)
   }
 })
 
-// do it now brabra
-
 // Get specified quiz
 router.get('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  const quiz = await Quiz.findOne({
-    _id: req.params.id
-  })
   try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+    let quiz = await Quiz.findOne({
+      _id: req.params.id
+    }).lean()
+
     if (!quiz)
       return res.status(404).send(`Quiz ${req.params.id} Not Found`)
-    return res.status(200).send(quiz)
+    quiz = await injectInstructor([quiz])
+    return res.status(200).send(quiz[0])
   } catch (error) {
     return res.status(500).send(error)
   }
@@ -63,7 +61,9 @@ router.get('/instructor/:id', async (req, res) => {
     if (error)
       return res.status(400).send(error.details[0].message)
 
-    let instructor = await Instructor.findOne({ _id: req.params.id })
+    let instructor = await Instructor.findOne({
+      _id: req.params.id
+    })
     if (!instructor)
       return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
 
@@ -88,7 +88,9 @@ router.post('/', async (req, res) => {
     if (error)
       return res.status(400).send(error.details[0].message)
 
-    let instructor = await Instructor.findOne({ _id: req.body.instructor })
+    let instructor = await Instructor.findOne({
+      _id: req.body.instructor
+    })
     if (!instructor)
       return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
@@ -319,9 +321,20 @@ function validateQuestions(questions) {
     status: true,
     totalMarks: marks
   } : {
-      status: false,
-      error: message
-    }
+    status: false,
+    error: message
+  }
+}
+
+// replace instructor id by the instructor information
+async function injectInstructor(quizes) {
+  for (const i in quizes) {
+    const instructor = await Instructor.findOne({
+      _id: quizes[i].instructor
+    })
+    quizes[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone'])
+  }
+  return quizes
 }
 
 // export the router

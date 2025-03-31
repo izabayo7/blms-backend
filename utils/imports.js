@@ -13,6 +13,7 @@ module.exports.bcrypt = bcrypt
 module.exports.multer = require('multer')
 module.exports.fs = require('fs-extra')
 module.exports.timestamps = require('mongoose-timestamp');
+module.exports._ = require('lodash')
 
 // models & functions
 const { SuperAdmin, validateSuperAdmin } = require('../models/superAdmin/superAdmin.model')
@@ -136,7 +137,9 @@ module.exports.getCourse = async (id) => {
     let chapter = await Chapter.findOne({ _id: id })
     return chapter.course
 }
-
+module.exports.removeDocumentVersion = (obj) => {
+    return module.exports._.omit(obj, '__v')
+}
 const fs = require('fs')
 const sharp = require('sharp')
 

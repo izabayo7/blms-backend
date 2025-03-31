@@ -8,14 +8,18 @@ const {
   validateStudent,
   validateUserLogin,
   hashPassword,
-  auth,
-  _superAdmin,
   defaulPassword,
-  _admin,
   validateObjectId,
-  _student,
-  checkRequirements
+  checkRequirements,
+  StudentFacilityCollegeYear,
+  FacilityCollegeYear,
+  FacilityCollege,
+  CollegeYear,
+  removeDocumentVersion
 } = require('../../utils/imports')
+const {
+  Facility
+} = require('../../models/facility/facility.model')
 
 // create router
 const router = express.Router()
@@ -80,12 +84,17 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const students = await Student.find()
   try {
+    let students = await Student.find().lean()
+
     if (students.length === 0)
       return res.status(404).send('Student list is empty')
+
+    students = await injectDetails(students)
+
     return res.status(200).send(students)
   } catch (error) {
+    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -387,6 +396,43 @@ router.delete('/:id', async (req, res) => {
   }
   return res.status(200).send(`${student.surName} ${student.otherNames} was successfully deleted`)
 })
+
+// link the student with his/her current college
+async function injectDetails(students) {
+  for (const i in students) {
+    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({
+      student: students[i]._id,
+      status: 1
+    }).lean()
+    students[i].studentFacilityCollegeYear = removeDocumentVersion(studentFacilityCollegeYear)
+
+    const facilityCollegeYear = await FacilityCollegeYear.findOne({
+      _id: studentFacilityCollegeYear.facilityCollegeYear
+    }).lean()
+    students[i].studentFacilityCollegeYear.facilityCollegeYear = removeDocumentVersion(facilityCollegeYear)
+
+    const collegeYear = await CollegeYear.findOne({
+      _id: facilityCollegeYear.collegeYear
+    }).lean()
+    students[i].studentFacilityCollegeYear.facilityCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+    
+    const facilityCollege = await FacilityCollege.findOne({
+      _id: facilityCollegeYear.facilityCollege
+    }).lean()
+    students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege = removeDocumentVersion(facilityCollege)
+
+    const facility = await Facility.findOne({
+      _id: facilityCollege.facility
+    }).lean()
+    students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.facility = removeDocumentVersion(facility)
+
+    const college = await College.findOne({
+      _id: facilityCollege.college
+    }).lean()
+    students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
+  }
+  return students
+}
 
 // export the router
 module.exports = router

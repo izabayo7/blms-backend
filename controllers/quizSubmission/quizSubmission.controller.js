@@ -5,41 +5,49 @@ const {
   Quiz,
   Student,
   validateQuizSubmission,
-  validateObjectId
+  validateObjectId,
+  _
 } = require('../../utils/imports')
-const { Instructor } = require('../../models/instructor/instructor.model')
+const {
+  Instructor
+} = require('../../models/instructor/instructor.model')
 
 // create router
 const router = express.Router()
 
 // Get all quizSubmissions
 router.get('/', async (req, res) => {
-  const quizSubmissions = await QuizSubmission.find()
+  let quizSubmissions = await QuizSubmission.find().lean()
   try {
     if (quizSubmissions.length === 0)
-      return res.send('QuizSubmission list is empty').status(404)
-    return res.send(quizSubmissions).status(200)
+      return res.status(404).send('QuizSubmission list is empty')
+    quizSubmissions = await injectStudent(quizSubmissions)
+    quizSubmissions = await injectQuiz(quizSubmissions)
+    return res.status(200).send(quizSubmissions)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
 // Get specified quizSubmissions
 router.get('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(error.details[0].message).status(400)
-  const quizSubmissions = await QuizSubmission.findOne({
-    _id: req.params.id
-  })
   try {
-    if (!quizSubmissions)
-      return res.send(`QuizSubmission ${req.params.id} Not Found`).status(404)
-    return res.send(quizSubmissions).status(200)
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+    let quizSubmission = await QuizSubmission.findOne({
+      _id: req.params.id
+    }).lean()
+
+    if (!quizSubmission)
+      return res.status(404).send(`QuizSubmission ${req.params.id} Not Found`)
+    quizSubmission = await injectStudent([quizSubmission])
+    quizSubmission = await injectQuiz(quizSubmission)
+    return res.status(200).send(quizSubmission[0])
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -50,24 +58,25 @@ router.get('/quiz/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(error.details[0].message).status(400)
+      return res.status(400).send(error.details[0].message)
 
     // check if quiz exist
     let quiz = await Quiz.findOne({
       _id: req.params.id
     })
     if (!quiz)
-      return res.send(`Quiz with code ${req.params.id} doens't exist`)
+      return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
 
-    const quizSubmissions = await QuizSubmission.find({
+    let quizSubmissions = await QuizSubmission.find({
       quiz: req.params.id
-    })
+    }).lean()
 
     if (quizSubmissions.length < 1)
-      return res.send(`Ther are no submissions for quiz ${quiz.name}`).status(404)
-    return res.send(quizSubmissions).status(200)
+      return res.status(404).send(`Ther are no submissions for quiz ${quiz.name}`)
+      quizSubmissions = await injectStudent(quizSubmissions)
+    return res.status(200).send(quizSubmissions)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -78,24 +87,25 @@ router.get('/student/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(error.details[0].message).status(400)
+      return res.status(400).send(error.details[0].message)
 
     // check if quiz exist
     let student = await Student.findOne({
       _id: req.params.id
     })
     if (!student)
-      return res.send(`Sudent with code ${req.params.id} doens't exist`)
+      return res.status(404).send(`Sudent with code ${req.params.id} doens't exist`)
 
-    const quizSubmissions = await QuizSubmission.find({
+    let quizSubmissions = await QuizSubmission.find({
       student: req.params.id
-    })
+    }).lean()
 
     if (quizSubmissions.length < 1)
-      return res.send(`Ther are no submissions for ${student.surName} ${student.otherNames}`).status(404)
-    return res.send(quizSubmissions).status(200)
+      return res.status(404).send(`Ther are no submissions for ${student.surName} ${student.otherNames}`)
+      quizSubmissions = await injectQuiz(quizSubmissions)
+    return res.status(200).send(quizSubmissions)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -106,7 +116,7 @@ router.get('/instructor/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(error.details[0].message).status(400)
+      return res.status(400).send(error.details[0].message)
 
     // check if instructor exist
     let instructor = await Instructor.findOne({
@@ -125,22 +135,23 @@ router.get('/instructor/:id', async (req, res) => {
     let foundSubmissions = []
 
     for (const quiz of quizes) {
-      const quizSubmissions = await QuizSubmission.find({
+      let quizSubmissions = await QuizSubmission.find({
         quiz: quiz._id
-      })
-      if (quizSubmissions.length > 0){
-        for (const submission of quizSubmissions) {
+      }).lean()
+      if (quizSubmissions.length > 0) {
+        quizSubmissions = await injectStudent(quizSubmissions)
+        quizSubmissions = await injectQuiz(quizSubmissions)
+        for (let submission of quizSubmissions) {
           foundSubmissions.push(submission)
         }
       }
     }
 
     if (foundSubmissions.length < 1)
-      return res.send(`Ther are no submissions for Instructor ${instructor.surName}`).status(404)
+      return res.status(404).send(`Ther are no submissions for Instructor ${instructor.surName}`)
     return res.status(200).send(foundSubmissions)
   } catch (error) {
-    console.log(error)
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -152,20 +163,20 @@ router.post('/', async (req, res) => {
       error
     } = validateQuizSubmission(req.body)
     if (error)
-      return res.send(error.details[0].message).status(400)
+      return res.status(400).send(error.details[0].message)
 
     let student = await Student.findOne({
       _id: req.body.student
     })
     if (!student)
-      return res.send(`Student of Code ${req.body.student} Not Found`)
+      return res.status(404).send(`Student of Code ${req.body.student} Not Found`)
 
     // check if quiz exist
     let quiz = await Quiz.findOne({
       _id: req.body.quiz
     })
     if (!quiz)
-      return res.send(`Quiz with code ${req.params.id} doens't exist`)
+      return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
 
     const validSubmissions = validateSubmittedAnswers(quiz.questions, req.body.answers, 'anwsering')
     if (validSubmissions.status !== true)
@@ -189,8 +200,8 @@ router.post('/', async (req, res) => {
 
     const saveDocument = await newDocument.save()
     if (saveDocument)
-      return res.send(saveDocument).status(201)
-    return res.send('New QuizSubmission not Registered').status(500)
+      return res.status(201).send(saveDocument)
+    return res.status(500).send('New QuizSubmission not Registered')
   } catch (error) {
     return res.status(500).send(error)
   }
@@ -202,24 +213,24 @@ router.put('/:id', async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
   error = validateQuizSubmission(req.body)
   error = error.error
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
   // check if quizSubmissions exist
   let quizSubmission = await QuizSubmission.findOne({
     _id: req.params.id
   })
   if (!quizSubmission)
-    return res.send(`QuizSubmission with code ${req.params.id} doens't exist`)
+    return res.status(404).send(`QuizSubmission with code ${req.params.id} doens't exist`)
 
   let quiz = await Quiz.findOne({
     _id: quizSubmission.quiz
   })
   if (!quiz)
-    return res.send(`Quiz with code ${req.params.id} doens't exist`)
+    return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
 
   let student = await Student.findOne({
     _id: req.body.student
@@ -240,8 +251,8 @@ router.put('/:id', async (req, res) => {
     new: true
   })
   if (updateDocument)
-    return res.send(updateDocument).status(201)
-  return res.send("Error ocurred").status(500)
+    return res.status(201).send(updateDocument)
+  return res.status(500).send("Error ocurred")
 
 })
 
@@ -308,6 +319,28 @@ function validateSubmittedAnswers(questions, answers, mode) {
       status: false,
       error: message
     }
+}
+
+// replace student id by the student information
+async function injectStudent(submissions) {
+  for (const i in submissions) {
+    const instructor = await Student.findOne({
+      _id: submissions[i].student
+    })
+    submissions[i].student = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone'])
+  }
+  return submissions
+}
+
+// replace quiz id by the quiz information
+async function injectQuiz(submissions) {
+  for (const i in submissions) {
+    const quiz = await Quiz.findOne({
+      _id: submissions[i].quiz
+    })
+    submissions[i].quiz = quiz
+  }
+  return submissions
 }
 
 // export the router
