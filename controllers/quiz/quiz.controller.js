@@ -622,6 +622,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - Quiz
  *     description: Update quiz target
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz id
