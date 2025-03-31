@@ -677,6 +677,78 @@ router.get('/user', async (req, res) => {
 
 /**
  * @swagger
+ * /course/school/{abbreviation}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses of a specified user
+ *     parameters:
+ *       - name: abbreviation
+ *         description: school abbreviation
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/school/:abbreviation', async (req, res) => {
+    try {
+        let school = await findDocument(College, {
+            abbreviation: req.params.abbreviation
+        });
+        if (!school)
+            return res.send(formatResult(404, 'school not found'));
+
+        let faculties = await findDocuments(Faculty, {
+            college: school._id,
+            isPublic: true,
+        }, {
+            name: true
+        }, undefined, undefined, true);
+
+        for (const faculty of faculties) {
+            let courses = await findDocuments(Course, {
+                user_group: {
+                    $in: await User_group.find({
+                        faculty: faculty._id,
+                        status: "ACTIVE"
+                    }).select('_id')
+                },
+                published: true
+            }, {
+                name: true
+            }, undefined, undefined, true);
+
+            for (const course of courses) {
+                let chapter = await findDocuments(Chapter, {
+                    course: course._id,
+                    number: 1
+                }, {
+                    name: true,
+                    uploaded_video: true,
+                    description: true
+                }, undefined, undefined, true);
+
+                course.chapter = chapter;
+            }
+
+            faculty.courses = courses;
+        }
+
+        return res.send(formatResult(u, u, faculties))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /course/user/{user_name}/{courseName}:
  *   get:
  *     tags:
