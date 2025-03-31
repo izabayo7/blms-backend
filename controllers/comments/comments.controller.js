@@ -10,7 +10,9 @@ const {
   findDocuments,
   u,
   Create_or_update_comment,
-  deleteDocument
+  deleteDocument,
+  Live_session,
+  createDocument
 } = require('../../utils/imports')
 
 // create router
@@ -173,7 +175,37 @@ router.post('/', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].comment))
 
-    const result = await Create_or_update_comment(req.body.sender, req.body.receiver, req.body.content)
+    req.body.target.type = req.body.target.type.toLowerCase()
+
+    const allowedTargets = ['chapter', 'live_session']
+
+    if (!allowedTargets.includes(req.body.target.type))
+      return res.send(formatResult(400, 'invalid comment target_type'))
+
+    let target
+
+    switch (req.body.target.type) {
+      case 'chapter':
+        target = await findDocument(Chapter, {
+          _id: req.body.target.id
+        })
+        break;
+
+      case 'live_session':
+        target = await findDocument(Live_session, {
+          _id: req.body.target.id
+        })
+        break;
+
+      default:
+        break;
+    }
+
+    if (!target)
+      return res.send(formatResult(404, 'comment target not found'))
+
+
+    const result = await createDocument(Comment, req.body)
 
     return res.send(result)
   } catch (error) {

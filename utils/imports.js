@@ -185,6 +185,14 @@ const {
 module.exports.User_notification = user_notification
 module.exports.validate_user_notification = validate_user_notification
 
+const {
+  live_session,
+  validate_live_session
+} = require('../models/live_session/live_session.model')
+
+module.exports.Live_session = live_session
+module.exports.validate_live_session = validate_live_session
+
 
 module.exports.u = undefined
 

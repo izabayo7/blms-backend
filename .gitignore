@@ -9,3 +9,5 @@
 .env
 index.js
 config.json
+*.iml
+*.xml
