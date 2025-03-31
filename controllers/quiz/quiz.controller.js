@@ -1,4 +1,5 @@
 // import dependencies
+const {updateDocument} = require("../../utils/imports");
 const {
     express,
     fs,
@@ -619,6 +620,59 @@ router.put('/:id', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /quiz/release_marks/{id}:
+ *   put:
+ *     tags:
+ *       - Quiz
+ *     description: Publish quiz marks
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/release_marks/:id', async (req, res) => {
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        // check if course exist
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
+
+
+        let result = await updateDocument(Quiz, req.params.id,
+        {
+            status: quiz.status == 1 ? 2 : 1
+        })
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 
 /**
  * @swagger

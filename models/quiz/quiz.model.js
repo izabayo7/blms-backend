@@ -83,6 +83,7 @@ const quiz_schema = new mongoose.Schema({
     status: {
         type: Number,
         default: 1
+        // 2 when marks are released
     },
 })
 quiz_schema.plugin(timestamps);
