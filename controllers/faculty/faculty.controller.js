@@ -152,50 +152,6 @@ router.get('/college/:faculty', async (req, res) => {
   }
 })
 
-
-/**
- * @swagger
- * /faculty/{id}:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Returns a specified faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Faculty's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
-    const result = await findDocument(Faculty, {
-      _id: req.params.id
-    })
-    if (!result)
-      return res.send(formatResult(404, `Faculty ${req.params.id} Not Found`))
-
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
 /**
  * @swagger
  * /faculty:
