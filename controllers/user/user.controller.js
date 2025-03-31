@@ -1,5 +1,6 @@
 // import dependencies
 const { compare } = require('bcryptjs')
+const { validateUserPasswordUpdate } = require('../../models/user/user.model')
 const {
   express,
   User,
@@ -35,7 +36,6 @@ const {
   Faculty,
   Faculty_college_year,
   upload_single_image,
-  Compress_images,
   Chat_group,
   Quiz,
   auth
@@ -718,7 +718,7 @@ router.put('/:id/password', auth, async (req, res) => {
     const hashedPassword = await hashPassword(req.body.new_password);
     user.password = hashedPassword
     const updated = await user.save();
-    return res.send(formatResult(201, "UPDATED", updated))
+    return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
