@@ -405,22 +405,12 @@ router.put('/:id/logo', async (req, res) => {
       return res.send(formatResult(404, 'college not found'))
 
     const path = `./uploads/colleges/${req.params.id}`
-    const temp_path = `./uploads/colleges/${req.params.id}/temp`
     req.kuriousStorageData = {
-      dir: temp_path,
+      dir: path,
     }
     upload_single_image(req, res, async (err) => {
       if (err)
         return res.send(formatResult(500, err.message))
-
-      await Compress_images(temp_path, path)
-
-      setTimeout(() => {
-        fs.unlink(`${temp_path}/${req.file.filename}`, (err) => {
-          if (err)
-            return res.send(formatResult(500, err))
-        })
-      }, 1000);
 
       if (college.logo && college.logo != req.file.filename) {
         fs.unlink(`${path}/${college.logo}`, (err) => {

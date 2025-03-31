@@ -10,7 +10,7 @@ const {
  * definitions:
  *   User_invitation:
  *     properties:
- *        email:
+ *       email:
  *         type: string
  *         description: email of the invited user
  *       user:
