@@ -121,7 +121,7 @@ const router = express.Router()
  * definitions:
  *   UserLogin:
  *     properties:
- *       email_user_name_or_phone:
+ *       email_or_user_name:
  *         type: string
  *       password:
  *         type: string
@@ -1350,11 +1350,9 @@ router.post('/login', async (req, res) => {
         // find user
         let user = await findDocument(User, {
             $or: [{
-                email: req.body.email_user_name_or_phone
+                email: req.body.email_or_user_name
             }, {
-                user_name: req.body.email_user_name_or_phone
-            }, {
-                phone: req.body.email_user_name_or_phone
+                user_name: req.body.email_or_user_name
             }],
             "status.deleted": {$ne: 1}
         })

@@ -325,7 +325,7 @@ exports.hashPassword = async (password) => {
  */
 exports.validateUserLogin = (credentials) => {
     const schema = {
-        email_user_name_or_phone: Joi.string().required(),
+        email_or_user_name: Joi.string().required(),
         password: Joi.string().min(3).max(255).required()
     }
     return Joi.validate(credentials, schema)
