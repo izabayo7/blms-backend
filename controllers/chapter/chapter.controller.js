@@ -261,6 +261,56 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
 
 /**
  * @swagger
+ * /chapter/{id}/uploaded_content:
+ *   get:
+ *     tags:
+ *       - Chapter
+ *     description: Returns the file containing the chapter content
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/uploaded_content', async (req, res) => {
+    try {
+
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        const chapter = await findDocument(Chapter, {
+            _id: req.params.id
+        })
+        if (!chapter)
+            return res.send(formatResult(404, 'chapter not found'))
+
+        if (!chapter.uploaded_content_src)
+            return res.send(formatResult(404, 'file not found'))
+
+
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${chapter.uploaded_content_src}`)
+        return res.sendFile(file_path)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /chapter/{id}/attachment/{file_name}/download:
  *   get:
  *     tags:
