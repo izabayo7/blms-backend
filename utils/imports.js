@@ -1154,7 +1154,11 @@ exports.dynamic_storage = this.multer.diskStorage({
         })
     },
     filename: (req, file, cb) => {
-        cb(null, `${file.originalname}`)
+        const {
+            name
+        } = req.kuriousStorageData
+
+        cb(null, `${name || file.originalname}`)
     }
 })
 
