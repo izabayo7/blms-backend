@@ -1671,7 +1671,7 @@ async function addUserBill(collegeId, userCategory) {
     collegeId = collegeId.toString()
 
     const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
-
+// akabazo on minuza package
     if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
         const payment = await Account_payments.findOne({
             college: collegeId,
@@ -1687,10 +1687,16 @@ async function addUserBill(collegeId, userCategory) {
         const payments = await Account_payments.find({
             college: collegeId,
             endingDate: {$gt: new Date(today).toISOString()}
+        }).populate({
+            path: 'collegePaymentPlan',
+            populate: {
+                path: 'college',
+                model: 'Component'
+            }
         })
 
         for (const i in payments) {
-            amount += await calculateAmount(college, payments[i].periodType, payments[i].periodValue, 1)
+            amount += await calculateAmount(payments[i].collegePaymentPlan, payments[i].periodType, payments[i].periodValue, 1, true)
         }
 
         if (amount !== 0)
