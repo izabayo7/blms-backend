@@ -185,14 +185,14 @@ exports.sendResetPasswordEmail = async ({ email, token, user_name, institution_n
     }
 };
 
-exports.sendConfirmEmail = async ({ user_name, institution_name, institution_address, subscription }) => {
+exports.sendConfirmEmail = async ({ email, user_name, institution_name, institution_address, subscription, token }) => {
     try {
 
-        const mail = confirm_email({ user_name, institution_name, institution_address, subscription })
-
+        const mail = confirm_email({ email, user_name, institution_name, institution_address, subscription, token })
+        console.log(email)
         const _message = {
             from: process.env.EMAIL,
-            to: process.env.COMMUNICATION_TEAM_EMAIL,
+            to: email,
             subject: 'Account creation succeeded.',
             html: mail,
         };

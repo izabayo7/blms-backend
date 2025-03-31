@@ -794,8 +794,6 @@ router.post('/admin', async (req, res) => {
       maximum_users: req.body.maximum_users
     })
 
-    console.log(saved_college)
-
     let result = await createDocument(User, {
       user_name: req.body.user_name,
       sur_name: req.body.sur_name,
@@ -807,7 +805,7 @@ router.post('/admin', async (req, res) => {
       category: user_category._id
     })
 
-    const { sent, err } = await sendConfirmEmail(req.body);
+    const { sent, err } = await sendConfirmEmail({ email: result.data.email, user_name: req.body.sur_name + ' ' + req.body.other_names, institution_name: req.body.college, institution_address: "ngahooo", token: "ntayo", subscription: "trial" });
     if (err)
       return res.send(formatResult(500, err));
 

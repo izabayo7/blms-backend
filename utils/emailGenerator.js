@@ -4,6 +4,7 @@ exports.confirm_email = ({
   institution_name,
   institution_address,
   subscription,
+  token
 }) => {
   const result = `
     <!DOCTYPE html>
