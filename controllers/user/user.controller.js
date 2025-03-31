@@ -558,7 +558,7 @@ router.get('/current', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkUserNameExistance/:user_name', this.checkUsernameExistence)
+router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
 
 /**
  * @swagger
@@ -581,7 +581,7 @@ router.get('/checkUserNameExistance/:user_name', this.checkUsernameExistence)
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkEmailExistance/:email', this.checkEmailExistance)
+router.get('/checkEmailExistance/:email', checkEmailExistance)
 
 /**
  * @swagger
@@ -1617,7 +1617,7 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
  * @param req
  * @param res
  */
-exports.checkEmailExistance = async (req, res) => {
+async function checkEmailExistance (req, res) {
     try {
         const user = await User.findOne({ email: req.params.email, "status.deleted": {$ne: 1} });
         if (user) return res.send(formatResult(200, 'Email Already Taken', { exists: true }));
@@ -1633,7 +1633,7 @@ exports.checkEmailExistance = async (req, res) => {
  * @param req
  * @param res
  */
-exports.checkUsernameExistence = async (req, res) => {
+async function checkUsernameExistence (req, res) {
     try {
         const user = await User.findOne({ user_name: req.params.user_name, "status.deleted": {$ne: 1} });
         if (user) return res.send(formatResult(200, 'Username Already Taken', { exists: true }));
