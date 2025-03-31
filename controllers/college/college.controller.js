@@ -513,7 +513,7 @@ router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
         result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
         return res.send(result)
     } catch (error) {
-        return res.send(formatResult(500, error))
+        return res.send({error,req.body})
     }
 })
 
