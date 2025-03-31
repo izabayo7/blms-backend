@@ -235,7 +235,7 @@ router.get('/user', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
+router.get('/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -282,7 +282,7 @@ router.get('/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/exam/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
+router.get('/exam/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -721,7 +721,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         let {
             error
@@ -747,12 +747,6 @@ router.put('/:id', auth, async (req, res) => {
             return res.send(formatResult(404, 'exam not found'))
 
         req.body.user = submission.user
-
-        if (!exam.target.id)
-            return res.send(formatResult(404, 'exam is not available'))
-
-        const faculty_college_year = await get_faculty_college_year(req.body.exam)
-
 
         const valid_submision = validateSubmittedAnswers(exam.questions, req.body.answers, 'marking')
         if (valid_submision.status !== true)
