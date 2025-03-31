@@ -240,8 +240,7 @@ router.get('/user/:user_name', async (req, res) => {
             result = simplifyObject(result)
             result = await injecUserProgress(result, user._id)
             result = await injectUser(result, 'user')
-        }
-        else {
+        } else {
             result = await findDocuments(Course, {
                 user: user._id
             })
@@ -632,7 +631,7 @@ router.put('/:id', async (req, res) => {
         // check if course exist
         let course = await findDocument(Course, {
             _id: req.params.id,
-            user: req.body.user
+            user: user._id
         })
         if (!course)
             return res.send(formatResult(404, 'course not found'))
@@ -645,7 +644,7 @@ router.put('/:id', async (req, res) => {
         })
         if (course)
             return res.send(formatResult(403, 'name was taken'))
-
+        req.body.user = user._id
         const result = await updateDocument(Course, req.params.id, req.body)
 
         return res.send(result)
@@ -677,7 +676,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-    router.put('/:id/cover_picture', async (req, res) => {
+router.put('/:id/cover_picture', async (req, res) => {
     try {
         const {
             error
