@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllPosts, getMyPosts, createPost } = require('../../controllers/posts/posts.controller')
+const { getAllPosts, getMyPosts, createPost, updatePost } = require('../../controllers/posts/posts.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
@@ -81,27 +81,40 @@ router.route('/all')
      */
     .get(getAllPosts)
 
-router.route('/:token')
+router.route('/:id')
     /**
      * @swagger
-     * /user_invitations/{token}:
-     *   get:
+     * /posts:
+     *   put:
      *     tags:
      *       - Post
-     *     description: Returns a specific user_invitation
+     *     description: Creates a Post
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
-     *       - name: token
-     *         description: User invitation token
+     *       - name: id
+     *         description: post id
      *         in: path
      *         type: string
      *         required: true
+     *       - name: body
+     *         description: Post fields
+     *         in: body
+     *         required: true
+     *         schema:
+     *           properties:
+     *             title:
+     *               type: string
+     *             content:
+     *               type: string
+     *           required:
+     *             - title
+     *             - content
      *     responses:
      *       200:
      *         description: Success
-     *       500:
-     *         description: Internal Server Error
      */
-    .get(getInvitationbyToken)
+    .post([auth, updatePost])
 
 router.route('/:token/renew')
     /**
