@@ -92,7 +92,7 @@ router.get('/current', getCollegeCurrentPaymentPlan)
  *           properties:
  *             plan:
  *               type: string
- *               enum: ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA']
+ *               enum: ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA_STARTER','MINUZA_GROWTH','MINUZA_ACCELERATE']
  *               required: true
  *             discount:
  *               type: number

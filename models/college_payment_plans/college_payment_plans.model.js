@@ -14,7 +14,7 @@ const {
  *         type: string
  *       plan:
  *         type: string
- *         enum: ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA']
+ *         enum: ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA_STARTER','MINUZA_GROWTH','MINUZA_ACCELERATE']
  *       discount:
  *         type: number
  *         default: 20
@@ -26,7 +26,7 @@ const {
  *       - email
  */
 
-const plans = ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA']
+const plans = ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA_STARTER','MINUZA_GROWTH','MINUZA_ACCELERATE']
 
 const schema = new mongoose.Schema({
     college: {
