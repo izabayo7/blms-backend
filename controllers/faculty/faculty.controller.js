@@ -63,6 +63,37 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
+ * /faculty/statistics:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get Faculty statistics
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics', async (req, res) => {
+  try {
+    let total_faculties
+    if (req.user.category.name == "SUPERADMIN") {
+      total_faculties = await countDocuments(Faculty)
+    } else {
+      total_faculties = await countDocuments(Faculty_college, { college: req.user.college })
+    }
+    return res.send(formatResult(u, u, { total_faculties }))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /faculty/college/{id}:
  *   get:
  *     tags:
@@ -405,7 +436,7 @@ async function injectDetails(faculties, faculty_colleges) {
       const attendants = await User_faculty_college_year.find({
         faculty_collegeYear: faculty_collegeYears[k]._id
       }).countDocuments()
-      total_courses += await countDocuments(Course, {faculty_college_year: faculty_collegeYears[k]._id})
+      total_courses += await countDocuments(Course, { faculty_college_year: faculty_collegeYears[k]._id })
       all_attendants += attendants
     }
     faculties[i].total_student_groups = faculty_collegeYears.length
