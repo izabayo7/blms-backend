@@ -677,12 +677,18 @@ router.put('/:id', async (req, res) => {
  *     description: Upload course cover_picture (file upload using swagger is still under construction)
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: Course id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: User Profile to upload.
  *     responses:
  *       201:
  *         description: Created
@@ -750,18 +756,12 @@ router.put('/:id/cover_picture', async (req, res) => {
  *     description: Remove course cover_picture
  *     security:
  *       - bearerAuth: -[]
- *     consumes:
- *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: Course id
  *         in: path
  *         required: true
  *         type: string
- *        - in: formData
- *          name: file
- *          type: file
- *          description: User Profile to upload.
  *     responses:
  *       201:
  *         description: Created
