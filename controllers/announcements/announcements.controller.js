@@ -1,4 +1,6 @@
 // import dependencies
+const {Announcement} = require("../../models/announcements/announcements.model");
+const {validate_announcement} = require("../../models/announcements/announcements.model");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
 const {College} = require("../../utils/imports");
 const {Faculty_college} = require("../../utils/imports");
@@ -7,24 +9,15 @@ const {User_group} = require("../../models/user_group/user_group.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {
     express,
-    Announcement,
-    validate_announcement,
     validateObjectId,
     formatResult,
     findDocument,
-    User,
-    findDocuments,
     u,
-    Create_or_update_announcement,
     deleteDocument,
-    Live_session,
     createDocument,
     updateDocument,
-    Chapter,
     injectUser,
-    injectAnnouncementsReplys,
     simplifyObject,
-    Quiz_submission
 } = require('../../utils/imports')
 
 // create router
@@ -197,7 +190,7 @@ router.post('/', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
         if (!target)
             return res.send(formatResult(404, 'announcement target not found'))
 
-        if (req.body.target.type === 'college' && req.body.target.id != req.user.college)
+        if (req.body.target.type === 'college' && req.body.target.id !== req.user.college)
             return res.send(formatResult(403, 'You are not allowed to send announcement in another college'))
 
         if (req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")

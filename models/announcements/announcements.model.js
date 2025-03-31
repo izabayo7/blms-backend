@@ -22,7 +22,7 @@ const {
  *             type: string
  *       content:
  *         type: string
- *       views:
+ *       viewers:
  *         type: string
  *     required:
  *       - sender
@@ -50,10 +50,10 @@ const announcement_schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    views: {
-        type: Number,
-        default: 0
-    }
+    viewers: [{
+        type: String,
+        ref: 'user'
+    }]
 }, {timestamps: true})
 
 // validate announcement
