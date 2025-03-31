@@ -352,7 +352,7 @@ router.put('/:id', async (req, res) => {
     const progress = (finished_chapters / chapters.length) * 100
 
     let updateObject = {
-      user: req.body.user,
+      user: user._id,
       course: req.body.course,
       progress: progress,
       finished_chapters: user_progress.finished_chapters
