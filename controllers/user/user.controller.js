@@ -824,7 +824,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
     })
     user.profile = u
     await user.save()
-    return res.send(formatResult(u, u, user))
+    return res.send(formatResult(200, 'OK', await generateAuthToken(user)))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
