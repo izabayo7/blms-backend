@@ -598,7 +598,7 @@ router.get('/user', async (req, res) => {
             if (!user_user_group)
                 return res.send(formatResult(200, undefined, []))
 
-            result = await findDocuments(Course, {
+            result = await Course.find({
                 user_group: user_user_group.user_group,
                 published: true
             }).sort({createdAt: -1})
