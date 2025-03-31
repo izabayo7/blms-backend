@@ -22,7 +22,8 @@ const {
   fs,
   Create_or_update_message,
   Search,
-  simplifyObject
+  simplifyObject,
+  generateGroupCode
 } = require('../../utils/imports')
 
 // create router
@@ -35,6 +36,8 @@ const router = express.Router()
  * definitions:
  *   Chat_group:
  *     properties:
+ *       code:
+ *         type: number
  *       name:
  *         type: string
  *       description:
@@ -100,14 +103,14 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/college/{id}:
+ * /chat_group/college/{name}:
  *   get:
  *     tags:
  *       - Chat_group
  *     description: Returns chat_groups in a specified college
  *     parameters:
- *       - name: id
- *         description: College's id
+ *       - name: name
+ *         description: College's name
  *         in: path
  *         required: true
  *         type: string
@@ -119,22 +122,16 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id', async (req, res) => {
+router.get('/college/:name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     let college = await findDocument(College, {
-      _id: req.params.id
+      name: req.params.name
     })
     if (!college)
       return res.send(formatResult(404, 'college not found'))
 
     const result = await findDocuments(Chat_group, {
-      college: req.params.id
+      college: college._id
     })
 
     return res.send(formatResult(u, u, result))
@@ -145,14 +142,14 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/user/{id}:
+ * /chat_group/user/{user_name}:
  *   get:
  *     tags:
  *       - Chat_group
  *     description: Returns chat_groups a specified user belongs in
  *     parameters:
- *       - name: id
- *         description: Users's id
+ *       - name: user_name
+ *         description: Users's user_name
  *         in: path
  *         required: true
  *         type: string
@@ -164,16 +161,10 @@ router.get('/college/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:user_name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     let user = await findDocument(User, {
-      _id: req.params.id
+      user_name: req.params.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
@@ -181,7 +172,7 @@ router.get('/user/:id', async (req, res) => {
     const result = await findDocuments(Chat_group, {
       members: {
         $elemMatch: {
-          id: req.params.id,
+          id: user._id,
           status: true
         }
       }
@@ -195,14 +186,14 @@ router.get('/user/:id', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}/profile/{file_name}:
+ * /chat_group/{code}/profile/{file_name}:
  *   get:
  *     tags:
  *       - Chat_group
  *     description: Returns the profile_picture of a specified Chat_group
  *     parameters:
- *       - name: id
- *         description: Group's id
+ *       - name: code
+ *         description: Group's code
  *         in: path
  *         required: true
  *         type: string
@@ -231,17 +222,11 @@ router.get('/user/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/profile/:file_name', async (req, res) => {
+router.get('/:code/profile/:file_name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     // check if course exist
     const group = await findDocument(Chat_group, {
-      _id: req.params.id
+      code: req.params.code
     })
     if (!group)
       return res.send(formatResult(404, 'group not found'))
@@ -249,7 +234,7 @@ router.get('/:id/profile/:file_name', async (req, res) => {
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    path = `./uploads/colleges/${group.college}/chat/groups/${req.params.id}/${group.profile}`
+    path = `./uploads/colleges/${group.college}/chat/groups/${group._id}/${group.profile}`
     sendResizedImage(req, res, path)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -258,14 +243,14 @@ router.get('/:id/profile/:file_name', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}/search_members:
+ * /chat_group/{code}/search_members:
  *   post:
  *     tags:
  *       - Chat_group
  *     description: Search users
  *     parameters:
- *       - name: id
- *         description: Group's id
+ *       - name: code
+ *         description: Group's code
  *         in: path
  *         required: true
  *         type: string
@@ -292,15 +277,10 @@ router.get('/:id/profile/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/search_members', async (req, res) => {
+router.get('/:code/search_members', async (req, res) => {
   try {
-
-    let _error = validateObjectId(req.params.id)
-    if (_error.error)
-      return res.send(formatResult(400, _error.error.details[0].message))
-
     const group = await findDocument(Chat_group, {
-      _id: req.params.id
+      code: req.params.code
     })
     if (!group)
       return res.send(formatResult(404, 'group not found'))
@@ -363,13 +343,13 @@ router.get('/:id/search_members', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}:
+ * /chat_group/{code}:
  *   get:
  *     tags:
  *       - Chat_group
  *     description: Get all chat_groups
  *     params:
- *       - name: id
+ *       - name: code
  *         description: Chat_group's id
  *         in: path
  *         required: true
@@ -382,9 +362,9 @@ router.get('/:id/search_members', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:code', async (req, res) => {
   try {
-    let result = await findDocument(Chat_group, { _id: req.params.id })
+    let result = await findDocument(Chat_group, { code: req.params.code })
 
     if (!result)
       return res.send(formatResult(404, 'Chat_group not found'))
@@ -450,18 +430,12 @@ router.post('/', async (req, res) => {
     if (!college)
       return res.send(formatResult(404, 'college not found'))
 
-    // check if name was not used
-    let chat_group = await findDocument(Chat_group, {
-      name: req.body.name
+    // check if name was not used in the same college
+    const chat_group = await findDocument(Chat_group, {
+      name: req.body.name,
+      college: req.body.college
     })
     if (chat_group)
-      return res.send(formatResult(403, 'name was taken'))
-
-    // avoid user_name === group name
-    let user = await findDocument(User, {
-      user_name: req.body.name
-    })
-    if (user)
       return res.send(formatResult(403, 'name was taken'))
 
     const creator = await findDocument(User, {
@@ -487,20 +461,18 @@ router.post('/', async (req, res) => {
       members.push({ id: user._id, isAdmin: user._id === creator._id })
     }
 
-    user = await findDocument(User, {
-      user_name: req.user.user_name
-    })
-    if (!members.includes({ id: user._id }))
-      members.push({ id: user._id })
+    if (!members.includes({ id: user._id, isAdmin: true }))
+      members.push({ id: user._id, isAdmin: true })
 
     let result = await createDocument(Chat_group, {
       name: req.body.name,
+      code: await generateGroupCode(),
       description: req.body.description,
       private: req.body.private,
       members: members,
       college: req.body.college,
     })
-
+    // ndanareba uko nahita menyesha abantu thinking about exporting socket for global usage
     await Create_or_update_message('SYSTEM', result.data.name, `This channel was created by __user__${user._id} at __time__${new Date().toISOString()}`, u, user._id)
 
     return res.send(result)
@@ -511,16 +483,16 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}:
+ * /chat_group/{code}:
  *   put:
  *     tags:
  *       - Chat_group
  *     description: Update a chat_group
  *     parameters:
- *       - name: id
+ *       - name: code
  *         in: path
  *         type: string
- *         description: Chat_group's Id
+ *         description: Chat_group's code
  *       - name: body
  *         description: Fields for a Chat_group
  *         in: body
@@ -541,44 +513,31 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:code', async (req, res) => {
   try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
-    error = validate_chat_group(req.body, 'update')
-    error = error.error
+    let { error } = validate_chat_group(req.body, 'update')
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
     // check if chat_group exist
-    let chat_group = await findDocument(Chat_group, {
-      _id: req.params.id
+    const chat_group = await findDocument(Chat_group, {
+      code: req.params.code
     })
     if (!chat_group)
       return res.send(formatResult(404, 'Chat_group not found'))
 
     // check if name was not used
-    chat_group = await findDocument(Chat_group, {
+    const _chat_group = await findDocument(Chat_group, {
       _id: {
-        $ne: req.params.id
+        $ne: chat_group._id
       },
-      name: req.body.name
+      name: req.body.name,
+      college: chat_group.college
     })
-    if (chat_group)
+    if (_chat_group)
       return res.send(formatResult(403, 'name was taken'))
 
-    // avoid user_name === group name
-    let user = await findDocument(User, {
-      user_name: req.body.name
-    })
-    if (user)
-      return res.send(formatResult(403, 'name was taken'))
-
-    const result = await updateDocument(Chat_group, req.params.id, req.body)
+    const result = await updateDocument(Chat_group, chat_group._id, req.body)
 
     return res.send(result)
   } catch (error) {
@@ -588,14 +547,14 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}/profile:
+ * /chat_group/{code}/profile:
  *   put:
  *     tags:
  *       - Chat_group
  *     description: Upload chat_group profile (file upload using swagger is still under construction)
  *     parameters:
- *       - name: id
- *         description: Chat_group id
+ *       - name: code
+ *         description: Chat_group code
  *         in: path
  *         required: true
  *         type: string
@@ -609,23 +568,17 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/profile', async (req, res) => {
+router.put('/:code/profile', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     // check if chat_group exist
-    const chat_goup = await findDocument(Chat_group, {
-      _id: req.params.id
+    const chat_group = await findDocument(Chat_group, {
+      code: req.params.code
     })
-    if (!chat_goup)
+    if (!chat_group)
       return res.send(formatResult(404, 'chat_group not found'))
 
-    const path = `./uploads/colleges/${chat_goup.college}/chat/groups/${req.params.id}`
-    const temp_path = `./uploads/colleges/${chat_goup.college}/temp`
+    const path = `./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`
+    const temp_path = `./uploads/colleges/${chat_group.college}/temp`
     req.kuriousStorageData = {
       dir: temp_path,
     }
@@ -642,16 +595,16 @@ router.put('/:id/profile', async (req, res) => {
         })
       }, 1000);
 
-      if (chat_goup.profile && chat_goup.profile != req.file.filename) {
-        fs.unlink(`${path}/${chat_goup.profile}`, (err) => {
+      if (chat_group.profile && chat_group.profile != req.file.filename) {
+        fs.unlink(`${path}/${chat_group.profile}`, (err) => {
           if (err)
             return res.send(formatResult(500, err))
         })
       }
-      const result = await updateDocument(Chat_group, req.params.id, {
+      const result = await updateDocument(Chat_group, chat_group._id, {
         profile: req.file.filename
       })
-      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${req.params.id}/profile/${result.data.profile}`
+      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${chat_group.code}/profile/${result.data.profile}`
       return res.send(result)
     })
 
@@ -662,16 +615,16 @@ router.put('/:id/profile', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}/add_members:
+ * /chat_group/{code}/add_members:
  *   put:
  *     tags:
  *       - Chat_group
  *     description: Add a group member
  *     parameters:
- *       - name: id
+ *       - name: code
  *         in: path
  *         type: string
- *         description: Chat_group's Id
+ *         description: Chat_group's code
  *       - name: body
  *         description: Fields for a Chat_group
  *         in: body
@@ -695,14 +648,8 @@ router.put('/:id/profile', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/add_members', async (req, res) => {
+router.put('/:code/add_members', async (req, res) => {
   try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     error = validate_chat_group(req.body, 'add_members')
     error = error.error
     if (error)
@@ -710,7 +657,7 @@ router.put('/:id/add_members', async (req, res) => {
 
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
-      _id: req.params.id
+      code: req.params.code
     }, u, false)
     if (!chat_group)
       return res.send(formatResult(404, 'chat_group not found'))
@@ -747,16 +694,16 @@ router.put('/:id/add_members', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{group_id}/toogle_isAdmin/{member_user_name}:
+ * /chat_group/{code}/toogle_isAdmin/{member_user_name}:
  *   put:
  *     tags:
  *       - Chat_group
  *     description: Remove a group member
  *     parameters:
- *       - name: group_id
+ *       - name: code
  *         in: path
  *         type: string
- *         description: Chat_group's Id
+ *         description: Chat_group's code
  *       - name: member_user_name
  *         in: path
  *         type: string
@@ -771,18 +718,13 @@ router.put('/:id/add_members', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:group_id/toogle_isAdmin/:member_user_name', async (req, res) => {
+router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
   try {
     /** only admins can make members admins or the member him self can change from admin */
-    let {
-      error
-    } = validateObjectId(req.params.group_id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
 
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
-      _id: req.params.group_id
+      code: req.params.code
     }, u, false)
     if (!chat_group)
       return res.send(formatResult(404, 'chat_group not found'))
@@ -816,16 +758,16 @@ router.put('/:group_id/toogle_isAdmin/:member_user_name', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{group_id}/remove_member/{member_user_name}:
+ * /chat_group/{code}/remove_member/{member_user_name}:
  *   put:
  *     tags:
  *       - Chat_group
  *     description: Remove a group member
  *     parameters:
- *       - name: group_id
+ *       - name: code
  *         in: path
  *         type: string
- *         description: Chat_group's Id
+ *         description: Chat_group's code
  *       - name: member_user_name
  *         in: path
  *         type: string
@@ -840,17 +782,11 @@ router.put('/:group_id/toogle_isAdmin/:member_user_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:group_id/remove_member/:member_user_name', async (req, res) => {
+router.put('/:code/remove_member/:member_user_name', async (req, res) => {
   try {
-    let {
-      error
-    } = validateObjectId(req.params.group_id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
-      _id: req.params.group_id
+      code: req.params.code
     }, u, false)
     if (!chat_group)
       return res.send(formatResult(404, 'chat_group not found'))
@@ -880,14 +816,14 @@ router.put('/:group_id/remove_member/:member_user_name', async (req, res) => {
 
 /**
  * @swagger
- * /chat_group/{id}:
+ * /chat_group/{code}:
  *   delete:
  *     tags:
  *       - Chat_group
  *     description: Delete a chat_group
  *     parameters:
- *       - name: id
- *         description: Chat_group's id
+ *       - name: code
+ *         description: Chat_group's code
  *         in: path
  *         required: true
  *         type: string
@@ -901,17 +837,11 @@ router.put('/:group_id/remove_member/:member_user_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:code', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
-      _id: req.params.id
+      _id: req.params.code
     })
     if (!chat_group)
       return res.send(formatResult(404, 'Chat_group not found'))
@@ -920,27 +850,27 @@ router.delete('/:id', async (req, res) => {
     let chat_group_used = false
 
     const message = await findDocument(Message, {
-      "group": req.params.id
+      "group": chat_group._id
     })
     if (message)
       chat_group_used = true
 
     if (!chat_group_used) {
 
-      const result = await deleteDocument(Chat_group, req.params.id)
+      const result = await deleteDocument(Chat_group, chat_group._id)
 
       // make the design of the chat storage
-      // const path = `./uploads/colleges/${chat_goup.college}/chat_groups/${req.params.id}`
-      // fs.exists(path, (exists) => {
-      //   if (exists) {
-      //     fs.remove(path)
-      //   }
-      // })
+      const path = `./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`
+      fs.exists(path, (exists) => {
+        if (exists) {
+          fs.remove(path)
+        }
+      })
 
       return res.send(result)
     }
 
-    const updated_chat_group = await updateDocument(Chat_group, req.params.id, {
+    const updated_chat_group = await updateDocument(Chat_group, chat_group._id, {
       status: 0
     })
     return res.send(formatResult(200, 'Chat_group couldn\'t be deleted because it was used, instead it was disabled', updated_chat_group))
@@ -963,6 +893,9 @@ async function injectDetails(chat_groups) {
       chat_groups[i].college.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${college.logo}`
     }
     chat_groups[i].members = await injectUser(chat_groups[i].members, 'id', 'data')
+    if (chat_groups[i].profile) {
+      chat_groups[i].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${chat_groups[i].college}/profile/${chat_groups[i].profile}`
+    }
   }
   return chat_groups
 }
