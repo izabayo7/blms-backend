@@ -361,10 +361,10 @@ router.post('/duplicate/:id',filterUsers(['INSTRUCTOR']), async (req, res) => {
             _id: req.params.id,
             user: req.user._id
         })
-        if (quiz)
+        if (!exam)
             return res.send(formatResult(404, 'Exam not found'))
 
-        let result = await createDocument(Quiz, {
+        let result = await createDocument(Exam, {
             name: `${exam.name} copy(${Math.floor(1000 + Math.random() * 9000)})`,
             duration: exam.duration,
             instructions: exam.instructions,

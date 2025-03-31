@@ -359,13 +359,14 @@ router.post('/duplicate/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
 
-        assignment = _.pick(assignment, "title,details,passMarks,target,dueDate,total_marks,allowMultipleFilesSubmission,submissionMode,allowed_files,attachments")
+        assignment = _.pick(assignment, ["title","details","passMarks","target","dueDate","total_marks","allowMultipleFilesSubmission","submissionMode","allowed_files","attachments","user"])
         assignment.title = `${assignment.title} copy(${Math.floor(1000 + Math.random() * 9000)})`
         let result = await createDocument(Assignment, assignment)
-        if(assignment.attachments.length){
-            const src_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment._id}`)
+        result = simplifyObject(result)
+        if(assignment.attachments ? assignment.attachments.length : false){
+            const src_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${req.params.id}`)
             const target_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${result.data._id}`)
-            copyFolderRecursiveSync(file_path,target_path)
+            copyFolderRecursiveSync(src_path,target_path)
         }
         result.data = await addAssignmentTarget([result.data])
         result.data = result.data[0]
