@@ -482,7 +482,7 @@ exports.getConversationMessages = async ({
         }, limit)
     }
 
-    return await replaceUserIds(messages, user_id)
+    return await this.replaceUserIds(messages, user_id)
 }
 
 // check if the receivers are the same
@@ -667,7 +667,7 @@ exports.formatMessages = async (messages, user_id) => {
     return formatedMessages
 }
 
-async function replaceUserIds(messages, userId) {
+exports.replaceUserIds = async (messages, userId) => {
     for (const messagesKey in messages) {
         if (messages[messagesKey].sender === 'SYSTEM') {
             const messageSegments = messages[messagesKey].content.split(" ")
@@ -728,7 +728,7 @@ exports.getLatestMessages = async (user_id) => {
                         id: user_id
                     }
                 },
-                // group: undefined
+                sender: "SYSTEM"
             }
         }, {
             $group: {
@@ -756,7 +756,7 @@ exports.getLatestMessages = async (user_id) => {
     ])
 
 
-    latestMessages = await replaceUserIds(latestMessages, user_id)
+    latestMessages = await this.replaceUserIds(latestMessages, user_id)
 
     // get latest messages sent to us
     // let sentMessages = await this.Message.aggregate([{

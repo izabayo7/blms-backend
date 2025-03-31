@@ -12,6 +12,7 @@ const {
     getConversationMessages,
     formatMessages,
     injectChapters,
+    replaceUserIds,
     simplifyObject,
     makeCode,
     jwt,
@@ -213,7 +214,7 @@ module.exports.listen = (app) => {
             const receiver_type = typeof receiver
 
             const {error} = validate_message({
-                sender: user_name,
+                sender: user.user_name,
                 receiver: receiver_type === 'string' ? receiver : receiver.toString(),
                 content: content
             })
@@ -223,7 +224,7 @@ module.exports.listen = (app) => {
                 return
             }
 
-            let result = await Create_or_update_message(user_name, receiver, content)
+            let result = await Create_or_update_message(user.user_name, receiver, content)
 
             result = simplifyObject(result)
 
@@ -275,9 +276,9 @@ module.exports.listen = (app) => {
             })
             if (!conversation_found.length) {
 
-                const user = await findDocument(User, {user_name: conversation_id})
+                const Receiver = await findDocument(User, {user_name: conversation_id})
 
-                const content = `This is the begining of conversation between __user__${id} and __user__${user._id}`
+                const content = `This is the begining of conversation between __user__${id} and __user__${Receiver._id}`
 
                 const {error} = validate_message({sender: 'SYSTEM', receiver: conversation_id, content: content})
 
@@ -287,7 +288,9 @@ module.exports.listen = (app) => {
                 }
 
                 const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
-                socket.broadcast.to(user._id).emit('res/message/new', result.data)
+                result.data = await replaceUserIds([result.data], Receiver._id.toString())
+                result.data = result.data[0]
+                socket.broadcast.to(Receiver._id).emit('res/message/new', result.data)
             }
 
             // send success mesage
