@@ -1,34 +1,108 @@
 // import dependencies
-const { express, bcrypt, fs, SuperAdmin, validateObjectId, validateSuperAdmin, validateUserLogin, hashPassword, auth, _superAdmin, defaulPassword } = require('../../utils/imports');
+const { express, bcrypt, fs, SuperAdmin, validateObjectId, validateSuperAdmin, validateUserLogin, hashPassword, defaulPassword } = require('../../utils/imports')
 
 // create router
-const router = express.Router();
+const router = express.Router()
+
+/**
+ * @swagger
+ * definitions:
+ *   SuperAdmin:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       surName:
+ *         type: string
+ *       otherNames:
+ *         type: string
+ *       nationalId:
+ *         type: number
+ *       gender:
+ *         type: string
+ *       phone:
+ *         type: string
+ *       email:
+ *         type: string
+ *       category:
+ *         type: string
+ *       password:
+ *         type: string
+ *       status:
+ *         type: object
+ *         properties:
+ *           stillMember:
+ *             type: boolean
+ *           active:
+ *             type: boolean
+ *       profile:
+ *         type: string
+ *     required:
+ *       - surName
+ *       - otherNames
+ *       - nationalId
+ *       - gender
+ *       - phone
+ *       - email
+ */
 
 
-
-// Get superAdmin
+/**
+ * @swagger
+ * /kurious/superAdmin:
+ *   get:
+ *     tags:
+ *       - SuperAdmin
+ *     description: Get super Admin
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
-  const superAdmin = await SuperAdmin.find();
+  const superAdmin = await SuperAdmin.find()
   try {
     if (!superAdmin)
-      return res.send('SuperAdmin not yet registered').status(404);
-    return res.send(superAdmin).status(200);
-    // return res.send('SuperAdmin is registered').status(200);
+      return res.status(404).send('SuperAdmin not yet registered')
+    return res.status(200).send(superAdmin)
   } catch (error) {
-    return res.send(error).status(500);
+    return res.status(500).send(error)
   }
-});
+})
 
 
-// post an superAdmin
+/**
+ * @swagger
+ * /kurious/superAdmin:
+ *   post:
+ *     tags:
+ *       - SuperAdmin
+ *     description: Create a superAdmin
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a superAdmin
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/SuperAdmin'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
-  const { error } = validateSuperAdmin(req.body);
+  const { error } = validateSuperAdmin(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400);
+    return res.status(400).send(error.details[0].message)
 
-  const availableDocuments = await SuperAdmin.find().countDocuments();
+  const availableDocuments = await SuperAdmin.find().countDocuments()
   if (availableDocuments > 0)
-    return res.send(`Can't register more than one SuperAdmin to the system`);
+    return res.status(400).send(`Can't register more than one SuperAdmin to the system`)
 
   let newDocument = new SuperAdmin({
     surName: req.body.surName,
@@ -39,77 +113,154 @@ router.post('/', async (req, res) => {
     email: req.body.email,
     phone: req.body.phone,
     password: defaulPassword,
-  });
+  })
 
-  newDocument.password = await hashPassword(newDocument.password);
-  const saveDocument = await newDocument.save();
+  newDocument.password = await hashPassword(newDocument.password)
+  const saveDocument = await newDocument.save()
   if (saveDocument)
-    return res.send(saveDocument).status(201);
-  return res.send('New SuperAdmin not Registered').status(500);
-});
+    return res.status(201).send(saveDocument)
+  return res.status(500).send('New SuperAdmin not Registered')
+})
 
-// superAdmin login
+/**
+ * @swagger
+ * /kurious/superAdmin/login:
+ *   post:
+ *     tags:
+ *       - SuperAdmin
+ *     description: superAdmin login
+ *     parameters:
+ *       - name: body
+ *         description: Login credentials
+ *         in: body
+ *         required: true
+ *         schema:
+ *           email:
+ *             type: email
+ *             required: true
+ *           password:
+ *             type: string
+ *             required: true
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/login', async (req, res) => {
-  const { error } = validateUserLogin(req.body);
+  const { error } = validateUserLogin(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400)
-
+    return res.status(400)
+      .send(error.details[0].message)
   // find superAdmin
   let superAdmin = await SuperAdmin.findOne({ email: req.body.email })
   if (!superAdmin)
-    return res.send('Invalid Email or Password').status(400)
+    return res.status(404).send('Invalid Email or Password')
 
   // check if passed password is valid
   const validPassword = await bcrypt.compare(req.body.password, superAdmin.password)
   if (!validPassword)
-    return res.send('Invalid Email or Password').status(400)
+    return res.status(404).send('Invalid Email or Password')
   // return token
-  return res.send(superAdmin.generateAuthToken()).status(200);
-});
+  return res.status(200).send(superAdmin.generateAuthToken())
+})
 
-// updated a superAdmin
+/**
+ * @swagger
+ * /kurious/superAdmin/{id}:
+ *   put:
+ *     tags:
+ *       - SuperAdmin
+ *     description: Update superAdmin
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: superAdmin's Id
+ *       - name: body
+ *         description: Fields for a superAdmin
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/SuperAdmin'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  error = validateSuperAdmin(req.body);
+    return res.status(400).send(error.details[0].message)
+  error = validateSuperAdmin(req.body)
   error = error.error
   if (error)
-    return res.send(error.details[0].message).status(400);
+    return res.status(400).send(error.details[0].message)
 
   // check if superAdmin exist
-  let superAdmin = await SuperAdmin.findOne({ _id: req.params.id });
+  let superAdmin = await SuperAdmin.findOne({ _id: req.params.id })
   if (!superAdmin)
-    return res.send(`SuperAdmin with code ${req.params.id} doens't exist`);
+    return res.status(404).send(`SuperAdmin with code ${req.params.id} doens't exist`)
 
   if (req.body.password)
-    req.body.password = await hashPassword(req.body.password);
+    req.body.password = await hashPassword(req.body.password)
   const updateDocument = await SuperAdmin.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
-    return res.send(updateDocument).status(201);
-  return res.send("Error ocurred").status(500)
+    return res.status(201).send(updateDocument)
+  return res.status(500).send("Error ocurred")
 
-});
+})
 
-// delete a superAdmin
+/**
+ * @swagger
+ * /kurious/superAdmin/{id}:
+ *   delete:
+ *     tags:
+ *       - SuperAdmin
+ *     description: Deletes a superAdmin
+ *     parameters:
+ *       - name: id
+ *         description: superAdmin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  let superAdmin = await SuperAdmin.findOne({ _id: req.params.id });
+    return res.status(400).send(error.details[0].message)
+  let superAdmin = await SuperAdmin.findOne({ _id: req.params.id })
   if (!superAdmin)
-    return res.send(`SuperAdmin of Code ${req.params.id} Not Found`);
-  let deleteDocument = await SuperAdmin.findOneAndDelete({ _id: req.params.id });
+    return res.status(404).send(`SuperAdmin of Code ${req.params.id} Not Found`)
+  let deleteDocument = await SuperAdmin.findOneAndDelete({ _id: req.params.id })
   if (!deleteDocument)
-    return res.send('SuperAdmin Not Deleted').status(500);
+    return res.status(500).send('SuperAdmin Not Deleted')
   if (superAdmin.profile) {
     fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
       if (err)
-        return res.send(err).status(500)
+        return res.status(500).send(err)
     })
   }
-  return res.send(`${superAdmin.surName} ${superAdmin.otherNames} was successfully deleted`).status(200)
-});
+  return res.status(200).send(`${superAdmin.surName} ${superAdmin.otherNames} was successfully deleted`)
+})
 
 // export the router
-module.exports = router;
+module.exports = router

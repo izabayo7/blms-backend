@@ -1,10 +1,68 @@
 // import dependencies
-const { express, bcrypt, fs, Admin, College, validateAdmin, validateUserLogin, hashPassword, auth, _superAdmin, defaulPassword, _admin, validateObjectId } = require('../../utils/imports')
+const { express, bcrypt, fs, Admin, College, validateAdmin, validateUserLogin, hashPassword, defaulPassword, validateObjectId } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
-// Get all admins
+/**
+ * @swagger
+ * definitions:
+ *   Admin:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       surName:
+ *         type: string
+ *       otherNames:
+ *         type: string
+ *       nationalId:
+ *         type: number
+ *       gender:
+ *         type: string
+ *       phone:
+ *         type: string
+ *       email:
+ *         type: string
+ *       college:
+ *         type: string
+ *       category:
+ *         type: string
+ *       password:
+ *         type: string
+ *       status:
+ *         type: object
+ *         properties:
+ *           stillMember:
+ *             type: boolean
+ *           active:
+ *             type: boolean
+ *       profile:
+ *         type: string
+ *     required:
+ *       - surName
+ *       - otherNames
+ *       - nationalId
+ *       - gender
+ *       - phone
+ *       - email
+ *       - college
+ */
+
+/**
+ * @swagger
+ * /kurious/admin:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     description: Get all Admins
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
     const admins = await Admin.find()
     try {
@@ -16,11 +74,31 @@ router.get('/', async (req, res) => {
     }
 })
 
-// Get specified admin
+/**
+ * @swagger
+ * /kurious/admin/{id}:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     description: Returns a specified admin
+ *     parameters:
+ *       - name: id
+ *         description: Admin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
-        return res.status(412).send(error.details[0].message)
+        return res.status(400).send(error.details[0].message)
     const admin = await Admin.findOne({ _id: req.params.id })
     try {
         if (!admin)
@@ -31,11 +109,74 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-// post an admin
+/**
+ * @swagger
+ * /kurious/admin/college/{id}:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     description: Returns admin of a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/college/:id', async (req, res) => {
+    const { error } = validateObjectId(req.params.id)
+    if (error)
+        return res.status(400).send(error.details[0].message)
+
+    let college = await College.findOne({ _id: req.params.id })
+    if (!college)
+        return res.status(404).send(`College ${req.params.id} Not Found`)
+
+    const admin = await Admin.findOne({ college: req.params.id })
+    try {
+        if (!admin)
+            return res.status(404).send(`Admin of ${college.name} Not Found`)
+        return res.status(200).send(admin)
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
+/**
+ * @swagger
+ * /kurious/admin:
+ *   post:
+ *     tags:
+ *       - Admin
+ *     description: Create Admin
+ *     parameters:
+ *       - name: body
+ *         description: Fields for an Admin
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Admin'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
     const { error } = validateAdmin(req.body)
     if (error)
-        return res.status(412).send(error.details[0].message)
+        return res.status(400).send(error.details[0].message)
 
     let admin = await Admin.findOne({ email: req.body.email })
     if (admin)
@@ -75,34 +216,89 @@ router.post('/', async (req, res) => {
     return res.status(500).send('New Admin not Registered')
 })
 
-// admin login
+/**
+ * @swagger
+ * /kurious/admin/login:
+ *   post:
+ *     tags:
+ *       - Admin
+ *     description: Admin login
+ *     parameters:
+ *       - name: body
+ *         description: Login credentials
+ *         in: body
+ *         required: true
+ *         schema:
+ *           email:
+ *             type: email
+ *             required: true
+ *           password:
+ *             type: string
+ *             required: true
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/login', async (req, res) => {
     const { error } = validateUserLogin(req.body)
     if (error)
-        return res.status(412).send(error.details[0].message)
+        return res.status(400).send(error.details[0].message)
 
     // find admin
     let admin = await Admin.findOne({ email: req.body.email })
     if (!admin)
-        return res.status(412).send('Invalid Email or Password')
+        return res.status(404).send('Invalid Email or Password')
 
     // check if passed password is valid
     const validPassword = await bcrypt.compare(req.body.password, admin.password)
     if (!validPassword)
-        return res.status(412).send('Invalid Email or Password')
+        return res.status(404).send('Invalid Email or Password')
     // return token
     return res.status(200).send(admin.generateAuthToken())
 })
 
-// updated a admin
+/**
+ * @swagger
+ * /kurious/admin/{id}:
+ *   put:
+ *     tags:
+ *       - Admin
+ *     description: Update Admin
+ *     parameters:
+ *        - name: id
+ *          in: path
+ *          type: string
+ *          description: Admin's Id
+ *        - name: body
+ *          description: Fields for a Admin
+ *          in: body
+ *          required: true
+ *          schema:
+ *            $ref: '#/definitions/Admin'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
     let { error } = validateObjectId(req.params.id)
     if (error)
-        return res.status(412).send(error.details[0].message)
+        return res.status(400).send(error.details[0].message)
     error = validateAdmin(req.body)
     error = error.error
     if (error)
-        return res.status(412).send(error.details[0].message)
+        return res.status(400).send(error.details[0].message)
 
     // check if admin exist
     let admin = await Admin.findOne({ _id: req.params.id })
@@ -118,11 +314,33 @@ router.put('/:id', async (req, res) => {
 
 })
 
-// delete a admin
+/**
+ * @swagger
+ * /kurious/admin/{id}:
+ *   delete:
+ *     tags:
+ *       - Admin
+ *     description: Delete an Admin
+ *     parameters:
+ *       - name: id
+ *         description: Admin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
-        return res.status(412).send(error.details[0].message)
+        return res.status(400).send(error.details[0].message)
     let admin = await Admin.findOne({ _id: req.params.id })
     if (!admin)
         return res.status(404).send(`Admin of Code ${req.params.id} Not Found`)

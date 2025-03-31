@@ -1,82 +1,173 @@
 // import dependencies
-const { express, bcrypt, multer, fs, CollegeYear, College, validateCollegeYear, validateUserLogin, hashPassword, normaliseDate, fileFilter, auth, _superCollegeYear, defaulPassword, _admin, validateObjectId, _student, checkRequirements } = require('../../utils/imports')
+const {
+  express,
+  CollegeYear,
+  College,
+  validateCollegeYear
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
-// Get all collegeYears
+/**
+ * @swagger
+ * definitions:
+ *   CollegeYear:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       digit:
+ *         type: number
+ *     required:
+ *       - digit
+ */
+
+/**
+ * @swagger
+ * /kurious/college-year:
+ *   get:
+ *     tags:
+ *       - CollegeYear
+ *     description: Get all collegeYears
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
   const collegeYears = await CollegeYear.find()
   try {
     if (collegeYears.length === 0)
-      return res.send('CollegeYear list is empty').status(404)
-    return res.send(collegeYears).status(200)
+      return res.status(404).send('CollegeYear list is empty')
+    return res.status(200).send(collegeYears)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
-// Get all collegeYears in a specified college
+/**
+ * @swagger
+ * /kurious/college-year/college/{id}:
+ *   get:
+ *     tags:
+ *       - CollegeYear
+ *     description: Returns collegeYears in a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/college/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  let college = await College.findOne({ _id: req.params.id })
+    return res.status(400).send(error.details[0].message)
+  let college = await College.findOne({
+    _id: req.params.id
+  })
   if (!college)
-    return res.send(`College ${req.params.id} Not Found`)
-  const collegeYears = await CollegeYear.find({ college: req.params.id })
+    return res.status(404).send(`College ${req.params.id} Not Found`)
+  const collegeYears = await CollegeYear.find({
+    college: req.params.id
+  })
   try {
     if (collegeYears.length === 0)
-      return res.send(`${college.name} collegeYear list is empty`).status(404)
-    return res.send(collegeYears).status(200)
+      return res.status(404).send(`${college.name} collegeYear list is empty`)
+    return res.status(200).send(collegeYears)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
-// Get all collegeYears in a specified college
-router.get('/instructor/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(error.details[0].message).status(400)
-  let college = await College.findOne({ _id: req.params.id })
-  if (!college)
-    return res.send(`College ${req.params.id} Not Found`)
-  const collegeYears = await CollegeYear.find({ college: req.params.id })
-  try {
-    if (collegeYears.length === 0)
-      return res.send(`${college.name} collegeYear list is empty`).status(404)
-    return res.send(collegeYears).status(200)
-  } catch (error) {
-    return res.send(error).status(500)
-  }
-})
-
-// Get specified collegeYear
+/**
+ * @swagger
+ * /kurious/college-year/{id}:
+ *   get:
+ *     tags:
+ *       - CollegeYear
+ *     description: Returns a specified collegeYear
+ *     parameters:
+ *       - name: id
+ *         description: collegeYear's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  const collegeYear = await CollegeYear.findOne({ _id: req.params.id })
+    return res.status(400).send(error.details[0].message)
+  const collegeYear = await CollegeYear.findOne({
+    _id: req.params.id
+  })
   try {
     if (!collegeYear)
-      return res.send(`CollegeYear ${req.params.id} Not Found`).status(404)
-    return res.send(collegeYear).status(200)
+      return res.status(404).send(`CollegeYear ${req.params.id} Not Found`)
+    return res.status(200).send(collegeYear)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
-// post an collegeYear
+/**
+ * @swagger
+ * /kurious/college-year:
+ *   post:
+ *     tags:
+ *       - CollegeYear
+ *     description: Create collegeYear
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a collegeYear
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/CollegeYear'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
-  const { error } = validateCollegeYear(req.body)
+  const {
+    error
+  } = validateCollegeYear(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
   // check if collegeYear exist
-  let collegeYear = await CollegeYear.findOne({ digit: req.body.digit })
+  let collegeYear = await CollegeYear.findOne({
+    digit: req.body.digit
+  })
   if (collegeYear)
-    return res.send(`CollegeYear ${req.body.digit} arleady exist`)
+    return res.status(400).send(`CollegeYear ${req.body.digit} arleady exist`)
 
   let newDocument = new CollegeYear({
     digit: req.body.digit
@@ -84,24 +175,52 @@ router.post('/', async (req, res) => {
 
   const saveDocument = await newDocument.save()
   if (saveDocument)
-    return res.send(saveDocument).status(201)
-  return res.send('New CollegeYear not Registered').status(500)
+    return res.status(201).send(saveDocument)
+  return res.status(500).send('New CollegeYear not Registered')
 })
 
-// delete a collegeYear
+/**
+ * @swagger
+ * /kurious/college-year/{id}:
+ *   delete:
+ *     tags:
+ *       - CollegeYear
+ *     description: Delete a collegeYear
+ *     parameters:
+ *       - name: id
+ *         description: collegeYear's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
-  let collegeYear = await CollegeYear.findOne({ _id: req.params.id })
+  let collegeYear = await CollegeYear.findOne({
+    _id: req.params.id
+  })
   if (!collegeYear)
-    return res.send(`CollegeYear of Code ${req.params.id} Not Found`)
-    
-  let deletedCollegeYear = await CollegeYear.findOneAndDelete({ _id: req.params.id })
+    return res.status(404).send(`CollegeYear of Code ${req.params.id} Not Found`)
+
+  let deletedCollegeYear = await CollegeYear.findOneAndDelete({
+    _id: req.params.id
+  })
   if (!deletedCollegeYear)
-    return res.send('CollegeYear Not Deleted').status(500)
-  return res.send(`CollegeYear ${deletedCollegeYear._id} Successfully deleted`).status(200)
+    return res.status(500).send('CollegeYear Not Deleted')
+  return res.status(200).send(`CollegeYear ${deletedCollegeYear._id} Successfully deleted`)
 })
 
 // export the router

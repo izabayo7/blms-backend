@@ -1,8 +1,47 @@
 // import dependencies
-const { express, cors, auth, fs, bodyparser } = require('./utils/imports')
+const {
+    express,
+    cors,
+} = require('./utils/imports')
+
+const dotenv = require('dotenv');
+dotenv.config();
+
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 // define app
 const app = express()
+
+const port = process.env.PORT || 7070
+const path = process.env.NODE_ENV === "production" ? `142.93.110.248:${port}` : `localhost:${port}`
+
+const swaggerOptions = {
+    swaggerDefinition: {
+
+        info: {
+            title: "KURIOUS APIs 📖",
+            version: '1.0.0',
+            description: "Explore APIs as you wish",
+        },
+        schemes: ['http'],
+        host: path,
+        basePath: '/',
+        securityDefinitions: {
+            bearerAuth: {
+                type: 'apiKey',
+                name: 'Authorization',
+                scheme: 'bearer',
+                in: 'header',
+            },
+        },
+    },
+    apis: ['./controllers/**/*.js', './controllers/**/**/*.js'],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // import models
 require('./models/mongodb')
@@ -26,17 +65,14 @@ const fileController = require('./controllers/file/file.controller')
 const quizController = require('./controllers/quiz/quiz.controller')
 
 // use middlewares
-// app.use(bodyparser.urlencoded({ extended: true }))
-// app.use(bodyparser.json())
 app.use(cors())
-// for parsing multipart/form-data 
-// app.use(express.static('public'))
-
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+    extended: true
+}));
 
 app.get("/", (req, res) => {
-    res.send("WELCOME TO Kurious").status(200)
+    res.send("WELCOME TO Kurious 🎓").status(200)
 })
 
 app.use('/kurious/superAdmin', superAdminController)
@@ -46,18 +82,15 @@ app.use('/kurious/instructor', instructorController)
 app.use('/kurious/student', studentController)
 app.use('/kurious/facility', facilityController)
 app.use('/kurious/facility-college', facilityCollegeController)
-app.use('/kurious/collegeYear', collegeYearController)
+app.use('/kurious/college-year', collegeYearController)
 app.use('/kurious/facility-college-year', facilityCollegeYearController)
 app.use('/kurious/student-facility-college-year', studentFacilityCollegeYearController)
 app.use('/kurious/studentProgress', studentProgressController)
 app.use('/kurious/course', courseController)
 app.use('/kurious/chapter', chapterController)
-app.use('/kurious/message', messageController)
+app.use('/kurious/message', messageController) // well be renewed
 app.use('/kurious/file', fileController)
 app.use('/kurious/quiz', quizController)
-
-// define the port
-const port = process.env.PORT || 7070
 
 // start the server
 app.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

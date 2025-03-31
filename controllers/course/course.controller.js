@@ -4,7 +4,47 @@ const { express, fs, Course, getCollege, College, Instructor, validateCourse, Fa
 // create router
 const router = express.Router()
 
-// Get all courses
+/**
+ * @swagger
+ * definitions:
+ *   Course:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       name:
+ *         type: string
+ *       instructor:
+ *         type: string
+ *       facilityCollegeYear:
+ *         type: string
+ *       description:
+ *         type: string
+ *       coverPicture:
+ *         type: string
+ *       published:
+ *         type: boolean
+ *     required:
+ *       - name
+ *       - instructor
+ *       - facilityCollegeYear
+ *       - description
+ */
+
+/**
+ * @swagger
+ * /kurious/course:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Get all courses
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
   const courses = await Course.find()
   try {
@@ -16,25 +56,79 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Get all courses in a specified college
+/**
+ * @swagger
+ * /kurious/course/college/{id}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses in a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/college/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let college = await College.findOne({ _id: req.params.id })
-  if (!college)
-    return res.status(404).send(`College ${req.params.id} Not Found`)
-  const courses = await Course.find({ college: req.params.id })
   try {
-    if (courses.length === 0)
+    const { error } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+    let college = await College.findOne({ _id: req.params.id })
+    if (!college)
+      return res.status(404).send(`College ${req.params.id} Not Found`)
+
+    let instructors = await Instructor.find({ college: req.params.id })
+    if (!instructors)
+      return res.status(404).send(`Courses in ${college.name} Not Found`)
+
+    let foundCourses = []
+
+    for (const instructor of instructors) {
+      const courses = await Course.find({ instructor: instructor._id })
+      if (courses, length > 0) {
+        for (const course of courses) {
+          foundCourses.push(course)
+        }
+      }
+    }
+    if (foundCourses.length === 0)
       return res.status(404).send(`${college.name} course list is empty`)
-    return res.status(200).send(courses)
+    return res.status(200).send(foundCourses)
   } catch (error) {
     return res.status(500).send(error)
   }
 })
 
-// Get all courses of a specified instructor
+/**
+ * @swagger
+ * /kurious/course/instructor/{id}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses of a specified instructor
+ *     parameters:
+ *       - name: id
+ *         description: Instructor id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/instructor/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
@@ -52,18 +146,39 @@ router.get('/instructor/:id', async (req, res) => {
   }
 })
 
-// Get all courses in a specified facilityCollegeYear
+/**
+ * @swagger
+ * /kurious/course/facility-college-year/{id}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses of a specified facilityCOllegeYear
+ *     parameters:
+ *       - name: id
+ *         description: FacilityCollegeYear id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/facility-college-year/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-
-  let facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: req.params.id })
-  if (!facilityCollegeYear)
-    return res.status(404).send(`facilityCollegeYear of Code ${req.params.id} Not Found`)
-
-  const courses = await Course.find({ facilityCollegeYear: req.params.id })
   try {
+    const { error } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+
+    let facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: req.params.id })
+    if (!facilityCollegeYear)
+      return res.status(404).send(`facilityCollegeYear of Code ${req.params.id} Not Found`)
+
+    const courses = await Course.find({ facilityCollegeYear: req.params.id })
+
     if (courses.length === 0)
       return res.status(404).send(`There are no courses with facilityCollegeYear ${req.params.id}`)
     return res.status(200).send(courses)
@@ -72,7 +187,27 @@ router.get('/facility-college-year/:id', async (req, res) => {
   }
 })
 
-// Get specified course
+/**
+ * @swagger
+ * /kurious/course/{id}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns a specific course
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
@@ -87,7 +222,30 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// post an course
+/**
+ * @swagger
+ * /kurious/course:
+ *   post:
+ *     tags:
+ *       - Course
+ *     description: Create course
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a course
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Course'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
   const { error } = validateCourse(req.body)
   if (error)
@@ -111,7 +269,35 @@ router.post('/', async (req, res) => {
   return res.status(500).send('New Course not Registered')
 })
 
-// updated a course
+/**
+ * @swagger
+ * /kurious/course/{id}:
+ *   put:
+ *     tags:
+ *       - Course
+ *     description: Update course
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Fields for a course
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Course'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
@@ -133,7 +319,29 @@ router.put('/:id', async (req, res) => {
 
 })
 
-// delete a course
+/**
+ * @swagger
+ * /kurious/course/{id}:
+ *   delete:
+ *     tags:
+ *       - Course
+ *     description: Delete a course
+ *     parameters:
+ *       - name: id
+ *         description: College id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)

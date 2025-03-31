@@ -4,7 +4,52 @@ const { express, bcrypt, multer, fs, Chapter, validateChapter, Course, normalise
 // create router
 const router = express.Router()
 
-// Get all chapters in a specified course
+/**
+ * @swagger
+ * definitions:
+ *   Chapter:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       name:
+ *         type: string
+ *       course:
+ *         type: string
+ *       description:
+ *         type: string
+ *       number:
+ *         type: string
+ *       mainVideo:
+ *         type: string
+ *       liveVideo:
+ *         type: string
+ *     required:
+ *       - name
+ *       - course
+ *       - description
+ */
+
+/**
+ * @swagger
+ * /kurious/chapter/course/{id}:
+ *   get:
+ *     tags:
+ *       - Chapter
+ *     description: Returns chapters in a specific course
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/course/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
@@ -25,7 +70,30 @@ router.get('/course/:id', async (req, res) => {
   }
 })
 
-// post an chapter
+/**
+ * @swagger
+ * /kurious/chapter:
+ *   post:
+ *     tags:
+ *       - Chapter
+ *     description: Create chapter
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a chapter
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Chapter'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
 
   const { error } = validateChapter(req.body)
@@ -53,7 +121,35 @@ router.post('/', async (req, res) => {
 })
 
 
-// updated a chapter
+/**
+ * @swagger
+ * /kurious/chapter/{id}:
+ *   put:
+ *     tags:
+ *       - Chapter
+ *     description: Update chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Fields for a chapter
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Chapter'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
@@ -74,7 +170,29 @@ router.put('/:id', async (req, res) => {
 
 })
 
-// delete a chapter
+/**
+ * @swagger
+ * /kurious/chapter/{id}:
+ *   delete:
+ *     tags:
+ *       - Course
+ *     description: Delete a chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)

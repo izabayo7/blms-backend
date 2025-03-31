@@ -1,10 +1,37 @@
 // import dependencies
-const { express, facilityCollege, Facility, validateFacility, auth, _superAdmin, _admin, validateObjectId, _student } = require('../../utils/imports')
+const { express, facilityCollege, Facility, validateFacility, auth, _superAdmin, _admin, validateObjectId, _facility } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
-// Get all facilities
+/**
+ * @swagger
+ * definitions:
+ *   Facility:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       name:
+ *         type: string
+ *     required:
+ *       - name
+ */
+
+/**
+ * @swagger
+ * /kurious/facility:
+ *   get:
+ *     tags:
+ *       - Facility
+ *     description: Get all Facilities
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
   const facilities = await Facility.find()
   try {
@@ -16,7 +43,27 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Get all facilities in a specified college
+/**
+ * @swagger
+ * /kurious/facility/college/{id}:
+ *   get:
+ *     tags:
+ *       - Facility
+ *     description: Returns facilities in a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/college/:id', async (req, res) => {
   try {
     const { error } = validateObjectId(req.params.id)
@@ -41,7 +88,27 @@ router.get('/college/:id', async (req, res) => {
   }
 })
 
-// Get specified facility
+/**
+ * @swagger
+ * /kurious/facility/{id}:
+ *   get:
+ *     tags:
+ *       - Facility
+ *     description: Returns a specified facility
+ *     parameters:
+ *       - name: id
+ *         description: Facility's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
   try {
     const { error } = validateObjectId(req.params.id)
@@ -56,17 +123,40 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// post an facility
+/**
+ * @swagger
+ * /kurious/facility:
+ *   post:
+ *     tags:
+ *       - Facility
+ *     description: Create Facility
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a Facility
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Facility'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
   try {
     const { error } = validateFacility(req.body)
     if (error)
       return res.send(error.details[0].message).status(400)
 
-  // check if facility exist
-  let facility = await Facility.findOne({ name: req.body.name })
-  if (facility)
-    return res.send(`Facility with code ${req.body.name} arleady exist`)
+    // check if facility exist
+    let facility = await Facility.findOne({ name: req.body.name })
+    if (facility)
+      return res.send(`Facility with code ${req.body.name} arleady exist`)
 
     let newDocument = new Facility({
       name: req.body.name,
@@ -80,7 +170,34 @@ router.post('/', async (req, res) => {
   }
 })
 
-// updated a facility
+/**
+ * @swagger
+ * /kurious/facility/{id}:
+ *   put:
+ *     tags:
+ *       - Facility
+ *     description: Update Facility
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: Facility's Id
+ *       - name: body
+ *         description: Fields for a Facility
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Facility'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
@@ -98,7 +215,29 @@ router.put('/:id', async (req, res) => {
 
 })
 
-// delete a facility
+/**
+ * @swagger
+ * /kurious/facility/{id}:
+ *   delete:
+ *     tags:
+ *       - Facility
+ *     description: Delete as Facility
+ *     parameters:
+ *       - name: id
+ *         description: Facility's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)

@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps,
 } = require('../../utils/imports')
 
 const courseSchema = new mongoose.Schema({
@@ -29,6 +30,8 @@ const courseSchema = new mongoose.Schema({
         default: false
     }
 })
+
+courseSchema.plugin(timestamps)
 
 // validate course
 function validateCourse(credentials) {

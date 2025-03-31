@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps
 } = require('../../utils/imports')
 
 Joi.ObjectId = require('joi-objectid')(Joi)
@@ -16,6 +17,8 @@ const facilityCollegeSchema = new mongoose.Schema({
         required: true
     },
 })
+
+facilityCollegeSchema.plugin(timestamps)
 
 // validate facility-college
 function validateFacilityCollege(credentials) {

@@ -38,7 +38,34 @@ const uploadPlus = multer({
     storage: storage
 }).any()
 
-// get college logo
+/**
+ * @swagger
+ * definitions:
+ *   FileUploading:
+ *     description: This is not a model. Instead its apis for file uploading
+ */
+
+/**
+ * @swagger
+ * /kurious/file/collegeLogo/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the logo of a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/collegeLogo/:id', async (req, res) => {
     try {
 
@@ -62,7 +89,28 @@ router.get('/collegeLogo/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
-// get superAdmin profile
+
+/**
+ * @swagger
+ * /kurious/file/superAdminProfile/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the profilePicture of a SuperAdmin
+ *     parameters:
+ *       - name: id
+ *         description: superAdmin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/superAdminProfile/:id', async (req, res) => {
     try {
 
@@ -86,7 +134,28 @@ router.get('/superAdminProfile/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
-// get admin profile
+
+/**
+ * @swagger
+ * /kurious/file/adminProfile/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the profilePicture of a specified Admin
+ *     parameters:
+ *       - name: id
+ *         description: Admin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/adminProfile/:id', async (req, res) => {
     try {
         const { error } = validateObjectId(req.params.id)
@@ -109,7 +178,28 @@ router.get('/adminProfile/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
-// get instructor profile
+
+/**
+ * @swagger
+ * /kurious/file/instructorProfile/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the profilePicture of a specified Instructor
+ *     parameters:
+ *       - name: id
+ *         description: Instructor's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/instructorProfile/:id', async (req, res) => {
     try {
 
@@ -133,7 +223,27 @@ router.get('/instructorProfile/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
-// get student profile
+/**
+ * @swagger
+ * /kurious/file/studentProfile/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the profilePicture of a specified Student
+ *     parameters:
+ *       - name: id
+ *         description: Student's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/studentProfile/:id', async (req, res) => {
     try {
 
@@ -157,7 +267,28 @@ router.get('/studentProfile/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
-// get course coverPicture
+
+/**
+ * @swagger
+ * /kurious/file/courseCoverPicture/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the coverPicture of a specified Course
+ *     parameters:
+ *       - name: id
+ *         description: Course's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/courseCoverPicture/:id', async (req, res) => {
     try {
 
@@ -185,7 +316,27 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
     }
 })
 
-// get chapter main document
+/**
+ * @swagger
+ * /kurious/file/chapterDocument/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the mainContent of a specified Chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/chapterDocument/:id', async (req, res) => {
     try {
 
@@ -210,7 +361,27 @@ router.get('/chapterDocument/:id', async (req, res) => {
     }
 })
 
-// get chapter main document
+/**
+ * @swagger
+ * /kurious/file/chapterMainVideo/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the mainVideo of a specified Chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/chapterMainVideo/:id', async (req, res) => {
     try {
 
@@ -274,7 +445,32 @@ router.get('/chapterMainVideo/:id', async (req, res) => {
     }
 })
 
-// get quiz attached images
+/**
+ * @swagger
+ * /kurious/file/chapterMainVideo/{quiz}/{picture}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the images attached to a specified quiz
+ *     parameters:
+ *       - name: quiz
+ *         description: Quiz's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: picture
+ *         description: picture's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/quizAttachedFiles/:quiz/:picture', async (req, res) => {
     try {
 
@@ -313,8 +509,27 @@ router.get('/quizAttachedFiles/:quiz/:picture', async (req, res) => {
     }
 })
 
-
-// get attachments
+/**
+ * @swagger
+ * /kurious/file/getAttachments/{id}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the attachments of a specified chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/getAttachments/:id', async (req, res) => {
     try {
 
@@ -337,6 +552,8 @@ router.get('/getAttachments/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
+
+// to be continued
 
 // get an attachment
 router.get('/getAttachment/:id', async (req, res) => {

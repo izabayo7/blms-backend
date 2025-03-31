@@ -1,22 +1,100 @@
 // import dependencies
-const { express, bcrypt, fs, Instructor, College, validateInstructor, validateUserLogin, hashPassword, auth, _superAdmin, defaulPassword, _admin, validateObjectId, checkRequirements } = require('../../utils/imports')
+const { express, bcrypt, fs, Instructor, College, validateInstructor, validateUserLogin, hashPassword, defaulPassword, validateObjectId, checkRequirements } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
-// Get all admins
+/**
+ * @swagger
+ * definitions:
+ *   Instructor:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       surName:
+ *         type: string
+ *       otherNames:
+ *         type: string
+ *       nationalId:
+ *         type: number
+ *       gender:
+ *         type: string
+ *       phone:
+ *         type: string
+ *       email:
+ *         type: string
+ *       college:
+ *         type: string
+ *       category:
+ *         type: string
+ *       password:
+ *         type: string
+ *       status:
+ *         type: object
+ *         properties:
+ *           stillMember:
+ *             type: boolean
+ *           active:
+ *             type: boolean
+ *       profile:
+ *         type: string
+ *     required:
+ *       - surName
+ *       - otherNames
+ *       - nationalId
+ *       - gender
+ *       - phone
+ *       - email
+ *       - college
+ */
+
+/**
+ * @swagger
+ * /kurious/instructor:
+ *   get:
+ *     tags:
+ *       - Instructor
+ *     description: Get all Instructors
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
-    const admins = await Instructor.find()
+    const instructors = await Instructor.find()
     try {
-        if (admins.length === 0)
+        if (instructors.length === 0)
             return res.status(404).send('Instructor list is empty')
-        return res.status(200).send(admins)
+        return res.status(200).send(instructors)
     } catch (error) {
         return res.status(500).send(error)
     }
 })
 
-// Get all instructors in a specified college
+/**
+ * @swagger
+ * /kurious/instructor/college/{id}:
+ *   get:
+ *     tags:
+ *       - Instructor
+ *     description: Returns instructors in a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/college/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
@@ -34,7 +112,27 @@ router.get('/college/:id', async (req, res) => {
     }
 })
 
-// Get specified instructor
+/**
+ * @swagger
+ * /kurious/instructor/{id}:
+ *   get:
+ *     tags:
+ *       - Instructor
+ *     description: Returns a specified instructor
+ *     parameters:
+ *       - name: id
+ *         description: Instructor's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
@@ -49,7 +147,30 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-// post an instructor
+/**
+ * @swagger
+ * /kurious/instructor:
+ *   post:
+ *     tags:
+ *       - Instructor
+ *     description: Create Instructor
+ *     parameters:
+ *       - name: body
+ *         description: Fields for an Instructor
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Instructor'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
     const { error } = validateInstructor(req.body)
     if (error)
@@ -78,7 +199,35 @@ router.post('/', async (req, res) => {
     return res.status(500).send('New Instructor not Registered')
 })
 
-// instructor login
+/**
+ * @swagger
+ * /kurious/instructor/login:
+ *   post:
+ *     tags:
+ *       - Instructor
+ *     description: Instructor login
+ *     parameters:
+ *       - name: body
+ *         description: Login credentials
+ *         in: body
+ *         required: true
+ *         schema:
+ *           email:
+ *             type: email
+ *             required: true
+ *           password:
+ *             type: string
+ *             required: true
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/login', async (req, res) => {
     console.log('ark ubu')
     const { error } = validateUserLogin(req.body)
@@ -88,17 +237,44 @@ router.post('/login', async (req, res) => {
     // find instructor
     let instructor = await Instructor.findOne({ email: req.body.email })
     if (!instructor)
-        return res.status(400).send('Invalid Email or Password')
+        return res.status(404).send('Invalid Email or Password')
 
     // check if passed password is valid
     const validPassword = await bcrypt.compare(req.body.password, instructor.password)
     if (!validPassword)
-        return res.status(400).send('Invalid Email or Password')
+        return res.status(404).send('Invalid Email or Password')
     // return token
     return res.status(200).send(instructor.generateAuthToken())
 })
 
-// updated a instructor
+/**
+ * @swagger
+ * /kurious/instructor/{id}:
+ *   put:
+ *     tags:
+ *       - Instructor
+ *     description: Update Instructor
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: Instructor's Id
+ *       - name: body
+ *         description: Fields for a Instructor
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Instructor'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
     let { error } = validateObjectId(req.params.id)
     if (error)
@@ -122,7 +298,29 @@ router.put('/:id', async (req, res) => {
 
 })
 
-// delete a instructor
+/**
+ * @swagger
+ * /kurious/instructor/{id}:
+ *   delete:
+ *     tags:
+ *       - Admin
+ *     description: Delete as Instructor
+ *     parameters:
+ *       - name: id
+ *         description: Instructor's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)

@@ -2,8 +2,7 @@
 const {
     mongoose,
     Joi,
-    jwt,
-    config
+    timestamps
 } = require('../../utils/imports')
 
 const studentProgressSchema = new mongoose.Schema({
@@ -21,6 +20,8 @@ const studentProgressSchema = new mongoose.Schema({
         default: 0
     },
 })
+
+studentProgressSchema.plugin(timestamps)
 
 // validate student
 function validateStudentProgress(credentials) {

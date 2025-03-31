@@ -1,44 +1,119 @@
 // import dependencies
-const { express, fs, College, validateCollege, findDocument, normaliseDate, fileFilter, auth, _superAdmin, _admin } = require('../../utils/imports')
+const { express, College, validateCollege, findDocument } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
-// Get college
+/**
+ * @swagger
+ * definitions:
+ *   College:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       name:
+ *         type: string
+ *       email:
+ *         type: string
+ *       logo:
+ *         type: number
+ *       disabled:
+ *         type: string
+ *     required:
+ *       - name
+ *       - email
+ */
+
+/**
+ * @swagger
+ * /kurious/college:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: Get all Colleges
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
     try {
         const colleges = await College.find()
         if (colleges.length === 0)
-            return res.send('College list is empty').status(404)
+            return res.status(404).send('College list is empty')
 
-        return res.send(colleges).status(200)
+        return res.status(200).send(colleges)
     } catch (error) {
-        return res.send(error).status(500)
+        return res.status(500).send(error)
     }
 })
 
-// Get college
+/**
+ * @swagger
+ * /kurious/college/{id}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: Returns a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
     try {
         const college = await findDocument(College, req.params.id)
         if (!college)
-            return res.send(`College ${req.params.id} Not Found`).status(404)
-        return res.send(college).status(200)
+            return res.status(404).send(`College ${req.params.id} Not Found`)
+        return res.status(200).send(college)
     } catch (error) {
-        return res.send(error).status(500)
+        return res.status(500).send(error)
     }
 })
 
-// post an college
+/**
+ * @swagger
+ * /kurious/college:
+ *   post:
+ *     tags:
+ *       - College
+ *     description: Create a college
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a college
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/College'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
     try {
         const { error } = validateCollege(req.body)
         if (error)
-            return res.send(error.details[0].message).status(400)
+            return res.status(400).send(error.details[0].message)
 
         let college = await College.findOne({ email: req.body.email })
         if (college)
-            return res.send(`College with email ${req.body.email} arleady exist`)
+            return res.status(400).send(`College with email ${req.body.email} arleady exist`)
 
         let newDocument = new College({
             name: req.body.name,
@@ -49,43 +124,92 @@ router.post('/', async (req, res) => {
 
         const saveDocument = await newDocument.save()
         if (saveDocument)
-            return res.send(saveDocument).status(201)
-        return res.send('New College not Registered').status(500)
+            return res.status(201).send(saveDocument)
+        return res.status(500).send('New College not Registered')
     } catch (error) {
-        return res.send(error).status(500)
+        return res.status(500).send(error)
     }
 })
 
-// updated a college
+/**
+ * @swagger
+ * /kurious/college/{id}:
+ *   put:
+ *     tags:
+ *       - College
+ *     description: Update college
+ *     parameters:
+ *        - name: id
+ *          in: path
+ *          type: string
+ *          description: college's Id
+ *        - name: body
+ *          description: Fields for a college
+ *          in: body
+ *          required: true
+ *          schema:
+ *            $ref: '#/definitions/College'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
     try {
         const { error } = validateCollege(req.body, 'update')
         if (error)
-            return res.send(error.details[0].message).status(400)
+            return res.status(400).send(error.details[0].message)
 
         // check if college exist
         let college = await findDocument(College, req.params.id)
         if (!college)
-            return res.send(`College with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`College with code ${req.params.id} doens't exist`)
 
         const updateDocument = await College.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
         if (updateDocument)
-            return res.send(updateDocument).status(201)
-        return res.send("Error ocurred").status(500)
+            return res.status(201).send(updateDocument)
+        return res.status(500).send("Error ocurred")
     } catch (error) {
-        return res.send(error).status(500)
+        return res.status(500).send(error)
     }
 })
 
-// delete a college
-router.delete('/:id', [auth, _superAdmin], async (req, res) => {
+/**
+ * @swagger
+ * /kurious/college/{id}:
+ *   delete:
+ *     tags:
+ *       - College
+ *     description: Deletes a college
+ *     parameters:
+ *       - name: id
+ *         description: college's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id', async (req, res) => {
     let college = await findDocument(College, req.params.id)
     if (!college)
-        return res.send(`College of Code ${req.params.id} Not Found`)
+        return res.status(404).send(`College of Code ${req.params.id} Not Found`)
     let deleteDocument = await College.findOneAndDelete({ _id: req.params.id })
     if (!deleteDocument)
-        return res.send('College Not Deleted').status(500)
-    return res.send(`College ${deleteDocument._id} Successfully deleted`).status(200)
+        return res.status(500).send('College Not Deleted')
+    return res.status(200).send(`College ${deleteDocument._id} Successfully deleted`)
 })
 
 // export the router

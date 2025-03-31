@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps
 } = require('../../utils/imports')
 
 const facilitySchema = new mongoose.Schema({
@@ -10,6 +11,8 @@ const facilitySchema = new mongoose.Schema({
         required: true
     },
 })
+
+facilitySchema.plugin(timestamps)
 
 // validate facility
 function validateFacility(credentials) {

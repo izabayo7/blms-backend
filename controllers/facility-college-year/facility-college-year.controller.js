@@ -1,38 +1,110 @@
 // import dependencies
-const { express, FacilityCollegeYear, CollegeYear, College, FacilityCollege, auth, _superAdmin, _admin, validateFacilityCollegeYear, validateObjectId, _student } = require('../../utils/imports')
-const { Facility } = require('../../models/facility/facility.model')
+const {
+  express,
+  FacilityCollegeYear,
+  CollegeYear,
+  College,
+  FacilityCollege,
+  validateFacilityCollegeYear,
+  validateObjectId,
+} = require('../../utils/imports')
+const {
+  Facility
+} = require('../../models/facility/facility.model')
 // create router
 const router = express.Router()
 
-// Get all facilityCollegeYears
+/**
+ * @swagger
+ * definitions:
+ *   FacilityCollegeYear:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       facilityCollege:
+ *         type: string
+ *       collegeYear:
+ *         type: string
+ *     required:
+ *       - facilityCollege
+ *       - collegeYear
+ */
+
+/**
+ * @swagger
+ * /kurious/facility-college-year:
+ *   get:
+ *     tags:
+ *       - FacilityCollegeYear
+ *     description: Get all facilityCollegeYears
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
   const facilityCollegeYears = await FacilityCollegeYear.find()
   try {
     if (facilityCollegeYears.length === 0)
-      return res.send('facility-college-years list is empty').status(404)
+      return res.send('facility-facility-college-years list is empty').status(404)
     return res.send(facilityCollegeYears).status(200)
   } catch (error) {
     return res.send(error).status(500)
   }
 })
 
-// Get all facilityCollegeYears in a college
+/**
+ * @swagger
+ * /kurious/facility-college-year/college/{id}:
+ *   get:
+ *     tags:
+ *       - FacilityCollegeYear
+ *     description: Returns facilityCollegeYears in a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/college/:id', async (req, res) => {
   try {
     // check if college exist
-    let college = await College.findOne({ _id: req.params.id })
+    let college = await College.findOne({
+      _id: req.params.id
+    })
     if (!college)
-      return res.send(`College with code ${req.params.id} doens't exist`)
+      return res.status(404).send(`College with code ${req.params.id} doens't exist`)
 
-    let facilityColleges = await FacilityCollege.find({ college: req.params.id })
+    let facilityColleges = await FacilityCollege.find({
+      college: req.params.id
+    })
     if (facilityColleges.length < 1)
       return res.send(`facilityCollege in ${college.name} Not Found`)
+
     let allfacilityCollegeYears = []
+
     for (const facilityCollege of facilityColleges) {
-      const facilityDetails = await Facility.findOne({ _id: facilityCollege.facility })
-      const response = await FacilityCollegeYear.find({ facilityCollege: facilityCollege._id })
+      const facilityDetails = await Facility.findOne({
+        _id: facilityCollege.facility
+      })
+      const response = await FacilityCollegeYear.find({
+        facilityCollege: facilityCollege._id
+      })
       for (const newFacilityCollegeYear of response) {
-        const yearDetails = await CollegeYear.findOne({ _id: newFacilityCollegeYear.collegeYear })
+        const yearDetails = await CollegeYear.findOne({
+          _id: newFacilityCollegeYear.collegeYear
+        })
         allfacilityCollegeYears.push({
           _id: newFacilityCollegeYear._id,
           facilityCollege: newFacilityCollegeYear.facilityCollege,
@@ -49,20 +121,49 @@ router.get('/college/:id', async (req, res) => {
   }
 })
 
-// post an facilityCollege
+/**
+ * @swagger
+ * /kurious/facility-college-year:
+ *   post:
+ *     tags:
+ *       - FacilityCollegeYear
+ *     description: Create facilityCollegeYear
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a facilityCollegeYear
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/FacilityCollegeYear'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
   try {
-    const { error } = validateFacilityCollegeYear(req.body)
+    const {
+      error
+    } = validateFacilityCollegeYear(req.body)
     if (error)
       return res.send(error.details[0].message).status(400)
 
     // check if facilityCollege exist
-    let facilityCollege = await FacilityCollege.findOne({ _id: req.body.facilityCollege })
+    let facilityCollege = await FacilityCollege.findOne({
+      _id: req.body.facilityCollege
+    })
     if (!facilityCollege)
       return res.send(`FacilityCollege with code ${req.body.facilityCollege} doens't exist`)
 
     // check if collegeYear exist
-    let collegeYear = await CollegeYear.findOne({ _id: req.body.collegeYear })
+    let collegeYear = await CollegeYear.findOne({
+      _id: req.body.collegeYear
+    })
     if (!collegeYear)
       return res.send(`CollegeYearwith code ${req.body.collegeYear} doens't exist`)
 
@@ -86,17 +187,45 @@ router.post('/', async (req, res) => {
   }
 })
 
-// delete a facility-college-year
+/**
+ * @swagger
+ * /kurious/facility-college-year/{id}:
+ *   delete:
+ *     tags:
+ *       - FacilityCollegeYear
+ *     description: Delete a facilityCollegeYear
+ *     parameters:
+ *       - name: id
+ *         description: facilityCollegeYear's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
 
-  let facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: req.params.id })
+  let facilityCollegeYear = await FacilityCollegeYear.findOne({
+    _id: req.params.id
+  })
   if (!facilityCollegeYear)
     return res.send(`facilityCollegeYear of Code ${req.params.id} Not Found`)
 
-  let deleteFacilityCollege = await FacilityCollegeYear.findOneAndDelete({ _id: req.params.id })
+  let deleteFacilityCollege = await FacilityCollegeYear.findOneAndDelete({
+    _id: req.params.id
+  })
   if (!deleteFacilityCollege)
     return res.send('facilityCollegeYear Not Deleted').status(500)
 

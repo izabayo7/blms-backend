@@ -1,7 +1,7 @@
 const { mongoose } = require('../utils/imports')
-
+const dbHost = process.env.NODE_ENV === "production" ? process.env.MONGO_URI : `localhost/Kurious`
 // connect to mongodb server
-mongoose.connect('mongodb://localhost/Kurious', {
+mongoose.connect(`mongodb://${dbHost}`, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => console.log('Successfully connected to Database '))
