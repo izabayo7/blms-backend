@@ -41,35 +41,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /user_user_group:
- *   get:
- *     tags:
- *       - User_user_group
- *     description: Get all user_user_group
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        let result = await findDocuments(User_user_group)
-
-        // result = await injectDetails(result)
-
-        return res.send(formatResult(200, undefined, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /user_user_group/user/{id}:
  *   get:
  *     tags:

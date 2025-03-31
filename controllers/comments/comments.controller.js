@@ -51,34 +51,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /comment:
- *   get:
- *     tags:
- *       - Comment
- *     description: Get all comments
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        let results = await findDocuments(Comment, {reply: undefined}, u, u, u, u, u, {_id: -1})
-        results = await injectUser(results, 'sender')
-        results = await injectCommentsReplys(results)
-        return res.send(formatResult(u, u, results))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /comment/{target}/{id}:
  *   get:
  *     tags:

@@ -185,5 +185,5 @@ function validate_exam(body) {
 const exam = mongoose.model('exam', exam_schema)
 
 // export the model and the validation function
-module.exports.exam = exam
+module.exports.Exam = exam
 module.exports.validate_exam = validate_exam

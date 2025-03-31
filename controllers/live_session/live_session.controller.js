@@ -56,35 +56,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /live_session:
- *   get:
- *     tags:
- *       - Live_session
- *     description: Get all live_sessions
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        const result = await findDocuments(Live_session)
-        if (!result.length)
-            return res.send(formatResult(404, 'Live_session list is empty'))
-
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /live_session/{target}/{id}:
  *   get:
  *     tags:

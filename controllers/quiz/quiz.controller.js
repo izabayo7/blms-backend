@@ -100,39 +100,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /quiz:
- *   get:
- *     tags:
- *       - Quiz
- *     description: Get all quizes
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        let result = await findDocuments(Quiz)
-
-        if (!result.length)
-            return res.send(formatResult(404, 'Quiz list is empty'))
-
-        // result = await injectInstructor(result)
-        // result = await addAttachmentMediaPaths(result)
-
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /quiz/user/{id}:
  *   get:
  *     tags:
@@ -1085,20 +1052,6 @@ function validateQuestions(questions) {
         status: false,
         error: message
     }
-}
-
-// replace user id by the user information
-async function injectInstructor(quizes) {
-    for (const i in quizes) {
-        const user = await Instructor.findOne({
-            _id: quizes[i].user
-        })
-        quizes[i].user = _.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
-        if (quizes[i].user.profile) {
-            quizes[i].user.profile = `${process.env.HOST}/kurious/file/userProfile/${user._id}`
-        }
-    }
-    return quizes
 }
 
 // export the router

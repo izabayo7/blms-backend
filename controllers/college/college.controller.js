@@ -19,6 +19,7 @@ const {
     addStorageDirectoryToPath,
     auth
 } = require('../../utils/imports')
+const {filterUsers} = require("../../middlewares/auth.middleware");
 
 // create router
 const router = express.Router()
@@ -64,7 +65,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
     try {
         let colleges = await findDocuments(College)
         if (!colleges.length)
@@ -377,7 +378,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
     try {
         let {
             error
@@ -394,7 +395,9 @@ router.put('/:id', auth, async (req, res) => {
         // check if college exist
         let college = await findDocument(College, {_id: req.params.id})
         if (!college)
-            return res.send(formatResult(404, `College with code ${req.params.id} doens't exist`))
+            return res.send(formatResult(404, `College not found`))
+        if (req.params.id !== req.user.college)
+            return res.send(formatResult(403, `You don't have access`))
 
         const arr = []
 
@@ -469,7 +472,7 @@ router.put('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/logo', auth, async (req, res) => {
+router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
     try {
         const {
             error
@@ -483,6 +486,8 @@ router.put('/:id/logo', auth, async (req, res) => {
         })
         if (!college)
             return res.send(formatResult(404, 'college not found'))
+        if (req.params.id !== req.user.college)
+            return res.send(formatResult(403, `You don't have access`))
 
         const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
         req.kuriousStorageData = {
@@ -597,7 +602,7 @@ router.delete('/:id/logo/:file_name', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, filterUsers(['SUPERADMIN']),async (req, res) => {
     try {
 
         let college = await findDocument(College, {_id: req.params.id})

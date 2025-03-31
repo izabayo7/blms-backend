@@ -78,38 +78,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /chat_group:
- *   get:
- *     tags:
- *       - Chat_group
- *     description: Get all chat_groups
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', auth, async (req, res) => {
-  try {
-    let result = await findDocuments(Chat_group)
-
-    if (!result.length)
-      return res.send(formatResult(404, 'Chat_group list is empty'))
-
-    result = await injectDetails(result)
-
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
  * /chat_group/college/{name}:
  *   get:
  *     tags:

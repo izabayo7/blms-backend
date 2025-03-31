@@ -16,6 +16,7 @@ const {
   User_role,
   auth
 } = require('../../utils/imports')
+const {filterUsers} = require("../../middlewares/auth.middleware");
 
 // create router
 const router = express.Router()
@@ -50,7 +51,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
   try {
     const user_categories = await findDocuments(User_category)
     if (user_categories.length === 0)
@@ -176,7 +177,7 @@ router.get('/id/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
   try {
     const {
       error
@@ -237,7 +238,7 @@ router.post('/', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
   try {
     let {
       error
@@ -306,7 +307,7 @@ router.put('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
   try {
     const {
       error

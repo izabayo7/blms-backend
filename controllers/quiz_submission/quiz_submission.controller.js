@@ -94,40 +94,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /quiz_submission:
- *   get:
- *     tags:
- *       - Quiz_submission
- *     description: Get all quiz_submissions
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', auth, async (req, res) => {
-    try {
-
-        let result = await findDocuments(Quiz_submission)
-
-        if (!result.length)
-            return res.send(formatResult(404, 'Quiz_submission list is empty'))
-
-        // result = await injectUser(result, 'user')
-        // result = await injectQuiz(result)
-
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /quiz_submission/user:
  *   get:
  *     tags:

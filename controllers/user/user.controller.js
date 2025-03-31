@@ -127,38 +127,6 @@ const router = express.Router()
  *         type: string
  */
 
-/**
- * @swagger
- * /user:
- *   get:
- *     tags:
- *       - User
- *     description: Get all Users
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', [auth, filterUsers(["SUPERADMIN"])], async (req, res) => {
-    try {
-        let users = await findDocuments(User)
-
-        if (!users.length)
-            return res.send(formatResult(404, 'User list is empty'))
-
-        users = await add_user_details(users)
-
-        return res.send(formatResult(u, u, users))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
 router.get('/reg_number/:regnumber', async (req, res) => {
     try {
         console.log(req.params.regnumber)
