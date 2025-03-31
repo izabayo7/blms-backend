@@ -24,17 +24,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * definitions:
- *   Faculty:
- *     properties:
- *       name:
- *         type: string
- *     required:
- *       - name
- */
-
-/**
- * @swagger
  * /faculty:
  *   get:
  *     tags:
@@ -158,65 +147,6 @@ router.get('/college/:faculty', async (req, res) => {
 
     foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
     return res.send(formatResult(u, u, foundFaculties.length ? fetch_all_faculties ? foundFaculties : foundFaculties[0] : []))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
- * /faculty/import/college/{id}:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Returns faculties that are not in a college hence importable
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: College's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/import/college/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
-    let college = await findDocument(College, {
-      _id: req.params.id
-    })
-    if (!college)
-      return res.send(formatResult(404, `College ${req.params.id} Not Found`))
-
-    const all_faculties = await findDocuments(Faculty)
-
-    let foundFaculties = []
-
-    for (const i in all_faculties) {
-      const faculty_college = await findDocument(Faculty_college, {
-        college: req.params.id,
-        faculty: all_faculties[i]._id
-      })
-      if (!faculty_college)
-        foundFaculties.push(all_faculties[i]);
-    }
-
-    if (foundFaculties.length < 1)
-      return res.send(formatResult(404, `College ${college.name} has no importable faculties`))
-
-    return res.send(formatResult(u, u, foundFaculties))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

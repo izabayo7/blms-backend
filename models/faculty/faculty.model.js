@@ -2,8 +2,7 @@
 const { Types } = require('mongoose')
 const {
     mongoose,
-    Joi,
-    timestamps
+    Joi
 } = require('../../utils/imports')
 
 const paginate = require('mongoose-paginate-v2')
@@ -11,7 +10,7 @@ const paginate = require('mongoose-paginate-v2')
 /**
  * @swagger
  * definitions:
- *   Faculty_college:
+ *   Faculty:
  *     properties:
  *       name:
  *         type: string
