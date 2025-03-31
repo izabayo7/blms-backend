@@ -752,8 +752,6 @@ router.put('/profile', auth, async (req, res) => {
     if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    console.log(user)
-
     const path = user.college ? `./uploads/colleges/${user.college}/user_profiles` : `./uploads/system/user_profiles`
     req.kuriousStorageData = {
       dir: path,
@@ -782,7 +780,7 @@ router.put('/profile', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user/{id}/profile/{file_name}:
+ * /user/profile/{file_name}:
  *   delete:
  *     tags:
  *       - User
@@ -808,7 +806,7 @@ router.put('/profile', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id/profile/:file_name', async (req, res) => {
+router.delete('/profile/:file_name', async (req, res) => {
   try {
     const {
       error
@@ -818,7 +816,7 @@ router.delete('/:id/profile/:file_name', async (req, res) => {
 
     // check if user exist
     const user = await findDocument(User, {
-      _id: req.params.id
+      user_name: req.user.user_name
     }, u, false)
     if (!user)
       return res.send(formatResult(404, 'user not found'))
