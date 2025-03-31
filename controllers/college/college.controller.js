@@ -493,25 +493,44 @@ router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
 
         const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
 
-
-        error = validate_chat_group_profile_udpate(req.body)
-        error = error.error
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        const {filename} = await savedecodedBase64Image(req.body.profile, path)
-
-        if (college.logo) {
-            fs.unlink(`${path}/${college.logo}`, (err) => {
-                if (err)
-                    return res.send(formatResult(500, err))
-            })
+        req.kuriousStorageData = {
+            dir: path,
         }
-        const result = await updateDocument(College, req.params.id, {
-            logo: filename
+        // error = validate_chat_group_profile_udpate(req.body)
+        // error = error.error
+        // if (error)
+        //     return res.send(formatResult(400, error.details[0].message))
+        //
+        // const {filename} = await savedecodedBase64Image(req.body.profile, path)
+        //
+        // if (college.logo) {
+        //     fs.unlink(`${path}/${college.logo}`, (err) => {
+        //         if (err)
+        //             return res.send(formatResult(500, err))
+        //     })
+        // }
+        // const result = await updateDocument(College, req.params.id, {
+        //     logo: filename
+        // })
+        // result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
+        // return res.send(result)
+
+        upload_single_image(req, res, async (err) => {
+            if (err)
+                return res.send(formatResult(500, err.message))
+
+            if (college.logo && college.logo != req.file.filename) {
+                fs.unlink(`${path}/${college.logo}`, (err) => {
+                    if (err)
+                        return res.send(formatResult(500, err))
+                })
+            }
+            const result = await updateDocument(College, req.params.id, {
+                logo: req.file.filename
+            })
+            result.data.cover_picture = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
+            return res.send(result)
         })
-        result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
-        return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
     }
