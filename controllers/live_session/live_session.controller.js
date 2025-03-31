@@ -191,6 +191,11 @@ router.get('/:id', async (req, res) => {
         result.course = await Course.findById(chapter.course)
         result.chapter = chapter
 
+        result.quiz = await Quiz.findOne({
+            "target.type": 'chapter',
+            "target.id": result._id
+        })
+
         return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
