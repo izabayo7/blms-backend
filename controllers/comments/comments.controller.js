@@ -14,7 +14,8 @@ const {
   Live_session,
   createDocument,
   updateDocument,
-  Chapter
+  Chapter,
+  injectUser
 } = require('../../utils/imports')
 
 // create router
@@ -61,8 +62,9 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    const result = await findDocuments(Comment)
-    return res.send(formatResult(u, u, result))
+    let results = await findDocuments(Comment)
+    results = await injectUser(results, 'sender')
+    return res.send(formatResult(u, u, results))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -131,11 +133,11 @@ router.get('/:target/:id', async (req, res) => {
     if (!target)
       return res.send(formatResult(404, 'comment target not found'))
 
-    const comments = await findDocuments(Comment, {
+    let comments = await findDocuments(Comment, {
       "target.type": req.params.target,
       "target.id": req.params.id
     })
-
+    comments = await injectUser(comments, 'sender')
     return res.send(formatResult(u, u, comments))
   } catch (error) {
     return res.send(formatResult(500, error))
