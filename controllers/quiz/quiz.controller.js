@@ -466,7 +466,7 @@ router.post('/', async (req, res) => {
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Id of the quiz you want to dupplicate
+ *         description: Id of the quiz you want to duplicate
  *         in: path
  *         required: true
  *         type: string

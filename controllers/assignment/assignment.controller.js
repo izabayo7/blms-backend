@@ -14,7 +14,8 @@ const {validate_assignment} = require("../../models/assignments/assignments.mode
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {Assignment} = require("../../models/assignments/assignments.model");
 const {sendReleaseMarskEmail} = require("../email/email.controller");
-const {updateDocument} = require("../../utils/imports");
+const {updateDocument, _} = require("../../utils/imports");
+var path = require('path');
 const {
     express,
     fs,
@@ -322,6 +323,94 @@ router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /assignments/duplicate/{id}:
+ *   post:
+ *     tags:
+ *       - Assignment
+ *     description: Create assignment
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Id of the assignment you want to duplicate
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/duplicate/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
+    try {
+        // check if assignment exist
+        let assignment = await findDocument(Assignment, {
+            _id: req.params.id,
+            user: req.user._id
+        }, u, false)
+        if (!assignment)
+            return res.send(formatResult(404, 'assignment not found'))
+
+        assignment = _.pick(assignment, "title,details,passMarks,target,dueDate,total_marks,allowMultipleFilesSubmission,submissionMode,allowed_files,attachments")
+        assignment.title = `${assignment.title} copy(${Math.floor(1000 + Math.random() * 9000)})`
+        let result = await createDocument(Assignment, assignment)
+        if(assignment.attachments.length){
+            const src_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment._id}`)
+            const target_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${result.data._id}`)
+            copyFolderRecursiveSync(file_path,target_path)
+        }
+        result.data = await addAssignmentTarget([result.data])
+        result.data = result.data[0]
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+function copyFileSync( source, target ) {
+
+    var targetFile = target;
+
+    // If target is a directory, a new file with the same name will be created
+    if ( fs.existsSync( target ) ) {
+        if ( fs.lstatSync( target ).isDirectory() ) {
+            targetFile = path.join( target, path.basename( source ) );
+        }
+    }
+
+    fs.writeFileSync(targetFile, fs.readFileSync(source));
+}
+
+function copyFolderRecursiveSync( source, target ) {
+    var files = [];
+
+    // Check if folder needs to be created or integrated
+    var targetFolder = target
+    if ( !fs.existsSync( targetFolder ) ) {
+        fs.mkdirSync( targetFolder );
+    }
+
+    // Copy
+    if ( fs.lstatSync( source ).isDirectory() ) {
+        files = fs.readdirSync( source );
+        files.forEach( function ( file ) {
+            var curSource = path.join( source, file );
+            if ( fs.lstatSync( curSource ).isDirectory() ) {
+                copyFolderRecursiveSync( curSource, targetFolder );
+            } else {
+                copyFileSync( curSource, targetFolder );
+            }
+        } );
+    }
+}
 
 /**
  * @swagger
