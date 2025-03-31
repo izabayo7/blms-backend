@@ -1,6 +1,22 @@
 // import dependencies
-const { express, fs, Quiz, getCollege, Chapter, Course, Instructor, validateQuiz, FacilityCollegeYear, auth, _instructor, validateObjectId, _student } = require('../../utils/imports')
-const { parseInt } = require('lodash')
+const {
+  express,
+  fs,
+  Quiz,
+  getCollege,
+  Chapter,
+  Course,
+  Instructor,
+  validateQuiz,
+  FacilityCollegeYear,
+  auth,
+  _instructor,
+  validateObjectId,
+  _student
+} = require('../../utils/imports')
+const {
+  parseInt
+} = require('lodash')
 
 // create router
 const router = express.Router()
@@ -21,10 +37,14 @@ router.get('/', async (req, res) => {
 
 // Get specified quiz
 router.get('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
     return res.status(400).send(error.details[0].message)
-  const quiz = await Quiz.findOne({ _id: req.params.id })
+  const quiz = await Quiz.findOne({
+    _id: req.params.id
+  })
   try {
     if (!quiz)
       return res.status(404).send(`Quiz ${req.params.id} Not Found`)
@@ -34,16 +54,43 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// post an quiz
-router.post('/', async (req, res) => {
+// Get quizes for a specific instructor
+router.get('/instructor/:id', async (req, res) => {
   try {
-    let { error } = validateQuiz(req.body)
+    const {
+      error
+    } = validateObjectId(req.params.id)
     if (error)
       return res.status(400).send(error.details[0].message)
 
-    // let instructor = await Instructor.findOne({ _id: req.body.instructor })
-    // if (!instructor)
-    //   return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+    let instructor = await Instructor.findOne({ _id: req.params.id })
+    if (!instructor)
+      return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
+
+    const quizes = await Quiz.find({
+      instructor: req.params.id
+    })
+
+    if (quizes.length < 1)
+      return res.status(404).send(`There are no quizes for instructor ${instructor.surName}`)
+    return res.status(200).send(quizes)
+  } catch (error) {
+    return res.status(500).send(error)
+  }
+})
+
+// post an quiz
+router.post('/', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateQuiz(req.body)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+
+    let instructor = await Instructor.findOne({ _id: req.body.instructor })
+    if (!instructor)
+      return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
     if (req.body.target) {
       req.body.target.type = req.body.target.type.toLowerCase()
@@ -63,15 +110,21 @@ router.post('/', async (req, res) => {
 
       switch (req.body.target.type) {
         case 'chapter':
-          Target = await Chapter.findOne({ _id: req.body.target.id })
+          Target = await Chapter.findOne({
+            _id: req.body.target.id
+          })
           break;
 
         case 'course':
-          Target = await Course.findOne({ _id: req.body.target.id })
+          Target = await Course.findOne({
+            _id: req.body.target.id
+          })
           break;
 
         case 'facilitycollegeyear':
-          Target = await FacilityCollegeYear.findOne({ _id: req.body.target.id })
+          Target = await FacilityCollegeYear.findOne({
+            _id: req.body.target.id
+          })
           break;
 
         default:
@@ -106,7 +159,9 @@ router.post('/', async (req, res) => {
 
 // updated a quiz
 router.put('/:id', async (req, res) => {
-  let { error } = validateObjectId(req.params.id)
+  let {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
     return res.status(400).send(error.details[0].message)
   error = validateQuiz(req.body)
@@ -115,11 +170,15 @@ router.put('/:id', async (req, res) => {
     return res.status(400).send(error.details[0].message)
 
   // check if quiz exist
-  let quiz = await Quiz.findOne({ _id: req.params.id })
+  let quiz = await Quiz.findOne({
+    _id: req.params.id
+  })
   if (!quiz)
     return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
 
-  let instructor = await Instructor.findOne({ _id: req.body.instructor })
+  let instructor = await Instructor.findOne({
+    _id: req.body.instructor
+  })
   if (!instructor)
     return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
@@ -135,15 +194,21 @@ router.put('/:id', async (req, res) => {
 
     switch (req.body.target.type) {
       case 'chapter':
-        Target = await Chapter.find({ _id: req.body.target.id })
+        Target = await Chapter.find({
+          _id: req.body.target.id
+        })
         break;
 
       case 'course':
-        Target = await Course.find({ _id: req.body.target.id })
+        Target = await Course.find({
+          _id: req.body.target.id
+        })
         break;
 
       case 'facilitycollegeyear':
-        Target = await FacilityCollegeYear.find({ _id: req.body.target.id })
+        Target = await FacilityCollegeYear.find({
+          _id: req.body.target.id
+        })
         break;
 
       default:
@@ -160,7 +225,11 @@ router.put('/:id', async (req, res) => {
 
   req.body.totalMarks = validQuestions.totalMarks
 
-  const updateDocument = await Quiz.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+  const updateDocument = await Quiz.findOneAndUpdate({
+    _id: req.params.id
+  }, req.body, {
+    new: true
+  })
   if (updateDocument)
     return res.status(201).send(updateDocument)
   return res.status(500).send("Error ocurred")
@@ -169,20 +238,50 @@ router.put('/:id', async (req, res) => {
 
 // delete a quiz
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let quiz = await Quiz.findOne({ _id: req.params.id })
-  if (!quiz)
-    return res.status(404).send(`Quiz of Code ${req.params.id} Not Found`)
-  let deletedQuiz = await Quiz.findOneAndDelete({ _id: req.params.id })
-  if (!deletedQuiz)
-    return res.status(500).send('Quiz Not Deleted')
-  return res.status(200).send(`Quiz ${deletedQuiz._id} Successfully deleted`)
+  try {
+
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+    let quiz = await Quiz.findOne({
+      _id: req.params.id
+    })
+    if (!quiz)
+      return res.status(404).send(`Quiz of Code ${req.params.id} Not Found`)
+
+    let instructor = await Instructor.findOne({
+      _id: quiz.instructor
+    })
+    if (!instructor)
+      return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+
+    let deletedQuiz = await Quiz.findOneAndDelete({
+      _id: req.params.id
+    })
+    if (!deletedQuiz)
+      return res.status(500).send('Quiz Not Deleted')
+
+    const path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.id}`
+    fs.exists(path, (exists) => {
+      if (exists) {
+        fs.rmdir(path, (err) => {
+          if (err) {
+            return res.status(500).send(err)
+          }
+        })
+      }
+    })
+
+    return res.status(200).send(`Quiz ${deletedQuiz._id} Successfully deleted`)
+  } catch (error) {
+    return res.status(500).send(error)
+  }
 })
 
 function validateQuestions(questions) {
-  const allowedQuestionTypes = ['open-ended', 'single-text-select', 'multi-text-select', 'single-file-select', 'multi-file-select', 'file-upload']
+  const allowedQuestionTypes = ['open-ended', 'single-text-select', 'multiple-text-select', 'single-file-select', 'multiple-file-select', 'file-upload']
   let message = ''
   let marks = 0
   for (let i in questions) {
@@ -216,7 +315,13 @@ function validateQuestions(questions) {
     marks += parseInt(questions[i].marks)
     // more validations later
   }
-  return message === '' ? { status: true, totalMarks: marks } : { status: false, error: message }
+  return message === '' ? {
+    status: true,
+    totalMarks: marks
+  } : {
+      status: false,
+      error: message
+    }
 }
 
 // export the router

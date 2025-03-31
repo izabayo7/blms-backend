@@ -48,7 +48,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/superAdmin:
+ * /kurious/super-admin:
  *   get:
  *     tags:
  *       - SuperAdmin
@@ -75,7 +75,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/superAdmin:
+ * /kurious/super-admin:
  *   post:
  *     tags:
  *       - SuperAdmin
@@ -124,7 +124,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/superAdmin/login:
+ * /kurious/super-admin/login:
  *   post:
  *     tags:
  *       - SuperAdmin
@@ -171,7 +171,7 @@ router.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/superAdmin/{id}:
+ * /kurious/super-admin/{id}:
  *   put:
  *     tags:
  *       - SuperAdmin
@@ -222,7 +222,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/superAdmin/{id}:
+ * /kurious/super-admin/{id}:
  *   delete:
  *     tags:
  *       - SuperAdmin
@@ -254,7 +254,7 @@ router.delete('/:id', async (req, res) => {
   if (!deleteDocument)
     return res.status(500).send('SuperAdmin Not Deleted')
   if (superAdmin.profile) {
-    fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
+    fs.unlink(`./uploads/system/super-admin/${superAdmin.profile}`, (err) => {
       if (err)
         return res.status(500).send(err)
     })

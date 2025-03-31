@@ -92,7 +92,6 @@ router.get('/college/:id', async (req, res) => {
     return res.send(foundFacilities).status(200)
 
   } catch (error) {
-    console.log(error)
     return res.send(error).status(500)
   }
 })

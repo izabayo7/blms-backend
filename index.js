@@ -76,7 +76,7 @@ app.get("/", (req, res) => {
     res.send("WELCOME TO Kurious 🎓").status(200)
 })
 
-app.use('/kurious/superAdmin', superAdminController)
+app.use('/kurious/super-admin', superAdminController)
 app.use('/kurious/admin', adminController)
 app.use('/kurious/college', collegeController)
 app.use('/kurious/instructor', instructorController)

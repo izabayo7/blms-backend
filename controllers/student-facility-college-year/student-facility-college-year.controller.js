@@ -56,6 +56,35 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
+ * /kurious/student-facility-college-year/student/{id}:
+ *   get:
+ *     tags:
+ *       - StudentFacilityCollegeYear
+ *     description: Get a student's current studentFacilityCollegeYear
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/student/:id', async (req, res) => {
+  try {
+
+    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({ student: req.params.id, status: 1 })
+
+    if (!studentFacilityCollegeYear)
+      return res.status(404).send(`student-student-facility-college-year for ${req.params.id} was not found`)
+    
+      return res.send(studentFacilityCollegeYear).status(200)
+  } catch (error) {
+    return res.send(error).status(500)
+  }
+})
+
+/**
+ * @swagger
  * /kurious/student-facility-college-year:
  *   post:
  *     tags:
