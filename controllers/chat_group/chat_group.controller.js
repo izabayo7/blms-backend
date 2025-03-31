@@ -957,7 +957,7 @@ router.delete('/:code', auth, async (req, res) => {
       const result = await deleteDocument(Chat_group, chat_group._id)
 
       // make the design of the chat storage
-      const path = `./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)
