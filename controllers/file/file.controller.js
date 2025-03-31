@@ -160,10 +160,30 @@ router.get('/superAdminProfile/:id', async (req, res) => {
         if (!superAdmin.profile)
             return res.status(404).send(`SuperAdmin ${req.params.id} have not yet uploaded ${superAdmin.gender === 'Male' ? 'his' : 'her'} profile`)
 
-        filepath = `./uploads/system/superAdmin/${superAdmin.profile}`
-        const pic = fs.readFileSync(filepath)
-        res.contentType('image/jpeg')
-        return res.status(200).send(pic)
+        path = `./uploads/system/superAdmin/${superAdmin.profile}`
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.picture} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -208,10 +228,30 @@ router.get('/adminProfile/:id', async (req, res) => {
         if (!admin.profile)
             return res.status(404).send(`Admin ${req.params.id} have not yet uploaded ${admin.gender === 'Male' ? 'his' : 'her'} profile`)
 
-        filepath = `./uploads/colleges/${admin.college}/users/admin/${admin.profile}`
-        const pic = fs.readFileSync(filepath)
-        res.contentType('image/jpeg')
-        return res.status(200).send(pic)
+        path = `./uploads/colleges/${admin.college}/users/admin/${admin.profile}`
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.picture} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -257,10 +297,30 @@ router.get('/instructorProfile/:id', async (req, res) => {
         if (!instructor.profile)
             return res.status(404).send(`Instructor ${req.params.id} have not yet uploaded ${instructor.gender === 'Male' ? 'his' : 'her'} profile`)
 
-        filepath = `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}/${instructor.profile}`
-        const pic = fs.readFileSync(filepath)
-        res.contentType('image/jpeg')
-        return res.status(200).send(pic)
+        path = `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}/${instructor.profile}`
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.picture} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -305,10 +365,30 @@ router.get('/studentProfile/:id', async (req, res) => {
         if (!student.profile)
             return res.status(404).send(`Student ${req.params.id} have not yet uploaded ${student.gender === 'Male' ? 'his' : 'her'} profile`)
 
-        filepath = `./uploads/colleges/${student.college}/users/students/${student.profile}`
-        const pic = fs.readFileSync(filepath)
-        res.contentType('image/jpeg')
-        return res.status(200).send(pic)
+        path = `./uploads/colleges/${student.college}/users/students/${student.profile}`
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.picture} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -592,8 +672,6 @@ router.get('/quizAttachedFiles/:quiz/:picture', async (req, res) => {
                 resizeImage(path, format, width, height).pipe(res)
             }
         })
-
-
 
     } catch (error) {
         return res.status(500).send(error)

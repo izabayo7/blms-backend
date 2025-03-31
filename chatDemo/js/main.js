@@ -26,9 +26,34 @@ var socket = io.connect('/', {
   }
 });
 
+
 // get essential description
 socket.emit('request-self-groups-and-contacts');
 socket.emit('request-unread-messages');
+
+/************************************************************* */
+
+// get contacts new style
+socket.emit('request_user_contacts');
+
+// Get contacts new style
+socket.on('recieve_user_contacts', ({
+  contacts,
+}) => {
+  console.log(contacts)
+});
+
+// get contacts new style
+socket.emit('request_conversation',{ groupId: '5f5da8f9e8eb0e3a6c61fdfa', lastMessage: '5f5e294b0106831e48a7a31e'});
+
+// Get contacts new style
+socket.on('recieve_conversation', ({
+  conversation,
+}) => {
+  console.log(conversation)
+});
+
+/************************************************************* */
 
 // Get userName and contacts
 socket.on('get-self-groups-and-contacts', ({
@@ -81,7 +106,7 @@ socket.on('receive-message', (message) => {
   } else {
     if (message.group) {
       for (const i in allGroups) {
-        if (group == allGroups[i]._id) {
+        if (message.group == allGroups[i]._id) {
           allGroups[i].unreadMessages += 1
           groupsList.childNodes[i].innerHTML = `${allGroups[i].name} ${allGroups[i].unreadMessages}`
         }

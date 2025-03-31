@@ -29,6 +29,9 @@ const chatGroupSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    profile: {
+        type: String
+    },
     status: {
         type: Boolean,
         default: true

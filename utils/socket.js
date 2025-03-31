@@ -11,7 +11,10 @@ const {
     returnUser,
     Message,
     getLatestMessages,
-    ChatGroup
+    ChatGroup,
+    formatContacts,
+    getConversationMessages,
+    formatMessages
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -30,8 +33,23 @@ module.exports.listen = (app) => {
         socket.on('request_user_contacts', async () => {
             // get the latest conversations
             const latestMessages = await getLatestMessages(id)
+
+            // format the contacts
+            const contacts = await formatContacts(latestMessages, id)
+
             // send the messages
-            socket.emit('recieve_user_contacts', unreadMessages);
+            socket.emit('recieve_user_contacts', { contacts: contacts });
+        })
+
+        socket.on('request_conversation', async ({ groupId, contactId, lastMessage }) => {
+            // get the messages
+            const messages = await getConversationMessages({ userId: id, groupId: groupId, contactId: contactId, lastMessage: lastMessage  })
+
+            // format the messages
+            const formatedMessages = await formatMessages(messages, id)
+
+            // send the messages
+            socket.emit('recieve_conversation', { conversation: formatedMessages });
         })
 
 
