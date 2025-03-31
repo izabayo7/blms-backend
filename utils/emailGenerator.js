@@ -2061,7 +2061,7 @@ exports.invitationToSystem = ({
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
-                                href="https://kurious.rw/auth/register?token=${token}"
+                                href="https://test.kurious.rw/auth/register?token=${token}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                         >
