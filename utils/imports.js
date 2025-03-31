@@ -752,16 +752,22 @@ module.exports.getLatestMessages = async (user_id) => {
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
 
+  const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
+
   for (const message of receivedMessages) {
-    if (!latestMessages.includes(message)) {
-      for (const k in receivedMessages) {
-        if (receivedMessages[k]._id !== message._id) {
-          const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
-          const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
-          if (await receiversMatch(minorMessage.receivers, majorMessage.receivers)) {
-            latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
+    if (!systemMessageFound.length)
+      latestMessages.push(message)
+    else {
+      if (!latestMessages.includes(message)) {
+          for (const k in receivedMessages) {
+            if (receivedMessages[k]._id !== message._id) {
+              const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
+              const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
+              if (await receiversMatch(minorMessage.receivers, majorMessage.receivers)) {
+                latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
+              }
+            }
           }
-        }
       }
     }
   }
