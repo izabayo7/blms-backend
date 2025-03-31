@@ -630,6 +630,13 @@ router.put('/release_marks/:id', async (req, res) => {
         if (!quiz)
             return res.send(formatResult(404, 'quiz not found'))
 
+        let unmarked = await countDocuments(Quiz_submission, {
+            exam: req.params.id,
+            marked: false
+        })
+
+        if (unmarked)
+            return res.send(formatResult(403, `Please mark the remaining ${unmarked} submission${unmarked > 1 ? 's' : ''} before releasing marks`))
 
         let result = await updateDocument(Quiz, req.params.id,
             {
