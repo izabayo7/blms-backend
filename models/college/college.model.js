@@ -4,12 +4,17 @@ const {
     Joi,
     timestamps
 } = require('../../utils/imports')
-
+const plans = ['TRIAL','HUGUKA', 'JIJUKA', 'MINUZA']
 const college_schema = new mongoose.Schema({
     name: {
         type: String,
         unique: true,
         required: true
+    },
+    plan: {
+        type: String,
+        enum: plans,
+        default: 'TRIAL'
     },
     email: {
         type: String

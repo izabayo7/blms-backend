@@ -20,7 +20,7 @@ const userPaymentsSchema = new mongoose.Schema({
     },
     user: {
         type: String,
-        ref: "user_category"
+        ref: "user"
     },
     amount_paid: {
         type: Number
@@ -32,7 +32,7 @@ const userPaymentsSchema = new mongoose.Schema({
 },{timestamps: true})
 
 // validate user
-exports.validate_user = (credentials) => {
+exports.validate_account_payments = (credentials) => {
     const schema = {
         method_used: Joi.string().enum(methods).required(),
         amount_paid: Joi.number().min(1).max(100).required()
