@@ -227,7 +227,6 @@ router.get('/user/:user_name', async (req, res) => {
             _id: user.category
         })
         if (user_category.name == 'STUDENT') {
-            console.log('Student hhhhhhhhhhhhhhhhh')
             const user_faculty_college_year = await findDocument(User_faculty_college_year, {
                 user: user._id,
                 status: 1
@@ -238,8 +237,9 @@ router.get('/user/:user_name', async (req, res) => {
             result = await findDocuments(Course, {
                 faculty_college_year: user_faculty_college_year.faculty_college_year
             })
+            console.log(result)
             result = simplifyObject(result)
-            result = await injectUserProgress(result, user._id+'')
+            result = await injectUserProgress(result, user._id + '')
             result = await injectUser(result, 'user')
         } else {
             result = await findDocuments(Course, {

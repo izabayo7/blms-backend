@@ -232,7 +232,7 @@ router.get('/user/:user_name', async (req, res) => {
   try {
     // check if user exist
     let user = await findDocument(User, {
-      user_name: req.params.id
+      user_name: req.params.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
