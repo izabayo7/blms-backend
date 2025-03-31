@@ -446,7 +446,7 @@ router.get('/college', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/faculty/:id', async (req, res) => {
+router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
@@ -478,11 +478,9 @@ router.get('/faculty/:id', async (req, res) => {
 
         }
 
-        if (foundCourses.length === 0)
-            return res.send(formatResult(404, `${college.name} course list is empty`))
-
-        // foundCourses = await injectUser(foundCourses, 'user')
-        // foundCourses = await injectChapters(foundCourses)
+        foundCourses = await injectUser(foundCourses, 'user')
+        foundCourses = await injectChapters(foundCourses)
+        foundCourses = await injectFaculty_college_year(foundCourses)
 
         return res.send(formatResult(u, u, foundCourses))
     } catch (error) {
