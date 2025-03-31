@@ -1074,11 +1074,13 @@ exports.injectNotification = async (array) => {
             let notification = await this.findDocument(this.Notification, {
                 _id: array[i].notifications[k].id
             })
-            notification = await this.injectUser([notification], 'user')
-            notification = notification[0]
+            if (notification.user) {
+                notification = await this.injectUser([notification], 'user')
+                notification = notification[0]
+            }
             array[i].notifications[k].id = undefined
             array[i].notifications[k].notification = notification
-            if(notification.mes){
+            if (notification.mes) {
 
             }
         }
@@ -1495,10 +1497,10 @@ exports.handleChunk = async (chunk, id) => {
 }
 
 exports.makeCode = (length) => {
-    var result           = '';
-    var characters       = 'AiB0CD1EfF2GpH3IaJ4KhL5MmN6OeP7QR8ScT9UVWXnYbZdgjkloqrstuvwxyz';
+    var result = '';
+    var characters = 'AiB0CD1EfF2GpH3IaJ4KhL5MmN6OeP7QR8ScT9UVWXnYbZdgjkloqrstuvwxyz';
     var charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
+    for (var i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() *
             charactersLength));
     }
