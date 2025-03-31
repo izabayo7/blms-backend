@@ -76,8 +76,13 @@ router.get('/', async (req, res) => {
  *         description: Fields for a faculty_college
  *         in: body
  *         required: true
- *         schema:
- *           $ref: '#/definitions/Faculty_college'
+ *         type: object
+ *         properties:
+ *           faculty:
+ *             type: string
+ *             description: faculty name
+ *           college:
+ *             description: college name
  *     responses:
  *       201:
  *         description: Created
@@ -98,28 +103,28 @@ router.post('/', async (req, res) => {
 
     // check if faculty exist
     let faculty = await findDocument(Faculty, {
-      _id: req.body.faculty
+      name: req.body.faculty
     })
     if (!faculty)
-      return res.send(formatResult(404, `Faculty with code ${req.body.faculty} doens't exist`))
+      return res.send(formatResult(404, 'faculty not found'))
 
     // check if college exist
     let college = await findDocument(College, {
-      _id: req.body.college
+      name: req.body.college
     })
     if (!college)
-      return res.send(formatResult(404, `College with code ${req.body.college} doens't exist`))
+      return res.send(formatResult(404, 'college not found'))
 
     let faculty_college = await findDocument(Faculty_college, {
-      faculty: req.body.faculty,
-      college: req.body.college
+      faculty: faculty._id,
+      college: college._id
     })
     if (faculty_college)
-      return res.send(formatResult(400, `faculty_college you want to create arleady exist`))
+      return res.send(formatResult(403, 'faculty_college arleady exist'))
 
     let result = await createDocument(Faculty_college, {
-      faculty: req.body.faculty,
-      college: req.body.college
+      faculty: faculty._id,
+      college: college._id
     })
 
     // result = await injectDetails([simplifyObject(result)])

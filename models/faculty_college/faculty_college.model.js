@@ -44,8 +44,8 @@ faculty_college_schema.plugin(timestamps)
 // validate faculty-college
 function validate_faculty_college(credentials) {
     const schema = {
-        faculty: Joi.ObjectId().required(),
-        college: Joi.ObjectId().required(),
+        faculty: Joi.string().required(),
+        college: Joi.string().required(),
         leader: Joi.object({
             id: Joi.ObjectId().required(),
             start_date: Joi.date().required(),
