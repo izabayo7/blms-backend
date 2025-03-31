@@ -203,9 +203,9 @@ router.get('/user/:user', async (req, res) => {
       user: user._id
     })
 
-    // quiz = await addAttachmentMediaPaths(quiz)
-    // quiz = await addQuizUsages(quiz)
-    // quiz = await addAttachedCourse(quiz)
+    quiz = await addAttachmentMediaPaths(quiz)
+    quiz = await addQuizUsages(quiz)
+    quiz = await addAttachedCourse(quiz)
 
     return res.send(formatResult(u, u, quiz))
   } catch (error) {

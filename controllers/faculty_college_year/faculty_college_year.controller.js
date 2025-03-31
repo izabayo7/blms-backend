@@ -224,7 +224,7 @@ router.get('/user/:user_name', async (req, res) => {
  *     parameters:
  *       - name: body
  *         description: Fields for a faculty_college_year
- *         in: body1
+ *         in: body
  *         required: true
  *         schema:
  *           $ref: '#/definitions/Faculty_college_year'
