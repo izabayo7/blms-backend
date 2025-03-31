@@ -75,7 +75,7 @@ router.get('/', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegePaymentPlans)
  *       500:
  *         description: Internal Server error
  */
-router.get('/current', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegeCurrentPaymentPlan)
+router.get('/current', getCollegeCurrentPaymentPlan)
 
 /**
  * @swagger
