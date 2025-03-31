@@ -309,7 +309,6 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     quiz = await addAttachedCourse(quiz)
     quiz = await addQuizTarget(quiz)
     quiz = quiz[0]
-
     return res.send(formatResult(u, u, quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
