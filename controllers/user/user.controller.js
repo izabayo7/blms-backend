@@ -577,7 +577,7 @@ router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
  *     description: tells whether the email is available or taken
  *     parameters:
  *       - name: email
- *         description: User name
+ *         description: User email
  *         in: path
  *         required: true
  *         type: string
@@ -590,6 +590,29 @@ router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
  *         description: Internal Server error
  */
 router.get('/checkEmailExistance/:email', checkEmailExistance)
+
+/**
+ * @swagger
+ * /user/checkPhoneExistance/{phone}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: tells whether the phone is available or taken
+ *     parameters:
+ *       - name: phone
+ *         description: User phone
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/checkEmailExistance/:phone', checkPhoneExistance)
 
 /**
  * @swagger
@@ -1741,7 +1764,7 @@ async function checkEmailExistance(req, res) {
         const user = await User.findOne({email: req.params.email, "status.deleted": {$ne: 1}});
         if (user) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
 
-        const college = await User.findOne({email: req.params.email);
+        const college = await User.findOne({email: req.params.email});
         if (college) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
 
         return res.send(formatResult(200, 'Email Available', {exists: false}));
@@ -1751,19 +1774,19 @@ async function checkEmailExistance(req, res) {
 }
 
 /**
- * Check Email Existence
+ * Check Phone Existence
  * @param req
  * @param res
  */
-async function checkEmailExistance(req, res) {
+async function checkPhoneExistance(req, res) {
     try {
-        const user = await User.findOne({email: req.params.email, "status.deleted": {$ne: 1}});
-        if (user) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+        const user = await User.findOne({phone: req.params.phone, "status.deleted": {$ne: 1}});
+        if (user) return res.send(formatResult(200, 'Phone Already Taken', {exists: true}));
 
-        const college = await User.findOne({email: req.params.email);
-        if (college) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+        const college = await User.findOne({phone: req.params.phone});
+        if (college) return res.send(formatResult(200, 'Phone Already Taken', {exists: true}));
 
-        return res.send(formatResult(200, 'Email Available', {exists: false}));
+        return res.send(formatResult(200, 'Phone Available', {exists: false}));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
