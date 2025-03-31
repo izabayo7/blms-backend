@@ -14,6 +14,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    address: {
+        type: String,
+    },
     user_name: {
         type: String,
         unique: true,
@@ -103,6 +106,7 @@ exports.validate_user = (credentials, method = 'create') => {
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         phone: Joi.string().regex(this.PhoneRegex).required(),
+        address: Joi.string().min(3).max(100).required(),
         email: Joi.string().email().required(),
         date_of_birth: Joi.date().required(),
         course_id: Joi.ObjectId().required()
@@ -113,6 +117,7 @@ exports.validate_user = (credentials, method = 'create') => {
         user_name: Joi.string().min(3).max(100), // regex needed
         gender: Joi.string().min(4).max(6).valid('male', 'female'),
         phone: Joi.string().regex(this.PhoneRegex),
+        address: Joi.string().min(3).max(100),
         email: Joi.string().email(),
         date_of_birth: Joi.date()
     }

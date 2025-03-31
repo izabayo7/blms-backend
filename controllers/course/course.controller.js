@@ -727,7 +727,8 @@ router.get('/school/:abbreviation', async (req, res) => {
                 cover_picture: true,
                 haveCertificate: true,
                 description: true,
-                price: true
+                price: true,
+                duration: true
             }, undefined, undefined, true);
 
             courses = await injectUser(courses, 'user')
