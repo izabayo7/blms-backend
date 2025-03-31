@@ -294,9 +294,8 @@ router.get('/student/:id', async (req, res) => {
       student: student._id,
       status: 1
     }).lean()
-
     let courses = await Course.find({
-      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: false
+      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: true
     }).lean()
     if (courses.length === 0)
       return res.status(404).send(`There are no courses for student ${req.params.id}`)
@@ -359,7 +358,7 @@ router.get('/student/:studentId/:courseName', async (req, res) => {
     }).lean()
 
     let courses = await Course.find({
-      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: false
+      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: true
     }).lean()
     if (courses.length < 1)
       return res.status(404).send(`The requested course was not found`)
@@ -463,10 +462,13 @@ router.post('/', async (req, res) => {
     coverPicture: req.file === undefined ? undefined : req.file.filename
   })
 
-  const saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.status(201).send(saveDocument)
-  return res.status(500).send('New Course not Registered')
+  let saveDocument = await newDocument.save()
+  if (!saveDocument)
+    return res.status(500).send('New Course not Registered')
+  saveDocument = await injectChapters([saveDocument])
+  saveDocument = await injectFacultyCollegeYear(saveDocument)
+  return res.status(201).send(saveDocument[0])
+
 })
 
 /**
@@ -506,21 +508,24 @@ router.put('/tooglePublishment/:id', async (req, res) => {
   if (!course)
     return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
 
-    const now = new Date()
+  const now = new Date()
 
   const updateObject = {
     published: !course.published,
     publishedOn: !course.published ? now : undefined
   }
 
-  const updateDocument = await Course.findOneAndUpdate({
+  let updateDocument = await Course.findOneAndUpdate({
     _id: req.params.id
   }, updateObject, {
     new: true
-  })
-  if (updateDocument)
-    return res.status(201).send(updateDocument)
-  return res.status(500).send("Error ocurred")
+  }).lean()
+  if (!updateDocument)
+    return res.status(500).send("Error ocurred")
+
+  updateDocument = await injectFacultyCollegeYear([updateDocument])
+  return res.status(201).send(updateDocument[0])
+
 
 })
 

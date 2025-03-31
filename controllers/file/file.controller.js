@@ -1305,7 +1305,7 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
 })
 
 // updated a chapter content
-router.post('/updateChapterContent/:id', async (req, res) => {
+router.put('/updateChapterContent/:id', async (req, res) => {
     try {
         const {
             error
@@ -1346,8 +1346,8 @@ router.post('/updateChapterContent/:id', async (req, res) => {
     }
 })
 
-// add a mainVideo to chapter
-router.post('/addMainVideo/:chapter', async (req, res) => {
+// update a mainVideo of chapter
+router.put('/updateMainVideo/:chapter', async (req, res) => {
     try {
         const {
             error
@@ -1375,6 +1375,14 @@ router.post('/addMainVideo/:chapter', async (req, res) => {
         upload(req, res, async (err) => {
             if (err)
                 return res.status(500).send(err.message)
+
+            if (chapter.mainVideo) {
+                fs.unlink(`${req.kuriousStorageData.dir}/${chapter.mainVideo}`, (err) => {
+                    if (err)
+                        return res.status(500).send(err)
+                })
+            }
+
             const updateDocument = await Chapter.findOneAndUpdate({
                 _id: req.params.chapter
             }, {
@@ -1393,7 +1401,7 @@ router.post('/addMainVideo/:chapter', async (req, res) => {
 })
 
 // add an attachment
-router.post('/AddAttachments/:chapter', async (req, res) => {
+router.post('/addAttachments/:chapter', async (req, res) => {
     try {
         const {
             error
@@ -1418,6 +1426,7 @@ router.post('/AddAttachments/:chapter', async (req, res) => {
             dir: `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/attachments`,
             model: 'attachment'
         }
+        let savedAttachments = []
         uploadPlus(req, res, async (err) => {
             if (err)
                 return res.status(500).send(err.message)
@@ -1436,10 +1445,9 @@ router.post('/AddAttachments/:chapter', async (req, res) => {
                         index: i
                     })
                 }
+                savedAttachments.push(saveDocument)
             }
-            return res.status(201).send({
-                message: 'All attachments were successfully uploaded'
-            })
+            return res.status(201).send(savedAttachments)
         })
 
     } catch (error) {

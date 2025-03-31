@@ -113,7 +113,8 @@ router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
-  rror = validateChapter(req.body)
+  error = validateChapter(req.body)
+  error = error.error
   if (error)
     return res.send(error.details[0].message).status(400)
 

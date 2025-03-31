@@ -29,7 +29,6 @@ var socket = io.connect('/', {
 
 // get essential description
 socket.emit('request-self-groups-and-contacts');
-socket.emit('request-unread-messages');
 
 /************************************************************* */
 
@@ -72,6 +71,7 @@ socket.on('get-self-groups-and-contacts', ({
   allGroups = groups
   userContacts = contacts
   outputUser(userName);
+  socket.emit('request-unread-messages');
 });
 
 function findMessage(id) {
@@ -94,6 +94,7 @@ socket.on('previous-messages', (messages) => {
 
 // Message from server
 socket.on('receive-message', (message) => {
+  console.log(message)
 
   allMessages.push(message)
 
@@ -207,9 +208,9 @@ socket.on('unread-messages', (messages) => {
       }
     }
   }
+  allMessages = messages
   outputContacts(userContacts);
   outputGroups(allGroups);
-  allMessages = messages
 });
 
 // decrease unread messages

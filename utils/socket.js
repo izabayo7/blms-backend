@@ -214,13 +214,6 @@ module.exports.listen = (app) => {
 
             if (saveDocument) {
                 recipients.forEach(recipient => {
-                    const newRecipients = []
-                    for (const _recipient of recipients) {
-                        if (_recipient !== recipient) {
-                            newRecipients.push(_recipient.id)
-                        }
-                    }
-                    newRecipients.push(id)
                     // send the message
                     socket.broadcast.to(recipient.id).emit('receive-message', newDocument)
                 })
