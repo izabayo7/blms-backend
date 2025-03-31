@@ -1405,7 +1405,7 @@ exports.injectCommentsReplys = async (comments) => {
     // simplify 
     comments[i].replies = replies
   }
-  return comments
+  return comments;
 }
 
 exports.injectFaculty_college_year = async (courses) => {
@@ -1443,7 +1443,7 @@ exports.injectFaculty_college_year = async (courses) => {
   return courses
 }
 
-exports. = async (dataString, dir) => {
+exports.savedecodedBase64Image = (dataString, dir) => {
 
   var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
     response = {};
