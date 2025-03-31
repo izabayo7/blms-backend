@@ -22,6 +22,9 @@ const {
   validateUserLogin,
   generateAuthToken,
   Search,
+  Course,
+  User_progress,
+  Quiz_submission,
 
 } = require('../../utils/imports')
 
@@ -580,10 +583,39 @@ router.delete('/:id', async (req, res) => {
       return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 
     // check if the user is never used
-    const user_found = await findDocument(User_faculty_college_year, {
+    let user_used = false
+
+    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
       user: req.params.id
     })
-    if (!user_found.data) {
+    if (user_faculty_college_year.data)
+      user_used = true
+
+    const course = await findDocument(Course, {
+      user: req.params.id
+    })
+    if (course.data)
+      user_used = true
+
+    const quiz = await findDocument(Quiz, {
+      user: req.params.id
+    })
+    if (quiz.data)
+      user_used = true
+
+    const progress = await findDocument(User_progress, {
+      user: req.params.id
+    })
+    if (progress.data)
+      user_used = true
+
+    const submission = await findDocument(Quiz_submission, {
+      user: req.params.id
+    })
+    if (submission.data)
+      user_used = true
+
+    if (!user_used) {
 
       const result = await deleteDocument(User, req.params.id)
 

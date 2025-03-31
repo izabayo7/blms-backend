@@ -401,11 +401,18 @@ router.post('/', async (req, res) => {
     if (!faculty_college_year.data)
       return res.send(formatResult(404, 'faculty_college_year not found'))
 
+    let user_category = await findDocument(User_category, {
+      name: 'INSTRUCTOR'
+    })
+
     let user = await findDocument(User, {
       _id: req.body.user
     })
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
+
+    if (user.data.category !== user_category.data._id)
+      return res.send(formatResult(404, 'user can\'t create course'))
 
     let course = await findDocument(Course, {
       name: req.body.name
@@ -528,18 +535,26 @@ router.put('/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    // check if course exist
-    let course = await findDocument(Course, {
-      _id: req.params.id
+    let user_category = await findDocument(User_category, {
+      name: 'INSTRUCTOR'
     })
-    if (!course.data)
-      return res.send(formatResult(404, 'course not found'))
 
     let user = await findDocument(User, {
       _id: req.body.user
     })
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
+
+    if (user.data.category !== user_category.data._id)
+      return res.send(formatResult(404, 'user can\'t create quiz'))
+
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.params.id,
+      user: req.body.user
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
     course = await findDocument(Course, {
       _id: {
@@ -596,7 +611,7 @@ router.delete('/:id', async (req, res) => {
       return res.send(formatResult(404, 'course not found'))
 
     // check if the course is never used
-    const course_used = false
+    let course_used = false
 
     const progress = await findDocument(User_progress, {
       course: req.params.id
@@ -611,8 +626,6 @@ router.delete('/:id', async (req, res) => {
       course_used = true
 
     if (!course_used) {
-
-
 
       const chapters = await findDocuments(Chapter, { course: req.params.id })
 

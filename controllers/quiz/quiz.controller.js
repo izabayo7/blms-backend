@@ -16,7 +16,9 @@ const {
   findDocuments,
   formatResult,
   findDocument,
-  User
+  User,
+  User_category,
+  createDocument
 } = require('../../utils/imports')
 const {
   parseInt
@@ -36,7 +38,7 @@ const router = express.Router()
  *         type: string
  *       duration:
  *         type: number
- *       totalMarks:
+ *       total_marks:
  *         type: number
  *       user:
  *         type: string
@@ -331,175 +333,227 @@ router.post('/', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
+    let user_category = await findDocument(User_category, {
+      name: 'INSTRUCTOR'
+    })
+
     let user = await findDocument(User, {
-      _id: req.params.id
+      _id: req.body.user
     })
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
 
+    if (user.data.category !== user_category.data._id)
+      return res.send(formatResult(404, 'user can\'t create quiz'))
+
     // check if quizname exist
-    let quiz = await Quiz.findOne({
+    let quiz = await findDocument(Quiz, {
       name: req.body.name
     })
-    if (quiz)
-      return res.send(formatResult(400, `Quiz ${req.body.name} arleady exist try another name`))
+    if (quiz.data)
+      return res.send(formatResult(400, 'name was taken'))
 
     const validQuestions = validateQuestions(req.body.questions)
     if (validQuestions.status !== true)
       return res.send(formatResult(400, validQuestions.error))
 
-    let newDocument = new Quiz({
+    let result = await createDocument(Quiz, {
       name: req.body.name,
       duration: req.body.duration,
       instructions: req.body.instructions,
       user: req.body.user,
       questions: req.body.questions,
-      totalMarks: validQuestions.totalMarks
+      total_marks: validQuestions.total_marks
     })
 
-    const saveDocument = await newDocument.save()
-    if (saveDocument)
-      return res.status(201).send(saveDocument)
-    return res.status(500).send('New Quiz not Registered')
+    return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
   }
 })
 
-// updated a quiz
+/**
+ * @swagger
+ * /quiz/{id}:
+ *   put:
+ *     tags:
+ *       - Quiz
+ *     description: Update quiz
+ *     parameters:
+ *       - name: id
+ *         description: Quiz id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Fields for a quiz
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Quiz'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(formatResult(400, error.details[0].message))
-  error = validate_quiz(req.body)
-  error = error ? error.error : error
-  if (error)
-    return res.send(formatResult(400, error.details[0].message))
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if quiz exist
-  let quiz = await Quiz.findOne({
-    _id: req.params.id
-  })
-  if (!quiz)
-    return res.send(formatResult(404, `Quiz with code ${req.params.id} doens't exist`))
+    error = validate_quiz(req.body)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  let user = await Instructor.findOne({
-    _id: req.body.user
-  })
-  if (!user)
-    return res.send(formatResult(404, `Instructor of Code ${req.body.user} Not Found`))
-
-  // // check if quizname exist
-  // let _quiz = await Quiz.findOne({
-  //   // use id not equal
-  //   name: req.body.name
-  // })
-  // if (_quiz && _quiz._id !== quiz._id)
-  //   return res.send(formatResult(404,`Quiz ${req.body.name} arleady exist try another name`))
-
-  if (req.body.target) {
-
-    req.body.target.type = req.body.target.type.toLowerCase()
-
-    const allowedTargets = ['chapter', 'course', 'faculty_college_year']
-
-    if (!allowedTargets.includes(req.body.target.type))
-      return res.send(formatResult(404, `Quiz target type ${req.body.target.type} doens't exist`))
-
-    let Target
-
-    switch (req.body.target.type) {
-      case 'chapter':
-        Target = await Chapter.find({
-          _id: req.body.target.id
-        })
-        break;
-
-      case 'course':
-        Target = await Course.find({
-          _id: req.body.target.id
-        })
-        break;
-
-      case 'faculty_college_year':
-        Target = await Faculty_college_year.find({
-          _id: req.body.target.id
-        })
-        break;
-
-      default:
-        break;
-    }
-
-    if (!Target)
-      return res.send(formatResult(400, `Quiz target id ${req.body.target.id} doens't exist`))
-
-    const latesTargetedQuiz = await Quiz.findOne({
-      target: req.body.target
+    let user_category = await findDocument(User_category, {
+      name: 'INSTRUCTOR'
     })
-    if (latesTargetedQuiz) {
-      latesTargetedQuiz.target = undefined
-      await latesTargetedQuiz.save()
-    }
-  }
-  const validQuestions = validateQuestions(req.body.questions)
-  if (validQuestions.status !== true)
-    return res.send(formatResult(400, validQuestions.error))
 
-  req.body.totalMarks = validQuestions.totalMarks
+    let user = await findDocument(User, {
+      _id: req.body.user
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-  quiz.name = req.body.name
-  quiz.instructions = req.body.instructions
-  quiz.target = req.body.target
-  quiz.duration = req.body.duration
-  quiz.questions = req.body.questions
-  quiz.totalMarks = req.body.totalMarks
-  quiz.user = req.body.user
-  quiz.published = req.body.published
+    if (user.data.category !== user_category.data._id)
+      return res.send(formatResult(404, 'user can\'t create quiz'))
 
-  const updateDocument = await quiz.save()
-  if (!updateDocument)
-    return res.status(500).send("Error ocurred")
+    // check if quiz exist
+    let quiz = await findDocument(Quiz, {
+      _id: req.params.id,
+      user: req.body.user
+    })
+    if (!quiz.data)
+      return res.send(formatResult(404, 'quiz not found'))
 
-  // delete removed files
-  for (const i in quiz.questions) {
-    if (
-      quiz.questions[i].type.includes("file-select") &&
-      quiz.questions[i].options.choices.length > 0
-    ) {
-      let deleteAll = false
-      if (!req.body.questions[i].type.includes('file-select')) {
-        deleteAll = true
+    // check if quizname exist
+    quiz = await findDocument(Quiz, {
+      _id: {
+        $ne: req.params.id
+      },
+      name: req.body.name
+    })
+    if (quiz.data)
+      return res.send(formatResult(400, 'name was taken'))
+
+    if (req.body.target) {
+
+      req.body.target.type = req.body.target.type.toLowerCase()
+
+      const allowedTargets = ['chapter', 'course', 'faculty_college_year']
+
+      if (!allowedTargets.includes(req.body.target.type))
+        return res.send(formatResult(400, 'invalid quiz target_type'))
+
+      let target
+
+      switch (req.body.target.type) {
+        case 'chapter':
+          target = await findDocument(Chapter, {
+            _id: req.body.target.id
+          })
+          break;
+
+        case 'course':
+          target = await findDocument(Course, {
+            _id: req.body.target.id
+          })
+          break;
+
+        case 'faculty_college_year':
+          target = await findDocument(Faculty_college_year, {
+            _id: req.body.target.id
+          })
+          break;
+
+        default:
+          break;
       }
-      for (const j in quiz.questions[i].options.choices) {
-        let deletePicture = true
-        if (req.body.questions[i].type.includes('file-select')) {
-          for (const k in req.body.questions[i].options.choices) {
-            if (quiz.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
-              deletePicture = false
+
+      if (!target.data)
+        return res.send(formatResult(404, 'quiz target not found'))
+
+      // const last_targeted_quiz = await Quiz.findOne({
+      //   target: req.body.target
+      // })
+      // if (last_targeted_quiz) {
+      //   last_targeted_quiz.target = undefined
+      //   await last_targeted_quiz.save()
+      // }
+
+      const last_targeted_quiz = await findDocument(Quiz, {
+        target: req.body.target
+      })
+      if (last_targeted_quiz.data) {
+        last_targeted_quiz.data.target = undefined
+        await last_targeted_quiz.data.save()
+      }
+    }
+
+    const validQuestions = validateQuestions(req.body.questions)
+    if (validQuestions.status !== true)
+      return res.send(formatResult(400, validQuestions.error))
+
+    req.body.total_marks = validQuestions.total_marks
+
+    quiz.data.name = req.body.name
+    quiz.data.instructions = req.body.instructions
+    quiz.data.target = req.body.target
+    quiz.data.duration = req.body.duration
+    quiz.data.questions = req.body.questions
+    quiz.data.total_marks = req.body.total_marks
+    quiz.data.user = req.body.user
+    quiz.data.published = req.body.published
+
+    await quiz.data.save()
+
+
+    // delete removed files
+    for (const i in quiz.questions) {
+      if (
+        quiz.questions[i].type.includes("file-select") &&
+        quiz.questions[i].options.choices.length > 0
+      ) {
+        let deleteAll = false
+        if (!req.body.questions[i].type.includes('file-select')) {
+          deleteAll = true
+        }
+        for (const j in quiz.questions[i].options.choices) {
+          let deletePicture = true
+          if (req.body.questions[i].type.includes('file-select')) {
+            for (const k in req.body.questions[i].options.choices) {
+              if (quiz.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
+                deletePicture = false
+              }
             }
           }
-        }
-        if (deleteAll || deletePicture) {
-          const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
-          fs.exists(path, (exists) => {
-            if (exists) {
-              fs.unlink(path, (err) => {
-                if (err) {
-                  return res.status(500).send(err)
-                }
-              })
-            }
-          })
+          if (deleteAll || deletePicture) {
+            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
+            fs.exists(path, (exists) => {
+              if (exists) {
+                fs.unlink(path, {
+                  recursive: true
+                })
+              }
+            })
+          }
         }
       }
     }
+
+    return res.send(200, 'UPDATED', quiz.data)
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
-
-  return res.status(201).send(updateDocument)
-
 })
 
 // delete a quiz
@@ -511,17 +565,16 @@ router.delete('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    let quiz = await Quiz.findOne({
+
+    let quiz = await findDocument(Quiz, {
       _id: req.params.id
     })
-    if (!quiz)
-      return res.send(formatResult(404, `Quiz of Code ${req.params.id} Not Found`))
+    if (!quiz.data)
+      return res.send(formatResult(404, 'quiz not found'))
 
-    let user = await Instructor.findOne({
+    let user = await findDocument(User, {
       _id: quiz.user
     })
-    if (!user)
-      return res.send(formatResult(404, `Instructor of Code ${req.body.user} Not Found`))
 
     let deletedQuiz = await Quiz.findOneAndDelete({
       _id: req.params.id
@@ -591,7 +644,7 @@ function validateQuestions(questions) {
   }
   return message === '' ? {
     status: true,
-    totalMarks: marks
+    total_marks: marks
   } : {
       status: false,
       error: message
