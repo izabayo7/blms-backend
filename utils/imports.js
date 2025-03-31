@@ -17,7 +17,6 @@ exports.fs = require('fs-extra')
 exports.timestamps = require('mongoose-timestamp');
 exports._ = require('lodash')
 exports.path = require('path')
-exports.RTCMultiConnectionServer = require('rtcmulticonnection-server');
 const EventEmitter = require('events');
 
 class MyEmitter extends EventEmitter {
