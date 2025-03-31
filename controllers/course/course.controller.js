@@ -237,7 +237,7 @@ router.get('/user/:user_name', async (req, res) => {
             result = await findDocuments(Course, {
                 faculty_college_year: user_faculty_college_year.faculty_college_year
             })
-
+            result = simplifyObject(result)
             result = await injecUserProgress(result, user._id)
             result = await injectUser(result, 'user')
         }
@@ -245,10 +245,12 @@ router.get('/user/:user_name', async (req, res) => {
             result = await findDocuments(Course, {
                 user: user._id
             })
+            result = simplifyObject(result)
         }
         // ******* while adding permissions remember to filter data according to the user requesting *******
 
-        result = simplifyObject(result)
+
+        result = await injectChapters(result)
 
 
         return res.send(formatResult(u, u, result))
