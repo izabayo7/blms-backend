@@ -524,6 +524,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Update a chat_group
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         in: path
