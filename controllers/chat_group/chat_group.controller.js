@@ -26,7 +26,8 @@ const {
   validateChat_group_code,
   savedecodedBase64Image,
   validate_chat_group_profile_udpate,
-  auth
+  auth,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -250,7 +251,7 @@ router.get('/:code/profile/:file_name', async (req, res) => {
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    path = `./uploads/colleges/${group.college}/chat/groups/${group._id}/${group.profile}`
+    path = addStorageDirectoryToPath(`./uploads/colleges/${group.college}/chat/groups/${group._id}/${group.profile}`)
     sendResizedImage(req, res, path)
   } catch (error) {
     return res.send(formatResult(500, error))
