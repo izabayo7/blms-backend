@@ -1492,9 +1492,8 @@ exports.addQuizTarget = async (quizes) => {
         _id: chapter ? chapter.course : quiz.target.id
       }).populate('user_group')
 
-      quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt'])
+      quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group'])
       quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
-      quizes[i].target.user_group = course.user_group
 
     }
   }

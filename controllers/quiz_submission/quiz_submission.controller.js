@@ -249,8 +249,6 @@ router.get('/user', auth, async (req, res) => {
       let foundSubmissions = []
 
       quizes = await addAttachmentMediaPaths(quizes)
-      console.log('ahaaaaaaaa')
-
 
       quizes = await addQuizTarget(quizes)
       for (const i in quizes) {
