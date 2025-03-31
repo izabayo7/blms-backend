@@ -1134,14 +1134,14 @@ exports.resizeImage = function resize(path, format, width, height) {
 }
 
 // add mediapaths to quiz attachments
-exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => {
+exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false,isExam=false) => {
     for (const i in quizes) {
         for (const k in quizes[i].questions) {
             if (quizes[i].questions[k].options) {
                 for (const j in quizes[i].questions[k].options.choices) {
                     if (quizes[i].questions[k].options.choices[j].src) {
                         if (!quizes[i].questions[k].options.choices[j].src.includes('http')) {
-                            quizes[i].questions[k].options.choices[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/quiz/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
+                            quizes[i].questions[k].options.choices[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/${isExam ? 'exams' : 'quiz'}/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
                         }
                     }
                     if (removeRightChoice) {
