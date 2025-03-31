@@ -169,6 +169,102 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
+ * /user_notification/allSeen:
+ *   put:
+ *     tags:
+ *       - User_notification
+ *     description: Update a notification
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/allSeen', async (req, res) => {
+    try {
+
+        // check if notification exist
+        let user_notification = await findDocument(User_notification, {
+            user: req.user._id.toString()
+        },u,false)
+        if (!user_notification)
+            return res.send(formatResult(404, 'user_notification not found'))
+
+
+
+        for (const i in user_notification.notifications) {
+            if (user_notification.notifications[i].status === 3) {
+                user_notification.notifications[i].status = 2
+            }
+        }
+
+        const updated_document = await user_notification.save()
+
+        return res.send(formatResult(200, 'UPDATED'))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /user_notification/{notification}/read:
+ *   put:
+ *     tags:
+ *       - User_notification
+ *     description: Update a notification
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: notification
+ *         in: path
+ *         type: string
+ *         description: Notification Id
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:notification/read', async (req, res) => {
+    try {
+
+        // check if notification exist
+        let user_notification = await findDocument(User_notification, {
+            user: req.user._id.toString()
+        },u,false)
+        if (!user_notification)
+            return res.send(formatResult(404, 'user_notification not found'))
+
+
+        let notification_found = false
+        for (const i in user_notification.notifications) {
+            if (user_notification.notifications[i].id ===  req.params.notification) {
+                user_notification.notifications[i].status = 1
+            }
+        }
+
+        const updated_document = await user_notification.save()
+
+        return res.send(formatResult(200, 'UPDATED'))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /user_notification/{id}:
  *   put:
  *     tags:
