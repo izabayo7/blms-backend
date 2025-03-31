@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
     if (!result.length)
       return res.send(formatResult(404, 'User_progress list is empty'))
 
-    return res.send(formatResult(u,u,result))
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -99,7 +99,7 @@ router.get('/:id', async (req, res) => {
     if (!result)
       return res.send(formatResult(404, 'user_progress not found'))
 
-    return res.send(formatResult(u,u,result))
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -166,7 +166,7 @@ router.get('/user/:user_id/:course_id', async (req, res) => {
     if (!user_progress)
       return res.send(formatResult(404, 'user_progress not found'))
 
-    return res.send(formatResult(u,u,user_progress))
+    return res.send(formatResult(u, u, user_progress))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -289,7 +289,7 @@ router.put('/:id', async (req, res) => {
 
     // check if user_progress exist
     let user_progress = await findDocument(User_progress, {
-      _id: req.params.id
+      user_name: req.params.id
     })
     if (!user_progress)
       return res.send(formatResult(404, 'User_progress not found'))

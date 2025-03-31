@@ -37,7 +37,7 @@ user_progress_schema.plugin(timestamps)
 // validate user
 function validate_user_progress(credentials, method = 'put') {
     const schema = {
-        user: Joi.ObjectId().required(),
+        user: Joi.string().required(),
         course: Joi.ObjectId().required(),
         chapter: method == 'put' ? Joi.ObjectId().required() : Joi.ObjectId(),
     }
