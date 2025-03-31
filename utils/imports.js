@@ -53,14 +53,6 @@ exports.User_category = user_category
 exports.validate_user_category = validate_user_category
 
 const {
-    user_role,
-    validate_user_role
-} = require('../models/user_role/user_role.model')
-
-exports.User_role = user_role
-exports.validate_user_role = validate_user_role
-
-const {
     college,
     validate_college
 } = require('../models/college/college.model')
@@ -109,14 +101,6 @@ const {
 
 exports.Faculty_college_year = faculty_college_year
 exports.validate_faculty_college_year = validate_faculty_college_year
-
-const {
-    college_year,
-    validate_college_year
-} = require('../models/college_year/college_year.model')
-
-exports.College_year = college_year
-exports.validate_college_year = validate_college_year
 
 const {
     course,
