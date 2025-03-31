@@ -111,6 +111,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - User_category
  *     description: Create User_category
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a User_category
