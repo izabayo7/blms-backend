@@ -705,7 +705,7 @@ exports.getLatestMessages = async (user_id) => {
     }
   }
   ])
-  
+
   // get latest messages sent to us
   let sentMessages = await this.Message.aggregate([{
     $sort: {
@@ -742,7 +742,7 @@ exports.getLatestMessages = async (user_id) => {
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
   const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
-  
+
   var start = new Date().getTime();
   let i = 0
   for (const message of receivedMessages) {
