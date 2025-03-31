@@ -1,4 +1,5 @@
 // import dependencies
+const {superAdmin} = require("../../middlewares/superAdmin.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
 const {validateUserPasswordUpdate, validate_admin} = require('../../models/user/user.model')
@@ -131,7 +132,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', auth, async (req, res) => {
+router.get('/', [auth, superAdmin], async (req, res) => {
     try {
         let users = await findDocuments(User)
 
