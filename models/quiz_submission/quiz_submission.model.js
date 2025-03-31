@@ -49,6 +49,10 @@ const quiz_submission_schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    results_seen: {
+        type: Boolean,
+        default: false
+    },
     published: {
         type: Boolean,
         default: false
