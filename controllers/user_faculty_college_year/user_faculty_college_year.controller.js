@@ -160,7 +160,7 @@ router.post('/', async (req, res) => {
             return res.send(formatResult(400, 'Only students and instructors can have a connection with the faculty_college_year'))
 
         let last_active_u_f_c_y = await findDocument(User_faculty_college_year, {
-            user: req.body.user,
+            user: user._id,
             status: 1
         })
         if (last_active_u_f_c_y) {
@@ -171,14 +171,14 @@ router.post('/', async (req, res) => {
 
         let user_faculty_college_year = await findDocument(User_faculty_college_year, {
             faculty_college_year: req.body.faculty_college_year,
-            user: req.body.user
+            user: user._id
         })
         if (user_faculty_college_year)
             return res.send(formatResult(400, `user_faculty_college_year you want to create arleady exist`))
 
         let result = await createDocument(User_faculty_college_year, {
             faculty_college_year: req.body.faculty_college_year,
-            user: req.body.user
+            user: user._id
         })
 
         // result = await injectDetails([simplifyObject(result)])
