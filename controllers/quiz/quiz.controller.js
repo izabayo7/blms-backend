@@ -767,7 +767,8 @@ router.delete('/:id/target', async (req, res) => {
 
     // check if quiz exist
     let quiz = await findDocument(Quiz, {
-      _id: req.params.id
+      _id: req.params.id,
+      user: req.user._id
     }, u, false)
     if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
