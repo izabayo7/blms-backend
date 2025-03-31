@@ -13,13 +13,12 @@ const {
   FacultyCollege,
   Faculty,
   Student,
-  Attachment,
+  injectChapters,
   _,
   validateObjectId,
   StudentProgress,
   removeDocumentVersion,
-  Chapter,
-  Quiz
+  injectUser,
 } = require('../../utils/imports')
 
 // create router
@@ -73,7 +72,7 @@ router.get('/', async (req, res) => {
 
     if (courses.length === 0)
       return res.status(404).send('Course list is empty')
-    courses = await injectInstructor(courses)
+    courses = await injectUser(courses, 'instructor')
     courses = await injectChapters(courses)
     return res.status(200).send(courses)
   } catch (error) {
@@ -135,7 +134,7 @@ router.get('/college/:id', async (req, res) => {
     }
     if (foundCourses.length === 0)
       return res.status(404).send(`${college.name} course list is empty`)
-    foundCourses = await injectInstructor(foundCourses)
+    foundCourses = await injectUser(foundCourses, 'instructor')
     foundCourses = await injectChapters(foundCourses)
     return res.status(200).send(foundCourses)
   } catch (error) {
@@ -297,7 +296,7 @@ router.get('/student/:id', async (req, res) => {
     if (courses.length === 0)
       return res.status(404).send(`There are no courses for student ${req.params.id}`)
 
-    courses = await injectInstructor(courses)
+    courses = await injectUser(courses, 'instructor')
     courses = await injectChapters(courses)
     courses = await injectStudentProgress(courses, student._id)
 
@@ -363,7 +362,7 @@ router.get('/student/:studentId/:courseName', async (req, res) => {
     if (course.length < 1) {
       return res.status(404).send(`The requested course was not found`)
     }
-    course = await injectInstructor(course)
+    course = await injectUser(course, 'instructor')
     course = await injectChapters(course)
     course = await injectStudentProgress(course, student._id)
 
@@ -406,7 +405,7 @@ router.get('/:id', async (req, res) => {
   try {
     if (!course)
       return res.status(404).send(`Course ${req.params.id} Not Found`)
-    course = await injectInstructor([course])
+    course = await injectUser([course], 'instructor')
     course = await injectChapters(course)
     return res.status(200).send(course[0])
   } catch (error) {
@@ -640,75 +639,6 @@ router.delete('/:id', async (req, res) => {
   })
   return res.status(200).send(`Course ${deletedCourse._id} Successfully deleted`)
 })
-
-// replace instructor id by the instructor information
-async function injectInstructor(courses) {
-  for (const i in courses) {
-    const instructor = await Instructor.findOne({
-      _id: courses[i].instructor
-    })
-    courses[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
-    if (courses[i].instructor.profile) {
-      courses[i].instructor.profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}/${instructor.profile}`
-    }
-  }
-  return courses
-}
-
-// add chapters in their parent courses
-async function injectChapters(courses) {
-  for (const i in courses) {
-    courses[i].assignmentsLength = 0
-    // add course cover picture media path
-    if (courses[i].coverPicture && !courses[i].coverPicture.includes('http')) {
-      courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${courses[i].coverPicture}`
-    }
-    let chapters = await Chapter.find({
-      course: courses[i]._id
-    }).lean()
-    courses[i].chapters = chapters
-    for (const k in courses[i].chapters) {
-      // remove course and documentVersion
-      courses[i].chapters[k].course = undefined
-      courses[i].chapters[k].__v = undefined
-
-      // add media path of the content
-      courses[i].chapters[k].mainDocument = `http://${process.env.HOST}/kurious/file/chapterDocument/${courses[i].chapters[k]._id}`
-      // add media path of the video
-      if (courses[i].chapters[k].mainVideo) {
-        courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}/${courses[i].chapters[k].mainVideo}`
-      }
-      // add attachments
-      const attachments = await Attachment.find({
-        chapter: courses[i].chapters[k]._id
-      })
-      courses[i].chapters[k].attachments = attachments
-
-      // add assignments attached to chapters
-      const chapterQuiz = await Quiz.find({
-        "target.type": "chapter",
-        "target.id": courses[i].chapters[k]._id
-      })
-      courses[i].chapters[k].quiz = chapterQuiz
-      courses[i].assignmentsLength += chapterQuiz.length
-    }
-
-    // add assignments attached to course
-    const courseQuiz = await Quiz.find({
-      "target.type": 'course',
-      "target.id": courses[i]._id
-    })
-    courses[i].quiz = courseQuiz
-    courses[i].assignmentsLength += courseQuiz.length
-
-    // add the students that started the course
-    courses[i].attendedStudents = await StudentProgress.find({
-      course: courses[i]._id
-    }).countDocuments()
-  }
-  return courses
-}
-
 
 // replace instructor id by the instructor information
 async function injectStudentProgress(courses, studentId) {

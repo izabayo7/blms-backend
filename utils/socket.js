@@ -15,7 +15,11 @@ const {
     formatContacts,
     getConversationMessages,
     formatMessages,
-    _
+    injectChapters,
+    injectInstructor,
+    StudentFacultyCollegeYear,
+    _,
+    Notification
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -223,7 +227,7 @@ module.exports.listen = (app) => {
                 if (user.profile) {
                     newDocument.sender.profile = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
                 }
-                
+
                 recipients.forEach(recipient => {
                     // send the message
                     socket.broadcast.to(recipient.id).emit('receive-message', newDocument)
@@ -361,6 +365,42 @@ module.exports.listen = (app) => {
                 // send success mesage
                 socket.emit('group-created', newDocument)
             }
+        })
+
+        // tell students that a new couse was published
+        socket.on('course-published', async ({
+            courseId
+        }) => {
+
+            // get the course
+            const course = await Course.findOne({ _id: courseId, published: true })
+
+            // add chapters and instructor
+            course = await injectChapters([course])
+            course = await injectInstructor(course)
+            course = course[0]
+
+            let newDocument = new Notification({
+                doer_type: "User",
+                doer_id: id,
+                content: `${course.instructor.surName} published ${course.name}`,
+                link: `/courses/preview/${course.name}`,
+            })
+
+            const saveDocument = await newDocument.save()
+            if (saveDocument) {
+
+                const studentFaucultyCollegeYears = await StudentFacultyCollegeYear.find({ facultyCollegeYear: course.facultyCollegeYear })
+
+                studentFaucultyCollegeYears.forEach(_doc => {
+                    // send the notification
+                    socket.broadcast.to(_doc.student).emit('new-notification', newDocument)
+
+                    // send the course
+                    socket.broadcast.to(_doc.student).emit('new-course', course)
+                })
+            }
+
         })
 
     });

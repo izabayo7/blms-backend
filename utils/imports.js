@@ -226,12 +226,12 @@ module.exports.getCollege = async (id, type) => {
     let course = type === 'chapter' ? await Course.findOne({
         _id: id
     }) : undefined
-    let facultyCollegeYear = await module.exports.FacultyCollegeYear.findOne({
+    let facultyCollegeYear = await this.FacultyCollegeYear.findOne({
         _id: type === 'chapter' ? course.facultyCollegeYear : id
     })
     if (!facultyCollegeYear)
         return `facultyCollegeYear ${id} Not Found`
-    let facultyCollege = await module.exports.FacultyCollege.findOne({
+    let facultyCollege = await this.FacultyCollege.findOne({
         _id: facultyCollegeYear.facultyCollege
     })
     return facultyCollege.college
@@ -244,7 +244,7 @@ module.exports.getCourse = async (id) => {
     return chapter.course
 }
 module.exports.removeDocumentVersion = (obj) => {
-    return module.exports._.omit(obj, '__v')
+    return this._.omit(obj, '__v')
 }
 // get un read messages for a user
 module.exports.getUnreadMesages = async (userId) => {
@@ -666,6 +666,72 @@ module.exports.addAttachmentMediaPaths = (quizes) => {
         }
     }
     return quizes
+}
+
+// add chapters in their parent courses
+module.exports.injectChapters = async (courses) => {
+    for (const i in courses) {
+        courses[i].assignmentsLength = 0
+        // add course cover picture media path
+        if (courses[i].coverPicture && !courses[i].coverPicture.includes('http')) {
+            courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${courses[i].coverPicture}`
+        }
+        let chapters = await this.Chapter.find({
+            course: courses[i]._id
+        }).lean()
+        courses[i].chapters = chapters
+        for (const k in courses[i].chapters) {
+            // remove course and documentVersion
+            courses[i].chapters[k].course = undefined
+            courses[i].chapters[k].__v = undefined
+
+            // add media path of the content
+            courses[i].chapters[k].mainDocument = `http://${process.env.HOST}/kurious/file/chapterDocument/${courses[i].chapters[k]._id}`
+            // add media path of the video
+            if (courses[i].chapters[k].mainVideo) {
+                courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}/${courses[i].chapters[k].mainVideo}`
+            }
+            // add attachments
+            const attachments = await this.Attachment.find({
+                chapter: courses[i].chapters[k]._id
+            })
+            courses[i].chapters[k].attachments = attachments
+
+            // add assignments attached to chapters
+            const chapterQuiz = await this.Quiz.find({
+                "target.type": "chapter",
+                "target.id": courses[i].chapters[k]._id
+            })
+            courses[i].chapters[k].quiz = chapterQuiz
+            courses[i].assignmentsLength += chapterQuiz.length
+        }
+
+        // add assignments attached to course
+        const courseQuiz = await this.Quiz.find({
+            "target.type": 'course',
+            "target.id": courses[i]._id
+        })
+        courses[i].quiz = courseQuiz
+        courses[i].assignmentsLength += courseQuiz.length
+
+        // add the students that started the course
+        courses[i].attendedStudents = await this.StudentProgress.find({
+            course: courses[i]._id
+        }).countDocuments()
+    }
+    return courses
+}
+
+// replace user id by the user information
+module.exports.injectUser = async (array, property) => {
+    for (const i in array) {
+        const user = await this.returnUser(array[i][`${property}`])
+        array[i][`${property}`] = this._.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
+        if (array[i][`${property}`].profile) {
+            array[i][`${property}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user._id}/${user.profile}`
+        }
+    }
+    return array
 }
 
 // authentication middlewares

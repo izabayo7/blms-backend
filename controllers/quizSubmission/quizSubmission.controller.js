@@ -7,6 +7,7 @@ const {
   validateQuizSubmission,
   validateObjectId,
   addAttachmentMediaPaths,
+  injectUser,
   _
 } = require('../../utils/imports')
 const {
@@ -22,7 +23,7 @@ router.get('/', async (req, res) => {
   try {
     if (quizSubmissions.length === 0)
       return res.status(404).send('QuizSubmission list is empty')
-    quizSubmissions = await injectStudent(quizSubmissions)
+    quizSubmissions = await injectUser(quizSubmissions, 'student')
     quizSubmissions = await injectQuiz(quizSubmissions)
     return res.status(200).send(quizSubmissions)
   } catch (error) {
@@ -44,7 +45,7 @@ router.get('/:id', async (req, res) => {
 
     if (!quizSubmission)
       return res.status(404).send(`QuizSubmission ${req.params.id} Not Found`)
-    quizSubmission = await injectStudent([quizSubmission])
+    quizSubmission = await injectUser([quizSubmission], 'student')
     quizSubmission = await injectQuiz(quizSubmission)
     return res.status(200).send(quizSubmission[0])
   } catch (error) {
@@ -74,7 +75,7 @@ router.get('/quiz/:id', async (req, res) => {
 
     if (quizSubmissions.length < 1)
       return res.status(404).send(`Ther are no submissions for quiz ${quiz.name}`)
-    quizSubmissions = await injectStudent(quizSubmissions)
+    quizSubmissions = await injectUser(quizSubmissions, 'student')
     return res.status(200).send(quizSubmissions)
   } catch (error) {
     return res.status(500).send(error)
@@ -108,10 +109,9 @@ router.get('/student/:id', async (req, res) => {
       quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
       quizSubmissions[i].quiz = quizSubmissions[i].quiz[0]
     }
-    quizSubmissions = await injectStudent(quizSubmissions)
+    quizSubmissions = await injectUser(quizSubmissions, 'student')
     return res.status(200).send(quizSubmissions)
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -147,7 +147,7 @@ router.get('/student/:student_name/:quiz_name', async (req, res) => {
     quiz = await addAttachmentMediaPaths([quiz])
 
     quizSubmission.quiz = quiz[0]
-    quizSubmission = await injectStudent([quizSubmission])
+    quizSubmission = await injectUser([quizSubmission], 'student')
 
     return res.status(200).send(quizSubmission[0])
   } catch (error) {
@@ -185,7 +185,7 @@ router.get('/instructor/:id', async (req, res) => {
         quiz: quiz._id
       }).lean()
       if (quizSubmissions.length > 0) {
-        quizSubmissions = await injectStudent(quizSubmissions)
+        quizSubmissions = await injectUser(quizSubmissions,'student')
         quizSubmissions = await injectQuiz(quizSubmissions)
         for (const i in quizSubmissions) {
           quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
@@ -367,21 +367,6 @@ function validateSubmittedAnswers(questions, answers, mode) {
       status: false,
       error: message
     }
-}
-
-// replace student id by the student information
-async function injectStudent(submissions) {
-  for (const i in submissions) {
-    const student = await Student.findOne({
-      _id: submissions[i].student
-    })
-    submissions[i].student = _.pick(student, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
-    // add student profile media path
-    if (submissions[i].student.profile) {
-      submissions[i].student.profile = `http://${process.env.HOST}/kurious/file/studentProfile/${student._id}/${student.profile}`
-    }
-  }
-  return submissions
 }
 
 // replace quiz id by the quiz information
