@@ -1,25 +1,25 @@
 // import dependencies
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {
-  express,
-  Announcement,
-  validate_announcement,
-  validateObjectId,
-  formatResult,
-  findDocument,
-  User,
-  findDocuments,
-  u,
-  Create_or_update_announcement,
-  deleteDocument,
-  Live_session,
-  createDocument,
-  updateDocument,
-  Chapter,
-  injectUser,
-  injectAnnouncementsReplys,
-  simplifyObject,
-  Quiz_submission
+    express,
+    Announcement,
+    validate_announcement,
+    validateObjectId,
+    formatResult,
+    findDocument,
+    User,
+    findDocuments,
+    u,
+    Create_or_update_announcement,
+    deleteDocument,
+    Live_session,
+    createDocument,
+    updateDocument,
+    Chapter,
+    injectUser,
+    injectAnnouncementsReplys,
+    simplifyObject,
+    Quiz_submission
 } = require('../../utils/imports')
 
 // create router
@@ -54,65 +54,65 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/:target/:id', async (req, res) => {
-  try {
+    try {
 
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const allowedTargetTypes = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
+        const allowedTargetTypes = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
 
-    if (!allowedTargetTypes.includes(req.params.target)) {
-      return res.send(formatResult(400, 'invalid target type'))
+        if (!allowedTargetTypes.includes(req.params.target)) {
+            return res.send(formatResult(400, 'invalid target type'))
+        }
+
+        let target
+
+        switch (req.params.target) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.params.id
+                })
+                break;
+
+            case 'live_session':
+                target = await findDocument(Live_session, {
+                    _id: req.params.id
+                })
+                break;
+
+            case 'quiz_submission':
+                target = await findDocument(Quiz_submission, {
+                    _id: req.params.id
+                })
+                break;
+
+            case 'quiz_submission_answer':
+                target = await findDocument(Quiz_submission, {
+                    "answers._id": req.params.id
+                })
+                break;
+
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'announcement target not found'))
+
+        let announcements = await findDocuments(Announcement, {
+            "target.type": req.params.target,
+            "target.id": req.params.id,
+            reply: undefined
+        }, u, u, u, u, u, {_id: -1})
+        announcements = await injectUser(announcements, 'sender')
+        announcements = await injectAnnouncementsReplys(announcements)
+        return res.send(formatResult(u, u, announcements))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    let target
-
-    switch (req.params.target) {
-      case 'chapter':
-        target = await findDocument(Chapter, {
-          _id: req.params.id
-        })
-        break;
-
-      case 'live_session':
-        target = await findDocument(Live_session, {
-          _id: req.params.id
-        })
-        break;
-
-      case 'quiz_submission':
-        target = await findDocument(Quiz_submission, {
-          _id: req.params.id
-        })
-        break;
-
-      case 'quiz_submission_answer':
-        target = await findDocument(Quiz_submission, {
-          "answers._id": req.params.id
-        })
-        break;
-
-      default:
-        break;
-    }
-
-    if (!target)
-      return res.send(formatResult(404, 'announcement target not found'))
-
-    let announcements = await findDocuments(Announcement, {
-      "target.type": req.params.target,
-      "target.id": req.params.id,
-      reply: undefined
-    }, u, u, u, u, u, { _id: -1 })
-    announcements = await injectUser(announcements, 'sender')
-    announcements = await injectAnnouncementsReplys(announcements)
-    return res.send(formatResult(u, u, announcements))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -142,70 +142,70 @@ router.get('/:target/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  try {
-    const {
-      error
-    } = validate_announcement(req.body)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validate_announcement(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const user = await findDocument(User, { user_name: req.body.sender })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
+        const user = await findDocument(User, {user_name: req.body.sender})
+        if (!user)
+            return res.send(formatResult(404, 'user not found'))
 
-    req.body.sender = user._id
+        req.body.sender = user._id
 
-    req.body.target.type = req.body.target.type.toLowerCase()
+        req.body.target.type = req.body.target.type.toLowerCase()
 
-    const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
+        const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
 
-    if (!allowedTargets.includes(req.body.target.type))
-      return res.send(formatResult(400, 'invalid announcement target_type'))
+        if (!allowedTargets.includes(req.body.target.type))
+            return res.send(formatResult(400, 'invalid announcement target_type'))
 
-    let target
+        let target
 
-    switch (req.body.target.type) {
-      case 'chapter':
-        target = await findDocument(Chapter, {
-          _id: req.body.target.id
-        })
-        break;
+        switch (req.body.target.type) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.body.target.id
+                })
+                break;
 
-      case 'live_session':
-        target = await findDocument(Live_session, {
-          _id: req.body.target.id
-        })
-        break;
+            case 'live_session':
+                target = await findDocument(Live_session, {
+                    _id: req.body.target.id
+                })
+                break;
 
-      case 'quiz_submission':
-        target = await findDocument(Quiz_submission, {
-          _id: req.body.target.id
-        })
-        break;
+            case 'quiz_submission':
+                target = await findDocument(Quiz_submission, {
+                    _id: req.body.target.id
+                })
+                break;
 
-      case 'quiz_submission_answer':
-        target = await findDocument(Quiz_submission, {
-          "answers._id": req.body.target.id
-        })
-        break;
+            case 'quiz_submission_answer':
+                target = await findDocument(Quiz_submission, {
+                    "answers._id": req.body.target.id
+                })
+                break;
 
-      default:
-        break;
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'announcement target not found'))
+
+
+        let result = await createDocument(Announcement, req.body)
+        result = simplifyObject(result)
+        result.data = await injectUser([result.data], 'sender')
+        result.data = result.data[0]
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    if (!target)
-      return res.send(formatResult(404, 'announcement target not found'))
-
-
-    let result = await createDocument(Announcement, req.body)
-    result = simplifyObject(result)
-    result.data = await injectUser([result.data], 'sender')
-    result.data = result.data[0]
-
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -214,7 +214,7 @@ router.post('/', async (req, res) => {
  *   put:
  *     tags:
  *       - Announcement
- *     description: Update a announcement
+ *     description: Update announcement
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -227,7 +227,11 @@ router.post('/', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Announcement'
+ *           type: object
+ *           properties:
+ *             content:
+ *               type: string
+ *               required: true
  *     responses:
  *       201:
  *         description: Created
@@ -238,27 +242,27 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
-  try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-    error = validate_announcement(req.body, 'update')
-    error = error.error
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+router.put('/:id', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+        error = validate_announcement(req.body, 'update')
+        error = error.error
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const announcement = await findDocument(Announcement, { _id: req.params.id })
-    if (!announcement)
-      return res.send(formatResult(404, 'announcement not found'))
+        const announcement = await findDocument(Announcement, {_id: req.params.id})
+        if (!announcement)
+            return res.send(formatResult(404, 'announcement not found'))
 
-    const result = await updateDocument(Announcement, req.params.id, req.body)
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        const result = await updateDocument(Announcement, req.params.id, req.body)
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -286,26 +290,26 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', filterUsers(["ADMIN","INSTRUCTOR"]), async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+router.delete('/:id', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const announcement = await findDocument(Announcement, {
-      _id: req.params.id
-    })
-    if (!announcement)
-      return res.send(formatResult(404, 'announcement not found'))
+        const announcement = await findDocument(Announcement, {
+            _id: req.params.id
+        })
+        if (!announcement)
+            return res.send(formatResult(404, 'announcement not found'))
 
-    const result = await deleteDocument(Announcement, req.params.id)
+        const result = await deleteDocument(Announcement, req.params.id)
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 // export the router
