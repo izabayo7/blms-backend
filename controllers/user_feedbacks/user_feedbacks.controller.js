@@ -13,7 +13,28 @@ exports.contactUs = async (req, res) => {
     const { error } = validate_user_feedback(req.body, 'contact_us');
     if (error) return res.send(formatResult(400, error.details[0].message));
 
-    const { sent, err } = await sendContactUsEmail({ email, names: req.body.user_name, message: req.body.message });
+    const { sent, err } = await sendContactUsEmail(req.body);
+    if (err)
+      return res.send(formatResult(500, err));
+
+    return res.send(formatResult(201, 'CREATED', result));
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
+
+/***
+ *  Sends a requestCallback email
+ * @param req
+ * @param res
+ */
+exports.requestCallback = async (req, res) => {
+  try {
+    const { error } = validate_user_feedback(req.body, 'request_callback');
+    if (error) return res.send(formatResult(400, error.details[0].message));
+
+    const { sent, err } = await sendRequestCallback(req.body);
     if (err)
       return res.send(formatResult(500, err));
 
