@@ -90,10 +90,10 @@ exports.createUserInvitation = async (req, res) => {
 
     const { emails, category, college } = req.body
 
-    let college = await College.findOne({
+    let _college = await College.findOne({
       _id: college
     })
-    if (!college)
+    if (!_college)
       return res.send(formatResult(404, 'UserCategory not found'))
 
     let user_category = await User_category.findOne({

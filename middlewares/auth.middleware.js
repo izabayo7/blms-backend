@@ -1,7 +1,7 @@
 // import dependencies
 const { jwt, config, formatResult } = require('../utils/imports')
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
     const header = req.header('authorization')
     const token = header ? header.split(' ')[1] : req.query.token
     if (!token)

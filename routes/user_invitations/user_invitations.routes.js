@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation } = require('../../controllers/user_invitations/user_invitations.controller')
+const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation, acceptOrDenyInvitation } = require('../../controllers/user_invitations/user_invitations.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
