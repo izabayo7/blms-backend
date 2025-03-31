@@ -198,6 +198,8 @@ router.get('/user/:user_name', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Returns the profile_picture of a specified Chat_group
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         description: Group's code
