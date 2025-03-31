@@ -2,6 +2,7 @@ const { Reset_password, validatePasswordReset } = require("../../models/reset_pa
 const { formatResult, User, ONE_DAY } = require("../../utils/imports");
 const { sendResetPasswordEmail } = require("../email/email.controller");
 const { update_password } = require("../user/user.controller");
+const { v4: uuid, validate: uuidValidate } = require('uuid');
 
 /**
  * Create (open) a password reset
