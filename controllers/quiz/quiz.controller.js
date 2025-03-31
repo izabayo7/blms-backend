@@ -685,7 +685,7 @@ router.post('/:id/attachment', async (req, res) => {
     const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`, temp_path = `./uploads/colleges/${user.college}/temp`
 
     req.kuriousStorageData = {
-      dir: temp_path,
+      dir: path,
     }
 
     let file_missing = false
