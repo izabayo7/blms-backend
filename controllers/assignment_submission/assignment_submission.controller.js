@@ -161,7 +161,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
                 _id: -1
             })
             if (!assignments.length)
-                return res.send(formatResult(404, 'assignment_submissions not found'))
+                return res.send(formatResult(u,u,[]))
 
             let foundSubmissions = []
 
