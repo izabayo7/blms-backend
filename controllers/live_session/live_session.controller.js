@@ -1,19 +1,20 @@
 // import dependencies
 const {
-  express,
-  Live_session,
-  validate_live_session,
-  validateObjectId,
-  formatResult,
-  findDocument,
-  User,
-  findDocuments,
-  u,
-  Create_or_update_live_session,
-  deleteDocument,
-  Chapter,
-  updateDocument,
-  createDocument
+    express,
+    Live_session,
+    validate_live_session,
+    validateObjectId,
+    formatResult,
+    findDocument,
+    User,
+    findDocuments,
+    u,
+    Course,
+    Create_or_update_live_session,
+    deleteDocument,
+    Chapter,
+    updateDocument,
+    createDocument
 } = require('../../utils/imports')
 
 // create router
@@ -60,15 +61,15 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  try {
-    const result = await findDocuments(Live_session)
-    if (!result.length)
-      return res.send(formatResult(404, 'Live_session list is empty'))
+    try {
+        const result = await findDocuments(Live_session)
+        if (!result.length)
+            return res.send(formatResult(404, 'Live_session list is empty'))
 
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -100,47 +101,47 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:type/:id', async (req, res) => {
-  try {
+    try {
 
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    req.params.type = req.params.type.toLocaleLowerCase()
+        req.params.type = req.params.type.toLocaleLowerCase()
 
-    const allowedTargets = ['chapter']
+        const allowedTargets = ['chapter']
 
-    if (!allowedTargets.includes(req.params.type))
-      return res.send(formatResult(400, 'invalid live_session target_type'))
+        if (!allowedTargets.includes(req.params.type))
+            return res.send(formatResult(400, 'invalid live_session target_type'))
 
-    let target
+        let target
 
-    switch (req.params.type) {
-      case 'chapter':
-        target = await findDocument(Chapter, {
-          _id: req.params.id
+        switch (req.params.type) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.params.id
+                })
+                break;
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'live_session target not found'))
+
+        const results = await findDocument(Live_session, {
+            $and: [
+                {"target.type": req.params.type},
+                {"target.id": req.params.id}
+            ]
         })
-        break;
-      default:
-        break;
+
+        return res.send(formatResult(u, u, results))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    if (!target)
-      return res.send(formatResult(404, 'live_session target not found'))
-
-    const results = await findDocument(Live_session, {
-      $and: [
-        { "target.type": req.params.type },
-        { "target.id": req.params.id }
-      ]
-    })
-
-    return res.send(formatResult(u, u, results))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -167,26 +168,26 @@ router.get('/:type/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-  try {
+    try {
 
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const result = await Live_session.findById({
-      _id: req.params.id
-    })
+        const result = await Live_session.findById({
+            _id: req.params.id
+        })
 
-    const chapter = await Chapter.findById(result.target.id)
+        const chapter = await Chapter.findById(result.target.id)
 
-    result.course = await Course.findById(chapter.course)
+        result.course = await Course.findById(chapter.course)
 
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 
@@ -217,41 +218,41 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  try {
-    const {
-      error
-    } = validate_live_session(req.body)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validate_live_session(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    req.body.target.type = req.body.target.type.toLocaleLowerCase()
+        req.body.target.type = req.body.target.type.toLocaleLowerCase()
 
-    const allowedTargets = ['chapter']
+        const allowedTargets = ['chapter']
 
-    if (!allowedTargets.includes(req.body.target.type))
-      return res.send(formatResult(400, 'invalid live_session target_type'))
+        if (!allowedTargets.includes(req.body.target.type))
+            return res.send(formatResult(400, 'invalid live_session target_type'))
 
-    let target
+        let target
 
-    switch (req.body.target.type) {
-      case 'chapter':
-        target = await findDocument(Chapter, {
-          _id: req.body.target.id
-        })
-        break;
-      default:
-        break;
+        switch (req.body.target.type) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.body.target.id
+                })
+                break;
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'live_session target not found'))
+
+        const result = await createDocument(Live_session, req.body)
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    if (!target)
-      return res.send(formatResult(404, 'live_session target not found'))
-
-    const result = await createDocument(Live_session, req.body)
-
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -285,48 +286,48 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validate_live_session(req.body)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validate_live_session(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
 
-    let live_session = await findDocument(Live_session, {
-      _id: req.params.id
-    })
-    if (!live_session)
-      return res.send(formatResult(404, 'live_session not found'))
-
-    req.body.target.type = req.body.target.type.toLocaleLowerCase()
-
-    const allowedTargets = ['chapter']
-
-    if (!allowedTargets.includes(req.body.target.type))
-      return res.send(formatResult(400, 'invalid live_session target_type'))
-
-    let target
-
-    switch (req.body.target.type) {
-      case 'chapter':
-        target = await findDocument(Chapter, {
-          _id: req.body.target.id
+        let live_session = await findDocument(Live_session, {
+            _id: req.params.id
         })
-        break;
-      default:
-        break;
+        if (!live_session)
+            return res.send(formatResult(404, 'live_session not found'))
+
+        req.body.target.type = req.body.target.type.toLocaleLowerCase()
+
+        const allowedTargets = ['chapter']
+
+        if (!allowedTargets.includes(req.body.target.type))
+            return res.send(formatResult(400, 'invalid live_session target_type'))
+
+        let target
+
+        switch (req.body.target.type) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.body.target.id
+                })
+                break;
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'live_session target not found'))
+
+        const result = await updateDocument(Live_session, req.params.id, req.body)
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    if (!target)
-      return res.send(formatResult(404, 'live_session target not found'))
-
-    const result = await updateDocument(Live_session, req.params.id, req.body)
-
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -359,23 +360,23 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id/status/:status', async (req, res) => {
-  try {
-    const allowed_statuses = ["PENDING","LIVE","FINISHED"]
-    if (!allowed_statuses.includes(req.params.status))
-      return res.send(formatResult(400, "Invalid status"))
+    try {
+        const allowed_statuses = ["PENDING", "LIVE", "FINISHED"]
+        if (!allowed_statuses.includes(req.params.status))
+            return res.send(formatResult(400, "Invalid status"))
 
-    let live_session = await findDocument(Live_session, {
-      _id: req.params.id
-    })
-    if (!live_session)
-      return res.send(formatResult(404, 'live_session not found'))
+        let live_session = await findDocument(Live_session, {
+            _id: req.params.id
+        })
+        if (!live_session)
+            return res.send(formatResult(404, 'live_session not found'))
 
-    const result = await updateDocument(Live_session, req.params.id, {status: req.params.status})
+        const result = await updateDocument(Live_session, req.params.id, {status: req.params.status})
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 
@@ -405,27 +406,27 @@ router.put('/:id/status/:status', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    let live_session = await findDocument(Live_session, {
-      _id: req.params.id
-    })
-    if (!live_session)
-      return res.send(formatResult(404, 'live_session not found'))
+        let live_session = await findDocument(Live_session, {
+            _id: req.params.id
+        })
+        if (!live_session)
+            return res.send(formatResult(404, 'live_session not found'))
 
-    // need to delete all attachments
+        // need to delete all attachments
 
-    const result = await deleteDocument(Live_session, req.params.id)
+        const result = await deleteDocument(Live_session, req.params.id)
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 // export the router
