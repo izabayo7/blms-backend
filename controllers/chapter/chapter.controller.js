@@ -297,11 +297,11 @@ router.get('/:id/uploaded_content', async (req, res) => {
         if (!chapter)
             return res.send(formatResult(404, 'chapter not found'))
 
-        if (!chapter.uploaded_content_src)
+        if (!chapter.uploaded_content)
             return res.send(formatResult(404, 'file not found'))
 
 
-        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${chapter.uploaded_content_src}`)
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${chapter.uploaded_content}`)
         return res.sendFile(file_path)
     } catch (error) {
         return res.send(formatResult(500, error))
