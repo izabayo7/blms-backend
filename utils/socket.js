@@ -403,7 +403,7 @@ module.exports.listen = (app) => {
             let newDocument = new Notification({
                 user: id,
                 content: `published ${course.name}`,
-                link: `/courses/preview/_id${course._id}_id`,
+                link: `/courses/preview/${course.name}`,
             })
             const saveDocument = await newDocument.save()
             if (saveDocument) {
@@ -459,6 +459,75 @@ module.exports.listen = (app) => {
             }
 
         })
+        });
+
+    // tell user that someone replied his or her comment
+    socket.on('course-published', async ({
+                                             user_id,
+                                             comment_id
+                                         }) => {
+
+
+        let newDocument = new Notification({
+            user: id,
+            content: ` ${course.name}`,
+            link: `/courses/preview/_id${course._id}_id`,
+        })
+        const saveDocument = await newDocument.save()
+        if (saveDocument) {
+
+            newDocument = simplifyObject(newDocument)
+
+            newDocument = await injectUser([newDocument], 'user')
+            newDocument = newDocument[0]
+
+            const user_user_groups = await User_user_group.find({
+                user_group: course.user_group
+            })
+
+            user_user_groups.forEach(async _doc => {
+                if (_doc.user != id) {
+                    // create notification for user
+                    let userNotification = await User_notification.findOne({
+                        user: _doc.user
+                    })
+                    if (!userNotification) {
+                        userNotification = new User_notification({
+                            user: _doc.user,
+                            notifications: [{
+                                id: newDocument._id
+                            }]
+                        })
+
+                    } else {
+                        userNotification.notifications.push({
+                            id: newDocument._id
+                        })
+                    }
+
+                    _newDocument = await userNotification.save()
+
+                    if (_newDocument) {
+                        let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                        notification.id = undefined
+                        notification.notification = newDocument
+                        // send the notification
+                        socket.broadcast.to(_doc.user).emit('new-notification', {
+                            notification: notification
+                        })
+
+                        // add student progress
+                        const _course = await injectUserProgress([course], _doc.user)
+
+                        // send the course
+                        socket.broadcast.to(_doc.user).emit('new-course', _course[0])
+                    }
+                }
+            })
+        }
+
+    })
     });
+
     return io
 }

@@ -1070,8 +1070,12 @@ exports.injectNotification = async (array) => {
                 _id: array[i].notifications[k].id
             })
             notification = await this.injectUser([notification], 'user')
+            notification = notification[0]
             array[i].notifications[k].id = undefined
-            array[i].notifications[k].notification = notification[0]
+            array[i].notifications[k].notification = notification
+            if(notification.mes){
+
+            }
         }
     }
     return array
