@@ -221,7 +221,8 @@ async function injectDetails(faculties) {
     for (const i in faculties) {
         let all_attendants = 0, total_courses = 0;
         const user_groups = await User_group.find({
-            faculty: faculties[i]._id
+            faculty: faculties[i]._id,
+            status: "ACTIVE"
         })
         for (const k in user_groups) {
             const attendants = await User_user_group.find({
