@@ -211,7 +211,7 @@ router.get('/student/:id/:quiz_name', async (req, res) => {
     if (!studentFacultyCollegeYear)
       return res.status(404).send(`Student is not allowed to do this quiz`)
 
-    quiz = await addAttachmentMediaPaths([quiz])
+    quiz = await addAttachmentMediaPaths([quiz], true)
 
     return res.status(200).send(quiz[0])
   } catch (error) {
