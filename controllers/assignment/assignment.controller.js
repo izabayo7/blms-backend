@@ -1,4 +1,5 @@
 // import dependencies
+const {getStudentAssignments} = require("../../utils/imports");
 const {Assignment_submission} = require("../../models/assignment_submission/assignment_submission.model");
 const {addAssignmentTarget} = require("../../utils/imports");
 const {simplifyObject} = require("../../utils/imports");
@@ -61,19 +62,7 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 status: {$ne: "DELETED"}
             }, u, u, u, u, u, {_id: -1})
         } else {
-            const user_user_groups = await User_user_group.find({user: req.user._id})
-            const courses = await Course.find({
-                user_group: {$in: user_user_groups.map(x => x.user_group)}
-            })
-            const ids = courses.map(x=>x._id.toString())
-            const chapters = await Chapter.find({course: {$in: ids}},{_id: 1})
-            chapters.map(x=>{
-                ids.push(x._id.toString())
-            })
-            assignments = await findDocuments(Assignment, {
-                "target.id": {$in: ids},
-                status: {$in: ["PUBLISHED", "RELEASED"]}
-            }, u, u, u, u, u, {_id: -1})
+            assignments = await getStudentAssignments(req.user._id)
             for (const i in assignments) {
                 assignments[i].submission = await Assignment_submission.findOne({
                     assignment: assignments[i]._id,
@@ -494,7 +483,7 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
                 status: req.params.status
             })
 
-        if (assignment.status === "RELEASED") {
+        if (req.params.status === "RELEASED") {
             // const submissions = await Assignment_submission.find({assignment: req.params.id}).populate('user')
             // for (const i in submissions) {
             //     if (submissions[i].user.email) {
@@ -508,6 +497,8 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
             //         })
             //     }
             // }
+        } else if (req.params.status === 'PUBLISHED') {
+
         }
         return res.send(result)
     } catch (error) {

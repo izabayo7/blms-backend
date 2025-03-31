@@ -1,4 +1,6 @@
 const socket_io = require('socket.io')
+const {Assignment_submission} = require("../models/assignment_submission/assignment_submission.model");
+const {getStudentAssignments} = require("./imports");
 const {getContactIds} = require("./imports");
 const {sendLiveScheduledEmail} = require("../controllers/email/email.controller");
 const {sendReleaseMarskEmail} = require("../controllers/email/email.controller");
@@ -184,7 +186,7 @@ module.exports.listen = (app) => {
             // get the latest conversations
             const latestMessages = await getLatestMessages(id)
             // format the contacts
-            const contacts = await formatContacts(latestMessages, id, user,io.clients().adapter.rooms)
+            const contacts = await formatContacts(latestMessages, id, user, io.clients().adapter.rooms)
             // send the contacts
             socket.emit('res/message/contacts', {
                 contacts: contacts
@@ -318,7 +320,19 @@ module.exports.listen = (app) => {
                     }
                 }
             })
-            socket.emit('res/messages/unread', number);
+            let total_assignments = 0
+            if (user.category.name === 'STUDENT') {
+                let assignments = await getStudentAssignments(id,true)
+                total_assignments = await countDocuments(Assignment_submission, {
+                    assignment: {
+                        $in: assignments.map(x => x._id.toString())
+                    },
+                    user: id
+                })
+                total_assignments = assignments.length - total_assignments
+            }
+
+            socket.emit('res/messages/unread', {number, total_assignments});
         })
 
         // start a new conversation

@@ -824,7 +824,7 @@ exports.addAssignmentTarget = async (assignments) => {
                 course: 1
             }).populate({
                 path: 'course',
-                select: ['name','user_group'],
+                select: ['name', 'user_group'],
                 populate: {
                     path: 'user_group', populate: {
                         path: 'faculty',
@@ -885,6 +885,21 @@ exports.formatMessages = async (messages, user_id) => {
         }
     }
     return formatedMessages
+}
+exports.getStudentAssignments = async (user_id, undone = false) => {
+    const user_user_groups = await User_user_group.find({user: user_id})
+    const courses = await this.Course.find({
+        user_group: {$in: user_user_groups.map(x => x.user_group)}
+    })
+    const ids = courses.map(x => x._id.toString())
+    const chapters = await this.Chapter.find({course: {$in: ids}}, {_id: 1})
+    chapters.map(x => {
+        ids.push(x._id.toString())
+    })
+    return Assignment.find({
+        "target.id": {$in: ids},
+        status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
+    }).sort({_id: -1}).lean()
 }
 exports.injectAttachementsMediaPath = (message) => {
     for (const j in message.attachments) {
@@ -1099,6 +1114,7 @@ exports.Create_or_update_message = async (sender, receiver, content, _id, user_i
 
 const fs = require('fs')
 const sharp = require('sharp')
+const {Assignment} = require("../models/assignments/assignments.model");
 
 exports.resizeImage = function resize(path, format, width, height) {
     const readStream = fs.createReadStream(path)
