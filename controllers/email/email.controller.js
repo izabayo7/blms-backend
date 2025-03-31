@@ -2,16 +2,25 @@ const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
 const { invitationToSystem } = require('../../utils/emailGenerator');
+const ProtonMail = require('protonmail-api');
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    port: 465,
-    auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD
-    }
-});
 
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     port: 465,
+//     auth: {
+//         user: process.env.EMAIL,
+//         pass: process.env.PASSWORD
+//     }
+// });
+
+let transporter
+(async () => {
+    transporter = await ProtonMail.connect({
+        username: process.env.EMAIL,
+        password: process.env.PASSWORD
+    })
+})()
 const mailGenerator = new Mailgen({
     theme: 'salted',
     product: {
@@ -52,7 +61,8 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
         };
 
         return {
-            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendMail(message)
+            sent: await transporter.sendEMail(message)
         }
 
     }
