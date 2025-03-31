@@ -53,7 +53,7 @@ const router = express.Router()
  *         type: string
  *       description:
  *         type: string
- *       coverPicture:
+ *       cover_picture:
  *         type: string
  *       maximum_marks:
  *         type: number
@@ -742,15 +742,7 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
         if (!course.cover_picture || course.cover_picture !== req.params.file_name)
             return res.send(formatResult(404, 'file not found'))
 
-        let faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: course.faculty_college_year
-        })
-
-        let faculty_college = await findDocument(Faculty_college, {
-            _id: faculty_college_year.faculty_college
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${course._id}/${course.cover_picture}`)
 
         sendResizedImage(req, res, path)
     } catch (error) {
