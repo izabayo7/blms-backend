@@ -5,16 +5,16 @@ const { invitationToSystem } = require('../../utils/emailGenerator');
 const ProtonMail = require('protonmail-api');
 
 
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     port: 465,
-//     auth: {
-//         user: process.env.EMAIL,
-//         pass: process.env.PASSWORD
-//     }
-// });
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    port: 465,
+    auth: {
+        user: process.env.EMAIL,
+        pass: process.env.PASSWORD
+    }
+});
 
-let transporter
+// let transporter
 
 const mailGenerator = new Mailgen({
     theme: 'salted',
@@ -65,10 +65,10 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
             }
         */
 
-        transporter = await ProtonMail.connect({
-            username: process.env.EMAIL,
-            password: process.env.PASSWORD
-        })
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
 
         return {
             // sent: await transporter.sendMail(message)
