@@ -72,62 +72,6 @@ const uploadPlus = multer({
  */
 
 
-/**
- * @swagger
- * /file/groupProfilePicture/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the profilePicture of a specified Course
- *     parameters:
- *       - name: id
- *         description: Group's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: Groups's profilePicture filename
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/groupProfilePicture/:id/:file_name', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        // check if course exist
-        const group = await ChatGroup.findOne({
-            _id: req.params.id
-        })
-        if (!group)
-            return res.send(formatResult(404, `Group with code ${req.params.id} doens't exist`))
-
-        if (!group.profile)
-            return res.send(formatResult(404, `Group ${req.params.id} does not have a profile picture`))
-
-        if (group.profile !== req.params.file_name)
-            return res.send(formatResult(404, `${req.params.file_name} was not found`))
-
-        path = `./uploads/colleges/${group.college}/chat/${req.params.id}/${group.profile}`
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-
 
 
 

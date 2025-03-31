@@ -376,7 +376,7 @@ router.post('/', async (req, res) => {
       name: req.body.name
     })
     if (chapter.data)
-      return res.send(formatResult(400, 'name was taken'))
+      return res.send(formatResult(403, 'name was taken'))
 
     const number = await countDocuments(Chapter, {
       course: req.body.course
@@ -461,7 +461,7 @@ router.put('/:id', async (req, res) => {
       name: req.body.name
     })
     if (chapter.data)
-      return res.send(formatResult(400, 'name was taken'))
+      return res.send(formatResult(403, 'name was taken'))
 
     const result = await updateDocument(Chapter, req.params.id, req.body)
     return res.send(result)

@@ -1,36 +1,14 @@
 // import dependencies
-const { express, multer, fs, Message, Student, Admin, Instructor, validateMessage, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student } = require('../../utils/imports')
+const { express, multer, fs, Message, Student, Admin, Instructor, validateMessage, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student, formatResult } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
-
-// configure multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/attachments')
-  },
-  filename: function (req, file, cb) {
-    const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-    cb(null, fileName)
-  }
-})
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5
-  },
-  fileFilter: fileFilter
-})
-
 
 /**
  * @swagger
  * definitions:
  *   Message:
  *     properties:
- *       _id:
- *         type: string
  *       sender:
  *         type: string
  *       receivers  :
@@ -71,13 +49,14 @@ const upload = multer({
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const messages = await Message.find()
   try {
-    if (messages.length === 0)
-      return res.send('Message list is empty').status(404)
-    return res.send(messages).status(200)
+    const result = await findDocuments(Message)
+    if (!result.data.length)
+      return res.send(formatResult(404, 'Message list is empty'))
+
+    return res.send(result)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -103,16 +82,21 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/user/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(error.details[0].message).status(400)
-  let userFound = await findUser(req.params.id)
-  if (!userFound)
-    return res.send('The User id is invalid')
-  const sent = await Message.find({ sender: req.params.id })
-  const recieved = await Message.find({ receiver: req.params.id })
+  try {
+    const { error } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+      
+    let userFound = await findUser(req.params.id)
+    if (!userFound)
+      return res.send('The User id is invalid')
+    const sent = await Message.find({ sender: req.params.id })
+    const recieved = await Message.find({ receiver: req.params.id })
 
-  return res.send({ sent: sent, recieved: recieved }).status(200)
+    return res.send({ sent: sent, recieved: recieved })
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -142,7 +126,7 @@ router.get('/user/:id', async (req, res) => {
 router.post('/', upload.single('attachments'), async (req, res) => {
   const { error } = validateMessage(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.send(formatResult(400, error.details[0].message))
 
   let sender = await findUser(req.body.sender)
   if (!sender)
@@ -198,11 +182,11 @@ router.post('/', upload.single('attachments'), async (req, res) => {
 router.put('/:id', upload.single('attachments'), async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.send(formatResult(400, error.details[0].message))
   error = validateMessage(req.body)
   error = error.error
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.send(formatResult(400, error.details[0].message))
 
   // check if message exist
   let message = await Message.findOne({ _id: req.params.id })
@@ -242,7 +226,7 @@ router.put('/:id', upload.single('attachments'), async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.send(formatResult(400, error.details[0].message))
   let message = await Message.findOne({ _id: req.params.id })
   if (!message)
     return res.send(`Message of Code ${req.params.id} Not Found`)
@@ -250,7 +234,7 @@ router.delete('/:id', async (req, res) => {
   let deleteDocument = await Message.findOneAndDelete({ _id: req.params.id })
   if (!deleteDocument)
     return res.send('Message Not Deleted').status(500)
-  return res.send(`Message ${deleteDocument._id} Successfully deleted`).status(200)
+  return res.send(`Message ${deleteDocument._id} Successfully deleted`)
 })
 
 async function findUser(id) {

@@ -51,7 +51,6 @@ require('./models/mongodb')
 // import controllers
 // const messageController = require('./controllers/message/message.controller')
 // const fileController = require('./controllers/file/file.controller')
-// const chatGroupController = require('./controllers/chat-group/chat-group.controller')
 const user_controller = require('./controllers/user/user.controller')
 const user_category_controller = require('./controllers/user_category/user_category.controller')
 const user_role_controller = require('./controllers/user_role/user_role.controller')
@@ -68,6 +67,7 @@ const quiz_submission_controller = require('./controllers/quiz_submission/quiz_s
 const user_progress_contoller = require('./controllers/user_progress/user_progress.controller')
 const notification_controller = require('./controllers/notification/notification.controller')
 const user_notification_controller = require('./controllers/user_notification/user_notification.controller')
+const chat_group_controller = require('./controllers/chat_group/chat_group.controller')
 
 // use middlewares
 app.use(cors())
@@ -110,6 +110,7 @@ app.use(`${basePath}/quiz_submission`, quiz_submission_controller)
 app.use(`${basePath}/user_progress`, user_progress_contoller)
 app.use(`${basePath}/notification`, notification_controller)
 app.use(`${basePath}/user_notification`, user_notification_controller)
+app.use(`${basePath}/chat_group`, chat_group_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

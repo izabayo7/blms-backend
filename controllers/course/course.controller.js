@@ -490,7 +490,7 @@ router.post('/', async (req, res) => {
       name: req.body.name
     })
     if (course.data)
-      return res.send(formatResult(400, 'name was taken'))
+      return res.send(formatResult(403, 'name was taken'))
 
     let result = await createDocument(Course, {
       name: req.body.name,
@@ -635,7 +635,7 @@ router.put('/:id', async (req, res) => {
       name: req.body.name
     })
     if (course.data)
-      return res.send(formatResult(400, 'name was taken'))
+      return res.send(formatResult(403, 'name was taken'))
 
     const result = await updateDocument(Course, req.params.id, req.body)
 

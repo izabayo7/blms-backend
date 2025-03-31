@@ -128,14 +128,6 @@ module.exports.Message = message
 module.exports.validate_message = validate_message
 
 const {
-    attachment,
-    validate_attachment
-} = require('../models/attachment/attachment.model')
-
-module.exports.Attachment = attachment
-module.exports.validate_attachment = validate_attachment
-
-const {
     quiz,
     validate_quiz
 } = require('../models/quiz/quiz.model')

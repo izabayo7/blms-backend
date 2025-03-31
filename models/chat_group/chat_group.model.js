@@ -44,8 +44,8 @@ const chat_group_schema = new mongoose.Schema({
         required: true
     },
     status: {
-        type: Boolean,
-        default: true
+        type: Number,
+        default: 1
     }
 })
 
@@ -61,11 +61,11 @@ function validate_chat_group(credentials) {
             status: Joi.boolean(),
             isAdmin: Joi.boolean(),
             id: Joi.ObjectId().required()
-        }),
+        }).required(),
         desctiption: Joi.string(),
         college: Joi.ObjectId().required(),
         private: Joi.boolean(),
-        status: Joi.boolean(),
+        status: Joi.number(),
     }
     return Joi.validate(credentials, schema)
 }
