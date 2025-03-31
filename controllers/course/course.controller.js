@@ -796,7 +796,6 @@ router.post('/', async (req, res) => {
         })
         if (!user_group)
             return res.send(formatResult(404, 'User_group not found'))
-        console.log(user_group)
 
         if (req.user.category.name != "INSTRUCTOR")
             return res.send(formatResult(404, 'you can\'t create course'))
@@ -816,7 +815,6 @@ router.post('/', async (req, res) => {
         })
 
         result = simplifyObject(result)
-        console.log(result)
         result.data = await injectFaculty_college_year([result.data])
         result.data = result.data[0]
         return res.send(result)
@@ -927,23 +925,19 @@ router.put('/:id', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
+        let user_group = await findDocument(User_group, {
+            _id: req.body.user_group
         })
+        if (!user_group)
+            return res.send(formatResult(404, 'User_group not found'))
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create course'))
+        if (req.user.category.name != "INSTRUCTOR")
+            return res.send(formatResult(404, 'you can\'t create course'))
 
         // check if course exist
         let course = await findDocument(Course, {
             _id: req.params.id,
-            user: user._id
+            user: req.user._id
         })
         if (!course)
             return res.send(formatResult(404, 'course not found'))
