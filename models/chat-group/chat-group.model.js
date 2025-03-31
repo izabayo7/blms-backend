@@ -9,6 +9,14 @@ const memberSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    isCreator:{
+        type: Boolean,
+        unique: true,
+    },
+    isAdmin:{
+        type: Boolean,
+        default: false,
+    },
     status: {
         type: Boolean,
         default: true

@@ -1,18 +1,18 @@
-
+const {
+  College
+} = require('../../models/college/college.model')
 // coming mukanya
 // import dependencies
-const { express, multer, fs, ChatGroup, Student, Admin, Instructor, validatechatGroup, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student } = require('../../utils/imports')
+const {
+  express,
+  ChatGroup,
+  validatechatGroup,
+  validateObjectId,
+  returnUser
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
-
-// get groups
-// get group members
-// get all users able to join
-// create group
-// update group
-// delete group
-
 
 /**
  * @swagger
@@ -21,37 +21,46 @@ const router = express.Router()
  *     properties:
  *       _id:
  *         type: string
- *       sender:
+ *       name:
  *         type: string
- *       receivers  :
+ *       description:
+ *         type: string
+ *       members  :
  *         type: array
  *         items:
- *            type: object
+ *            type: objec\t
  *            properties:
  *              id:
  *                type: string
- *              read:
+ *              isCreator:
  *                type: boolean
- *       content:
+ *                unique: true
+ *              isAdmin:
+ *                type: boolean
+ *              status:
+ *                type: boolean
+ *       private:
+ *         type: boolean
+ *       profile:
  *         type: string
- *       attachments:
- *         type: string
- *       read:
+ *       college:
+ *          type: string
+ *       status:
  *          type: boolean
  *          default: false
  *     required:
- *       - sender
- *       - receivers
- *       - content
+ *       - name
+ *       - members
+ *       - college
  */
 
 /**
  * @swagger
- * /kurious/message:
+ * /kurious/chat_group:
  *   get:
  *     tags:
  *       - ChatGroup
- *     description: Get all messages
+ *     description: Get all chat_groups
  *     responses:
  *       200:
  *         description: OK
@@ -61,23 +70,63 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const messages = await ChatGroup.find()
   try {
-    if (messages.length === 0)
-      return res.send('ChatGroup list is empty').status(404)
-    return res.send(messages).status(200)
+    const chat_groups = await ChatGroup.find()
+
+    if (chat_groups.length === 0)
+      return res.status(404).send('ChatGroup list is empty')
+      
+    return res.status(200).send(chat_groups)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
 /**
  * @swagger
- * /kurious/message/user/{id}:
+ * /kurious/chat_group/college/{id}:
  *   get:
  *     tags:
  *       - ChatGroup
- *     description: Returns messages to and from a specified user
+ *     description: Returns chat_groups in a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/college/:id', async (req, res) => {
+  const {
+    error
+  } = validateObjectId(req.params.id)
+  if (error)
+    return res.status(400).send(error.details[0].chat_group)
+  let college = await College.findOne({
+    _id: req.params.id
+  })
+  if (!college)
+    return res.status(400).send('The College was not found')
+  const chat_groups = await ChatGroup.find({
+    college: req.params.id
+  })
+  return res.status(200).send(chat_groups)
+})
+
+/**
+ * @swagger
+ * /kurious/chat_group/user/{id}:
+ *   get:
+ *     tags:
+ *       - ChatGroup
+ *     description: Returns chat_groups a specified user belongs in
  *     parameters:
  *       - name: id
  *         description: Users's id
@@ -93,28 +142,35 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/user/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  let userFound = await findUser(req.params.id)
+    return res.status(400).send(error.details[0].chat_group)
+  let userFound = await returnUser(req.params.id)
   if (!userFound)
-    return res.send('The User id is invalid')
-  const sent = await ChatGroup.find({ sender: req.params.id })
-  const recieved = await ChatGroup.find({ receiver: req.params.id })
-
-  return res.send({ sent: sent, recieved: recieved }).status(200)
+    return res.status(400).send('The User id is invalid')
+  const chat_groups = await ChatGroup.find({
+    members: {
+      $elemMatch: {
+        id: req.params.id,
+        status: true
+      }
+    }
+  })
+  return res.status(200).send(chat_groups)
 })
 
 /**
  * @swagger
- * /kurious/message:
+ * /kurious/chat_group:
  *   post:
  *     tags:
  *       - ChatGroup
- *     description: Send a message
+ *     description: Send a chat_group
  *     parameters:
  *       - name: body
- *         description: Fields for a message
+ *         description: Fields for a chat_group
  *         in: body
  *         required: true
  *         schema:
@@ -130,40 +186,44 @@ router.get('/user/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  const { error } = validateChatGroup(req.body)
+  const {
+    error
+  } = validatechatGroup(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].chat_group)
 
-  let sender = await findUser(req.body.sender)
-  if (!sender)
-    return res.send(`Sender Not Found`)
-  for (const i in req.body.receivers) {
-    let receiver = await findUser(req.body.receivers[i].id)
+  let college = await College.findOne({
+    _id: req.body.college
+  })
+  if (!college)
+    return res.status(400).send('The College was not found')
+
+  for (const i in req.body.members) {
+    let receiver = await returnUser(req.body.members[i].id)
     if (!receiver)
-      return res.send(`Reciever Not Found`)
+      return res.status(400).send(`Member ${req.body.members[i].id} was Not Found`)
   }
 
-
   let newDocument = new ChatGroup({
-    sender: req.body.sender,
-    receivers: req.body.receivers,
-    content: req.body.content,
-    attachments: req.files === undefined ? undefined : req.files
+    name: req.body.name,
+    description: req.body.description,
+    private: req.body.private,
+    members: req.body.members,
   })
 
   const saveDocument = await newDocument.save()
   if (saveDocument)
-    return res.send(saveDocument).status(201)
-  return res.send('New ChatGroup not Registered').status(500)
+    return res.status(201).send(saveDocument)
+  return res.status(500).send('New ChatGroup not Registered')
 })
 
 /**
  * @swagger
- * /kurious/message/{id}:
+ * /kurious/chat_group/{id}:
  *   put:
  *     tags:
  *       - ChatGroup
- *     description: Update a message
+ *     description: Update a chat_group
  *     parameters:
  *       - name: id
  *         in: path
@@ -186,33 +246,41 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  let { error } = validateObjectId(req.params.id)
+  let {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  error = validateChatGroup(req.body)
+    return res.status(400).send(error.details[0].chat_group)
+  error = validatechatGroup(req.body)
   error = error.error
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].chat_group)
 
-  // check if message exist
-  let message = await ChatGroup.findOne({ _id: req.params.id })
-  if (!message)
-    return res.send(`ChatGroup with code ${req.params.id} doens't exist`)
+  // check if chat_group exist
+  let chat_group = await ChatGroup.findOne({
+    _id: req.params.id
+  })
+  if (!chat_group)
+    return res.status(400).send(`ChatGroup with code ${req.params.id} doens't exist`)
 
-  const updateDocument = await ChatGroup.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+  const updateDocument = await ChatGroup.findOneAndUpdate({
+    _id: req.params.id
+  }, req.body, {
+    new: true
+  })
   if (updateDocument)
-    return res.send(updateDocument).status(201)
-  return res.send("Error ocurred").status(500)
+    return res.status(201).send(updateDocument)
+  return res.status(500).send("Error ocurred")
 
 })
 
 /**
  * @swagger
- * /kurious/message/{id}:
+ * /kurious/chat_group/{id}:
  *   delete:
  *     tags:
  *       - ChatGroup
- *     description: Delete a message
+ *     description: Delete a chat_group
  *     parameters:
  *       - name: id
  *         description: ChatGroup's id
@@ -230,30 +298,48 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
+  const {
+    error
+  } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
-  let message = await ChatGroup.findOne({ _id: req.params.id })
-  if (!message)
-    return res.send(`ChatGroup of Code ${req.params.id} Not Found`)
+    return res.status(400).send(error.details[0].chat_group)
+  let chat_group = await ChatGroup.findOne({
+    _id: req.params.id
+  })
+  if (!chat_group)
+    return res.status(400).send(`ChatGroup of Code ${req.params.id} Not Found`)
   // need to delete all attachments
-  let deleteDocument = await ChatGroup.findOneAndDelete({ _id: req.params.id })
+  let deleteDocument = await ChatGroup.findOneAndDelete({
+    _id: req.params.id
+  })
   if (!deleteDocument)
-    return res.send('ChatGroup Not Deleted').status(500)
-  return res.send(`ChatGroup ${deleteDocument._id} Successfully deleted`).status(200)
+    return res.status(500).send('ChatGroup Not Deleted')
+  return res.status(200).send(`ChatGroup ${deleteDocument._id} Successfully deleted`)
 })
 
-async function findUser(id) {
-  let user = await Admin.findOne({ _id: id })
-  if (user)
-    return true
-  user = await Instructor.findOne({ _id: id })
-  if (user)
-    return true
-  user = await Student.findOne({ _id: id })
-  if (user)
-    return true
-  return false
+// add missing Information
+async function injectDetails(chat_groups) {
+  for (const i in chat_groups) {
+
+    const college = await College.findOne({
+      _id: chat_groups[i].college
+    }).lean()
+    chat_groups[i].college = removeDocumentVersion(college)
+    if (chat_groups[i].college.logo) {
+      chat_groups[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    }
+
+    for (const k in chat_groups[i].members) {
+      const member = await returnUser(chat_groups[i].members[k].id)
+      hat_groups[i].members[k] = removeDocumentVersion(member)
+      // add student profile media path
+      if (chat_groups[i].members[k].profile) {
+        chat_groups[i].members[k].profile = `http://${process.env.HOST}/kurious/file/studentProfile/${chat_groups[i]._id}/${student.profile}`
+      }
+    }
+
+  }
+  return chat_groups
 }
 
 // export the router
