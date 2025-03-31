@@ -691,7 +691,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/password', async (req, res) => {
+router.put('/:id/password', auth, async (req, res) => {
   try {
     let {
       error
