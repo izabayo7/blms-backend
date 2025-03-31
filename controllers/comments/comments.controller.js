@@ -173,6 +173,8 @@ router.get('/:target/:id', async (req, res) => {
  *     tags:
  *       - Comment
  *     description: Send a comment
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a comment
