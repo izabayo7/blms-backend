@@ -676,7 +676,7 @@ exports.confirm_account = ({
                             "
                                     onfocus="this.style.outline='none'"
                             >
-                                CONFIRM EMAIL
+                                CONFIRM
                             </button>
                         </a>
                     </div>
