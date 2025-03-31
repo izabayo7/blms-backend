@@ -519,17 +519,7 @@ router.put('/:id/document', async (req, res) => {
     if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
-    const dir = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`)
+    const dir = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`)
 
     fs.createFile(`${dir}/index.html`, (error) => {
       if (error)
