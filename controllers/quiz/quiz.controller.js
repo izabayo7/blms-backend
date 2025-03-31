@@ -707,8 +707,6 @@ router.post('/:id/attachment', async (req, res) => {
       if (err)
         return res.send(formatResult(500, err.message))
 
-      await Compress_images(temp_path, path)
-
       for (const i in req.files) {
         setTimeout(() => {
           fs.unlink(`${temp_path}/${req.files[i].filename}`, (err) => {
