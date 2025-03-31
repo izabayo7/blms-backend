@@ -61,6 +61,8 @@ const router = express.Router()
  *     tags:
  *       - Chapter
  *     description: Returns the mainContent of a specified Chapter
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter's id
