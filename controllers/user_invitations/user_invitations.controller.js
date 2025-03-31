@@ -113,6 +113,14 @@ exports.createUserInvitation = async (req, res) => {
         return res.send(formatResult(400, `User with email (${email}) arleady exist`))
       }
 
+      const user_invitation = await User_invitation.findOne({
+        email: email,
+        status: "PENDING"
+      })
+      if (user_invitation) {
+        return res.send(formatResult(400, `User with email (${email}) have a pending invitation`))
+      }
+
       const newDocument = new User_invitation({
         user: req.user._id,
         email: email,
