@@ -56,7 +56,7 @@ const course_schema = new mongoose.Schema({
         type: Number,
     },
     duration: {
-        type: Number,
+        type: String,
     },
 })
 
@@ -77,7 +77,7 @@ function validate_course(credentials) {
         haveCertificate: Joi.boolean(),
         isPublic: Joi.boolean(),
         price: Joi.number().min(0),
-        duration: Joi.number().min(0).max(12),
+        duration: Joi.string(),
     }
     return Joi.validate(credentials, schema)
 }

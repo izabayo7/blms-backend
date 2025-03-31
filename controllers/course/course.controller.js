@@ -964,7 +964,7 @@ router.post('/', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        if (req.user.isPublic) {
+        if (req.body.isPublic) {
             if (!req.body.faculty)
                 return res.send(formatResult(400, 'Faculty is required'))
 
