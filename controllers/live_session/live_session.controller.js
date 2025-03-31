@@ -192,10 +192,14 @@ router.get('/:id', async (req, res) => {
         result.course = await Course.findById(chapter.course)
         result.chapter = chapter
 
-        result.quiz = await Quiz.findOne({
-            "target.type": 'live_session',
-            "target.id": result._id
-        })
+        if(req.user.category.name == "INSTRUCTOR") {
+            result.quiz = await Quiz.findOne({
+                "target.type": 'live_session',
+                "target.id": result._id
+            })
+        } else {
+            result.quiz = undefined
+        }
 
         return res.send(formatResult(u, u, result))
     } catch (error) {
