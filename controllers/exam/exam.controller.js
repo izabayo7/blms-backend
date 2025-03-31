@@ -440,73 +440,6 @@ router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
 
 /**
  * @swagger
- * /exams/release_marks/{id}:
- *   put:
- *     tags:
- *       - Exam
- *     description: Publish exam marks
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Exam id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.put('/release_marks/:id', async (req, res) => {
-    try {
-        let {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        // check if course exist
-        let exam = await findDocument(Exam, {
-            _id: req.params.id
-        })
-        if (!exam)
-            return res.send(formatResult(404, 'exam not found'))
-
-
-        let result = await updateDocument(Exam, req.params.id,
-            {
-                status: exam.status == 1 ? 2 : 1
-            })
-        if (exam.status === 1) {
-            const submissions = await Exam_submission.find({exam: req.params.id}).populate('user')
-            for (const i in submissions) {
-                if (submissions[i].user.email) {
-                    await sendReleaseMarskEmail({
-                        email: submissions[i].user.email,
-                        user_names: `Mr${submissions[i].user.gender === 'female' ? 's' : ''} ${submissions[i].user.sur_name} ${submissions[i].user.other_names}`,
-                        instructor_names: req.user.sur_name + ' ' + req.user.other_names,
-                        assignment_name: exam.name,
-                        assignment_type: 'exam',
-                        link: `https://${process.env.FRONTEND_HOST}/exams/${exam.name}/${submissions[i].user.user_name}`
-                    })
-                }
-            }
-        }
-        return res.send(result)
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-
-/**
- * @swagger
  * /exams/changeStatus/{id}/{status}:
  *   put:
  *     tags:
@@ -571,7 +504,7 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
 
         if (req.params.status === "RELEASED") {
 
-            const submissions = await Exam_submission.find({quiz: req.params.id}).populate('user')
+            const submissions = await Exam_submission.find({exam: req.params.id}).populate('user')
             for (const i in submissions) {
                 if (submissions[i].user.email) {
                     await sendReleaseMarskEmail({
