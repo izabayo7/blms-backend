@@ -1,4 +1,5 @@
 // import dependencies
+const {validate_college_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {
@@ -78,7 +79,7 @@ router.get('/current', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegeCurrentPa
 
 /**
  * @swagger
- * /college_payment_plans/current:
+ * /college_payment_plans:
  *   post:
  *     tags:
  *       - College_payment_plans

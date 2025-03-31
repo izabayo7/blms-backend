@@ -52,8 +52,7 @@ const schema = new mongoose.Schema({
 // validate college
 function validate_college_payment_plans(credentials) {
     const schema = {
-        college: Joi.ObjectId().required(),
-        plan: Joi.string().enum(plans),
+        plan: Joi.string().valid(plans),
         discount: Joi.number(),
     }
     return Joi.validate(credentials, schema)
