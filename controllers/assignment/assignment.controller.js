@@ -150,7 +150,7 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 user_group = course.user_group
             }
             const user_user_group = await findDocument(User_user_group, {
-                user: user._id,
+                user: req.user._id,
                 user_group: user_group
             })
             if (!user_user_group)
