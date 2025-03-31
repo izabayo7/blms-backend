@@ -1,4 +1,5 @@
 // import dependencies
+const {handleChunk} = require("../../utils/imports");
 const {
     express,
     Live_session,
@@ -254,6 +255,60 @@ router.post('/', async (req, res) => {
         const result = await createDocument(Live_session, req.body)
 
         return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /live_session/record/{id}:
+ *   post:
+ *     tags:
+ *       - Live_session
+ *     description: Record a live_session
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: Live_session's Id
+ *       - name: body
+ *         description: Fields for a Live_session
+ *         in: body
+ *         required: true
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/record/:id', async (req, res) => {
+    try {
+        // const {
+        //     error
+        // } = validate_live_session(req.body)
+        // if (error)
+        //     return res.send(formatResult(400, error.details[0].message))
+
+
+        let live_session = await findDocument(Live_session, {
+            _id: req.params.id
+        })
+        if (!live_session)
+            return res.send(formatResult(404, 'live_session not found'))
+
+
+        for await (const chunk of req){
+            await handleChunk(chunk, req.params.id);
+        }
+
+        return res.send("sawa")
     } catch (error) {
         return res.send(formatResult(500, error))
     }

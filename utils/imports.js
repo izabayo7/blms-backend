@@ -1452,6 +1452,10 @@ exports.addQuizTarget = async (quizes) => {
     return quizes
 }
 
+exports.handleChunk = async (chunk, id) => {
+    console.log("id: "+id+"\n\nchunk: "+ chunk)
+}
+
 // proper way to define user roles
 // proper way to use jwt
 // proper way to use config
