@@ -85,7 +85,7 @@ exports.getMyPosts = async (req, res) => {
  * @param req
  * @param res
  */
-exports.createUserAPost = async (req, res) => {
+exports.createPost = async (req, res) => {
   try {
     const { error } = validate_post(req.body);
     if (error) return res.send(formatResult(400, error.details[0].message));

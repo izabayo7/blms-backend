@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllPosts, getMyPosts } = require('../../controllers/posts/posts.controller')
+const { getAllPosts, getMyPosts, createPost } = require('../../controllers/posts/posts.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
@@ -32,34 +32,29 @@ router.route('/')
      * /user_invitations:
      *   post:
      *     tags:
-     *       - User_invitation
-     *     description: Creates a User_invitation
+     *       - Post
+     *     description: Creates a Post
      *     security:
      *       - bearerAuth: -[]
      *     parameters:
      *       - name: body
-     *         description: User_invitation fields
+     *         description: Post fields
      *         in: body
      *         required: true
      *         schema:
      *           properties:
-     *             college:
+     *             title:
      *               type: string
-     *             category:
+     *             content:
      *               type: string
-     *             emails:
-     *               type: array
-     *               items:
-     *                 type: string
      *           required:
-     *             - college
-     *             - category
-     *             - emails
+     *             - title
+     *             - content
      *     responses:
      *       200:
      *         description: Success
      */
-    .post([auth, createUserInvitation])
+    .post([auth, createPost])
 
 router.route('/all')
     /**
@@ -92,7 +87,7 @@ router.route('/:token')
      * /user_invitations/{token}:
      *   get:
      *     tags:
-     *       - User_invitation
+     *       - Post
      *     description: Returns a specific user_invitation
      *     parameters:
      *       - name: token
@@ -114,7 +109,7 @@ router.route('/:token/renew')
      * /user_invitations/{token}/renew:
      *   put:
      *     tags:
-     *       - User_invitation
+     *       - Post
      *     description: Extends the expiration time of an invitation
      *     security:
      *       - bearerAuth: -[]
@@ -138,7 +133,7 @@ router.route('/:token/:action')
      * /user_invitations/{token}/{action}:
      *   put:
      *     tags:
-     *       - User_invitation
+     *       - Post
      *     description: Accept or deny user_invitations
      *     parameters:
      *       - name: token
@@ -166,7 +161,7 @@ router.route('/:token/delete')
      * /user_invitations/{token}/delete:
      *   delete:
      *     tags:
-     *       - User_invitation
+     *       - Post
      *     description: Deletes a user_invitation
      *     security:
      *       - bearerAuth: -[]
@@ -184,4 +179,4 @@ router.route('/:token/delete')
      */
     .delete([auth, deleteInvitation])
 
-exports.User_invitation_routes = router
+exports.Post_routes = router
