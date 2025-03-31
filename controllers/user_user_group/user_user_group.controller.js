@@ -15,6 +15,7 @@ const {
     validateObjectId,
     deleteDocument,
     User_category,
+    u,
 } = require('../../utils/imports')
 
 // create router
@@ -95,7 +96,7 @@ router.get('/user/:id', async (req, res) => {
 
         let result = await findDocument(User_user_group, {
             user: req.params.id,
-            status: 1
+            status: "ACTIVE"
         })
 
         if (!result)
@@ -104,7 +105,7 @@ router.get('/user/:id', async (req, res) => {
         // result = await injectDetails([result])
         // result = result[0]
 
-        return res.send(result)
+        return res.send(formatResult(u,u,result))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
