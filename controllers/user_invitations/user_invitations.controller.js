@@ -58,7 +58,7 @@ exports.getInvitationbyToken = async (req, res) => {
     if (!(uuidValidate(token)))
       return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const invitation = await User_invitation.findOne({ token: token }).populate(['college', 'category', 'user_group']);
+    const invitation = await User_invitation.findOne({ token: token, status: "PENDING" }).populate(['college', 'category', 'user_group']);
     if (!invitation)
       return res.send(formatResult(400, 'User invitation was not found'))
 
