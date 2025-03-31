@@ -3,6 +3,7 @@
  */
 const Joi = require('joi')
 const bcrypt = require('bcryptjs')
+const schedule = require('node-schedule');
 Joi.ObjectId = require('joi-objectid')(Joi)
 exports.express = require('express')
 exports.cors = require('cors')
@@ -211,6 +212,10 @@ exports.u = undefined
 
 exports.date = (date) => {
     return new Date(date)
+}
+
+exports.scheduleEvent = async (date, callback) => {
+    schedule.scheduleJob(date, callback);
 }
 
 exports.update_password = async ({password, user_id}) => {
