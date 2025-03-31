@@ -22,6 +22,7 @@ const {
   findFileType,
   upload_single,
   upload_multiple,
+  addStorageDirectoryToPath,
 } = require('../../utils/imports')
 
 // create router
@@ -172,7 +173,7 @@ router.get('/:id/video/:file_name', async (req, res) => {
       _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${chapter.uploaded_video}`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${chapter.uploaded_video}`)
     const exists = await fs.exists(file_path)
     if (!exists)
       return res.send(formatResult(404, 'file not found'))

@@ -749,8 +749,7 @@ router.put('/profile', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let path = req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`
-    path = addStorageDirectoryToPath(path) 
+    const path = addStorageDirectoryToPath(req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`)
     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
     if (req.user.profile) {
