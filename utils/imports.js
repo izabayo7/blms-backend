@@ -1399,6 +1399,15 @@ const audioFilter = function (req, file, cb) {
     cb(null, true);
 };
 
+const xlsxfileFilter = function (req, file, cb) {
+    // Accept auddios only
+    if (!file.originalname.match(/\.(XLSX|xlsx)$/)) {
+        req.fileValidationError = 'file type not allowed (only .xlsx is supported)';
+        return cb(new Error(req.fileValidationError), false);
+    }
+    cb(null, true);
+};
+
 // upload sing file
 exports.upload_single = this.multer({
     storage: this.dynamic_storage,
@@ -1406,6 +1415,12 @@ exports.upload_single = this.multer({
     //     fileSize: 1024 * 1024 * 5
     // },
     // fileFilter: fileFilter
+}).single('file')
+
+// upload sing file
+exports.upload_xlsx = this.multer({
+    storage: this.dynamic_storage,
+    fileFilter: xlsxfileFilter
 }).single('file')
 
 exports.upload_audio = this.multer({

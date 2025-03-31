@@ -1,3 +1,7 @@
+const {upload_xlsx} = require("../../utils/imports");
+const {fs} = require("../../utils/imports");
+const {addStorageDirectoryToPath} = require("../../utils/imports");
+const {upload_single} = require("../../utils/imports");
 const {Faculty} = require("../../models/faculty/faculty.model");
 const {User_invitation, validate_user_invitation} = require('../../models/user_invitations/user_invitations.model');
 const {v4: uuid, validate: uuidValidate} = require('uuid');
@@ -239,11 +243,31 @@ function checkIfArrayIsUnique(myArray) {
 }
 
 /***
- *  Create's a multiple user_invitations from a file
+ *  Deletes uploaded file after inviting or creating users from file
  * @param req
  * @param res
  */
-exports.createMultipleUserInvitations = async (req, res) => {
+exports.DeleteSourceFile = async (req, res) => {
+    if (req.kuriousStorageData.path) {
+        const exists = fs.existsSync(req.kuriousStorageData.path)
+        if (exists) {
+            fs.unlink(`${req.kuriousStorageData.path}`, (err) => {
+                if (err) {
+                    return res.send(formatResult(500, err))
+                }
+            })
+        }
+    }
+    return res.send(req.res)
+}
+
+/***
+ *  Create's a multiple user_invitations from a file
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.createMultipleUserInvitations = async (req, res, next) => {
     try {
 
         let faculties = await Faculty.find({college: req.user.college}).populate('college')
@@ -299,104 +323,126 @@ exports.createMultipleUserInvitations = async (req, res) => {
 
         const readXlsxFile = require('read-excel-file/node')
 
-        const {rows, errors} = await readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema})
+        req.kuriousStorageData = {
+            dir: addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}`),
+        }
 
-        // `errors` list items have shape: `{ row, column, error, value }`.
-        if (errors.length)
-            return res.send(formatResult(400, `(${errors[0].value}) ${errors[0].column} on row ${errors[0].row} is ${errors[0].error}`, errors[0]))
-
-        const {error} = checkIfArrayIsUnique(rows)
-
-        if (error)
-            return res.send(formatResult(400, error))
-
-        // `rows` is an array of rows
-        // each row being an array of cells.
-
-        let creationErrors = []
-        const savedInvitations = []
-        for (const i in rows) {
-            const user = await User.findOne({
-                email: rows[i].email,
-                "status.deleted": {$ne: 1}
-            })
-            if (user) {
-                creationErrors.push(`User with email (${rows[i].email}) arleady exist`)
-                break
-            }
-
-            if (rows[i].category !== "ADMIN" && !rows[i].user_group) {
-                creationErrors.push(`User with email (${rows[i].email}) must have a student group`)
-                break
-            }
-
-
-            const user_category = user_categories.map(x => {
-                if (x.name === rows[i].category)
-                    return x._id
-            })[0]
-
-            const user_group = user_groups.map(x => {
-                if (x.name === rows[i].user_group)
-                    return x._id
-            })[0]
-
-            let result = await User_invitation.findOne({
-                user: req.user._id,
-                email: rows[i].email,
-                category: user_category,
-                college: req.user.college,
-            })
-
-            let token
-
-            if (result) {
-                result.expiration_date = expiration_date
-                result = await result.save()
-                token = result.token
-            } else {
-                token = uuid()
-            }
-
-
-            const {sent, err} = await sendInvitationMail({
-                email: rows[i].email,
-                names: req.user.sur_name + ' ' + req.user.other_names,
-                token: token,
-                institution: {name: college ? college.name : faculties[0].college.name},
-                user_group: user_group
-            });
+        upload_xlsx(req, res, async (err) => {
             if (err) {
-                creationErrors.push(err)
-                break
+                req.res = formatResult(500, err.message)
+                return next()
+            }
+            if (!req.file) {
+                req.res = formatResult(500, "file is required")
+                return next()
             }
 
+            req.kuriousStorageData.path = `${req.kuriousStorageData.dir}/${req.file.filename}`
 
-            if (!result) {
-                const newDocument = new User_invitation({
+
+            const {rows, errors} = await readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema})
+
+            // `errors` list items have shape: `{ row, column, error, value }`.
+            if (errors.length) {
+                req.res = formatResult(400, `(${errors[0].value}) ${errors[0].column} on row ${errors[0].row} is ${errors[0].error}`, errors[0])
+                return next()
+            }
+
+            const {error} = checkIfArrayIsUnique(rows)
+
+            if (error) {
+                req.res = formatResult(400, error)
+                return next()
+            }
+
+            // `rows` is an array of rows
+            // each row being an array of cells.
+
+            let creationErrors = []
+            const savedInvitations = []
+            for (const i in rows) {
+                const user = await User.findOne({
+                    email: rows[i].email,
+                    "status.deleted": {$ne: 1}
+                })
+                if (user) {
+                    creationErrors.push(`User with email (${rows[i].email}) arleady exist`)
+                    break
+                }
+
+                if (rows[i].category !== "ADMIN" && !rows[i].user_group) {
+                    creationErrors.push(`User with email (${rows[i].email}) must have a student group`)
+                    break
+                }
+
+
+                const user_category = user_categories.map(x => {
+                    if (x.name === rows[i].category)
+                        return x._id
+                })[0]
+
+                const user_group = user_groups.map(x => {
+                    if (x.name === rows[i].user_group)
+                        return x._id
+                })[0]
+
+                let result = await User_invitation.findOne({
                     user: req.user._id,
                     email: rows[i].email,
                     category: user_category,
                     college: req.user.college,
+                })
+
+                let token
+
+                if (result) {
+                    result.expiration_date = expiration_date
+                    result = await result.save()
+                    token = result.token
+                } else {
+                    token = uuid()
+                }
+
+
+                const {sent, err} = await sendInvitationMail({
+                    email: rows[i].email,
+                    names: req.user.sur_name + ' ' + req.user.other_names,
                     token: token,
-                    user_group: user_group,
-                    expiration_date: expiration_date,
+                    institution: {name: college ? college.name : faculties[0].college.name},
+                    user_group: user_group
                 });
+                if (err) {
+                    creationErrors.push(err)
+                    break
+                }
 
-                result = await newDocument.save();
+
+                if (!result) {
+                    const newDocument = new User_invitation({
+                        user: req.user._id,
+                        email: rows[i].email,
+                        category: user_category,
+                        college: req.user.college,
+                        token: token,
+                        user_group: user_group,
+                        expiration_date: expiration_date,
+                    });
+
+                    result = await newDocument.save();
+                }
+
+                if (sent) {
+                    savedInvitations.push(result)
+                }
             }
 
-            if (sent) {
-                savedInvitations.push(result)
-            }
-        }
 
-        if (creationErrors.length)
-
-            return res.send(formatResult(201, creationErrors.length ? `${savedInvitations.length} invitations ` : '' + 'CREATED', {
+            req.res = formatResult(201, creationErrors.length ? `${savedInvitations.length} invitations ` : '' + 'CREATED', {
                 savedInvitations,
                 creationErrors
-            }));
+            })
+            return next()
+        })
     } catch
         (e) {
         return res.send(formatResult(500, e))

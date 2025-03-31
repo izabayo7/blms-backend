@@ -1,4 +1,5 @@
 const express = require('express')
+const {DeleteSourceFile} = require("../../controllers/user_invitations/user_invitations.controller");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {createMultipleUserInvitations} = require("../../controllers/user_invitations/user_invitations.controller");
 const {
@@ -82,11 +83,18 @@ router.route('/mega')
      *     description: Creates User_invitations from uploaded file
      *     security:
      *       - bearerAuth: -[]
+     *     consumes:
+     *       - multipart/form-data
+     *     parameters:
+     *       - in: formData
+     *         name: file
+     *         type: file
+     *         description: xlsx file with user information
      *     responses:
      *       200:
      *         description: Success
      */
-    .post([auth, filterUsers(["ADMIN"]), createMultipleUserInvitations])
+    .post([auth, filterUsers(["ADMIN"]), createMultipleUserInvitations, DeleteSourceFile])
 
 router.route('/all')
     /**
