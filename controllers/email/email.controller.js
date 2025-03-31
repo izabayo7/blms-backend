@@ -52,7 +52,7 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
             from: process.env.EMAIL,
             to: email,
             subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
-            body: mail,
+            html: mail,
         };
 
         /*
