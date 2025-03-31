@@ -337,6 +337,8 @@ module.exports.listen = (app) => {
             // let result = await createDocument(Comment, comment)
             let result = simplifyObject(new Comment(comment));
 
+            result.createdAt = new Date().toISOString();
+
             result = await injectUser([result], 'sender')
             result = result[0]
 
