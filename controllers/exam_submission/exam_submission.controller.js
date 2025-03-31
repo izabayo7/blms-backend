@@ -6,7 +6,7 @@ const {
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
-    Quiz,
+    Exam,
     User,
     date,
     validate_submission,
@@ -36,7 +36,7 @@ const {
     upload_multiple,
     upload_single,
     Comment,
-    addQuizTarget,
+    addExamTarget,
     auth,
     addStorageDirectoryToPath
 } = require('../../utils/imports')
@@ -251,7 +251,7 @@ router.get('/:id', auth, async (req, res) => {
             return res.send(formatResult(404, 'submission not found'))
 
         // result = await injectUser([result], 'user')
-        // result = await injectQuiz(result)
+        // result = await injectExam(result)
         // result = result[0]
 
         return res.send(formatResult(u, u, result))
@@ -271,7 +271,7 @@ router.get('/:id', auth, async (req, res) => {
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz id
+ *         description: Exam id
  *         in: path
  *         required: true
  *         type: string
@@ -292,7 +292,7 @@ router.get('/exam/:id', auth, async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         // check if exam exist
-        let exam = await findDocument(Quiz, {
+        let exam = await findDocument(Exam, {
             _id: req.params.id
         })
         if (!exam)
@@ -329,7 +329,7 @@ router.get('/exam/:id', auth, async (req, res) => {
  *         required: true
  *         type: string
  *       - name: quiz_name
- *         description: Quiz name
+ *         description: Exam name
  *         in: path
  *         required: true
  *         type: string
@@ -351,7 +351,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
         if (!user)
             return res.send(formatResult(404, 'user not found'))
 
-        let exam = await findDocument(Quiz, {
+        let exam = await findDocument(Exam, {
             name: req.params.quiz_name
         })
         if (!exam)
@@ -364,11 +364,11 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
         if (!result)
             return res.send(formatResult(404, 'submission not found'))
         result = simplifyObject(result)
-        result = simplifyObject(await injectQuiz([result]))
+        result = simplifyObject(await injectExam([result]))
         result = await injectUserFeedback(result)
         result = await injectUser(result, 'user')
         result = result[0]
-        result.exam = await addQuizTarget([result.exam])
+        result.exam = await addExamTarget([result.exam])
         result.exam = await addAttachmentMediaPaths(result.exam)
         result.exam = simplifyObject(result.exam)
         result.exam = await injectUser(result.exam, 'user')
@@ -434,7 +434,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         if (!submission)
             return res.send(formatResult(404, 'submission not found'))
 
-        const exam = await findDocument(Quiz, {
+        const exam = await findDocument(Exam, {
             _id: submission.exam
         })
 
@@ -560,7 +560,7 @@ router.get('/statistics/user', async (req, res) => {
     try {
         let courses = await Course.find({user: req.user._id}, {_id: 1})
         let chapters = await Chapter.find({course: {$in: courses.map(x => x._id.toString())}}, {_id: 1})
-        let exam = await Quiz.find({
+        let exam = await Exam.find({
             "target.type": "chapter",
             "target.id": {$in: chapters.map(x => x._id.toString())}
         }, {_id: 1, passMarks: 1, total_marks: 1})
@@ -573,7 +573,7 @@ router.get('/statistics/user', async (req, res) => {
         const total_submissions = result.length
         let marked = result.filter(e => e.marked)
 
-        let passed = marked.filter(e => ((e.total_marks / findQuizMarks(exam, e.exam._id)) * 100) >= findQuizMarks(exam, e.exam._id, true))
+        let passed = marked.filter(e => ((e.total_marks / findExamMarks(exam, e.exam._id)) * 100) >= findExamMarks(exam, e.exam._id, true))
 
         if (result.length > 4)
             result.length = 4
@@ -588,7 +588,7 @@ router.get('/statistics/user', async (req, res) => {
     }
 })
 
-function findQuizMarks(quizarray, quizid, passMarks = false) {
+function findExamMarks(quizarray, quizid, passMarks = false) {
     for (const i in quizarray) {
         if (quizarray[i]._id.toString() === quizid.toString()) {
             return passMarks ? quizarray[i].passMarks : quizarray[i].total_marks
@@ -653,7 +653,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (user_category.name !== 'STUDENT')
             return res.send(formatResult(403, 'user is not allowed to do this exam'))
 
-        let exam = await findDocument(Quiz, {
+        let exam = await findDocument(Exam, {
             _id: req.body.exam
         })
         if (!exam)
@@ -695,7 +695,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
             marked: is_selection_only
         })
         result = simplifyObject(result)
-        result.data = await injectQuiz([result.data])
+        result.data = await injectExam([result.data])
         result.data = {
             document: result.data[0],
             is_selection_only: is_selection_only
@@ -757,7 +757,7 @@ router.put('/:id', auth, async (req, res) => {
         if (!submission)
             return res.send(formatResult(404, 'submission not found'))
 
-        let exam = await findDocument(Quiz, {
+        let exam = await findDocument(Exam, {
             _id: req.body.exam
         })
         if (!exam)
@@ -880,7 +880,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
         if (!submission)
             return res.send(formatResult(404, 'submission not found'))
 
-        const exam = await findDocument(Quiz, {
+        const exam = await findDocument(Exam, {
             _id: submission.exam
         })
         if (!exam)
@@ -974,7 +974,7 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
         if (!answer.length)
             return res.send(formatResult(404, 'answer not found'))
 
-        const exam = await findDocument(Quiz, {
+        const exam = await findDocument(Exam, {
             _id: submission.exam
         })
         if (!exam)
@@ -1073,7 +1073,7 @@ router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
         if (answer[0].feedback_src != req.params.file_name)
             return res.send(formatResult(404, 'File not found'))
 
-        const exam = await findDocument(Quiz, {
+        const exam = await findDocument(Exam, {
             _id: submission.exam
         })
         if (!exam)
@@ -1151,7 +1151,7 @@ router.delete('/:id', auth, async (req, res) => {
 
         const result = await deleteDocument(Exam_submission, req.params.id)
 
-        let exam = await findDocument(Quiz, {
+        let exam = await findDocument(Exam, {
             _id: submission.exam
         })
         if (!exam.target.id) {
@@ -1257,9 +1257,9 @@ function validateSubmittedAnswers(questions, answers, mode) {
 }
 
 // replace exam id by the exam information
-async function injectQuiz(submissions) {
+async function injectExam(submissions) {
     for (const i in submissions) {
-        const exam = await Quiz.findOne({
+        const exam = await Exam.findOne({
             _id: submissions[i].exam
         })
         submissions[i].exam = exam
@@ -1283,7 +1283,7 @@ async function injectUserFeedback(submissions) {
 }
 
 async function get_faculty_college_year(quiz_id) {
-    let exam = await findDocument(Quiz, {
+    let exam = await findDocument(Exam, {
         _id: quiz_id
     })
     let course
