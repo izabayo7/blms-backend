@@ -600,7 +600,7 @@ router.put('/:id', async (req, res) => {
             }
           }
           if (deletePicture) {
-            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`)
             fs.exists(path, (exists) => {
               if (exists) {
                 fs.unlink(path)
