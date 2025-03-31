@@ -1,5 +1,5 @@
 // import dependencies
-const { User_group } = require('../../models/user_group/user_group.model')
+const { User_group, validate_user_group } = require('../../models/user_group/user_group.model')
 const {
     express,
     Faculty_college,
@@ -31,13 +31,19 @@ const router = express.Router()
  * definitions:
  *   User_group:
  *     properties:
- *       faculty_college:
+ *       faculty:
  *         type: string
- *       college_year:
+ *       name:
  *         type: string
+ *       created_by:
+ *         type: string
+ *       status:
+ *         type: string
+ *         enum: ['ACTIVE', 'INACTIVE']
  *     required:
- *       - faculty_college
- *       - college_year
+ *       - faculty
+ *       - name
+ *       - created_by
  */
 
 /**
@@ -271,7 +277,14 @@ router.get('/user/:user_name', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/User_group'
+ *           properties:
+ *             name:
+ *               type: string
+ *             faculty:
+ *               type: string
+ *           required:
+ *             - name
+ *             - faculty
  *     responses:
  *       201:
  *         description: Created
@@ -286,34 +299,28 @@ router.post('/', async (req, res) => {
     try {
         const {
             error
-        } = validate_user_groups(req.body)
+        } = validate_user_group(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        // check if faculty_college exist
-        let faculty_college = await findDocument(Faculty_college, {
-            _id: req.body.faculty_college
+        // check if faculty exist
+        let faculty = await findDocument(Faculty, {
+            _id: req.body.faculty
         })
-        if (!faculty_college)
-            return res.send(formatResult(404, `Faculty_college with code ${req.body.faculty_college} doens't exist`))
+        if (!faculty)
+            return res.send(formatResult(404, `Faculty with code ${req.body.faculty} doens't exist`))
 
-        // check if college_year exist
-        let college_year = await findDocument(College_year, {
-            _id: req.body.college_year
-        })
-        if (!college_year)
-            return res.send(formatResult(404, `College_year with code ${req.body.college_year} doens't exist`))
 
-        let user_groups = await findDocument(User_group, {
-            faculty_college: req.body.faculty_college,
-            college_year: req.body.college_year
+        let dupplicate = await findDocument(User_group, {
+            faculty: req.body.faculty,
+            name: req.body.name
         })
-        if (user_groups)
-            return res.send(formatResult(400, `user_groups you want to create arleady exist`))
+        if (dupplicate)
+            return res.send(formatResult(400, `user_group you want to create arleady exist`))
 
         let result = await createDocument(User_group, {
-            faculty_college: req.body.faculty_college,
-            college_year: req.body.college_year
+            faculty: req.body.faculty,
+            name: req.body.name
         })
 
         // result = await injectDetails([simplifyObject(result)])
