@@ -822,7 +822,16 @@ exports.addAssignmentTarget = async (assignments) => {
             assignments[i].target.chapter = await this.Chapter.findOne({_id: assignments[i].target.id}, {
                 name: 1,
                 course: 1
-            }).populate('course', ['name'])
+            }).populate({
+                path: 'course',
+                select: ['name','user_group'],
+                populate: {
+                    path: 'user_group', populate: {
+                        path: 'faculty',
+                        model: 'faculty'
+                    }
+                }
+            })
             assignments[i].target.course = assignments[i].target.chapter.course
         }
     }
