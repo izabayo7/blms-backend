@@ -474,7 +474,8 @@ router.post('/', async (req, res) => {
       instructions: req.body.instructions,
       user: user._id,
       questions: req.body.questions,
-      total_marks: validQuestions.total_marks
+      total_marks: validQuestions.total_marks,
+      passMarks: req.body.passMarks
     })
 
     return res.send(result)

@@ -13,6 +13,11 @@ const quiz_schema = new mongoose.Schema({
     instructions: {
         type: String
     },
+    // percentage which students will be graded on
+    passMarks: {
+        type: Number,
+        default: 50
+    },
     target: {
         type: {
             type: String,
@@ -37,6 +42,10 @@ const quiz_schema = new mongoose.Schema({
         details: {
             type: String,
             require: true
+        },
+        required: {
+            type: Boolean,
+            default: false
         },
         options: {
             list_style_type: {
@@ -83,6 +92,7 @@ function validate_quiz(body, target = false) {
     } : {
             name: Joi.string().min(3).required(),
             instructions: Joi.string().min(3),
+            passMarks: Joi.number().min(1).required(),
             target: Joi.object({
                 type: Joi.string().required(),
                 id: Joi.ObjectId().required()
@@ -93,6 +103,7 @@ function validate_quiz(body, target = false) {
                 type: Joi.string().required(),
                 marks: Joi.number().required(),
                 details: Joi.string().min(5).required(),
+                required: Joi.boolean(),
                 options: {
                     list_style_type: Joi.string(),
                     choices: Joi.array().items(Joi.object({
