@@ -340,7 +340,7 @@ router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Id of the exam you want to dupplicate
+ *         description: Id of the exam you want to duplicate
  *         in: path
  *         required: true
  *         type: string
