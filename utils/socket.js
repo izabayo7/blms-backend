@@ -516,6 +516,68 @@ module.exports.listen = (app) => {
 
         });
 
+        // tell user that marks were released
+        socket.on('marksReleased', async ({
+                                                route,
+                                                user_group,
+                                                content
+                                            }) => {
+
+            let newDocument = new Notification({
+                user: id,
+                content: content,
+                link: route,
+            })
+            const saveDocument = await newDocument.save()
+            if (saveDocument) {
+
+                newDocument = simplifyObject(newDocument)
+
+                newDocument = await injectUser([newDocument], 'user')
+                newDocument = newDocument[0]
+
+                const user_user_groups = await User_user_group.find({
+                    user_group: user_group
+                })
+
+                user_user_groups.forEach(async _doc => {
+                    if (_doc.user != id) {
+                        // create notification for user
+                        let userNotification = await User_notification.findOne({
+                            user: _doc.user
+                        })
+                        if (!userNotification) {
+                            userNotification = new User_notification({
+                                user: _doc.user,
+                                notifications: [{
+                                    id: newDocument._id
+                                }]
+                            })
+
+                        } else {
+                            userNotification.notifications.push({
+                                id: newDocument._id
+                            })
+                        }
+
+                        let _newDocument = await userNotification.save()
+
+                        if (_newDocument) {
+                            let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                            notification.id = undefined
+                            notification.notification = newDocument
+                            // send the notification
+                            socket.broadcast.to(_doc.user).emit('new-notification', {
+                                notification: notification
+                            })
+                        }
+                    }
+                })
+
+            }
+
+        });
+
 
     });
 
