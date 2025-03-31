@@ -441,7 +441,7 @@ async function injectDetails(faculties, faculty_colleges) {
     })
     for (const k in faculty_collegeYears) {
       const attendants = await User_faculty_college_year.find({
-        faculty_collegeYear: faculty_collegeYears[k]._id
+        faculty_college_year: faculty_collegeYears[k]._id.toString()
       }).countDocuments()
       total_courses += await countDocuments(Course, { faculty_college_year: faculty_collegeYears[k]._id })
       all_attendants += attendants
