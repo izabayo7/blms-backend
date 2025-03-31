@@ -55,8 +55,7 @@ const user_invitation_schema = new mongoose.Schema({
     },
     user_group: {
         type: mongoose.Types.ObjectId,
-        ref: "user_group",
-        required: true
+        ref: "user_group"
     },
     email: {
         type: String,

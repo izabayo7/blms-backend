@@ -137,8 +137,10 @@ exports.createUserInvitation = async (req, res) => {
         if (!user_category)
             return res.send(formatResult(404, 'UserCategory not found'))
 
+        let user_group
+
         if (req.body.user_group) {
-            let user_group = await User_group.findOne({
+            user_group = await User_group.findOne({
                 name: req.body.user_group
             })
             if (!user_group)
@@ -199,7 +201,7 @@ exports.createUserInvitation = async (req, res) => {
                     category: user_category._id,
                     college: req.user.college,
                     token: token,
-                    user_group: user_group._id,
+                    user_group: user_group ? user_group._id : undefined,
                     expiration_date: expiration_date,
                 });
 
