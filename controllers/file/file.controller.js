@@ -17,9 +17,12 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const { model } = req.kuriousStorageData
-        cb(null, `${model}-${normaliseDate(new Date().toISOString())}.${file.mimetype.split('/')[1]}`)
+        cb(null, `${model}-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length-1]}`)
     }
 })
+
+// file size limits needed
+// type checking also needed
 
 const upload = multer({
     storage: storage,
@@ -28,6 +31,11 @@ const upload = multer({
     },
     fileFilter: fileFilter
 }).single('file')
+
+// for multiple filies
+const uploadPlus = multer({
+    storage: storage
+}).any()
 
 // get college logo
 router.get('/collegeLogo/:id', async (req, res) => {
@@ -199,6 +207,31 @@ router.get('/chapterDocument/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
+
+// get attachments
+router.get('/getAttachments/:id', async (req, res) => {
+    try {
+
+        const { error } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        // check if chapter exist
+        const chapter = await Chapter.findOne({ _id: req.params.id })
+        if (!chapter)
+            return res.send(`Chapter with code ${req.params.id} doens't exist`)
+
+        // fetch chapter attachments
+        const attachments = await Attachment.find({ chapter: req.params.id })
+        if (attachments.length < 1)
+            return res.send(`Chapter ${chapter.name} don't have attachmets`)
+
+        return res.status(200).send(attachments)
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
 // get an attachment
 router.get('/getAttachment/:id', async (req, res) => {
     try {
@@ -212,7 +245,7 @@ router.get('/getAttachment/:id', async (req, res) => {
         if (!attachment)
             return res.send(`Attachment with code ${req.params.id} doens't exist`)
 
-        const chapter = Chapter.findOne({ _id: attachment.chapter })
+        const chapter = await Chapter.findOne({ _id: attachment.chapter })
         const course = await Course.findOne({ _id: chapter.course })
         const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
         const facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
@@ -222,6 +255,33 @@ router.get('/getAttachment/:id', async (req, res) => {
         res.contentType('image/jpeg') // wp kbx
         return res.status(200).send(pic)
     } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
+// download an attachment
+router.get('/downloadAttachment/:id', async (req, res) => {
+    try {
+
+        const { error } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        // check if attachment exist
+        const attachment = await Attachment.findOne({ _id: req.params.id })
+        if (!attachment)
+            return res.status(404).send(`Attachment with code ${req.params.id} doens't exist`)
+
+        const chapter = await Chapter.findOne({ _id: attachment.chapter })
+        const course = await Course.findOne({ _id: chapter.course })
+        const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
+        const facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
+
+        filepath = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`
+        // res.setHeader('Content-Disposition', 'attachment')
+        return res.download(filepath)
+    } catch (error) {
+        console.log(error)
         return res.status(500).send(error)
     }
 })
@@ -449,7 +509,7 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
     }
 })
 
-// updated a chapter profiles
+// updated a chapter content
 router.post('/updateChapterContent/:id', async (req, res) => {
     try {
         const { error } = validateObjectId(req.params.id)
@@ -470,9 +530,9 @@ router.post('/updateChapterContent/:id', async (req, res) => {
             if (error)
                 res.status(500).send(error)
             fs.writeFile(`${dir}/index.html`, req.body.content, (err) => {
-                if (err) 
+                if (err)
                     return res.status(500).send(err)
-                return res.status(200).send('Content was successfully saved')
+                return res.status(201).send('Content was successfully saved')
             })
         })
 
@@ -482,7 +542,7 @@ router.post('/updateChapterContent/:id', async (req, res) => {
 })
 
 // add an attachment
-router.post('/AddAttachment/:chapter', async (req, res) => {
+router.post('/AddAttachments/:chapter', async (req, res) => {
     try {
         const { error } = validateObjectId(req.params.chapter)
         if (error)
@@ -497,20 +557,23 @@ router.post('/AddAttachment/:chapter', async (req, res) => {
             dir: `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/attachments`,
             model: 'attachment'
         }
-
-        upload(req, res, async (err) => {
+        uploadPlus(req, res, async (err) => {
             if (err)
                 return res.status(500).send(err.message)
+            const status = true
+            for (const i in req.files) {
+                const newDocument = new Attachment({
+                    name: req.files[i].filename,
+                    chapter: req.params.chapter
+                })
 
-            const newDocument = new Attachment({
-                name: req.file.filename,
-                chapter: req.body.chapter
-            })
-
-            const saveDocument = await newDocument.save()
-            if (saveDocument)
-                return res.status(201).send(saveDocument)
-            return res.status(500).send('New Attachment not Registered')
+                const saveDocument = await newDocument.save()
+                if (!saveDocument){
+                    status = false
+                    return res.status(400).send({message: 'Erro occured', index: i})
+                }
+            }
+            return res.status(201).send({message: 'All attachments were successfully uploaded'})
         })
 
     } catch (error) {
@@ -525,7 +588,7 @@ router.post('/removeAttachment/:id', async (req, res) => {
         if (error)
             return res.status(400).send(error.details[0].message)
 
-        const attachment = Attachmen.findOne({ _id: req.params.id })
+        const attachment = await Attachment.findOne({ _id: req.params.id })
         const chapter = await Chapter.findOne({ _id: attachment.chapter })
         const course = await Course.findOne({ _id: chapter.course })
         const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
@@ -536,10 +599,10 @@ router.post('/removeAttachment/:id', async (req, res) => {
             if (err)
                 return res.status(500).send(err)
 
-            const deconstedDocument = await Attachment.findOneAndDeconste({ _id: req.params.id })
-            if (!deconstedDocument)
-                return res.status(500).send('Attachment Not Deconsted')
-            return res.status(200).send(`Attachment ${deconstedDocument._id} Successfully deconsted`)
+            const deletedDocument = await Attachment.findOneAndDeconste({ _id: req.params.id })
+            if (!deletedDocument)
+                return res.status(500).send('Attachment Not Deleted')
+            return res.status(200).send(`Attachment ${deletedDocument._id} Successfully deleted`)
         })
 
     } catch (error) {

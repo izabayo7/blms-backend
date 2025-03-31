@@ -12,6 +12,7 @@ module.exports.config = require('config')
 module.exports.bcrypt = bcrypt
 module.exports.multer = require('multer')
 module.exports.fs = require('fs-extra')
+module.exports.timestamps = require('mongoose-timestamp');
 
 // models & functions
 const { SuperAdmin, validateSuperAdmin } = require('../models/superAdmin/superAdmin.model')
@@ -27,6 +28,10 @@ const { Course, validateCourse } = require('../models/course/course.model')
 const { Chapter, validateChapter } = require('../models/chapter/chapter.model')
 const { Message, validateMessage } = require('../models/message/message.model')
 const { Attachment, validateAttachment } = require('../models/attachments/attachments.model')
+const { studentFacilityCollegeYear, validateStudentFacilityCollegeYear} = require('../models/student-facility-college-year/student-facility-college-year.model')
+const { StudentProgress, validateStudentProgress} = require('../models/studentProgress/studentProgress.model')
+const { Quiz, validateQuiz } = require('../models/quiz/quiz.model')
+const { QuizAnswers, validateQuizAnswers } = require('../models/quizAnswers/quizAnswers.model')
 const { fileFilter } = require('./multer/fileFilter')
 
 module.exports.Admin = Admin
@@ -55,7 +60,16 @@ module.exports.Message = Message
 module.exports.validateMessage = validateMessage
 module.exports.Attachment = Attachment
 module.exports.validateAttachment = validateAttachment
+module.exports.StudentFacilityCollegeYear = studentFacilityCollegeYear
+module.exports.validateStudentFacilityCollegeYear = validateStudentFacilityCollegeYear
+module.exports.StudentProgress = StudentProgress
+module.exports.validateStudentProgress = validateStudentProgress
+module.exports.Quiz = Quiz
+module.exports.validateQuiz = validateQuiz
+module.exports.QuizAnswers = QuizAnswers
+module.exports.validateQuizAnswers = validateQuizAnswers
 module.exports.fileFilter = fileFilter
+
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
 
 module.exports.hashPassword = async (password) => {

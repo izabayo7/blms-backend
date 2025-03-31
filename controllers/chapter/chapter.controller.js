@@ -4,50 +4,6 @@ const { express, bcrypt, multer, fs, Chapter, validateChapter, Course, normalise
 // create router
 const router = express.Router()
 
-// configure multer
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     const college = getCollege(req.body.facilityCollegeYear, 'chapter')
-//     let dir = `./uploads/schools/${college}/courses`
-//     fs.exists(dir, exist => {
-//       if (!exist) {
-//         fs.mkdir(dir, error => cb(error, dir))
-//       }
-//       dir = `./uploads/schools/${college}/courses/${req.body.course}`
-//       fs.exists(dir, exist => {
-//         if (!exist) {
-//           fs.mkdir(dir, error => cb(error, dir))
-//         }
-//         dir = `./uploads/schools/${college}/courses/${req.body.course}/chapters`
-//         fs.exists(dir, exist => {
-//           if (!exist) {
-//             fs.mkdir(dir, error => cb(error, dir))
-//           }
-//           dir = `./uploads/schools/${college}/courses/${req.body.course}/chapters/${req.params.id}`
-//           fs.exists(dir, exist => {
-//             if (!exist) {
-//               fs.mkdir(dir, error => cb(error, dir))
-//             }
-//             return cb(null, dir)
-//           })
-//         })
-//       })
-
-//     })
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, `mainContent-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
-//   }
-// })
-
-// const upload = multer({
-//   storage: storage,
-//   limits: {
-//     fileSize: 1024 * 1024 * 5
-//   },
-//   fileFilter: fileFilter
-// })
-
 // Get all chapters in a specified course
 router.get('/course/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
@@ -98,7 +54,6 @@ router.post('/', async (req, res) => {
 
 
 // updated a chapter
-// router.put('/:id', upload.single('mainContent'), async (req, res) => {
 router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
@@ -112,14 +67,6 @@ router.put('/:id', async (req, res) => {
   if (!chapter)
     return res.send(`Chapter with code ${req.params.id} doens't exist`)
 
-  if (req.file && chapter.document) {
-    fs.unlink(__dirname + '../../uploads/profile/chapter/' + chapter.document, (err) => {
-      if (err)
-        return res.send(err).status(500)
-    })
-  }
-  if (req.file)
-    req.body.document = req.file.filename
   const updateDocument = await Chapter.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
     return res.send(updateDocument).status(201)

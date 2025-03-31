@@ -1,0 +1,26 @@
+GET http://localhost:7070/kurious/student-facility-college-year
+
+###
+POST http://localhost:7070/kurious/student-facility-college-year
+Content-Type: application/json
+
+{
+    "student": "5f29143034d5ef2e7020ce78",
+    "facilityCollegeYear": "5f0ab5f7deea002f14fd93a2"
+}
+
+###
+PUT http://localhost:7070/kurious/student-facility-college-year/feedbackUgQJ1
+Content-Type: application/json
+
+{
+    "user": "RCA916UUU",
+    "type": "bug reporting",
+    "descryption": "the login button is not working"
+}
+
+###
+DELETE http://localhost:7070/kurious/student-facility-college-year/feedbackUgQJ1
+
+###
+

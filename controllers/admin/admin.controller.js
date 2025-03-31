@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
-        return res.send(error.details[0].message).status(400)
+        return res.send(error.details[0].message).status(412)
     const admin = await Admin.findOne({ _id: req.params.id })
     try {
         if (!admin)
@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     const { error } = validateAdmin(req.body)
     if (error)
-        return res.send(error.details[0].message).status(400)
+        return res.send(error.details[0].message).status(412)
 
     let admin = await Admin.findOne({ email: req.body.email })
     if (admin)
@@ -80,17 +80,17 @@ router.post('/', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { error } = validateUserLogin(req.body)
     if (error)
-        return res.send(error.details[0].message).status(400)
+        return res.send(error.details[0].message).status(412)
 
     // find admin
     let admin = await Admin.findOne({ email: req.body.email })
     if (!admin)
-        return res.send('Invalid Email or Password').status(400)
+        return res.send('Invalid Email or Password').status(412)
 
     // check if passed password is valid
     const validPassword = await bcrypt.compare(req.body.password, admin.password)
     if (!validPassword)
-        return res.send('Invalid Email or Password').status(400)
+        return res.send('Invalid Email or Password').status(412)
     // return token
     return res.send(admin.generateAuthToken()).status(200)
 })
@@ -99,11 +99,11 @@ router.post('/login', async (req, res) => {
 router.put('/:id', async (req, res) => {
     let { error } = validateObjectId(req.params.id)
     if (error)
-        return res.send(error.details[0].message).status(400)
+        return res.send(error.details[0].message).status(412)
     error = validateAdmin(req.body)
     error = error.error
     if (error)
-        return res.send(error.details[0].message).status(400)
+        return res.send(error.details[0].message).status(412)
 
     // check if admin exist
     let admin = await Admin.findOne({ _id: req.params.id })
@@ -123,7 +123,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
-        return res.send(error.details[0].message).status(400)
+        return res.send(error.details[0].message).status(412)
     let admin = await Admin.findOne({ _id: req.params.id })
     if (!admin)
         return res.send(`Admin of Code ${req.params.id} Not Found`)
