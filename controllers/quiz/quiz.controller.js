@@ -374,7 +374,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
         let file_found = false
 
         for (const i in quiz.questions) {
-            if (quiz.questions[i].type.includes('file_select')) {
+            if (quiz.questions[i].type.includes('image_select')) {
                 for (const k in quiz.questions[i].options.choices) {
                     if (quiz.questions[i].options.choices[k].src == req.params.file_name) {
                         file_found = true
@@ -585,14 +585,14 @@ router.put('/:id', async (req, res) => {
         // delete removed files
         for (const i in quiz_copy.questions) {
             if (
-                quiz_copy.questions[i].type.includes("file_select")
+                quiz_copy.questions[i].type.includes("image_select")
             ) {
                 let current_question = quiz.questions.filter(q = q._id == quiz_copy.questions[i]._id)
                 current_question = current_question[0]
                 for (const j in quiz_copy.questions[i].options.choices) {
                     let deletePicture = true
                     if (current_question) {
-                        if (current_question.type.includes('file_select')) {
+                        if (current_question.type.includes('image_select')) {
                             for (const k in current_question.options.choices) {
                                 if (quiz_copy.questions[i].options.choices[j].src === current_question.options.choices[k].src) {
                                     deletePicture = false
@@ -841,7 +841,7 @@ router.post('/:id/attachment', async (req, res) => {
         let file_missing = false
 
         for (const i in quiz.questions) {
-            if (quiz.questions[i].type.includes('file_select')) {
+            if (quiz.questions[i].type.includes('image_select')) {
                 for (const k in quiz.questions[i].options.choices) {
                     const file_found = await fs.exists(`${path}/${quiz.questions[i].options.choices[k].src}`)
                     if (!file_found) {
@@ -941,7 +941,7 @@ router.delete('/:id', async (req, res) => {
 })
 
 function validateQuestions(questions) {
-    const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_file_select', 'multiple_file_select', 'file_upload']
+    const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_image_select', 'multiple_image_select', 'file_upload']
     let message = ''
     let marks = 0
     for (let i in questions) {
@@ -967,14 +967,14 @@ function validateQuestions(questions) {
                 for (let k in questions[i].options.choices) {
                     k = parseInt(k)
                     let times
-                    if (questions[i].type === 'single_text_select' || questions[i].type === 'multi_text_select') {
+                    if (questions[i].type === 'single_text_select' || questions[i].type === 'multiple_text_select') {
                         times = questions[i].options.choices.filter(choice => choice.text == questions[i].options.choices[k].text).length
                         if (!questions[i].options.choices[k].text) {
                             message = `choice ${k + 1} in question ${i + 1} must have text`
                             break;
                         }
                     }
-                    if (questions[i].type === 'single_file_select' || questions[i].type === 'multi_file_select') {
+                    if (questions[i].type === 'single_image_select' || questions[i].type === 'multiple_image_select') {
                         times = questions[i].options.choices.filter(choice => choice.src == questions[i].options.choices[k].src).length
                         if (!questions[i].options.choices[k].src) {
                             message = `choice ${k + 1} in question ${i + 1} must have attachment src`
