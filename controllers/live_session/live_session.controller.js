@@ -481,6 +481,24 @@ router.put('/:id/status/:status', async (req, res) => {
 })
 
 
+router.get('/:id/endAutomatically', async (req, res) => {
+    // TODO limit the callers to be only from streaming server
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        await AutomaticallyEndLiveSession({liveId:req.params.id})
+
+        return res.send(formatResult())
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
 /**
  * @swagger
  * /live_session/{id}:
