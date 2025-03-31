@@ -7,7 +7,7 @@
     "start": "pm2 start index.js --name \"Kurious\"",
     "restart": "pm2 restart Kurious --update-env",
     "stop": "pm2 stop Kurious",
-    "serve": "nodemon .\\index.js",
+    "dev": "nodemon .\\index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "I.Cedric",

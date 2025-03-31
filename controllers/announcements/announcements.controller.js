@@ -1,5 +1,5 @@
 // import dependencies
-const {User} = require("../../utils/imports");
+const {User, getUserAnnouncements} = require("../../utils/imports");
 const {Announcement} = require("../../models/announcements/announcements.model");
 const {validate_announcement} = require("../../models/announcements/announcements.model");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
@@ -45,89 +45,13 @@ router.get('/user', async (req, res) => {
     try {
 
 
-        const ids = [req.user.college]
-
-        // ['course', 'student_group', 'faculty', 'college']
-
-        const user_user_group = await User_user_group.find({
-            user: req.user._id,
-            status: "ACTIVE"
-        }, {user_group: 1}).populate('user_group',
-            {faculty: 1}
-        )
-
-        user_user_group.map(async (x) => {
-            ids.push(x.user_group._id.toString())
-            ids.push(x.user_group.faculty.toString())
-        })
-
-        if (req.user.category.name === 'STUDENT') {
-
-            const courses = await Course.find({
-                user_group: {$in: user_user_group.map(x => x.user_group._id.toString())},
-                published: true
-            }, {_id: 1})
-
-            courses.map(async (x) => {
-                ids.push(x._id.toString())
-            })
-
-        }
-
-        let announcements = await Announcement.find({
-            $or: [
-                {"target.id": {$in: ids}},
-                {sender: req.user._id},
-                {specific_receivers: req.user._id.toString()},
-            ]
-        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({_id: -1}).lean()
-
-        announcements = await injectUser(announcements, 'sender')
-        announcements = await injectTarget(announcements)
+        const announcements = await getUserAnnouncements(req.user)
 
         return res.send(formatResult(u, u, announcements))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
-
-async function injectTarget(announcements) {
-    for (const announcementsKey in announcements) {
-        if (!announcements[announcementsKey].target)
-            continue;
-        let target
-        switch (announcements[announcementsKey].target.type) {
-            case 'course':
-                target = await findDocument(Course, {
-                    _id: announcements[announcementsKey].target.id
-                }, {name: 1})
-                break;
-
-            case 'student_group':
-                target = await findDocument(User_group, {
-                    _id: announcements[announcementsKey].target.id
-                }, {name: 1})
-                break;
-
-            case 'faculty':
-                target = await findDocument(Faculty_college, {
-                    _id: announcements[announcementsKey].target.id
-                }, {name: 1})
-                break;
-
-            case 'college':
-                target = await findDocument(College, {
-                    _id: announcements[announcementsKey].target.id
-                }, {name: 1})
-                break;
-
-            default:
-                break;
-        }
-        announcements[announcementsKey].target.name = target.name
-    }
-    return announcements
-}
 
 /**
  * @swagger
