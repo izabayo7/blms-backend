@@ -33,8 +33,8 @@ const post_schema = new mongoose.Schema({
     }],
     status: {
         type: String,
-        enum: ['ACTIVE', 'INACTIVE'],
-        default: 'ACTIVE'
+        enum: ['DRAFT', 'PUBLISHED', 'DELETED'],
+        default: 'DRAFT'
     }
 }, { timestamps: true })
 
