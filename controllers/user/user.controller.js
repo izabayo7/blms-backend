@@ -276,7 +276,7 @@ router.get('/statistics/user_joins', [auth,filterUsers(["ADMIN"])], async (req, 
 
 /**
  * @swagger
- * /user/college/{id}/{category}:
+ * /user/college/{category}:
  *   get:
  *     tags:
  *       - User
@@ -303,13 +303,8 @@ router.get('/statistics/user_joins', [auth,filterUsers(["ADMIN"])], async (req, 
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id/:category', [auth,filterUsers(["ADMIN"])], async (req, res) => {
+router.get('/college/:category', [auth,filterUsers(["ADMIN"])], async (req, res) => {
     try {
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
 
         if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
             return res.send(formatResult(400, "Invalid category"))
@@ -318,7 +313,7 @@ router.get('/college/:id/:category', [auth,filterUsers(["ADMIN"])], async (req, 
             name: req.params.category
         })
 
-        let users = await findDocuments(User, req.params.category == 'ALL' ? {
+        let users = await findDocuments(User, req.params.category === 'ALL' ? {
             college: req.user.college
         } : {
             college: req.user.college,
@@ -978,7 +973,8 @@ router.post('/login', async (req, res) => {
                 user_name: req.body.email_user_name_or_phone
             }, {
                 phone: req.body.email_user_name_or_phone
-            }]
+            }],
+            "status.disabled": 0
         })
 
         const erroMessage = 'invalid credentials'
