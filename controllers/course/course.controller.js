@@ -32,7 +32,8 @@ const {
     Chapter,
     sendResizedImage,
     upload_single_image,
-    Compress_images
+    Compress_images,
+    injectFaculty_college_year
 } = require('../../utils/imports')
 
 // create router
@@ -950,42 +951,6 @@ router.delete('/:id', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
-// inject faculty college Year
-async function injectFaculty_college_year(courses) {
-    for (const i in courses) {
-        const faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: courses[i].faculty_college_year
-        }, { _v: 0 }, true, false)
-
-        courses[i].faculty_college_year = faculty_college_year
-
-        const collegeYear = await findDocument(College_year, {
-            _id: faculty_college_year.college_year
-        }, { _v: 0 }, true, false)
-        courses[i].faculty_college_year.college_year = collegeYear
-
-        const faculty_college = await findDocument(Faculty_college, {
-            _id: faculty_college_year.faculty_college
-        }, { _v: 0 }, true, false)
-        courses[i].faculty_college_year.faculty_college = faculty_college
-
-        const faculty = await findDocument(Faculty, {
-            _id: faculty_college.faculty
-        }, { _v: 0 }, true, false)
-        courses[i].faculty_college_year.faculty_college.faculty = faculty
-
-        const college = await findDocument(College, {
-            _id: faculty_college.college
-        }, { _v: 0 }, true, false)
-
-        courses[i].faculty_college_year.faculty_college.college = college
-        if (courses[i].faculty_college_year.faculty_college.college.logo) {
-            courses[i].faculty_college_year.faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
-        }
-    }
-    return courses
-}
 
 // export the router
 module.exports = router
