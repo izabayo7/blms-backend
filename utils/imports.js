@@ -80,11 +80,11 @@ module.exports.Faculty = faculty
 module.exports.validate_faculty = validate_faculty
 
 const {
-    facultyCollege,
+    faculty_college,
     validateFacultyCollege
 } = require('../models/faculty_college/faculty_college.model')
 
-module.exports.FacultyCollege = facultyCollege
+module.exports.Faculty_college = faculty_college
 module.exports.validateFacultyCollege = validateFacultyCollege
 
 const {
@@ -232,42 +232,6 @@ module.exports.validateUserLogin = (credentials) => {
     return Joi.validate(credentials, schema)
 }
 
-module.exports.checkRequirements = async (category, body) => {
-    let Users = category === 'SuperAdmin' ? SuperAdmin : category === 'Admin' ? Admin : category === 'Instructor' ? Instructor : Student
-
-    let college = await College.findOne({
-        _id: body.college
-    })
-    if (!college)
-        return `College ${body.college} Not Found`
-    let user = await Users.findOne({
-        email: body.email
-    })
-    if (user)
-        return `${category} with email ${body.email} arleady exist`
-
-    user = await Users.findOne({
-        nationalId: body.nationalId
-    })
-    if (user)
-        return `${category} with nationalId ${body.nationalId} arleady exist`
-
-    user = await Users.findOne({
-        phone: body.phone
-    })
-    if (user)
-        return `${category} with phone ${body.phone} arleady exist`
-
-    if (category === 'Admin') {
-        user = await Users.findOne({
-            college: body.college
-        })
-        if (user)
-            return `${category} with college ${body.college} arleady exist`
-    }
-    return 'alright'
-}
-
 /**
  *  creates a new document with the data
  * @param {Object} model Model
@@ -297,7 +261,7 @@ module.exports.updateDocument = async (model, id, properties) => {
             _id: id
         }, properties, {
             new: true
-        })
+        }).exec()
         return this.formatResult(200, 'UPDATED', updatedDocument)
     } catch (error) {
         return this.formatResult(500, error)
@@ -310,11 +274,11 @@ module.exports.updateDocument = async (model, id, properties) => {
  * @param {Object} id MongoId of the document
  * @returns formatedResult
  */
-module.exports.deleteDocument = async (model, id, properties) => {
+module.exports.deleteDocument = async (model, id) => {
     try {
         const deletedDocument = await model.findOneAndDelete({
             _id: id
-        })
+        }).exec()
         return this.formatResult(200, 'DELETED', deletedDocument)
     } catch (error) {
         return this.formatResult(500, error)
@@ -1084,12 +1048,12 @@ module.exports.generateAuthToken = async (user) => {
         _id: user._id,
         sur_name: user.sur_name,
         other_names: user.other_names,
-        national_id: user.national_id,
+        // national_id: user.national_id,
         gender: user.gender,
         date_of_birth: user.date_of_birth,
         phone: user.phone,
         email: user.email,
-        password: user.password,
+        // password: user.password,
         category: user.category,
         roles: user.roles,
         college: user.college,
