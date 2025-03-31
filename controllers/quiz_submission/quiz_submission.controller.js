@@ -280,52 +280,61 @@ router.get('/user/:user_name', auth, async (req, res) => {
 
       for (const j in courses) {
         // check if there are quizes made by the user
-        let quizes = await findDocuments(Quiz, {
-          "target.id": courses[j]._id
+        let chapters = await findDocuments(Chapter, {
+          course: courses[j]._id
         }, u, u, u, u, u, {
           _id: -1
         })
-        console.log(quizes)
 
-        let foundSubmissions = []
+        for (const l in chapters) {
 
-        for (const i in quizes) {
-
-          let quiz_submissions = await findDocuments(Quiz_submission, {
-            quiz: quizes[i]._id
+          let quizes = await findDocuments(Quiz, {
+            "target.id": chapters[l]._id
           }, u, u, u, u, u, {
             _id: -1
           })
-          console.log(quiz_submissions)
-          quizes[i].total_submissions = quiz_submissions.length
 
-          if (quiz_submissions.length) {
+          let foundSubmissions = []
 
-            quiz_submissions = await injectUser(quiz_submissions, 'user')
-            quiz_submissions = await injectUserFeedback(quiz_submissions)
+          for (const i in quizes) {
 
-            // courses[j].marking_status = 0
-            // const percentage_of_one_submission = 100 / quiz_submissions.length
+            let quiz_submissions = await findDocuments(Quiz_submission, {
+              quiz: quizes[i]._id
+            }, u, u, u, u, u, {
+              _id: -1
+            })
+            console.log(quiz_submissions)
+            quizes[i].total_submissions = quiz_submissions.length
 
-            for (const k in quiz_submissions) {
+            if (quiz_submissions.length) {
 
-              // if (quiz_submissions[k].marked) {
-              //     quizes[i].marking_status += percentage_of_one_submission
-              // }
+              quiz_submissions = await injectUser(quiz_submissions, 'user')
+              quiz_submissions = await injectUserFeedback(quiz_submissions)
 
-              quiz_submissions[k].total_feedbacks = 0
+              // courses[j].marking_status = 0
+              // const percentage_of_one_submission = 100 / quiz_submissions.length
 
-              for (const l in quiz_submissions[k].answers) {
-                quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+              for (const k in quiz_submissions) {
+
+                // if (quiz_submissions[k].marked) {
+                //     quizes[i].marking_status += percentage_of_one_submission
+                // }
+
+                quiz_submissions[k].total_feedbacks = 0
+
+                for (const l in quiz_submissions[k].answers) {
+                  quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+                }
+                foundSubmissions.push(quiz_submissions[k])
               }
-              foundSubmissions.push(quiz_submissions[k])
+              // quizes[i].marking_status += '%'
             }
-            // quizes[i].marking_status += '%'
           }
-        }
-        if (foundSubmissions.length) {
-          courses[i].submissions = foundSubmissions
-          coursesWithSubmissions.push(courses[i])
+          if (foundSubmissions.length) {
+            courses[j].submissions = foundSubmissions
+            coursesWithSubmissions.push(courses[j])
+          }
+
         }
 
       }
