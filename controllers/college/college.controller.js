@@ -116,6 +116,42 @@ router.get('/name/:name', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /college/open/{name}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: Returns a specified college by name
+ *     parameters:
+ *       - name: id
+ *         description: College's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/open/:name', async (req, res) => {
+  try {
+    let college = await findDocument(College, {
+      name: req.params.name
+    }, { name: 1, logo: true })
+    if (!college)
+      return res.send(formatResult(404, 'College not found'))
+    college = await injectLogoMediaPaths([college])
+    college = college[0]
+    return res.send(formatResult(u, u, college))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /college/{id}:
  *   get:
  *     tags:
@@ -165,8 +201,6 @@ router.get('/:id', auth, async (req, res) => {
  *     tags:
  *       - College
  *     description: Returns the logo of a specified college
- *     security:
- *       - bearerAuth: -[]
  *     parameters:
  *       - name: college_name
  *         description: College name
@@ -198,7 +232,7 @@ router.get('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:college_name/logo/:file_name', auth, async (req, res) => {
+router.get('/:college_name/logo/:file_name', async (req, res) => {
   try {
 
     // check if college exist
@@ -378,12 +412,18 @@ router.put('/:id', auth, async (req, res) => {
  *     description: Upload college logo (file upload using swagger is still under construction)
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *       - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: College id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: college logo to upload.
  *     responses:
  *       201:
  *         description: Created

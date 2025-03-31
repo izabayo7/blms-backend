@@ -79,9 +79,9 @@
         }
 
         .footer {
-            height: 66px;
             /* width: 43.8%; */
             /* margin: auto; */
+            height: 66px;
             left: 0px;
             top: 476px;
             border-radius: 0px;
@@ -118,8 +118,11 @@
         }
 
         .flex {
-            display: flex;
-            justify-content: center;
+            height: 20px;
+            width: 20px;
+            left: 41px;
+            top: 499px;
+            border-radius: 0px;
         }
 
         @media screen and (max-width: 525px) {
