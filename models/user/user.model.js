@@ -51,7 +51,8 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     college: {
-        type: String
+        type: String,
+        ref: "college",
     },
     status: {
         // disabled status 0(enabled) 1(disabled)
@@ -71,7 +72,7 @@ const userSchema = new mongoose.Schema({
 })
 userSchema.plugin(timestamps)
 
-const PasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/
+exports.PasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/
 
 // validate user
 exports.validate_user = (credentials, method = 'create') => {
@@ -80,7 +81,7 @@ exports.validate_user = (credentials, method = 'create') => {
         other_names: Joi.string().min(3).max(100).required(),
         user_name: Joi.string().min(3).max(100).required(), // regex needed
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
-        password: Joi.string().max(100).regex(PasswordRegex).required(),
+        password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         email: Joi.string().email().required(),
         date_of_birth: Joi.date(),
         college: Joi.string(),

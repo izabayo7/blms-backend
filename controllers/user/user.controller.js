@@ -38,11 +38,14 @@ const {
   upload_single_image,
   Chat_group,
   Quiz,
+  date,
   auth,
   validate_chat_group_profile_udpate,
   savedecodedBase64Image,
   addStorageDirectoryToPath,
-  countDocuments
+  countDocuments,
+  MyEmitter,
+  update_password
 } = require('../../utils/imports')
 
 // create router
@@ -200,6 +203,64 @@ router.get('/statistics', auth, async (req, res) => {
       })
     }
     return res.send(formatResult(u, u, { total_users, total_students, total_instructors, total_staff }))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/statistics/user_joins:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of how user joined
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: start_date
+ *         description: The starting date
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: end_date
+ *         description: The ending date
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/user_joins', auth, async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query
+    const result = await User.aggregate([
+      { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
+      { "$match": { college: req.user.college } },
+      {
+        "$group": {
+          "_id": {
+            "$subtract": [
+              "$createdAt",
+              {
+                "$mod": [
+                  { "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")] },
+                  1000 * 60 * 60 * 24
+                ]
+              }
+            ]
+          },
+          "total_users": { "$sum": 1 }
+        }
+      },
+      { "$sort": { "_id": 1 } }
+    ])
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -627,6 +688,9 @@ router.post('/', async (req, res) => {
       date_of_birth: req.body.date_of_birth
     })
 
+    // notify the admin that a new user joined
+    MyEmitter.emit(`new_user_in_${college._id}`, result.data);
+
     // result = await add_user_details([result])
     // result = result[0]
     return res.status(201).send(result)
@@ -960,10 +1024,8 @@ router.put('/password', auth, async (req, res) => {
     const validPassword = await compare(req.body.current_password, req.user.password);
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
-    const hashedPassword = await hashPassword(req.body.new_password);
-    await updateDocument(User, req.user._id, {
-      password: hashedPassword
-    });
+    update_password({ password: req.body.new_password, user_id: req.user._id })
+
     return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
   } catch (error) {
     return res.send(formatResult(500, error))

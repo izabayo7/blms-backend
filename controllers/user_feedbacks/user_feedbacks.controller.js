@@ -17,7 +17,7 @@ exports.contactUs = async (req, res) => {
     if (err)
       return res.send(formatResult(500, err));
 
-    return res.send(formatResult(200, 'Email was successfully send'));
+  return res.send(formatResult(200, 'Email was successfully send'));
   } catch
   (e) {
     return res.send(formatResult(500, e))

@@ -93,6 +93,7 @@ let server = httpServer.createServer(app);
 // importing our socket
 const io = require('./utils/socket');
 const { User_feedback_routes } = require('./routes/user_feedbacks/user_feedbacks.routes');
+const { Reset_password_routes } = require('./routes/reset_password/reset_password.routes');
 io.listen(server)
 
 // Serve the chatdemo
@@ -126,6 +127,7 @@ app.use(`${basePath}/live_session`, auth, live_session_controller)
 app.use(`${basePath}/user_invitations`, User_invitation_routes)
 app.use(`${basePath}/posts`, Post_routes)
 app.use(`${basePath}/feedback`, User_feedback_routes)
+app.use(`${basePath}/reset_password`, Reset_password_routes)
 
 // serve assets
 app.use(
