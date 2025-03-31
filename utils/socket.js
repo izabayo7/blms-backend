@@ -335,7 +335,7 @@ module.exports.listen = (app) => {
                 return socket.error(formatResult(404, 'comment target not found'))
 
             // let result = await createDocument(Comment, comment)
-            let result = new Comment(comment);
+            let result = simplifyObject(new Comment(comment));
 
             result = await injectUser([result], 'sender')
             result = result[0]
