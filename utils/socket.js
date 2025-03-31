@@ -401,15 +401,15 @@ module.exports.listen = (app) => {
                 studentFaucultyCollegeYears.forEach( async _doc => {
 
                     // create notification for user
-                    let userNotification = await UserNotification.findOne({ user_id: _doc.student })
+                    let userNotification = await UserNotification.findOne
+                    ({ user_id: _doc.student })
                     if (!userNotification) {
                         userNotification = new UserNotification({
                             user_id: _doc.student,
-                            notifications: [{ id: newDocument_id }]
+                            notifications: [{ id: newDocument._id }]
                         })
 
                     } else {
-                        console.log(userNotification)
                         userNotification.notifications.push({ id: newDocument._id })
                     }
 

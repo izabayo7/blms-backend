@@ -742,7 +742,6 @@ module.exports.simplifyObject = (obj) => {
 // add doer information to a notification
 module.exports.injectDoer = async (notification) => {
     notification = await this.injectUser([notification], 'doer_id')
-    console.log(notification)
     notification = notification[0]
     notification.doer = notification.doer_id
     notification.doer_id = undefined
