@@ -226,6 +226,8 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
  *     tags:
  *       - College
  *     description: Create a college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a college
