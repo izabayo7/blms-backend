@@ -52,16 +52,7 @@ router.route('/')
      *             emails:
      *               type: array
      *               items:
-     *                 type: object
-     *                 properties:
-     *                   name:
-     *                     type: string
-     *                   is_exam:
-     *                     type: boolean
-     *                   is_ignored:
-     *                     type: boolean
-     *                   maximum_marks:
-     *                     type: number
+     *                 type: string
      *           required:
      *             - college
      *             - category
