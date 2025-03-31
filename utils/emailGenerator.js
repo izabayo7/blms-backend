@@ -227,7 +227,7 @@ exports.submission_email = ({
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
-                                href="https://apis.kurious.rw/user/accept/${token}"
+                                href="https://test.apis.kurious.rw/user/accept/${token}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                         >
@@ -655,7 +655,7 @@ exports.confirm_account = ({
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
-                                href="https://elearning.rw/verify_account?token=${token}"
+                                href="https://test.apis.kurious.rw/user/confirm/${token}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                         >
