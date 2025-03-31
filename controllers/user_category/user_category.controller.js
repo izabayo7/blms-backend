@@ -81,12 +81,18 @@ router.get('/', auth, async (req, res) => {
 router.get('/open', async (req, res) => {
   try {
     const user_categories = await findDocuments(User_category, {
-      name: {
-        $ne: 'ADMIN'
-      },
-      name: {
-        $ne: 'SUPER_ADMIN'
-      }
+      $and: [
+        {
+          name: {
+            $ne: 'ADMIN'
+          }
+        },
+        {
+          name: {
+            $ne: 'SUPER_ADMIN'
+          }
+        }
+      ]
     })
 
     const result = []
@@ -95,7 +101,7 @@ router.get('/open', async (req, res) => {
       result.push(user_categories[i].name)
     }
 
-    return res.send(formatResult(u, u, user_categories))
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
