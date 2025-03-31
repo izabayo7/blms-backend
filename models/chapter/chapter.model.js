@@ -12,7 +12,7 @@ const chapter_schema = new mongoose.Schema({
     },
     course: {
         type: String,
-        rel: 'course',
+        ref: 'course',
         required: true
     },
     description: {
