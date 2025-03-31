@@ -61,5 +61,5 @@ function validate_assignment_submission(credentials) {
 }
 
 // export the model and the validation function
-module.exports.Assignment_submision = mongoose.model('assignment_submision', schema)
+module.exports.Assignment_submission = mongoose.model('assignment_submission', schema)
 module.exports.validate_assignment_submission = validate_assignment_submission
