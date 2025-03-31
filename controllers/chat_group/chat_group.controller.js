@@ -626,7 +626,7 @@ router.put('/:code/profile', async (req, res) => {
     req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-      
+
     // check if chat_group exist
     const chat_group = await findDocument(Chat_group, {
       code: req.params.code
@@ -908,6 +908,8 @@ router.put('/:code/remove_member/:member_user_name', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Delete a chat_group
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         description: Chat_group's code
