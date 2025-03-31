@@ -428,7 +428,7 @@ router.put('/:id', auth, async (req, res) => {
                 return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
             }
         }
-
+// never go back to trial
         let result = await updateDocument(College, req.params.id, req.body)
         result.data = await injectLogoMediaPaths([result.data])
         result.data = result.data[0]

@@ -27,7 +27,7 @@ const router = express.Router()
 /**
  * @swagger
  * definitions:
- *   College:
+ *   Account_payments:
  *     properties:
  *       _id:
  *         type: string
@@ -53,25 +53,10 @@ const router = express.Router()
  * /account_payments:
  *   get:
  *     tags:
- *       - College
- *     description: Returns the logo of a specified college
+ *       - Account_payments
+ *     description: Returns the user payment history
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         in: path
- *         type: string
- *         description: Comment's Id
- *       - name: body
- *         description: Fields for a Comment
- *         in: body
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             content:
- *               type: string
- *               required: true
  *     responses:
  *       200:
  *         description: OK
@@ -80,27 +65,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/:college_name/logo/:file_name', async (req, res) => {
-    try {
-
-        // check if college exist
-        const college = await findDocument(College, {
-            name: req.params.college_name
-        })
-        if (!college)
-            return res.send(formatResult(404, 'college not found'))
-
-        if (!college.logo || (college.logo !== req.params.file_name))
-            return res.send(formatResult(404, 'file not found'))
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${college._id}/${college.logo}`)
-
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
+router.get('/', getPaymentHistory)
 
 
 /**
@@ -108,7 +73,7 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
  * /account_payments:
  *   post:
  *     tags:
- *       - College
+ *       - Account_payments
  *     description: Creates a user payment
  *     security:
  *       - bearerAuth: -[]
@@ -138,7 +103,7 @@ router.post('/', createPayment)
 
 
 /**
- * Check Email Existence
+ * Create account payment
  * @param req
  * @param res
  */
@@ -147,7 +112,7 @@ async function createPayment(req, res) {
         const college = await College.findOne({_id: req.user.college, status: 1});
         if (college) return res.send(formatResult(404, 'College not found'));
 
-        if (!college.plan) return res.send(formatResult(403, 'College must have a payment plan'));
+        if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
         // const requiredAmount = 5000
         //
@@ -169,15 +134,26 @@ async function createPayment(req, res) {
     } catch (err) {
         return res.send(formatResult(500, err));
     }
-};
+}
 
-async function injectLogoMediaPaths(colleges) {
-    for (const i in colleges) {
-        if (colleges[i].logo) {
-            colleges[i].logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/college/${colleges[i].name}/logo/${colleges[i].logo}`
-        }
+/**
+ * Get account payment history
+ * @param req
+ * @param res
+ */
+async function getPaymentHistory(req, res) {
+    try {
+        const college = await College.findOne({_id: req.user.college, status: 1});
+        if (college) return res.send(formatResult(404, 'College not found'));
+
+        if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(u, u, []));
+
+        const payments = await Account_payments.find({user: req.user._id}).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
+
+        return res.send(formatResult(200, u, payments));
+    } catch (err) {
+        return res.send(formatResult(500, err));
     }
-    return colleges
 }
 
 // export the router
