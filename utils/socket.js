@@ -282,34 +282,35 @@ module.exports.listen = (app) => {
         socket.on('message/start_conversation', async ({
                                                            conversation_id
                                                        }) => {
+            const Receiver = await findDocument(User, {user_name: conversation_id})
+            if (Receiver) {
 
-            // avoid dupplicate initialisation
-            const conversation_found = await getConversationMessages({
-                user_id: id,
-                conversation_id: conversation_id,
-                limit: 1
-            })
-            if (!conversation_found.length) {
+                // avoid dupplicate initialisation
+                const conversation_found = await getConversationMessages({
+                    user_id: id,
+                    conversation_id: conversation_id,
+                    limit: 1
+                })
+                if (!conversation_found.length) {
 
-                const Receiver = await findDocument(User, {user_name: conversation_id})
+                    const content = `This is the begining of conversation between __user__${id} and __user__${Receiver._id}`
 
-                const content = `This is the begining of conversation between __user__${id} and __user__${Receiver._id}`
+                    const {error} = validate_message({sender: 'SYSTEM', receiver: conversation_id, content: content})
 
-                const {error} = validate_message({sender: 'SYSTEM', receiver: conversation_id, content: content})
+                    if (error) {
+                        socket.error(error)
+                        return
+                    }
 
-                if (error) {
-                    socket.error(error)
-                    return
+                    const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
+                    result.data = await replaceUserIds([result.data], Receiver._id.toString())
+                    result.data = await formatContacts(result.data, Receiver._id.toString())
+                    socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', {contact: result.data[0]})
                 }
 
-                const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
-                result.data = await replaceUserIds([result.data], Receiver._id.toString())
-                result.data = await formatContacts(result.data, Receiver._id.toString())
-                socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', {contact: result.data[0]})
+                // send success mesage
+                socket.emit('res/message/conversation_created', conversation_id)
             }
-
-            // send success mesage
-            socket.emit('res/message/conversation_created', conversation_id)
         })
 
 
