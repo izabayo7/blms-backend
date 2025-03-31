@@ -21,7 +21,6 @@ const courseSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
     },
     coverPicture: {
         type: String,
@@ -43,7 +42,7 @@ function validateCourse(credentials) {
         name: Joi.string().min(3).required(),
         instructor: Joi.ObjectId().required(),
         facultyCollegeYear: Joi.ObjectId().required(),
-        description: Joi.string().max(500).min(10).required(),
+        description: Joi.string().max(500).min(10),
         coverPicture: Joi.string(),
         published: Joi.boolean()
     }
