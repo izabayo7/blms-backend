@@ -156,7 +156,70 @@ router.get('/statistics/course_access', async (req, res) => {
                             }
                         ]
                     },
-                    "total_users": {"$sum": "$accessed_course"}
+                    "total_access": {"$sum": "$accessed_course"}
+                }
+            },
+            {"$sort": {"_id": 1}}
+        ])
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /user_logs/statistics/live_session_access:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of how users accessed live_sessions
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: start_date
+ *         description: The starting date
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: end_date
+ *         description: The ending date
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/live_session_access', async (req, res) => {
+    try {
+        const {start_date, end_date} = req.query
+
+        const student = await User_category.findOne({name: "STUDENT"});
+        const users = await User.find({college: req.user.college, category: student._id}, {_id: 1})
+
+        const result = await User_logs.aggregate([
+            {"$match": {"createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {user: {$in: users.map(x => x._id.toString())}}},
+            {"$project": {createdAt: 1, accessed_live_stream: { $size: "$accessed_live_stream" }}},
+            {
+                "$group": {
+                    "_id": {
+                        "$subtract": [
+                            "$createdAt",
+                            {
+                                "$mod": [
+                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
+                                    1000 * 60 * 60 * 24
+                                ]
+                            }
+                        ]
+                    },
+                    "total_access": {"$sum": "$accessed_live_stream"}
                 }
             },
             {"$sort": {"_id": 1}}
