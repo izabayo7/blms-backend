@@ -1,5 +1,5 @@
 const express = require('express')
-const { contactUs, requestCallback } = require('../../controllers/user_invitations/user_invitations.controller')
+const { contactUs, requestCallback } = require('../../controllers/user_feedbacks/user_feedbacks.controller')
 const router = express.Router()
 
 router.route('/contact_us')

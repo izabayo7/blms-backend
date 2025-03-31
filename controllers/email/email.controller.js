@@ -27,24 +27,47 @@ const mailGenerator = new Mailgen({
 
 exports.sendInvitationMail = async ({ email, token, names, institution }) => {
     try {
-        const response = {
-            body: {
-                name: names,
-                email,
-                intro: 'invited on Kurious.<br>',
-                action: {
-                    instructions: 'Click to complete the process',
-                    button: {
-                        color: '#1a0c2f',
-                        text: 'View invitation',
-                        link: 'https://kurious.rw/auth/register?token=' + token
-                    }
-                },
-                outro: 'This code expires after 1 Week !'
-            },
+
+        const mail = invitationToSystem({ inviter: names, institution, token })
+
+        const message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
+            html: mail,
         };
 
-        // const mail = mailGenerator.generate(response);
+        /*
+            {
+                "college": "5f8f38ad558d86f96186daf0",
+                "category": "STUDENT",
+                "emails": [
+                    "nadibire08@gmail.com"
+                ]
+            }
+        */
+
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
+
+        return {
+            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    }
+    catch (err) {
+        console.log(err)
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
+    try {
 
         const mail = invitationToSystem({ inviter: names, institution, token })
 
