@@ -46,12 +46,9 @@ const schema = new mongoose.Schema({
             required: true
         }
     }],
-    feedback_attachments: [{
-        src: {
-            type: String,
-            required: true
-        }
-    }],
+    feedback_src: {
+        type: String,
+    },
     total_marks: {
         type: Number,
         default: 0

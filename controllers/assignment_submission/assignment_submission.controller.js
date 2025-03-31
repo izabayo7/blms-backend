@@ -734,11 +734,6 @@ router.post('/feedback/:id', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, "invalid assignment_submission id"))
 
-        error = validateObjectId(req.params.answer)
-        error = error.error
-        if (error)
-            return res.send(formatResult(400, "invalid question id"))
-
         const assignment_submission = await findDocument(Assignment_submission, {
             _id: req.params.id
         })
@@ -746,23 +741,13 @@ router.post('/feedback/:id', auth, async (req, res) => {
             return res.send(formatResult(404, 'assignment_submission not found'))
 
 
-        const assignment = await findDocument(Assignment, {
-            _id: assignment_submission.assignment
-        })
-        if (!assignment)
-            return res.send(formatResult(404, 'assignment not found'))
-
-        const user = await findDocument(User, {
-            _id: assignment.user
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assignment._id}/submissions/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment}/submissions/${req.params.id}`)
 
         req.kuriousStorageData = {
             dir: path,
         }
 
-        const file_found = await fs.exists(`${path}/${answer[0].feedback_src}`)
+        const file_found = await fs.exists(`${path}/${assignment_submission.feedback_src}`)
         if (file_found)
             return res.send(formatResult(400, 'feedback for this answer was already uploaded'))
 
@@ -770,10 +755,8 @@ router.post('/feedback/:id', auth, async (req, res) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
-            assignment_submission.answers[assignment_submission.answers.indexOf(answer[0])].feedback_src = req.file.filename
-
             await updateDocument(Assignment_submission, req.params.id, {
-                answers: assignment_submission.answers
+                feedback_src: req.file.filename
             })
 
             return res.send(formatResult(u, 'Feedback attachment was successfuly uploaded'))
@@ -786,7 +769,7 @@ router.post('/feedback/:id', auth, async (req, res) => {
 
 /**
  * @swagger
- * /assignment_submission/feedback/{id}/{answer}/{file_name}:
+ * /assignment_submission/feedback/{id}/{file_name}:
  *   delete:
  *     tags:
  *       - Assignment_submission
@@ -796,11 +779,6 @@ router.post('/feedback/:id', auth, async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: Assignment_submission id
- *         in: path
- *         required: true
- *         type: string
- *       - name: answer
- *         description: Answer id
  *         in: path
  *         required: true
  *         type: string
