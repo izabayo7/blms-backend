@@ -71,8 +71,8 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
         // })
 
         return {
-            // sent: await transporter.sendMail(message)
-            sent: await transporter.sendEmail(message)
+            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
         }
 
     }
