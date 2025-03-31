@@ -120,6 +120,8 @@ router.get('/name/:name', async (req, res) => {
  *     tags:
  *       - College
  *     description: Returns a specified college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: College's id
