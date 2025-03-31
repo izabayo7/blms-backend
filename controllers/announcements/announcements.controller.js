@@ -1,4 +1,5 @@
 // import dependencies
+const {User} = require("../../utils/imports");
 const {Announcement} = require("../../models/announcements/announcements.model");
 const {validate_announcement} = require("../../models/announcements/announcements.model");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
@@ -77,9 +78,9 @@ router.get('/user', async (req, res) => {
             $or: [
                 {"target.id": {$in: ids}},
                 {sender: req.user._id},
-                {specific_receivers: {$elemMatch: req.user._id}},
+                {specific_receivers: req.user._id.toString()},
             ]
-        }).populate('viewers', ['sur_name', 'other_names']).sort({_id: -1})
+        }).populate('viewers', ['sur_name', 'other_names','user_name']).populate('specific_receivers', ['sur_name', 'other_names','user_name']).sort({_id: -1}).lean()
 
         announcements = await injectUser(announcements, 'sender')
 
@@ -103,7 +104,6 @@ router.get('/user', async (req, res) => {
  *         in: path
  *         type: string
  *         enum: ['group','specific_users']
- *         description: Announcement's Id
  *       - name: body
  *         description: Fields for a announcement
  *         in: body
@@ -123,8 +123,10 @@ router.get('/user', async (req, res) => {
  *                   required: true
  *                 id:
  *                   type: string
- *                   required: true
- *               required: true
+ *             specific_receivers:
+ *               type: array
+ *               items:
+ *                  type: string
  *     responses:
  *       201:
  *         description: Created
@@ -139,7 +141,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
     try {
         const {
             error
-        } = validate_announcement(req.body)
+        } = validate_announcement(req.body,'create',req.params.receivers)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
@@ -202,6 +204,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                 const user = await User.findOne({user_name: req.body.specific_receivers[i]})
                 if (!user)
                     return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
+                req.body.specific_receivers[i] = user._id
             }
         }
         let result = await createDocument(Announcement, req.body)
@@ -358,7 +361,8 @@ router.delete('/:id', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => 
             return res.send(formatResult(400, error.details[0].message))
 
         const announcement = await findDocument(Announcement, {
-            _id: req.params.id
+            _id: req.params.id,
+            sender: req.user._id
         })
         if (!announcement)
             return res.send(formatResult(404, 'announcement not found'))

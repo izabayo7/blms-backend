@@ -20,6 +20,10 @@ const {
  *             type: string
  *           id:
  *             type: string
+ *       specific_receivers:
+ *         type: array
+ *         items:
+ *            type: string
  *       content:
  *         type: string
  *       viewers:
@@ -39,11 +43,9 @@ const announcement_schema = new mongoose.Schema({
     target: {
         type: {
             type: String,
-            required: true
         },
         id: {
             type: Schema.Types.ObjectId,
-            required: true
         }
     },
     content: {
@@ -64,7 +66,7 @@ const announcement_schema = new mongoose.Schema({
 function validate_announcement(credentials, action = 'create', type) {
     const schema = action === 'create' ? type === 'specific_users' ? {
         content: Joi.string().max(9000).required(),
-        specific_receivers: Joi.array().min(1).items(Joi.ObjectId())
+        specific_receivers: Joi.array().min(1).items(Joi.string())
     } : {
         target: Joi.object({
             type: Joi.string().required(),
