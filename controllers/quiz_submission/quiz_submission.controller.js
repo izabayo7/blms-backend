@@ -1164,7 +1164,7 @@ router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
             _id: quiz.user
         })
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}/${req.file.file_name}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}/${req.params.file_name}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -1184,7 +1184,7 @@ router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
         await updateDocument(Quiz_submission, req.params.id, {
             answers: quiz_submission.answers
         })
-
+        return res.send(formatResult(u, "DELETED"))
     } catch (error) {
         return res.send(formatResult(500, error))
     }

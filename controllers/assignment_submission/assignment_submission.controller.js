@@ -379,7 +379,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
                 break
             }
         }
-        if (!file_found)
+        if (!file_found && submission.feedback_src !== req.params.file_name)
             return res.send(formatResult(404, 'file not found'))
 
         const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${submission.assignment}/submissions/${submission._id}/${req.params.file_name}`)
@@ -805,11 +805,6 @@ router.delete('/feedback/:id/:file_name', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, "invalid assignment_submission id"))
 
-        error = validateObjectId(req.params.answer)
-        error = error.error
-        if (error)
-            return res.send(formatResult(400, "invalid question id"))
-
         const assignment_submission = await Assignment_submission.findOne({
             _id: req.params.id
         })
@@ -821,7 +816,7 @@ router.delete('/feedback/:id/:file_name', auth, async (req, res) => {
             return res.send(formatResult(404, 'File not found'))
 
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment}/submissions/${req.params.id}/${req.file.file_name}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment}/submissions/${req.params.id}/${req.params.file_name}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -839,7 +834,7 @@ router.delete('/feedback/:id/:file_name', auth, async (req, res) => {
         await updateDocument(Assignment_submission, req.params.id, {
             feedback_src: undefined
         })
-
+        return res.send(formatResult(u,"DELETED"))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
