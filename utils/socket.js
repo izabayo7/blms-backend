@@ -417,39 +417,6 @@ module.exports.listen = (app) => {
             })
         })
 
-        socket.on('live_session/joined', async ({
-                                                    session_id
-                                                }) => {
-            let target = await findDocument(Live_session, {
-                _id: session_id
-            })
-
-            let obj = {
-                connected_users: target.connected_users ? target.connected_users + 1 : 1
-            }
-
-            if (!target.started_at)
-                obj.started_at = new Date()
-
-            await Live_session.findOneAndUpdate({_id: session_id}, obj)
-
-        })
-
-        socket.on('live_session/left', async ({
-                                                  session_id
-                                              }) => {
-            let target = await findDocument(Live_session, {
-                _id: session_id
-            })
-
-            let obj = {
-                connected_users: target.connected_users - 1
-            }
-
-            await Live_session.findOneAndUpdate({_id: session_id}, obj)
-
-        })
-
 
         /**
          * comments
