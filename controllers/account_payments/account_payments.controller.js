@@ -433,7 +433,9 @@ async function getPaymentStatus(req, res) {
             const valid = new Date() < new Date(date)
 
             return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {
-                disabled: !valid,
+                disabled:
+                    // !valid,
+                false,
                 total_users,
                 paid,
                 endDate: new Date(date)
