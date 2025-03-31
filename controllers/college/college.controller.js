@@ -509,6 +509,8 @@ router.delete('/:id/logo/:file_name', async (req, res) => {
  *     tags:
  *       - College
  *     description: Deletes a college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: college's id
