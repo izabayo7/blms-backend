@@ -40,6 +40,7 @@ const {
     auth,
     addStorageDirectoryToPath
 } = require('../../utils/imports')
+const {filterUsers} = require("../../middlewares/auth.middleware");
 
 // create router
 const router = express.Router()
@@ -712,7 +713,7 @@ function findQuizMarks(quizarray, quizid, passMarks = false) {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', auth, async (req, res) => {
+router.post('/', auth,filterUsers(["STUDENT"]), async (req, res) => {
     try {
         req.body.user = req.user.user_name
         let {
