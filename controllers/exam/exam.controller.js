@@ -2,7 +2,7 @@
 const {sendReleaseMarskEmail, sendAssignmentExpirationEmail} = require("../email/email.controller");
 const {
     updateDocument, countDocuments, scheduleEvent, addAssignmentTarget, Notification, User_notification, MyEmitter,
-    Quiz_submission, validateQuestions, College, checkCollegePayment
+    Quiz_submission, validateQuestions, College, checkCollegePayment, getStudentExams
 } = require("../../utils/imports");
 const {
     express,
@@ -77,15 +77,7 @@ router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
             }).sort({_id: -1}).populate('course').lean()
             exam = await addExamUsages(exam)
         } else {
-            const user_user_groups = await User_user_group.find({user: req.user._id})
-            const courses = await Course.find({
-                user_group: {$in: user_user_groups.map(x => x.user_group)}
-            })
-            const ids = courses.map(x => x._id.toString())
-            exam = await Exam.find({
-                course: {$in: ids},
-                status: {$ne: 'DRAFT'}
-            }).sort({_id: -1}).populate('course').lean()
+            exam = await getStudentExams(req.user._id)
             for (const i in exam) {
                 exam[i].submission = await Exam_submission.findOne({
                     exam: exam[i]._id,

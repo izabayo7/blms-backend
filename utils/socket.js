@@ -1,6 +1,6 @@
 const socket_io = require('socket.io')
 const {Assignment_submission} = require("../models/assignment_submission/assignment_submission.model");
-const {getStudentAssignments} = require("./imports");
+const {getStudentAssignments, getStudentExams} = require("./imports");
 const {getContactIds} = require("./imports");
 const {sendLiveScheduledEmail} = require("../controllers/email/email.controller");
 const {sendReleaseMarskEmail} = require("../controllers/email/email.controller");
@@ -278,13 +278,20 @@ module.exports.listen = (app) => {
             let total_assignments = 0
             if (user.category.name === 'STUDENT') {
                 let assignments = await getStudentAssignments(id, true)
-                total_assignments = await countDocuments(Assignment_submission, {
+                let done_assignments = await countDocuments(Assignment_submission, {
                     assignment: {
                         $in: assignments.map(x => x._id.toString())
                     },
                     user: id
                 })
-                total_assignments = assignments.length - total_assignments
+                let exams = await getStudentExams(id, true)
+                let done_exams = await countDocuments(Exam_submission, {
+                    exam: {
+                        $in: exams.map(x => x._id.toString())
+                    },
+                    user: id
+                })
+                total_assignments = (assignments.length - done_assignments) + (exams.length - done_exams)
             }
 
             socket.emit('res/messages/unread', {number, total_assignments});
