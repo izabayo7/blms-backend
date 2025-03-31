@@ -739,18 +739,18 @@ router.delete('/:id', auth, filterUsers(["STUDENT"]), async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         let assignment_submission = await findDocument(Assignment_submission, {
-            _id: req.params.id
+            _id: req.params.id,
         })
         if (!assignment_submission)
             return res.send(formatResult(404, 'assignment_submission not found'))
 
+        if (assignment_submission.marked)
+            return res.send(formatResult(403, 'You can not delete a marked submission'))
+
         const result = await deleteDocument(Assignment_submission, req.params.id)
 
-        let assignment = await findDocument(Assignment, {
-            _id: assignment_submission.assignment
-        })
-        if (!assignment_submission.attachments.length) {
-            const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment._id}/submissions/${req.params.id}`)
+        if (assignment_submission.attachments.length) {
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment}/submissions/${req.params.id}`)
             fs.exists(path, (exists) => {
                 if (exists) {
                     fs.remove(path)

@@ -873,7 +873,7 @@ router.delete('/:id', async (req, res) => {
             return res.send(formatResult(404, 'chapter not found'))
 
         // check if the course is never used
-        const chapter_used = false
+        let chapter_used = false
 
         const progress = await findDocument(User_progress, {
             "finished_chapters.id": req.params.id
