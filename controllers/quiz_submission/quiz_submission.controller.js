@@ -27,7 +27,8 @@ const {
   path,
   simplifyObject,
   fs,
-  upload_multiple
+  upload_multiple,
+  Comment
 } = require('../../utils/imports')
 
 // create router
@@ -350,8 +351,9 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     result[0].quiz = await injectUser(result[0].quiz, 'user')
     result = await injectUser(result, 'user')
     result[0].quiz = result[0].quiz[0]
+    result = await injectUserFeedback(result)
     result = result[0]
-
+    console.log('ahhhhhhhhhhhh')
     return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -859,6 +861,19 @@ async function injectQuiz(submissions) {
       _id: submissions[i].quiz
     })
     submissions[i].quiz = quiz
+  }
+  return submissions
+}
+
+// add feedback to quiz submission
+async function injectUserFeedback(submissions) {
+  for (const i in submissions) {
+    for (const k in submissions[i].answers) {
+      let feedback = await Comment.find({ "target.type": 'quiz_submission_answer', "target.id": submissions[i].answers[k]._id })
+      feedback = await injectUser(simplifyObject(feedback), 'sender')
+      console.log(feedback)
+      submissions[i].answers[k].feedback = feedback
+    }
   }
   return submissions
 }
