@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
     </style>
@@ -12,21 +12,26 @@
 <div class="logo" style="text-align: center; margin: 25px auto">
     <a href="https://kurious.rw"><img src="https://apis.kurious.rw/assets/images/logo.png" alt="" /></a>
 </div>
-<div class="flex">
+<div
+        class="flex"
+>
     <div class="">
         <div
                 class="content"
                 style="
-                        background-color: white;
-                        border-top: 3px solid #193074;
-                        padding: 69px 39px 1px;
-                        margin: auto;
-                        max-width: 522px;
-                        border-radius: 0px;
-                        align-self: center;
-                      "
+                background-color: white;
+                padding: 49px 39px 0;
+                border-top: 3px solid #193074;
+                margin: auto;
+                min-height: 340px;
+                max-width: 522px;
+                border-radius: 0px;
+                align-self: center;
+              "
         >
-            <div class="message" style="
+            <div
+                    class="message"
+                    style="
                   font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
@@ -38,28 +43,21 @@
                   width: 379px;
                   left: 39px;
                   top: 99px;
-                ">
-                ${user_name} Contacted us,<br />
-                through <a href="https://kurious.rw">Kurious home page</a>.
-            </div>
-            <div class="message" style="
-                  font-family: 'Inter', sans-serif;
-                  font-size: 15px;
-                  font-style: normal;
-                  font-weight: 400;
-                  line-height: 24px;
-                  letter-spacing: 0em;
-                  text-align: left;
-                  min-height: 96px;
-                  width: 379px;
-                  left: 39px;
-                  top: 99px;
-            ">
-                ${message}
+                "
+            >
+                ${inviter} invited you in ${institution.name} - ${user_group},<br />
+                on Kurious learn! Please click the button below to finish setting up
+                your account.
             </div>
             <div class="text-center" style="text-align: center">
-                <a href="mailto:${user_email}" target="_blank" rel="noopener noreferrer">
-                    <button class="confirm" style="
+                <a
+                        href="https://kurious.rw/auth/register?token=${token}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                >
+                    <button
+                            class="confirm"
+                            style="
                       height: 54px;
                       width: 172px;
                       left: 0px;
@@ -69,14 +67,18 @@
                       color: white;
                       border: none;
                       text-align: center;
-                      margin: 4px auto;
+                      margin: 20px auto 0px;
                       cursor: pointer;
-                    " onfocus="this.style.outline='none'">
-                        Reply
+                    "
+                            onfocus="this.style.outline='none'"
+                    >
+                        CONFIRM
                     </button>
                 </a>
             </div>
-            <div class="thanks" style="
+            <div
+                    class="thanks"
+                    style="
                   font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
@@ -89,7 +91,8 @@
                   width: 126px;
                   left: 39px;
                   top: 328px;
-                ">
+                "
+            >
                 Thanks,
                 <br> Kurious learn team
             </div>
@@ -97,14 +100,14 @@
         <div
                 class="footer"
                 style="
-                        height: 66px;
-                        left: 0px;
-                        top: 476px;
-                        border-radius: 0px;
-                        max-width: 600px;
-                        margin: auto;
-                        background: #193074;
-                      "
+                height: 66px;
+                left: 0px;
+                top: 476px;
+                max-width: 600px;
+                margin: auto;
+                border-radius: 0px;
+                background: #193074;
+              "
         >
             <a
                     href="https://twitter.com/kuriouslearnRw"
@@ -114,13 +117,13 @@
                 <img
                         class="ig_icon"
                         style="
-                            height: 20px;
-                            width: 20px;
-                            left: 41px;
-                            top: 499px;
-                            border-radius: 0px;
-                            margin: 24px 12px;
-                          "
+                    height: 20px;
+                    width: 20px;
+                    left: 41px;
+                    top: 499px;
+                    border-radius: 0px;
+                    margin: 24px 12px;
+                  "
                         src="https://apis.kurious.rw/assets/images/ig.png"
                         alt=""
                 />
@@ -133,13 +136,13 @@
                 <img
                         class="fb_icon"
                         style="
-                            height: 20px;
-                            width: 11px;
-                            left: 87px;
-                            top: 499px;
-                            border-radius: 0px;
-                            margin: 24px 12px;
-                          "
+                    height: 20px;
+                    width: 11px;
+                    left: 87px;
+                    top: 499px;
+                    border-radius: 0px;
+                    margin: 24px 12px;
+                  "
                         src="https://apis.kurious.rw/assets/images/fb.png"
                         alt=""
                 />
