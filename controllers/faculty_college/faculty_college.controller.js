@@ -73,6 +73,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Faculty_college
  *     description: Create faculty_college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a faculty_college
