@@ -8,6 +8,7 @@ const {
     formatMessages,
     injectChapters,
     simplifyObject,
+    makeCode,
     _,
     u,
     Comment,
@@ -358,8 +359,6 @@ module.exports.listen = (app) => {
                 socket.broadcast.to(receiver.id).emit('res/live/checkAttendance', {code})
             })
 
-            // send success mesage
-            socket.emit('res/live/checkAttendance')
         })
 
         // notify instructor that you are still following
@@ -368,9 +367,6 @@ module.exports.listen = (app) => {
             receivers.forEach(receiver => {
                 socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', {id})
             })
-
-            // send success mesage
-            socket.emit('res/live/checkAttendance')
         })
 
         // notify members that quiz is released
