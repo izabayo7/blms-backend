@@ -425,8 +425,8 @@ module.exports.listen = (app) => {
         })
 
         socket.on('live_session/joined', async ({
-                                            session_id
-                                        }) => {
+                                                    session_id
+                                                }) => {
             let target = await findDocument(Live_session, {
                 _id: session_id
             })
@@ -435,16 +435,16 @@ module.exports.listen = (app) => {
                 connected_users: target.connected_users ? target.connected_users + 1 : 1
             }
 
-            if(!target.started_at)
+            if (!target.started_at)
                 obj.started_at = new Date()
 
-            await Live_session.findOneAndUpdate({_id: session_id},obj)
+            await Live_session.findOneAndUpdate({_id: session_id}, obj)
 
         })
 
         socket.on('live_session/left', async ({
-                                                    session_id
-                                                }) => {
+                                                  session_id
+                                              }) => {
             let target = await findDocument(Live_session, {
                 _id: session_id
             })
@@ -453,7 +453,7 @@ module.exports.listen = (app) => {
                 connected_users: target.connected_users - 1
             }
 
-            await Live_session.findOneAndUpdate({_id: session_id},obj)
+            await Live_session.findOneAndUpdate({_id: session_id}, obj)
 
         })
 
@@ -530,11 +530,10 @@ module.exports.listen = (app) => {
         })
 
         // handle raise or lower hand requests and responses
-        // message can be [request_presenting, revert_presenting_request, accept_presenting, deny_presenting]
-        socket.on('live/presentation_request', async ({receiver,message}) => {
-            receivers.forEach(receiver => {
-                socket.broadcast.to(receiver.id).emit('res/live/presentation_request', {message})
-            })
+        // message can be [request_presenting, revert_presenting_request, accept_presenting, deny_presenting, 'request_sent' to owner]
+        socket.on('live/presentation_request', async ({receiver, message}) => {
+            socket.broadcast.to(receiver.id).emit('res/live/presentation_request', {message})
+            socket.emit('res/live/presentation_request/sent', {message})
         })
 
         // notify instructor that you are still following
