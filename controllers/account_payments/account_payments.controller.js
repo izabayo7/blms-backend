@@ -447,8 +447,9 @@ async function getPaymentStatus(req, res) {
 
         if (!payment) return res.send(formatResult(u, 'You don\'t have a payment', {
             disabled:
-                (college.plan === 'HUGUKA' && req.user.category.name === 'STUDENT') ||
-                (req.user.category.name !== 'ADMIN'),
+                // (college.plan === 'HUGUKA' && req.user.category.name === 'STUDENT') ||
+                // (req.user.category.name !== 'ADMIN'),
+            false,
             total_users
         }));
 
@@ -463,7 +464,9 @@ async function getPaymentStatus(req, res) {
             startDate: payment.startingDate,
             endDate: payment.endingDate,
             balance: payment.balance,
-            disabled: new Date() > new Date(payment.endingDate),
+            disabled:
+                // new Date() > new Date(payment.endingDate),
+            false,
             paid,
             total_users
         }));
