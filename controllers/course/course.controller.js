@@ -14,6 +14,7 @@ const {
     injectChapters,
     _,
     validateObjectId,
+    Comment,
     injectUser,
     simplifyObject,
     injectUserProgress,
@@ -147,27 +148,15 @@ router.get('/statistics', async (req, res) => {
     }
 })
 
-// not done
 /**
  * @swagger
- * /course/statistics/user_access:
+ * /course/statistics/user:
  *   get:
  *     tags:
  *       - Statistics
- *     description: Get User statistics of how user joined
+ *     description: Get Courses statistics for a user
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: start_date
- *         description: The starting date
- *         in: query
- *         required: true
- *         type: string
- *       - name: end_date
- *         description: The ending date
- *         in: query
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -176,188 +165,29 @@ router.get('/statistics', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics/user_access', async (req, res) => {
+router.get('/statistics/user', async (req, res) => {
     try {
-        const {start_date, end_date} = req.query
-        const result = await User.aggregate([
-            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
-            {"$match": {college: req.user.college}},
-            {
-                "$group": {
-                    "_id": {
-                        "$subtract": [
-                            "$createdAt",
-                            {
-                                "$mod": [
-                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
-                                    1000 * 60 * 60 * 24
-                                ]
-                            }
-                        ]
-                    },
-                    "total_users": {"$sum": 1}
-                }
-            },
-            {"$sort": {"_id": 1}}
-        ])
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
+        let total_courses = 0
+        if (req.user.category.name == "INSTRUCTOR") {
 
-// not done
-/**
- * @swagger
- * /course/statistics/creations:
- *   get:
- *     tags:
- *       - Statistics
- *     description: Get User statistics of how courses are created per day
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: start_date
- *         description: The starting date
- *         in: query
- *         required: true
- *         type: string
- *       - name: end_date
- *         description: The ending date
- *         in: query
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/statistics/creations', async (req, res) => {
-    try {
-        const {start_date, end_date} = req.query
+            let courses = await Course.find({user: req.user._id})
+            const course_ids = courses.map(x => x._id.toString())
+            let students = await User_progress.distinct('user', {course: {$in: course_ids}})
 
-        const faculty_college_years = []
+            let chapters = await Chapter.find({course: {$in: course_ids}})
 
-        let faculty_college = await findDocuments(Faculty_college, {college: req.user.college})
-        if (!faculty_college.length)
-            return res.send(formatResult(404, 'courses not found'))
+            let comments = await Comment.find({
+                "target.type": 'chapter',
+                "target.id": {$in: chapters.map(x => x._id.toString())}
+            }).sort({_id:-1}).limit(4)
 
-        for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, {faculty_college: faculty_college[i]._id})
-            if (!faculty_college_year.length)
-                continue
-
-            for (const k in faculty_college_year) {
-                faculty_college_years.push(faculty_college_year[k]._id.toString())
-            }
-
+            return res.send(formatResult(u, u, {total_courses: courses.length, total_students: students.length, latestComments: comments}))
         }
-
-        const result = await Course.aggregate([
-            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
-            {"$match": {faculty_college_year: {$in: faculty_college_years}}},
-            {
-                "$group": {
-                    "_id": {
-                        "$subtract": [
-                            "$createdAt",
-                            {
-                                "$mod": [
-                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
-                                    1000 * 60 * 60 * 24
-                                ]
-                            }
-                        ]
-                    },
-                    "total_courses": {"$sum": 1}
-                }
-            },
-            {"$sort": {"_id": 1}}
-        ])
-        return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
-// not done
-/**
- * @swagger
- * /course/statistics/user_access:
- *   get:
- *     tags:
- *       - Statistics
- *     description: Get User statistics of how courses are accessed per day
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: start_date
- *         description: The starting date
- *         in: query
- *         required: true
- *         type: string
- *       - name: end_date
- *         description: The ending date
- *         in: query
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/statistics/user_access', async (req, res) => {
-    try {
-        const {start_date, end_date} = req.query
 
-        const faculty_college_years = []
-
-        let faculty_college = await findDocuments(Faculty_college, {college: req.user.college})
-        if (!faculty_college.length)
-            return res.send(formatResult(404, 'courses not found'))
-
-        for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, {faculty_college: faculty_college[i]._id})
-            if (!faculty_college_year.length)
-                continue
-
-            for (const k in faculty_college_year) {
-                faculty_college_years.push(faculty_college_year[k]._id.toString())
-            }
-
-        }
-
-        const result = await Course.aggregate([
-            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
-            {"$match": {faculty_college_year: {$in: faculty_college_years}}},
-            {
-                "$group": {
-                    "_id": {
-                        "$subtract": [
-                            "$createdAt",
-                            {
-                                "$mod": [
-                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
-                                    1000 * 60 * 60 * 24
-                                ]
-                            }
-                        ]
-                    },
-                    "total_courses": {"$sum": 1}
-                }
-            },
-            {"$sort": {"_id": 1}}
-        ])
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
 
 /**
  * @swagger
