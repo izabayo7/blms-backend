@@ -1,10 +1,43 @@
 // import dependencies
 const { Schema } = require('mongoose')
+const paginate = require('mongoose-paginate-v2')
 const {
     mongoose,
     Joi,
     timestamps,
 } = require('../../utils/imports')
+
+/**
+ * @swagger
+ * definitions:
+ *   Post:
+ *     properties:
+ *       creator:
+ *         type: string
+ *       title:
+ *         type: string
+ *         description: post title
+ *       content:
+ *         type: string
+ *         description: inviters id
+ *       cover_picture:
+ *         type: string
+ *       likes:
+ *         type: array
+ *         items:
+ *           type: string
+ *       dislikes:
+ *         type: array
+ *         items:
+ *           type: string
+ *       status:
+ *         type: string
+ *         enum: ['DRAFT', 'PUBLISHED', 'DELETED']
+ *     required:
+ *       - creator
+ *       - title
+ *       - content
+ */
 
 const post_schema = new mongoose.Schema({
     creator: {
@@ -37,6 +70,8 @@ const post_schema = new mongoose.Schema({
         default: 'DRAFT'
     }
 }, { timestamps: true })
+
+post_schema.plugin(paginate)
 
 // validate post
 function validate_post(credentials) {

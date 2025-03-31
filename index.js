@@ -73,6 +73,7 @@ const message_controller = require('./controllers/message/message.controller')
 const comment_controller = require('./controllers/comments/comments.controller')
 const live_session_controller = require('./controllers/live_session/live_session.controller')
 const { User_invitation_routes } = require('./routes/user_invitations/user_invitations.routes');
+const { Post_routes } = require('./routes/posts/posts.route');
 
 // use middlewares
 app.use(cors())
@@ -122,6 +123,7 @@ app.use(`${basePath}/message`, auth, message_controller)
 app.use(`${basePath}/comment`, auth, comment_controller)
 app.use(`${basePath}/live_session`, auth, live_session_controller)
 app.use(`${basePath}/user_invitations`, User_invitation_routes)
+app.use(`${basePath}/posts`, Post_routes)
 
 // serve assets
 app.use(
