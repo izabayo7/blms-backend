@@ -1084,12 +1084,19 @@ exports.Search = async (model, search_query, projected_fields, _page, _limit) =>
   }
 }
 
+exports.addStorageDirectoryToPath = (path) => {
+  return this.path.resolve(this.path.join(process.env.DIR ? process.env.DIR : '', path))
+}
+
 // configure multer dynamic storage
 exports.dynamic_storage = this.multer.diskStorage({
   destination: (req, file, cb) => {
-    const {
+    let {
       dir
     } = req.kuriousStorageData
+    dir = this.path.resolve(this.path.join('/', dir))
+    console.log(dir)
+    console.log('aaaaaaaaaaaaaaa')
     fs.exists(dir, exist => {
       if (!exist) {
         return fs.mkdir(dir, {

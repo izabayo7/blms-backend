@@ -40,7 +40,8 @@ const {
   Quiz,
   auth,
   validate_chat_group_profile_udpate,
-  savedecodedBase64Image
+  savedecodedBase64Image,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -748,8 +749,8 @@ router.put('/profile', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    const path = req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`
-
+    let path = req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`
+    path = addStorageDirectoryToPath(path)
     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
     if (req.user.profile) {
@@ -782,8 +783,8 @@ router.put('/profile', auth, async (req, res) => {
  *     tags:
  *       - User
  *     description: remove User profile
- *     security:
- *       - bearerAuth: -[]
+  *     security:
+  *       - bearerAuth: -[]
  *     parameters:
  *       - name: file_name
  *         description: File name

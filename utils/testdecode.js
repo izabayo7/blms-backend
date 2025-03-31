@@ -1,28 +1,33 @@
-const fs = require('fs')
-var data = 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAA..kJggg==';
+// const fs = require('fs')
+// var data = 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAA..kJggg==';
 
-function decodeBase64Image(dataString) {
-    var matches = dataString.match(),
-        response = {};
+const { path, addStorageDirectoryToPath } = require("./imports");
 
-    if (matches.length !== 3) {
-        return new Error('Invalid input string');
-    }
+// function decodeBase64Image(dataString) {
+//     var matches = dataString.match(),
+//         response = {};
 
-    response.type = matches[1];
-    response.data = new Buffer(matches[2], 'base64');
+//     if (matches.length !== 3) {
+//         return new Error('Invalid input string');
+//     }
 
-    return response;
-}
+//     response.type = matches[1];
+//     response.data = new Buffer(matches[2], 'base64');
 
-var imageBuffer = decodeBase64Image(data);
-const dir = './abana'
-fs.exists(dir, exist => {
-    if (!exist) {
-        console.log('creating dir')
-        fs.mkdirSync(dir, {
-            recursive: true
-        })
-    }
-    fs.writeFile(dir + '/test.jpg', imageBuffer.data, function (err) { console.log(err) });
-})
+//     return response;
+// }
+
+// var imageBuffer = decodeBase64Image(data);
+// const dir = './abana'
+// fs.exists(dir, exist => {
+//     if (!exist) {
+//         console.log('creating dir')
+//         fs.mkdirSync(dir, {
+//             recursive: true
+//         })
+//     }
+//     fs.writeFile(dir + '/test.jpg', imageBuffer.data, function (err) { console.log(err) });
+// })
+
+
+console.log(addStorageDirectoryToPath('/abana'))
