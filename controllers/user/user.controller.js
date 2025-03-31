@@ -752,6 +752,12 @@ router.post('/', async (req, res) => {
         if (find_admin)
           return res.send(formatResult(404, `College ${college.name} can't have more than one admin`))
       }
+      else{
+        let user_count = await countDocuments(User,{college: req.body.college})
+        if(user_count >= college.maximum_users){
+          return res.send(formatResult(404, `College ${req.body.college} users limit reached`))
+        }
+      }
     } else {
       const find_super_admin = await findDocument(User, {
         category: req.body.category
@@ -760,6 +766,7 @@ router.post('/', async (req, res) => {
       if (find_super_admin)
         return res.send(formatResult(404, `System can't have more than one super_admin`))
     }
+
 
     let result = await createDocument(User, {
       user_name: req.body.user_name,
