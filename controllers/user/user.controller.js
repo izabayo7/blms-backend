@@ -791,8 +791,11 @@ router.post('/', async (req, res) => {
         // notify the admin that a new user joined
         MyEmitter.emit(`new_user_in_${college._id}`, result.data);
 
-        // result = await add_user_details([result])
-        // result = result[0]
+        const new_user = result.data
+        result.data = {
+            user: new_user,
+            token: await generateAuthToken(new_user)
+        }
         return res.status(201).send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
