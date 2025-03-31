@@ -249,6 +249,19 @@ async function injectDetails(facilityCollegeYears) {
     }).lean()
     facilityCollegeYears[i].facilityCollege = removeDocumentVersion(facilityCollege)
 
+    const facility = await Facility.findOne({
+      _id: facilityCollegeYears[i].facilityCollege.facility
+    }).lean()
+    facilityCollegeYears[i].facilityCollege.facility = removeDocumentVersion(facility)
+
+    const college = await College.findOne({
+      _id: facilityCollegeYears[i].facilityCollege.college
+    }).lean()
+    facilityCollegeYears[i].facilityCollege.college = removeDocumentVersion(college)
+    if (facilityCollegeYears[i].facilityCollege.college.logo) {
+      facilityCollegeYears[i].facilityCollege.college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    }
+
     const collegeYear = await CollegeYear.findOne({
       _id: facilityCollegeYears[i].collegeYear
     }).lean()

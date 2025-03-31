@@ -121,22 +121,24 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/college/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let college = await College.findOne({
-    _id: req.params.id
-  })
-  if (!college)
-    return res.status(404).send(`College ${req.params.id} Not Found`)
-  const students = await Student.find({
-    college: req.params.id
-  })
   try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+    let college = await College.findOne({
+      _id: req.params.id
+    })
+    if (!college)
+      return res.status(404).send(`College ${req.params.id} Not Found`)
+    let students = await Student.find({
+      college: req.params.id
+    }).lean()
+
     if (students.length === 0)
       return res.status(404).send(`${college.name} student list is empty`)
+    students = await injectDetails(students)
     return res.status(200).send(students)
   } catch (error) {
     return res.status(500).send(error)
@@ -165,18 +167,20 @@ router.get('/college/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  const student = await Student.findOne({
-    _id: req.params.id
-  })
   try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+    let student = await Student.findOne({
+      _id: req.params.id
+    }).lean()
+
     if (!student)
       return res.status(404).send(`Student ${req.params.id} Not Found`)
-    return res.status(200).send(student)
+      student = await injectDetails([student])
+    return res.status(200).send(student[0])
   } catch (error) {
     return res.status(500).send(error)
   }
@@ -415,7 +419,7 @@ async function injectDetails(students) {
       _id: facilityCollegeYear.collegeYear
     }).lean()
     students[i].studentFacilityCollegeYear.facilityCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
-    
+
     const facilityCollege = await FacilityCollege.findOne({
       _id: facilityCollegeYear.facilityCollege
     }).lean()
@@ -430,6 +434,13 @@ async function injectDetails(students) {
       _id: facilityCollege.college
     }).lean()
     students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
+    if (students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo) {
+      students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    }
+    // add student profile media path
+    if (students[i].profile) {
+      students[i] = `${process.env.HOST}/kurious/file/studentProfile/${students[i]._id}`
+    }
   }
   return students
 }

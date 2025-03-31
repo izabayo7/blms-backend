@@ -6,6 +6,12 @@ const {
   Student,
   validateStudentFacilityCollegeYear,
   validateObjectId,
+  CollegeYear,
+  Facility,
+  College,
+  FacilityCollege,
+  removeDocumentVersion,
+  _
 } = require('../../utils/imports')
 // create router
 const router = express.Router()
@@ -44,10 +50,12 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const studentFacilityCollegeYears = await StudentFacilityCollegeYear.find()
   try {
+    let studentFacilityCollegeYears = await StudentFacilityCollegeYear.find().lean()
+
     if (studentFacilityCollegeYears.length === 0)
       return res.send('student-student-facility-college-years list is empty').status(404)
+    studentFacilityCollegeYears = await injectDetails(studentFacilityCollegeYears)
     return res.send(studentFacilityCollegeYears).status(200)
   } catch (error) {
     return res.send(error).status(500)
@@ -61,6 +69,12 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - StudentFacilityCollegeYear
  *     description: Get a student's current studentFacilityCollegeYear
+ *     parameters:
+ *       - name: id
+ *         description: Student's id
+ *         in: path
+ *         required: true
+ *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -72,12 +86,15 @@ router.get('/', async (req, res) => {
 router.get('/student/:id', async (req, res) => {
   try {
 
-    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({ student: req.params.id, status: 1 })
+    let studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({
+      student: req.params.id,
+      status: 1
+    }).lean()
 
     if (!studentFacilityCollegeYear)
       return res.status(404).send(`student-student-facility-college-year for ${req.params.id} was not found`)
-    
-      return res.send(studentFacilityCollegeYear).status(200)
+    studentFacilityCollegeYear = await injectDetails([studentFacilityCollegeYear])
+    return res.send(studentFacilityCollegeYear[0]).status(200)
   } catch (error) {
     return res.send(error).status(500)
   }
@@ -208,6 +225,48 @@ router.delete('/:id', async (req, res) => {
 
   return res.send(`studentFacilliyCollegeYear ${deleteDocument._id} Successfully deleted`).status(200)
 })
+
+// link the student with his/her current college
+async function injectDetails(studentsFacilityCollegeYears) {
+  for (const i in studentsFacilityCollegeYears) {
+    const facilityCollegeYear = await FacilityCollegeYear.findOne({
+      _id: studentsFacilityCollegeYears[i].facilityCollegeYear
+    }).lean()
+    studentsFacilityCollegeYears[i].facilityCollegeYear = removeDocumentVersion(facilityCollegeYear)
+
+    const collegeYear = await CollegeYear.findOne({
+      _id: facilityCollegeYear.collegeYear
+    }).lean()
+    studentsFacilityCollegeYears[i].facilityCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+
+    const facilityCollege = await FacilityCollege.findOne({
+      _id: facilityCollegeYear.facilityCollege
+    }).lean()
+    studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege = removeDocumentVersion(facilityCollege)
+
+    const facility = await Facility.findOne({
+      _id: facilityCollege.facility
+    }).lean()
+    studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.facility = removeDocumentVersion(facility)
+
+    const college = await College.findOne({
+      _id: facilityCollege.college
+    }).lean()
+    studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
+    if (studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college.logo) {
+      studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    }
+    let student = await Student.findOne({
+      _id: studentsFacilityCollegeYears[i].student
+    }).lean()
+    studentsFacilityCollegeYears[i].student = _.pick(student, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
+    // add student profile media path
+    if (student.profile) {
+      studentsFacilityCollegeYears[i].student.profile = `${process.env.HOST}/kurious/file/studentProfile/${student._id}`
+    }
+  }
+  return studentsFacilityCollegeYears
+}
 
 // export the router
 module.exports = router

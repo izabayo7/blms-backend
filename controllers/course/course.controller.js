@@ -7,10 +7,15 @@ const {
   College,
   Instructor,
   validateCourse,
+  StudentFacilityCollegeYear,
   FacilityCollegeYear,
+  Student,
+  Attachment,
   _,
   validateObjectId,
+  StudentProgress,
 } = require('../../utils/imports')
+const { Chapter } = require('../../models/chapter/chapter.model')
 
 // create router
 const router = express.Router()
@@ -64,9 +69,9 @@ router.get('/', async (req, res) => {
     if (courses.length === 0)
       return res.status(404).send('Course list is empty')
     courses = await injectInstructor(courses)
+    courses = await injectChapters(courses)
     return res.status(200).send(courses)
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -114,10 +119,10 @@ router.get('/college/:id', async (req, res) => {
     let foundCourses = []
 
     for (const instructor of instructors) {
-      const courses = await Course.find({
+      let courses = await Course.find({
         instructor: instructor._id
-      })
-      if (courses, length > 0) {
+      }).lean()
+      if (courses.length > 0) {
         for (const course of courses) {
           foundCourses.push(course)
         }
@@ -125,6 +130,8 @@ router.get('/college/:id', async (req, res) => {
     }
     if (foundCourses.length === 0)
       return res.status(404).send(`${college.name} course list is empty`)
+    foundCourses = await injectInstructor(foundCourses)
+    foundCourses = await injectChapters(foundCourses)
     return res.status(200).send(foundCourses)
   } catch (error) {
     return res.status(500).send(error)
@@ -153,22 +160,32 @@ router.get('/college/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/instructor/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(500).send(error.details[0].message)
-  let instructor = await Instructor.findOne({
-    _id: req.params.id
-  })
-  if (!instructor)
-    return res.status(404).send(`Instructor ${req.params.id} Not Found`)
-  const courses = await Course.find({
-    instructor: req.params.id
-  })
   try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(500).send(error.details[0].message)
+    let instructor = await Instructor.findOne({
+      _id: req.params.id
+    })
+    if (!instructor)
+      return res.status(404).send(`Instructor ${req.params.id} Not Found`)
+    let courses = await Course.find({
+      instructor: req.params.id
+    }).lean()
+
     if (courses.length === 0)
       return res.status(404).send(`${instructor.name} have No courses`)
+
+    for (const i in courses) {
+      if (courses[i].coverPicture) {
+        courses[i].coverPicture = `${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}`
+      }
+    }
+
+    courses = await injectChapters(courses)
+
     return res.status(200).send(courses)
   } catch (error) {
     return res.status(500).send(error)
@@ -177,14 +194,14 @@ router.get('/instructor/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/facility-college-year/{id}:
+ * /kurious/course/student/{id}:
  *   get:
  *     tags:
  *       - Course
- *     description: Returns courses of a specified facilityCOllegeYear
+ *     description: Returns courses of a student
  *     parameters:
  *       - name: id
- *         description: FacilityCollegeYear id
+ *         description: Student id
  *         in: path
  *         required: true
  *         type: string
@@ -196,7 +213,7 @@ router.get('/instructor/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/facility-college-year/:id', async (req, res) => {
+router.get('/student/:id', async (req, res) => {
   try {
     const {
       error
@@ -204,18 +221,29 @@ router.get('/facility-college-year/:id', async (req, res) => {
     if (error)
       return res.status(400).send(error.details[0].message)
 
-    let facilityCollegeYear = await FacilityCollegeYear.findOne({
+    // check if student exist
+    let student = await Student.findOne({
       _id: req.params.id
     })
-    if (!facilityCollegeYear)
-      return res.status(404).send(`facilityCollegeYear of Code ${req.params.id} Not Found`)
+    if (!student)
+      return res.status(404).send(`Sudent with code ${req.params.id} doens't exist`)
 
-    const courses = await Course.find({
-      facilityCollegeYear: req.params.id
-    })
+    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({
+      student: student._id,
+      status: 1
+    }).lean()
+
+    let courses = await Course.find({
+      facilityCollegeYear: studentFacilityCollegeYear.facilityCollegeYear, published: true
+    }).lean()
 
     if (courses.length === 0)
       return res.status(404).send(`There are no courses with facilityCollegeYear ${req.params.id}`)
+
+    courses = await injectInstructor(courses)
+    courses = await injectChapters(courses)
+    courses = await injectStudentProgress(courses, student._id)
+
     return res.status(200).send(courses)
   } catch (error) {
     return res.status(500).send(error)
@@ -249,13 +277,15 @@ router.get('/:id', async (req, res) => {
   } = validateObjectId(req.params.id)
   if (error)
     return res.status(400).send(error.details[0].message)
-  const course = await Course.findOne({
+  let course = await Course.findOne({
     _id: req.params.id
-  })
+  }).lean()
   try {
     if (!course)
       return res.status(404).send(`Course ${req.params.id} Not Found`)
-    return res.status(200).send(course)
+    course = await injectInstructor([course])
+    course = await injectChapters(course)
+    return res.status(200).send(course[0])
   } catch (error) {
     return res.status(500).send(error)
   }
@@ -428,7 +458,53 @@ async function injectInstructor(courses) {
     const instructor = await Instructor.findOne({
       _id: courses[i].instructor
     })
-    courses[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone'])
+    courses[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
+    if (courses[i].instructor.profile) {
+      courses[i].instructor.profile = `${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}`
+    }
+
+    if (courses[i].coverPicture) {
+      courses[i].coverPicture = `${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}`
+    }
+  }
+  return courses
+}
+
+// add chapters in their parent courses
+async function injectChapters(courses) {
+  for (const i in courses) {
+    let chapters = await Chapter.find({
+      course: courses[i]._id
+    }).lean()
+    courses[i].chapters = chapters
+    for (const k in courses[i].chapters) {
+      // remove course and documentVersion
+      courses[i].chapters[k].course = undefined
+      courses[i].chapters[k].__v = undefined
+
+      // add media path of the content
+      courses[i].chapters[k].mainDocument = `${process.env.HOST}/kurious/file/chapterDocument/${courses[i].chapters[k]._id}`
+      // add media path of the video
+      if (courses[i].chapters[k].mainVideo) {
+        courses[i].chapters[k].mainVideo = `${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}`
+      }
+      // add chapters
+      const attachments = await Attachment.find({
+        chapter: courses[i].chapters[k]._id
+      })
+      courses[i].chapters[k].attachments = attachments
+    }
+  }
+  return courses
+}
+
+// replace instructor id by the instructor information
+async function injectStudentProgress(courses, studentId) {
+  for (const i in courses) {
+    const studentProgress = await StudentProgress.findOne({
+      course: courses[i]._id, student: studentId
+    })
+    courses[i].progress = studentProgress.progress
   }
   return courses
 }

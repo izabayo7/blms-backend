@@ -18,13 +18,62 @@ const {
 // create router
 const router = express.Router()
 
-// Get all quiz
+/**
+ * @swagger
+ * definitions:
+ *   Quiz:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       name:
+ *         type: string
+ *       instructions:
+ *         type: string
+ *       duration:
+ *         type: number
+ *       totalMarks:
+ *         type: number
+ *       instructor:
+ *         type: string
+ *       published:
+ *         type: boolean
+ *       target:
+ *         type: object
+ *         properties:
+ *           typer:
+ *             type: string
+ *           id:
+ *             type: string
+ *       profile:
+ *         type: string
+ *     required:
+ *       - name
+ *       - instructions
+ *       - instructor
+ */
+
+/**
+ * @swagger
+ * /kurious/quiz:
+ *   get:
+ *     tags:
+ *       - Quiz
+ *     description: Get all quizes
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
   let quizes = await Quiz.find().lean()
   try {
     if (quizes.length === 0)
       return res.status(404).send('Quiz list is empty')
     quizes = await injectInstructor(quizes)
+    quizes = await addAttachmentMediaPaths(quizes)
     return res.status(200).send(quizes)
   } catch (error) {
     return res.status(500).send(error)
@@ -46,6 +95,7 @@ router.get('/:id', async (req, res) => {
     if (!quiz)
       return res.status(404).send(`Quiz ${req.params.id} Not Found`)
     quiz = await injectInstructor([quiz])
+    quiz = await addAttachmentMediaPaths([quiz])
     return res.status(200).send(quiz[0])
   } catch (error) {
     return res.status(500).send(error)
@@ -67,12 +117,15 @@ router.get('/instructor/:id', async (req, res) => {
     if (!instructor)
       return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
 
-    const quizes = await Quiz.find({
+    let quizes = await Quiz.find({
       instructor: req.params.id
-    })
+    }).lean()
 
     if (quizes.length < 1)
       return res.status(404).send(`There are no quizes for instructor ${instructor.surName}`)
+
+    quizes = await addAttachmentMediaPaths(quizes)
+
     return res.status(200).send(quizes)
   } catch (error) {
     return res.status(500).send(error)
@@ -321,9 +374,9 @@ function validateQuestions(questions) {
     status: true,
     totalMarks: marks
   } : {
-    status: false,
-    error: message
-  }
+      status: false,
+      error: message
+    }
 }
 
 // replace instructor id by the instructor information
@@ -332,7 +385,25 @@ async function injectInstructor(quizes) {
     const instructor = await Instructor.findOne({
       _id: quizes[i].instructor
     })
-    quizes[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone'])
+    quizes[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
+    if (quizes[i].instructor.profile) {
+      quizes[i].instructor.profile = `${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}`
+    }
+  }
+  return quizes
+}
+
+async function addAttachmentMediaPaths(quizes) {
+  for (const i in quizes) {
+    for (const k in quizes[i].questions) {
+      if (quizes[i].questions[k].options) {
+        for (const j in quizes[i].questions[k].options.choices) {
+          if (quizes[i].questions[k].options.choices[j].src) {
+            quizes[i].questions[k].options.choices[j].src = `${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
+          }
+        }
+      }
+    }
   }
   return quizes
 }

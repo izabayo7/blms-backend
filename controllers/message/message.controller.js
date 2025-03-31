@@ -24,7 +24,45 @@ const upload = multer({
 })
 
 
-// Get all messages
+/**
+ * @swagger
+ * definitions:
+ *   Message:
+ *     properties:
+ *       _id:
+ *         type: string
+ *       sender:
+ *         type: string
+ *       reciever:
+ *         type: string
+ *       content:
+ *         type: string
+ *       attachments:
+ *         type: string
+ *       read:
+ *          type: boolean
+ *          default: false
+ *     required:
+ *       - sender
+ *       - reciever
+ *       - content
+ */
+
+/**
+ * @swagger
+ * /kurious/message:
+ *   get:
+ *     tags:
+ *       - Message
+ *     description: Get all messages
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/', async (req, res) => {
   const messages = await Message.find()
   try {
@@ -36,7 +74,27 @@ router.get('/', async (req, res) => {
   }
 })
 
-// Get all messages in a specified college
+/**
+ * @swagger
+ * /kurious/message/user/{id}:
+ *   get:
+ *     tags:
+ *       - Message
+ *     description: Returns messages to and from a specified user
+ *     parameters:
+ *       - name: id
+ *         description: Users's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/user/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
@@ -50,8 +108,30 @@ router.get('/user/:id', async (req, res) => {
   return res.send({ sent: sent, recieved: recieved }).status(200)
 })
 
-
-// post an message
+/**
+ * @swagger
+ * /kurious/message:
+ *   post:
+ *     tags:
+ *       - Message
+ *     description: Send a message
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a message
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Message'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', upload.single('attachments'), async (req, res) => {
   const { error } = validateMessage(req.body)
   if (error)
@@ -78,7 +158,34 @@ router.post('/', upload.single('attachments'), async (req, res) => {
   return res.send('New Message not Registered').status(500)
 })
 
-// updated a message
+/**
+ * @swagger
+ * /kurious/message/{id}:
+ *   put:
+ *     tags:
+ *       - Message
+ *     description: Update a message
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: Message's Id
+ *       - name: body
+ *         description: Fields for a Message
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Message'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.put('/:id', upload.single('attachments'), async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
@@ -100,7 +207,29 @@ router.put('/:id', upload.single('attachments'), async (req, res) => {
 
 })
 
-// delete a message
+/**
+ * @swagger
+ * /kurious/message/{id}:
+ *   delete:
+ *     tags:
+ *       - Message
+ *     description: Delete a message
+ *     parameters:
+ *       - name: id
+ *         description: Message's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
@@ -123,7 +252,7 @@ async function findUser(id) {
   if (user)
     return true
   user = await Student.findOne({ _id: id })
-  if (uer)
+  if (user)
     return true
   return false
 }

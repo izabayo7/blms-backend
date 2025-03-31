@@ -62,10 +62,14 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const superAdmin = await SuperAdmin.find()
   try {
+    let superAdmin = await SuperAdmin.findOne().lean()
+
     if (!superAdmin)
       return res.status(404).send('SuperAdmin not yet registered')
+    if (superAdmin.profile) {
+      superAdmin.profile = `${process.env.HOST}/kurious/file/superAdminProfile/${superAdmin._id}`
+    }
     return res.status(200).send(superAdmin)
   } catch (error) {
     return res.status(500).send(error)

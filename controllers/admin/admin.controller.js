@@ -1,5 +1,17 @@
 // import dependencies
-const { express, bcrypt, fs, Admin, College, validateAdmin, validateUserLogin, hashPassword, defaulPassword, validateObjectId } = require('../../utils/imports')
+const {
+    express,
+    bcrypt,
+    fs,
+    Admin,
+    College,
+    validateAdmin,
+    validateUserLogin,
+    hashPassword,
+    defaulPassword,
+    validateObjectId,
+    removeDocumentVersion
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -64,10 +76,14 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-    const admins = await Admin.find()
     try {
+        let admins = await Admin.find().lean()
+
         if (admins.length === 0)
             return res.status(404).send('Admin list is empty')
+
+        admins = await injectDetails(admins)
+
         return res.status(200).send(admins)
     } catch (error) {
         return res.status(500).send(error)
@@ -96,14 +112,22 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-    const { error } = validateObjectId(req.params.id)
-    if (error)
-        return res.status(400).send(error.details[0].message)
-    const admin = await Admin.findOne({ _id: req.params.id })
     try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+        let admin = await Admin.findOne({
+            _id: req.params.id
+        }).lean()
+
         if (!admin)
             return res.status(404).send(`Admin ${req.params.id} Not Found`)
-        return res.status(200).send(admin)
+
+        admin = await injectDetails([admin])
+
+        return res.status(200).send(admin[0])
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -131,19 +155,29 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/college/:id', async (req, res) => {
-    const { error } = validateObjectId(req.params.id)
-    if (error)
-        return res.status(400).send(error.details[0].message)
-
-    let college = await College.findOne({ _id: req.params.id })
-    if (!college)
-        return res.status(404).send(`College ${req.params.id} Not Found`)
-
-    const admin = await Admin.findOne({ college: req.params.id })
     try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        let college = await College.findOne({
+            _id: req.params.id
+        })
+        if (!college)
+            return res.status(404).send(`College ${req.params.id} Not Found`)
+
+        let admin = await Admin.findOne({
+            college: req.params.id
+        }).lean()
+
         if (!admin)
             return res.status(404).send(`Admin of ${college.name} Not Found`)
-        return res.status(200).send(admin)
+
+        admin = await injectDetails([admin])
+
+        return res.status(200).send(admin[0])
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -174,27 +208,39 @@ router.get('/college/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-    const { error } = validateAdmin(req.body)
+    const {
+        error
+    } = validateAdmin(req.body)
     if (error)
         return res.status(400).send(error.details[0].message)
 
-    let admin = await Admin.findOne({ email: req.body.email })
+    let admin = await Admin.findOne({
+        email: req.body.email
+    })
     if (admin)
         return res.status(404).send(`Admin with email ${req.body.email} arleady exist`)
 
-    admin = await Admin.findOne({ nationalId: req.body.nationalId })
+    admin = await Admin.findOne({
+        nationalId: req.body.nationalId
+    })
     if (admin)
         return res.status(404).send(`Admin with nationalId ${req.body.nationalId} arleady exist`)
 
-    admin = await Admin.findOne({ phone: req.body.phone })
+    admin = await Admin.findOne({
+        phone: req.body.phone
+    })
     if (admin)
         return res.status(404).send(`Admin with phone ${req.body.phone} arleady exist`)
 
-    let college = await College.findOne({ _id: req.body.college })
+    let college = await College.findOne({
+        _id: req.body.college
+    })
     if (!college)
         return res.status(404).send(`College ${req.body.college} Not Found`)
 
-    admin = await Admin.findOne({ college: req.body.college })
+    admin = await Admin.findOne({
+        college: req.body.college
+    })
     if (admin)
         return res.status(404).send(`Admin of college ${req.body.college} arleady exist`)
 
@@ -246,12 +292,16 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/login', async (req, res) => {
-    const { error } = validateUserLogin(req.body)
+    const {
+        error
+    } = validateUserLogin(req.body)
     if (error)
         return res.status(400).send(error.details[0].message)
 
     // find admin
-    let admin = await Admin.findOne({ email: req.body.email })
+    let admin = await Admin.findOne({
+        email: req.body.email
+    })
     if (!admin)
         return res.status(404).send('Invalid Email or Password')
 
@@ -292,7 +342,9 @@ router.post('/login', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-    let { error } = validateObjectId(req.params.id)
+    let {
+        error
+    } = validateObjectId(req.params.id)
     if (error)
         return res.status(400).send(error.details[0].message)
     error = validateAdmin(req.body)
@@ -301,13 +353,19 @@ router.put('/:id', async (req, res) => {
         return res.status(400).send(error.details[0].message)
 
     // check if admin exist
-    let admin = await Admin.findOne({ _id: req.params.id })
+    let admin = await Admin.findOne({
+        _id: req.params.id
+    })
     if (!admin)
         return res.status(404).send(`Admin with code ${req.params.id} doens't exist`)
 
     if (req.body.password)
         req.body.password = await hashPassword(req.body.password)
-    const updateDocument = await Admin.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+    const updateDocument = await Admin.findOneAndUpdate({
+        _id: req.params.id
+    }, req.body, {
+        new: true
+    })
     if (updateDocument)
         return res.status(201).send(updateDocument)
     return res.status(500).send("Error ocurred")
@@ -338,13 +396,19 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-    const { error } = validateObjectId(req.params.id)
+    const {
+        error
+    } = validateObjectId(req.params.id)
     if (error)
         return res.status(400).send(error.details[0].message)
-    let admin = await Admin.findOne({ _id: req.params.id })
+    let admin = await Admin.findOne({
+        _id: req.params.id
+    })
     if (!admin)
         return res.status(404).send(`Admin of Code ${req.params.id} Not Found`)
-    let deleteDocument = await Admin.findOneAndDelete({ _id: req.params.id })
+    let deleteDocument = await Admin.findOneAndDelete({
+        _id: req.params.id
+    })
     if (!deleteDocument)
         return res.status(500).send('Admin Not Deleted')
     if (admin.profile) {
@@ -356,6 +420,24 @@ router.delete('/:id', async (req, res) => {
 
     return res.status(200).send(`${admin.surName} ${admin.otherNames} was successfully deleted`)
 })
+
+// replace relation ids with their references
+async function injectDetails(admins) {
+    for (const i in admins) {
+        const college = await College.findOne({
+            _id: admins[i].college
+        }).lean()
+        admins[i].college = removeDocumentVersion(college)
+        if (admins[i].college.logo) {
+            admins[i].college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+        }
+        // add admin profile media path
+        if (admins[i].profile) {
+            admins[i] = `${process.env.HOST}/kurious/file/adminProfile/${admins[i]._id}`
+        }
+    }
+    return admins
+}
 
 // export the router
 module.exports = router

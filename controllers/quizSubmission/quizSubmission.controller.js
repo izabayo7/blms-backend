@@ -89,7 +89,7 @@ router.get('/student/:id', async (req, res) => {
     if (error)
       return res.status(400).send(error.details[0].message)
 
-    // check if quiz exist
+    // check if student exist
     let student = await Student.findOne({
       _id: req.params.id
     })
@@ -327,7 +327,7 @@ async function injectStudent(submissions) {
     const instructor = await Student.findOne({
       _id: submissions[i].student
     })
-    submissions[i].student = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone'])
+    submissions[i].student = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
   }
   return submissions
 }

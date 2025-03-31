@@ -1,5 +1,18 @@
 // import dependencies
-const { express, bcrypt, fs, Instructor, College, validateInstructor, validateUserLogin, hashPassword, defaulPassword, validateObjectId, checkRequirements } = require('../../utils/imports')
+const {
+    express,
+    bcrypt,
+    fs,
+    Instructor,
+    College,
+    validateInstructor,
+    validateUserLogin,
+    hashPassword,
+    defaulPassword,
+    validateObjectId,
+    checkRequirements,
+    removeDocumentVersion
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -64,10 +77,14 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-    const instructors = await Instructor.find()
     try {
+        let instructors = await Instructor.find().lean()
+
         if (instructors.length === 0)
             return res.status(404).send('Instructor list is empty')
+
+        instructors = await injectDetails(instructors)
+
         return res.status(200).send(instructors)
     } catch (error) {
         return res.status(500).send(error)
@@ -96,16 +113,26 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/college/:id', async (req, res) => {
-    const { error } = validateObjectId(req.params.id)
-    if (error)
-        return res.status(400).send(error.details[0].message)
-    let college = await College.findOne({ _id: req.params.id })
-    if (!college)
-        return res.status(404).send(`College ${req.params.id} Not Found`)
-    const instructors = await Instructor.find({ college: req.params.id })
     try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+        let college = await College.findOne({
+            _id: req.params.id
+        })
+        if (!college)
+            return res.status(404).send(`College ${req.params.id} Not Found`)
+        let instructors = await Instructor.find({
+            college: req.params.id
+        }).lean()
+
         if (instructors.length === 0)
             return res.status(404).send(`${college.name} instructor list is empty`)
+
+        instructors = await injectDetails(instructors)
+
         return res.status(200).send(instructors)
     } catch (error) {
         return res.status(500).send(error)
@@ -134,14 +161,20 @@ router.get('/college/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-    const { error } = validateObjectId(req.params.id)
-    if (error)
-        return res.status(400).send(error.details[0].message)
-    const instructor = await Instructor.findOne({ _id: req.params.id })
     try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+        let instructor = await Instructor.findOne({
+            _id: req.params.id
+        }).lean()
+
         if (!instructor)
             return res.status(404).send(`Instructor ${req.params.id} Not Found`)
-        return res.status(200).send(instructor)
+        instructor = await injectDetails([instructor])
+        return res.status(200).send(instructor[0])
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -172,7 +205,9 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-    const { error } = validateInstructor(req.body)
+    const {
+        error
+    } = validateInstructor(req.body)
     if (error)
         return res.status(400).send(error.details[0].message)
 
@@ -229,11 +264,15 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/login', async (req, res) => {
-    const { error } = validateUserLogin(req.body)
+    const {
+        error
+    } = validateUserLogin(req.body)
     if (error)
         return res.status(400).send(error.details[0].message)
     // find instructor
-    let instructor = await Instructor.findOne({ email: req.body.email })
+    let instructor = await Instructor.findOne({
+        email: req.body.email
+    })
     if (!instructor)
         return res.status(404).send('Invalid Email or Password')
 
@@ -274,7 +313,9 @@ router.post('/login', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-    let { error } = validateObjectId(req.params.id)
+    let {
+        error
+    } = validateObjectId(req.params.id)
     if (error)
         return res.status(400).send(error.details[0].message)
     error = validateInstructor(req.body)
@@ -283,13 +324,19 @@ router.put('/:id', async (req, res) => {
         return res.status(400).send(error.details[0].message)
 
     // check if instructor exist
-    let instructor = await Instructor.findOne({ _id: req.params.id })
+    let instructor = await Instructor.findOne({
+        _id: req.params.id
+    })
     if (!instructor)
         return res.status(404).send(`Instructor with code ${req.params.id} doens't exist`)
 
     if (req.body.password)
         req.body.password = await hashPassword(req.body.password)
-    const updateDocument = await Instructor.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+    const updateDocument = await Instructor.findOneAndUpdate({
+        _id: req.params.id
+    }, req.body, {
+        new: true
+    })
     if (updateDocument)
         return res.status(201).send(updateDocument)
     return res.status(500).send("Error ocurred")
@@ -320,13 +367,19 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-    const { error } = validateObjectId(req.params.id)
+    const {
+        error
+    } = validateObjectId(req.params.id)
     if (error)
         return res.status(400).send(error.details[0].message)
-    let instructor = await Instructor.findOne({ _id: req.params.id })
+    let instructor = await Instructor.findOne({
+        _id: req.params.id
+    })
     if (!instructor)
         return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
-    let deleteDocument = await Instructor.findOneAndDelete({ _id: req.params.id })
+    let deleteDocument = await Instructor.findOneAndDelete({
+        _id: req.params.id
+    })
     if (!deleteDocument)
         return res.status(500).send('Instructor Not Deleted')
     if (instructor.profile) {
@@ -337,6 +390,20 @@ router.delete('/:id', async (req, res) => {
     }
     return res.status(200).send(`${instructor.surName} ${instructor.otherNames} was successfully deleted`)
 })
+
+// replace relation ids with their references
+async function injectDetails(instructors) {
+    for (const i in instructors) {
+        const college = await College.findOne({
+            _id: instructors[i].college
+        }).lean()
+        instructors[i].college = removeDocumentVersion(college)
+        if (instructors[i].college.logo) {
+            instructors[i].college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+        }
+    }
+    return instructors
+}
 
 // export the router
 module.exports = router

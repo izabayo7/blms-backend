@@ -126,7 +126,8 @@ module.exports.findDocument = async (model, id) => {
 
 module.exports.getCollege = async (id, type) => {
     let course = type === 'chapter' ? await Course.findOne({ _id: id }) : undefined
-    let facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: type === 'chapter' ? course.facilityCollegeYear : id })
+    console.log(course)
+    let facilityCollegeYear = await module.exports.FacilityCollegeYear.findOne({ _id: type === 'chapter' ? course.facilityCollegeYear : id })
     if (!facilityCollegeYear)
         return `facilityCollegeYear ${id} Not Found`
     let facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })

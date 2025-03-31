@@ -1,5 +1,5 @@
 // import dependencies
-const { express, bcrypt, multer, fs, Chapter, validateChapter, Course, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _chapter, checkRequirements } = require('../../utils/imports')
+const { express, Chapter, validateChapter, Course, validateObjectId } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -28,47 +28,6 @@ const router = express.Router()
  *       - course
  *       - description
  */
-
-/**
- * @swagger
- * /kurious/chapter/course/{id}:
- *   get:
- *     tags:
- *       - Chapter
- *     description: Returns chapters in a specific course
- *     parameters:
- *       - name: id
- *         description: Course id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/course/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(error.details[0].message).status(400)
-
-  // check if course exist
-  let course = await Course.findOne({ _id: req.params.id })
-  if (!course)
-    return res.send(`Course with code ${req.params.id} doens't exist`)
-
-  const chapters = await Chapter.find({ course: req.params.id })
-  try {
-    if (chapters.length === 0)
-      return res.send(`There are no chapters in ${course.name}`).status(404)
-    return res.send(chapters).status(200)
-  } catch (error) {
-    return res.send(error).status(500)
-  }
-})
 
 /**
  * @swagger
