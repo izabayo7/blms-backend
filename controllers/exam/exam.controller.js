@@ -126,9 +126,9 @@ router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
     try {
-        let exam = await Exam.findOne({_id: req.params.id}).populate('course')
+        let exam = await Exam.findOne({_id: req.params.id}).populate('course').lean()
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
@@ -140,6 +140,10 @@ router.get('/:id', async (req, res) => {
             })
             if (exam.status === 'DRAFT' || !user_user_group)
                 return res.send(formatResult(404, 'exam not available'))
+            exam.submission = await Exam_submission.findOne({
+                exam: exam._id,
+                user: req.user._id
+            })
         }
         exam = await addAttachmentMediaPaths([exam],req.user.category.name === 'STUDENT',true)
         exam = exam[0]
