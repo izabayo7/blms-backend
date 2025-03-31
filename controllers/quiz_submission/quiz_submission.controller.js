@@ -2,6 +2,7 @@
 const {
   quiz
 } = require('../../models/quiz/quiz.model')
+const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
   express,
   Quiz_submission,
@@ -122,6 +123,184 @@ router.get('/', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /quiz_submission/user:
+ *   get:
+ *     tags:
+ *       - Quiz_submission
+ *     description: Returns quiz_submissions of the specified user
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/user', auth, async (req, res) => {
+  try {
+
+    let result
+
+    if (req.user.category.name == 'STUDENT') {
+
+      const user_user_group = await findDocument(User_user_group, {
+        user: req.user._id,
+        status: "ACTIVE"
+      })
+
+      if (!user_user_group)
+        return res.send(formatResult(200, undefined, []))
+
+      let courses = await findDocuments(Course, {
+        user_group: user_user_group.user_group,
+        published: true
+      }, u, u, u, u, u, {
+        _id: -1
+      })
+      if (!courses.length)
+        return res.send(formatResult(200, undefined, []))
+
+      let coursesWithSubmissions = []
+
+      for (const j in courses) {
+        // check if there are quizes made by the user
+        let chapters = await findDocuments(Chapter, {
+          course: courses[j]._id
+        }, u, u, u, u, u, {
+          _id: -1
+        })
+
+        for (const l in chapters) {
+
+          let quizes = await findDocuments(Quiz, {
+            "target.id": chapters[l]._id
+          }, u, u, u, u, u, {
+            _id: -1
+          })
+
+          let foundSubmissions = []
+          quizes = await addQuizTarget(quizes)
+          for (const i in quizes) {
+
+            let quiz_submissions = await findDocuments(Quiz_submission, {
+              quiz: quizes[i]._id
+            }, u, u, u, u, u, {
+              _id: -1
+            })
+            if (quiz_submissions.length) {
+
+              quiz_submissions = await injectUserFeedback(quiz_submissions)
+
+              for (const k in quiz_submissions) {
+
+                quiz_submissions[k].total_feedbacks = 0
+
+                for (const l in quiz_submissions[k].answers) {
+                  quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+                }
+                quiz_submissions[k].quiz = quizes[i]
+                foundSubmissions.push(quiz_submissions[k])
+              }
+            }
+          }
+          if (foundSubmissions.length) {
+            foundSubmissions = foundSubmissions.sort((a, b) => {
+              if (a.createdAt > b.createdAt) return -1;
+              if (a.createdAt < b.createdAt) return 1;
+              return 0;
+            })
+            courses[j].submissions = foundSubmissions
+            courses[j].marking_status = 0
+            courses[j].unread_results = 0
+            const percentage_of_one_submission = 100 / foundSubmissions.length
+            for (const a in foundSubmissions) {
+              if (foundSubmissions[a].marked) {
+                courses[j].marking_status += percentage_of_one_submission
+              }
+              if (!foundSubmissions[a].results_seen) {
+                courses[j].unread_results++
+              }
+            }
+            courses[j].marking_status += '%'
+            courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
+            coursesWithSubmissions.push(courses[j])
+          }
+
+        }
+
+      }
+
+      result = coursesWithSubmissions
+    } else {
+      // check if there are quizes made by the user
+      let quizes = await findDocuments(Quiz, {
+        user: req.user._id,
+        target: {
+          $ne: undefined
+        }
+      }, u, u, u, u, u, {
+        _id: -1
+      })
+      if (!quizes.length)
+        return res.send(formatResult(404, 'quiz_submissions not found'))
+
+      let foundSubmissions = []
+
+      quizes = await addAttachmentMediaPaths(quizes)
+
+      quizes = await addQuizTarget(quizes)
+      for (const i in quizes) {
+
+        let quiz_submissions = await findDocuments(Quiz_submission, {
+          quiz: quizes[i]._id
+        }, u, u, u, u, u, {
+          _id: -1
+        })
+
+        quizes[i].total_submissions = quiz_submissions.length
+
+        if (quiz_submissions.length) {
+
+          quiz_submissions = await injectUser(quiz_submissions, 'user')
+          quiz_submissions = await injectUserFeedback(quiz_submissions)
+
+          quizes[i].marking_status = 0
+          const percentage_of_one_submission = 100 / quiz_submissions.length
+
+          for (const k in quiz_submissions) {
+
+            if (quiz_submissions[k].marked) {
+              quizes[i].marking_status += percentage_of_one_submission
+            }
+
+            quiz_submissions[k].total_feedbacks = 0
+
+            for (const l in quiz_submissions[k].answers) {
+              quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+            }
+          }
+          quizes[i].submissions = quiz_submissions
+          foundSubmissions.push(quizes[i])
+          quizes[i].marking_status += '%'
+        }
+      }
+
+      if (!foundSubmissions.length)
+        return res.send(formatResult(404, 'quiz_submissions not found'))
+      result = foundSubmissions
+    }
+    result = await injectUser(result, 'user')
+
+    return res.send(formatResult(u, u, result))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /quiz_submission/{id}:
  *   get:
  *     tags:
@@ -213,202 +392,6 @@ router.get('/quiz/:id', auth, async (req, res) => {
       return res.send(formatResult(404, 'quiz_submissions not found'))
 
     // result = await injectUser(result, 'user')
-
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
- * /quiz_submission/user/{user_name}:
- *   get:
- *     tags:
- *       - Quiz_submission
- *     description: Returns quiz_submissions of the specified user
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: user_name
- *         description: user name
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/user/:user_name', auth, async (req, res) => {
-  try {
-    // check if user exist
-    let user = await findDocument(User, {
-      user_name: req.params.user_name
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
-
-    let result
-
-    let user_category = await findDocument(User_category, {
-      _id: user.category
-    })
-
-    if (user_category.name == 'STUDENT') {
-
-      const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-        user: user._id,
-        status: 1
-      })
-      if (!user_faculty_college_year)
-        return res.send(formatResult(200, undefined, []))
-
-      let courses = await findDocuments(Course, {
-        faculty_college_year: user_faculty_college_year.faculty_college_year,
-        published: true
-      }, u, u, u, u, u, {
-        _id: -1
-      })
-      if (!courses.length)
-        return res.send(formatResult(200, undefined, []))
-
-      let coursesWithSubmissions = []
-
-      for (const j in courses) {
-        // check if there are quizes made by the user
-        let chapters = await findDocuments(Chapter, {
-          course: courses[j]._id
-        }, u, u, u, u, u, {
-          _id: -1
-        })
-
-        for (const l in chapters) {
-
-          let quizes = await findDocuments(Quiz, {
-            "target.id": chapters[l]._id
-          }, u, u, u, u, u, {
-            _id: -1
-          })
-
-          let foundSubmissions = []
-          quizes = await addQuizTarget(quizes)
-          for (const i in quizes) {
-
-            let quiz_submissions = await findDocuments(Quiz_submission, {
-              quiz: quizes[i]._id
-            }, u, u, u, u, u, {
-              _id: -1
-            })
-            if (quiz_submissions.length) {
-
-              quiz_submissions = await injectUserFeedback(quiz_submissions)
-
-              for (const k in quiz_submissions) {
-
-                quiz_submissions[k].total_feedbacks = 0
-
-                for (const l in quiz_submissions[k].answers) {
-                  quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
-                }
-                quiz_submissions[k].quiz = quizes[i]
-                foundSubmissions.push(quiz_submissions[k])
-              }
-            }
-          }
-          if (foundSubmissions.length) {
-            foundSubmissions = foundSubmissions.sort((a, b) => {
-              if (a.createdAt > b.createdAt) return -1;
-              if (a.createdAt < b.createdAt) return 1;
-              return 0;
-            })
-            courses[j].submissions = foundSubmissions
-            courses[j].marking_status = 0
-            courses[j].unread_results = 0
-            const percentage_of_one_submission = 100 / foundSubmissions.length
-            for (const a in foundSubmissions) {
-              if (foundSubmissions[a].marked) {
-                courses[j].marking_status += percentage_of_one_submission
-              }
-              if (!foundSubmissions[a].results_seen) {
-                courses[j].unread_results++
-              }
-            }
-            courses[j].marking_status += '%'
-            courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
-            coursesWithSubmissions.push(courses[j])
-          }
-
-        }
-
-      }
-
-      result = coursesWithSubmissions
-    } else {
-      // check if there are quizes made by the user
-      let quizes = await findDocuments(Quiz, {
-        user: user._id,
-        target: {
-          $ne: undefined
-        }
-      }, u, u, u, u, u, {
-        _id: -1
-      })
-      if (!quizes.length)
-        return res.send(formatResult(404, 'quiz_submissions not found'))
-
-      let foundSubmissions = []
-
-      quizes = await addAttachmentMediaPaths(quizes)
-
-
-      quizes = await addQuizTarget(quizes)
-
-      for (const i in quizes) {
-
-        let quiz_submissions = await findDocuments(Quiz_submission, {
-          quiz: quizes[i]._id
-        }, u, u, u, u, u, {
-          _id: -1
-        })
-
-        quizes[i].total_submissions = quiz_submissions.length
-
-        if (quiz_submissions.length) {
-
-          quiz_submissions = await injectUser(quiz_submissions, 'user')
-          quiz_submissions = await injectUserFeedback(quiz_submissions)
-
-          quizes[i].marking_status = 0
-          const percentage_of_one_submission = 100 / quiz_submissions.length
-
-          for (const k in quiz_submissions) {
-
-            if (quiz_submissions[k].marked) {
-              quizes[i].marking_status += percentage_of_one_submission
-            }
-
-            quiz_submissions[k].total_feedbacks = 0
-
-            for (const l in quiz_submissions[k].answers) {
-              quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
-            }
-          }
-          quizes[i].submissions = quiz_submissions
-          foundSubmissions.push(quizes[i])
-          quizes[i].marking_status += '%'
-        }
-      }
-
-      if (!foundSubmissions.length)
-        return res.send(formatResult(404, 'quiz_submissions not found'))
-      result = foundSubmissions
-    }
-
-    result = await injectUser(result, 'user')
 
     return res.send(formatResult(u, u, result))
   } catch (error) {
@@ -1038,9 +1021,9 @@ function validateSubmittedAnswers(questions, answers, mode) {
     status: true,
     total_marks: marks
   } : {
-      status: false,
-      error: message
-    }
+    status: false,
+    error: message
+  }
 }
 // auto mark selection questions
 function autoMarkSelectionQuestions(questions, answers) {

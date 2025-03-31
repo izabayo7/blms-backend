@@ -64,7 +64,7 @@ exports.validate_college = validate_college
 const {
   user_faculty_college_year,
   validate_user_faculty_college_year
-} = require('../models/user_user_group/user_user_group.model')
+} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
 
 exports.User_faculty_college_year = user_faculty_college_year
 exports.validate_user_faculty_college_year = validate_user_faculty_college_year
@@ -78,11 +78,11 @@ exports.User_progress = user_progress
 exports.validate_user_progress = validate_user_progress
 
 const {
-  Faculty,
+  faculty,
   validate_faculty
 } = require('../models/faculty/faculty.model')
 
-exports.Faculty = Faculty
+exports.Faculty = faculty
 exports.validate_faculty = validate_faculty
 
 const {
@@ -95,9 +95,8 @@ exports.validate_faculty_college = validate_faculty_college
 
 const {
   faculty_college_year,
-  validate_faculty_college_year,
-  User_group
-} = require('../models/user_group/user_group.model')
+  validate_faculty_college_year
+} = require('../models/faculty_college_year/faculty_college_year.model')
 
 exports.Faculty_college_year = faculty_college_year
 exports.validate_faculty_college_year = validate_faculty_college_year
@@ -1011,8 +1010,6 @@ exports.injectUser = async (array, property, newProperty) => {
   let name = newProperty ? newProperty : property
   for (const i in array) {
     if (array[i]) {
-      if (array[i][`${property}`]['email'])
-        continue;
       const user = await this.findDocument(this.User, {
         _id: array[i][`${property}`]
       })
@@ -1401,24 +1398,34 @@ exports.injectCommentsReplys = async (comments) => {
 
 exports.injectFaculty_college_year = async (courses) => {
   for (const i in courses) {
-    const user_group = await this.findDocument(User_group, {
-      _id: courses[i].user_group
-    }, { faculty: 1, name: 1 }, true, false)
+    const faculty_college_year = await this.findDocument(this.Faculty_college_year, {
+      _id: courses[i].faculty_college_year
+    }, { college_year: 1, faculty_college: 1 }, true, false)
 
-    courses[i].user_group = user_group
+    courses[i].faculty_college_year = faculty_college_year
+
+    const collegeYear = await this.findDocument(this.College_year, {
+      _id: faculty_college_year.college_year
+    }, { digit: 1 }, true, false)
+    courses[i].faculty_college_year.college_year = collegeYear
+
+    const faculty_college = await this.findDocument(this.Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    }, { faculty: 1, college: 1 }, true, false)
+    courses[i].faculty_college_year.faculty_college = faculty_college
 
     const faculty = await this.findDocument(this.Faculty, {
-      _id: user_group.faculty
-    }, { _id: 0 }, true, false)
-    courses[i].user_group.faculty = faculty
+      _id: faculty_college.faculty
+    }, { name: 1 }, true, false)
+    courses[i].faculty_college_year.faculty_college.faculty = faculty
 
     const college = await this.findDocument(this.College, {
-      _id: faculty.college
+      _id: faculty_college.college
     }, { name: 1, logo: 1 }, true, false)
 
-    courses[i].user_group.faculty.college = college
-    if (courses[i].user_group.faculty.college.logo) {
-      courses[i].user_group.faculty.college.logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+    courses[i].faculty_college_year.faculty_college.college = college
+    if (courses[i].faculty_college_year.faculty_college.college.logo) {
+      courses[i].faculty_college_year.faculty_college.college.logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }
   }
   return courses
@@ -1488,12 +1495,16 @@ exports.addQuizTarget = async (quizes) => {
           _id: chapter.course
         })
       }
-      course = await this.Course.findOne({
+      course = await this.findDocument(this.Course, {
         _id: chapter ? chapter.course : quiz.target.id
-      }).populate('user_group')
+      })
 
-      quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group'])
+      course = await this.injectFaculty_college_year([course])
+      course = course[0]
+
+      quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt'])
       quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
+      quizes[i].target.faculty_college_year = course.faculty_college_year
 
     }
   }

@@ -1,4 +1,6 @@
 // import dependencies
+const { User_group } = require('../../models/user_group/user_group.model')
+const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     fs,
@@ -124,15 +126,15 @@ router.get('/statistics', async (req, res) => {
             total_courses = await countDocuments(Course)
         } else {
 
-            let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
-            for (const i in faculty_college) {
-                let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
-                if (!faculty_college_year.length)
+            let faculties = await findDocuments(Faculty, { college: req.user.college })
+            for (const i in faculties) {
+                let user_groups = await findDocuments(User_group, { faculty: faculties[i]._id })
+                if (!user_groups.length)
                     continue
 
-                for (const k in faculty_college_year) {
+                for (const k in user_groups) {
                     let courses = await countDocuments(Course, {
-                        faculty_college_year: faculty_college_year[k]._id
+                        user_group: user_groups[k]._id
                     })
                     total_courses += courses
                 }
@@ -145,6 +147,7 @@ router.get('/statistics', async (req, res) => {
     }
 })
 
+// not done
 /**
  * @swagger
  * /course/statistics/user_access:
@@ -202,7 +205,7 @@ router.get('/statistics/user_access', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
+// not done
 /**
  * @swagger
  * /course/statistics/creations:
@@ -278,7 +281,7 @@ router.get('/statistics/creations', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
+// not done
 /**
  * @swagger
  * /course/statistics/user_access:
@@ -482,24 +485,19 @@ router.get('/faculty/:id', async (req, res) => {
 
         let foundCourses = []
 
-        let faculty_college = await findDocuments(Faculty_college, { faculty: req.params.id })
+        let user_groups = await findDocuments(User_group, { faculty: faculty._id })
 
-        for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
-            if (!faculty_college_year.length)
+        for (const k in user_groups) {
+            let courses = await findDocuments(Course, {
+                user_group: user_groups[k]._id
+            })
+            if (!courses.length)
                 continue
 
-            for (const k in faculty_college_year) {
-                let courses = await findDocuments(Course, {
-                    faculty_college_year: faculty_college_year[i]._id
-                })
-                if (!courses.length)
-                    continue
-
-                for (const course of courses) {
-                    foundCourses.push(course)
-                }
+            for (const course of courses) {
+                foundCourses.push(course)
             }
+
 
         }
 
@@ -517,19 +515,13 @@ router.get('/faculty/:id', async (req, res) => {
 
 /**
  * @swagger
- * /course/user/{user_name}:
+ * /course/user:
  *   get:
  *     tags:
  *       - Course
  *     description: Returns courses of a specified user
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: user_name
- *         description: User name
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -538,37 +530,28 @@ router.get('/faculty/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name', async (req, res) => {
+router.get('/user', async (req, res) => {
     try {
-        let user = await findDocument(User, {
-            user_name: req.params.user_name
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
         let result
 
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-        if (user_category.name == 'STUDENT') {
-            const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-                user: user._id,
-                status: 1
+        if (req.user.category.name == 'STUDENT') {
+            const user_user_group = await findDocument(User_user_group, {
+                user: req.user._id,
+                status: "ACTIVE"
             })
-            if (!user_faculty_college_year)
+            if (!user_user_group)
                 return res.send(formatResult(200, undefined, []))
 
             result = await findDocuments(Course, {
-                faculty_college_year: user_faculty_college_year.faculty_college_year,
+                user_group: user_user_group.user_group,
                 published: true
             })
             result = simplifyObject(result)
-            result = await injectUserProgress(result, user._id + '')
+            result = await injectUserProgress(result, req.user._id + '')
             result = await injectUser(result, 'user')
         } else {
             result = await findDocuments(Course, {
-                user: user._id
+                user: req.user._id
             })
             result = simplifyObject(result)
         }
@@ -808,25 +791,14 @@ router.post('/', async (req, res) => {
         } = validate_course(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
-
-        let faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: req.body.faculty_college_year
+        let user_group = await findDocument(User_group, {
+            _id: req.body.user_group
         })
-        if (!faculty_college_year)
-            return res.send(formatResult(404, 'faculty_college_year not found'))
+        if (!user_group)
+            return res.send(formatResult(404, 'User_group not found'))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
-        })
-
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create course'))
+        if (req.user.category.name != "INSTRUCTOR")
+            return res.send(formatResult(404, 'you can\'t create course'))
 
         let course = await findDocument(Course, {
             name: req.body.name
@@ -836,13 +808,13 @@ router.post('/', async (req, res) => {
 
         let result = await createDocument(Course, {
             name: req.body.name,
-            user: user._id,
-            faculty_college_year: req.body.faculty_college_year,
-            description: req.body.description
+            user: req.user._id,
+            user_group: req.body.user_group,
+            description: req.body.description,
+            maximum_marks: req.body.maximum_marks
         })
 
         result = simplifyObject(result)
-        console.log(result.data)
         result.data = await injectFaculty_college_year([result.data])
         result.data = result.data[0]
         return res.send(result)
@@ -953,23 +925,19 @@ router.put('/:id', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
+        let user_group = await findDocument(User_group, {
+            _id: req.body.user_group
         })
+        if (!user_group)
+            return res.send(formatResult(404, 'User_group not found'))
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create course'))
+        if (req.user.category.name != "INSTRUCTOR")
+            return res.send(formatResult(404, 'you can\'t create course'))
 
         // check if course exist
         let course = await findDocument(Course, {
             _id: req.params.id,
-            user: user._id
+            user: req.user._id
         })
         if (!course)
             return res.send(formatResult(404, 'course not found'))
@@ -982,7 +950,7 @@ router.put('/:id', async (req, res) => {
         })
         if (course)
             return res.send(formatResult(403, 'name was taken'))
-        req.body.user = user._id
+        req.body.user = req.user._id
         const result = await updateDocument(Course, req.params.id, req.body)
 
         return res.send(result)

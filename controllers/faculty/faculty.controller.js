@@ -1,4 +1,5 @@
 // import dependencies
+const { User_group } = require('../../models/user_group/user_group.model')
 const {
   express,
   findDocuments,
@@ -19,66 +20,12 @@ const {
   Course,
 } = require('../../utils/imports')
 
-// create router
-const router = express.Router()
-
-/**
- * @swagger
- * definitions:
- *   Faculty:
- *     properties:
- *       name:
- *         type: string
- *     required:
- *       - name
+/***
+ * Get faculty statistics
+ * @param req
+ * @param res
  */
-
-/**
- * @swagger
- * /faculty:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Get all Faculties
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-  try {
-    const result = await findDocuments(Faculty)
-    if (!result.length)
-      return res.send(formatResult(404, 'Faculty list is empty'))
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
- * /faculty/statistics:
- *   get:
- *     tags:
- *       - Statistics
- *     description: Get Faculty statistics
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/statistics', async (req, res) => {
+exports.getFacultyStatistics = async (req, res) => {
   try {
     let total_faculties
     if (req.user.category.name == "SUPERADMIN") {
@@ -90,209 +37,103 @@ router.get('/statistics', async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
-/**
- * @swagger
- * /faculty/college/{faculty}:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Returns faculties in a specified college
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: faculty
- *         description: Faculty Id *use ALL in case you need to see for all faculties
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+// handle all users down here
+// super admin
+// admin
+// instructor
+
+/***
+ * Get faculties
+ * @param req
+ * @param res
  */
-router.get('/college/:faculty', async (req, res) => {
+exports.getFaculties = async (req, res) => {
   try {
 
     let foundFaculties = []
-    const fetch_all_faculties = req.params.faculty === "ALL"
-    const faculty_colleges = await findDocuments(Faculty_college, fetch_all_faculties ? {
-      college: req.user.college
-    } : {
-        college: req.user.college,
-        faculty: req.params.faculty
-      }
-    );
+    const fetch_all_faculties = req.params.faculty_id === "ALL"
+    console.log(req.params.faculty_id)
+    let faculties;
+
+    // if (req.user.category.name == "SUPERADMIN") {
+    //   faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
+    //     _id: req.params.faculty_id
+    //   }
+    //   )
+    // } else if (req.user.category.name == "ADMIN") {
+    //   faculties = await findDocuments(Faculty, fetch_all_faculties ? {
+    //     college: req.user.college
+    //   } : {
+    //     _id: req.params.faculty_id,
+    //     college: req.user.college
+    //   }
+    //   )
+    // } else if (req.user.category.name == "INSTRUCTOR") {
+    //   const user_groups = await findDocuments(User_faculty_college_year, {
+    //     user: req.user._id
+    //   })
+    //   // stack here
+    //   for (const i in user_groups) {
+    //     const res = await findDocuments(Faculty, fetch_all_faculties ? {
+    //       college: req.user.college,
+    //       _id: user_groups[i].faculty_college
+    //     } : {
+    //       _id: req.params.faculty_id,
+    //       college: req.user.college
+    //     }
+    //     )
+    //   }
+
+    // }
+
+
     if (!fetch_all_faculties) {
       const {
         error
-      } = validateObjectId(req.params.faculty)
+      } = validateObjectId(req.params.faculty_id)
       if (error)
         return res.send(formatResult(400, error.details[0].message))
 
-      const faculty = await findDocument(Faculty, {
-        _id: req.params.faculty
+      faculties = await findDocuments(Faculty, {
+        _id: req.params.faculty_id
       })
-      if (!faculty)
-        return res.send(formatResult(404, 'faculty not found'))
-      foundFaculties.push(faculty)
     }
     else {
-      if (!faculty_colleges.length)
-        return res.send(formatResult(404, `College ${college.name} has no faculties`))
+      // if (!faculty_colleges.length)
+      //   return res.send(formatResult(404, `College ${college.name} has no faculties`))
 
-      for (const faculty_college of faculty_colleges) {
-        const faculty = await findDocument(Faculty, {
-          _id: faculty_college.faculty
-        })
-        if (!faculty)
-          return res.send(formatResult(404, `Faculty ${faculty_college.faculty} Not Found`)) // recheck use case
-        foundFaculties.push(faculty)
+      // for (const faculty_college of faculty_colleges) {
+      //   const faculty = await findDocument(Faculty, {
+      //     _id: faculty_college.faculty
+      //   })
+      //   if (!faculty)
+      //     return res.send(formatResult(404, `Faculty ${faculty_college.faculty} Not Found`)) // recheck use case
+      //   foundFaculties.push(faculty)
+      // }
+      console.log('aaaaaaaooooooo')
+      faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
+        _id: req.params.faculty_id
       }
+      )
 
     }
-
-    foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
+    // foundFaculties = await injectDetails(faculties, faculty_colleges)
+    foundFaculties = faculties
     return res.send(formatResult(u, u, foundFaculties.length ? fetch_all_faculties ? foundFaculties : foundFaculties[0] : []))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
-/**
- * @swagger
- * /faculty/import/college/{id}:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Returns faculties that are not in a college hence importable
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: College's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+
+/***
+ * Create faculty
+ * @param req
+ * @param res
  */
-router.get('/import/college/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
-    let college = await findDocument(College, {
-      _id: req.params.id
-    })
-    if (!college)
-      return res.send(formatResult(404, `College ${req.params.id} Not Found`))
-
-    const all_faculties = await findDocuments(Faculty)
-
-    let foundFaculties = []
-
-    for (const i in all_faculties) {
-      const faculty_college = await findDocument(Faculty_college, {
-        college: req.params.id,
-        faculty: all_faculties[i]._id
-      })
-      if (!faculty_college)
-        foundFaculties.push(all_faculties[i]);
-    }
-
-    if (foundFaculties.length < 1)
-      return res.send(formatResult(404, `College ${college.name} has no importable faculties`))
-
-    return res.send(formatResult(u, u, foundFaculties))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-
-/**
- * @swagger
- * /faculty/{id}:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Returns a specified faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Faculty's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
-    const result = await findDocument(Faculty, {
-      _id: req.params.id
-    })
-    if (!result)
-      return res.send(formatResult(404, `Faculty ${req.params.id} Not Found`))
-
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
- * /faculty:
- *   post:
- *     tags:
- *       - Faculty
- *     description: Create Faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: body
- *         description: Fields for a Faculty
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/Faculty'
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.post('/', async (req, res) => {
+exports.createFaculty = async (req, res) => {
   try {
     const {
       error
@@ -300,67 +141,50 @@ router.post('/', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
+    req.body.college = req.user.college
+    req.body.created_by = req.user._id
+
+    // ensure no redundancy
+    req.body.name = req.body.name.toLowerCase();
+
     // check name is available
     let faculty = await findDocument(Faculty, {
-      name: req.body.name
+      name: req.body.name,
+      college: req.user.college,
     })
     if (faculty)
       return res.send(formatResult(403, 'name was taken'))
 
-    let result = await createDocument(Faculty, {
-      name: req.body.name,
-    })
+    let result = await createDocument(Faculty, req.body)
 
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
-/**
- * @swagger
- * /faculty/{id}:
- *   put:
- *     tags:
- *       - Faculty
- *     description: Update Faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         in: path
- *         type: string
- *         description: Faculty's Id
- *       - name: body
- *         description: Fields for a Faculty
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/Faculty'
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+
+/***
+ * Update faculty
+ * @param req
+ * @param res
  */
-router.put('/:id', async (req, res) => {
+exports.updateFaculty = async (req, res) => {
   try {
     let {
       error
-    } = validateObjectId(req.params.id)
+    } = validateObjectId(req.params.faculty_id)
     if (error)
-      return res.send(formatResult(400, error.details[0].message))
+      return res.send(formatResult(400, 'invalid id'))
 
     // check if faculty exist
     let faculty = await findDocument(Faculty, {
-      _id: req.params.id
+      _id: req.params.faculty_id
     })
     if (!faculty)
       return res.send(formatResult(404, 'faculty not found'))
+
+    req.body.name = req.body.name.toLowerCase();
 
     // check if faculty exist
     let _faculty = await findDocument(Faculty, {
@@ -378,59 +202,39 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
-/**
- * @swagger
- * /faculty/{id}:
- *   delete:
- *     tags:
- *       - Faculty
- *     description: Delete as Faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Faculty's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+/***
+ * Delete faculty
+ * @param req
+ * @param res
  */
-router.delete('/:id', async (req, res) => {
+exports.deleteFaculty = async (req, res) => {
   const {
     error
-  } = validateObjectId(req.params.id)
+  } = validateObjectId(req.params.faculty_id)
   if (error)
-    return res.send(formatResult(400, error.details[0].message))
+    return res.send(formatResult(400, "invalid id"))
 
   let faculty = await findDocument(Faculty, {
-    _id: req.params.id
+    _id: req.params.faculty_id
   })
   if (!faculty)
-    return res.send(formatResult(404, `Faculty of Code ${req.params.id} Not Found`))
+    return res.send(formatResult(404, `Faculty of Code ${req.params.faculty_id} Not Found`))
 
 
 
   // check if the faculty is never used
-  const faculty_college_found = await findDocument(Faculty_college, {
-    faculty: req.params.id
+  const faculty_college_found = await findDocument(User_group, {
+    faculty: req.params.faculty_id
   })
   if (!faculty_college_found) {
-    let result = await deleteDocument(Faculty, req.params.id)
+    let result = await deleteDocument(Faculty, req.params.faculty_id)
     return res.send(result)
   }
 
   return res.send(formatResult(200, `Faculty ${faculty.name} couldn't be deleted because it was used`))
-})
+}
 
 async function injectDetails(faculties, faculty_colleges) {
   // add head teacher
@@ -454,6 +258,3 @@ async function injectDetails(faculties, faculty_colleges) {
   }
   return faculties
 }
-
-// export the router
-module.exports = router
