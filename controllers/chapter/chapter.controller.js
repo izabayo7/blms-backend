@@ -799,12 +799,12 @@ router.delete('/:id/video', async (req, res) => {
 
         if (!chapter.uploaded_video)
             return res.send(formatResult(404, 'file not found'))
-
+        const vid_name = chapter.uploaded_video;
         chapter.uploaded_video = undefined
 
         await chapter.save()
 
-        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${chapter.uploaded_video}`)
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${vid_name}`)
 
 
         fs.unlink(file_path, async (err) => {
