@@ -983,6 +983,9 @@ exports.injectUser = async (array, property, newProperty) => {
     const user = await this.findDocument(this.User, {
       _id: array[i][`${property}`]
     })
+    const category = await this.findDocument(this.User_category, { _id: user.category })
+    console.log(category)
+    user.category = category.name
     // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
     array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
     if (array[i][`${name}`].profile) {
