@@ -192,7 +192,12 @@ async function getTotalBills(req, res) {
                 return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total students in your college)`));
         }
 
-        const amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_students)
+        let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_students)
+
+        const payment = await Account_payments.findOne({user: req.user._id, status: 'ACTIVE'})
+
+        if (payment)
+            amount -= payment.balance
 
         return res.send(formatResult(u, u, {amount}));
     } catch (err) {
