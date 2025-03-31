@@ -530,7 +530,7 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
         if (!assignment_submission)
             return res.send(formatResult(404, 'assignment_submission not found'))
 
-        if (assignment_submission.assignment.status !== "PUBLISHED")
+        if (req.user.category === 'STUDENT' && assignment_submission.assignment.status !== "PUBLISHED")
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
         if (req.user.category === 'STUDENT' && new Date() > new Date(assignment_submission.assignment.dueDate))
