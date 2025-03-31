@@ -659,7 +659,7 @@ async function injectChapters(courses) {
     courses[i].assignmentsLength = 0
     // add course cover picture media path
     if (courses[i].coverPicture) {
-      courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${course.coverPicture}`
+      courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${courses[i].coverPicture}`
     }
     let chapters = await Chapter.find({
       course: courses[i]._id
