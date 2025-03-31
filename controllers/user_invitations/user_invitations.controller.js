@@ -131,7 +131,7 @@ exports.createUserInvitation = async (req, res) => {
       const newDocument = new User_invitation({
         user: req.user._id,
         email: email,
-        category: category,
+        category: user_category._id,
         college: college,
         token: token,
         expiration_date: expiration_date,

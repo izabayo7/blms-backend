@@ -169,7 +169,7 @@ exports.updatePost = async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
 /***
  *  change post status
