@@ -120,6 +120,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
         req.body.sender = req.user._id
 
         let target
+        let specific_users = []
 
         if (req.params.receivers === "group") {
 
@@ -169,12 +170,14 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
             if (req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
                 return res.send(formatResult(403, 'You are not allowed to send announcement in the whole college'))
 
-        } else {
+        }
+        else {
             for (const i in req.body.specific_receivers) {
                 const user = await User.findOne({user_name: req.body.specific_receivers[i]})
                 if (!user)
                     return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
                 req.body.specific_receivers[i] = user._id
+                specific_users.push(user)
             }
         }
         let result = await createDocument(Announcement, req.body)
@@ -184,11 +187,19 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
         result.data = result.data[0]
 
         if (req.params.receivers === "specific_users") {
-            for (const i in req.body.specific_receivers) {
+            for (const i in specific_users) {
                 MyEmitter.emit('socket_event', {
-                    name: `send_message_${req.body.specific_receivers[i]}`,
+                    name: `send_message_${specific_users[i]._id}`,
                     data: result.data
                 });
+                if (specific_users[i].email) {
+                    await sendAnnouncementEmail({
+                        email: specific_users[i].email,
+                        user_names: `Mr${specific_users[i].gender === 'female' ? 's' : ''} ${specific_users[i].sur_name} ${specific_users[i].other_names}`,
+                        announcer: req.user.sur_name + ' ' + req.user.other_names,
+                        link: `https://${process.env.FRONTEND_HOST}/messages/announcements`
+                    })
+                }
             }
         } else {
             let user_groups = []
