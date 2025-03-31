@@ -1,4 +1,5 @@
 // import dependencies
+const {Assignment_submission} = require("../../models/assignment_submission/assignment_submission.model");
 const {addAssignmentTarget} = require("../../utils/imports");
 const {simplifyObject} = require("../../utils/imports");
 const {upload_multiple} = require("../../utils/imports");
@@ -71,6 +72,12 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 user: {$in: instructors.map(x => x.user)},
                 status: {$in: ["PUBLISHED", "RELEASED"]}
             }, u, u, u, u, u, {_id: -1})
+            for (const i in assignments) {
+                assignments[i].submission = await Assignment_submission.findOne({
+                    assignment: assignments[i]._id,
+                    user: req.user._id
+                })
+            }
         }
 
         assignments = await addAssignmentTarget(assignments)
