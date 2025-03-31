@@ -291,7 +291,7 @@ exports.reset_password = ({
               border-top: 3px solid #193074;
               padding: 69px 39px 0;
               margin: auto;
-              height: 340px;
+              min-height: 340px;
               max-width: 522px;
               border-radius: 0px;
               align-self: center;
@@ -469,7 +469,7 @@ exports.requestCallback = ({
                 border-top: 3px solid #193074;
                 padding: 49px 39px 0;
                 margin: auto;
-                height: 340px;
+                min-height: 340px;
                 max-width: 522px;
                 border-radius: 0px;
                 align-self: center;
@@ -599,7 +599,7 @@ exports.contactUs = ({
                 border-top: 3px solid #193074;
                 padding: 49px 39px 0;
                 margin: auto;
-                height: 340px;
+                min-height: 340px;
                 max-width: 522px;
                 border-radius: 0px;
                 align-self: center;
@@ -748,7 +748,7 @@ exports.invitationToSystem = ({
                 padding: 49px 39px 0;
                 border-top: 3px solid #193074;
                 margin: auto;
-                height: 340px;
+                min-height: 340px;
                 max-width: 522px;
                 border-radius: 0px;
                 align-self: center;
