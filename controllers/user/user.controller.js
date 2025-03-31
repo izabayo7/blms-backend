@@ -36,7 +36,8 @@ const {
   upload_single_image,
   Compress_images,
   Chat_group,
-  Quiz
+  Quiz,
+  auth
 } = require('../../utils/imports')
 
 // create router
@@ -199,13 +200,16 @@ router.get('/college/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/search', async (req, res) => {
+router.get('/search', auth, async (req, res) => {
   try {
     // add college limit
     let {
       data,
       error
     } = await Search(User, {
+      email: {
+        $ne: req.user.email
+      },
       $or: [{
         sur_name: {
           $regex: req.query.data,
