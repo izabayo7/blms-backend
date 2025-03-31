@@ -681,6 +681,9 @@ router.get('/current', auth, async (req, res) => {
 
         user = await add_user_details([user])
         user = user[0]
+        user.category = {
+            name: user.category
+        }
 
         return res.send(formatResult(u, u, user))
     } catch (error) {
