@@ -68,7 +68,7 @@ router.route('/')
      */
     .post([auth, createUserInvitation])
 
-    router.route('/all')
+router.route('/all')
     /**
      * @swagger
      * /user_invitations/all:
@@ -93,3 +93,29 @@ router.route('/')
      */
     .get([auth, getAllInvitations])
 
+router.route('/:token/:action')
+    /**
+     * @swagger
+     * /user_invitations/{token}/{action}:
+     *   get:
+     *     tags:
+     *       - User_invitation
+     *     description: Returns all user_invitations
+     *     parameters:
+     *       - name: token
+     *         description: invitation token
+     *         in: path
+     *         type: string
+     *         required: true
+     *       - name: action
+     *         description: action you want to perform
+     *         in: path
+     *         type: string
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     */
+    .get([auth, getAllInvitations])
