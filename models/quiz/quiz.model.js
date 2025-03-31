@@ -68,10 +68,10 @@ function validateQuiz(body) {
                 choices: Joi.array().min(1).items(Joi.object({ text: Joi.string(), src: Joi.string() })).required(),
             },
         })).required(),
+        totalMarks: Joi.number,
         instructor: Joi.ObjectId().required(),
         published: Joi.boolean()
     }
-    return Joi.validate(body, schema)
 }
 
 // create Quizs model

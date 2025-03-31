@@ -68,7 +68,7 @@ router.get('/', async (req, res) => {
     if (!superAdmin)
       return res.status(404).send('SuperAdmin not yet registered')
     if (superAdmin.profile) {
-      superAdmin.profile = `http://${process.env.HOST}/kurious/file/superAdminProfile/${superAdmin._id}`
+      superAdmin.profile = `http://${process.env.HOST}/kurious/file/superAdminProfile/${superAdmin._id}/${superAdmin.profile}`
     }
     return res.status(200).send(superAdmin)
   } catch (error) {

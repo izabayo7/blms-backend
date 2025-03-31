@@ -451,7 +451,7 @@ module.exports.formatMessages = async (messages, userId) => {
                     diff /= 60;
                     diff = Math.abs(Math.round(diff))
                     if (diff < 5) {
-                        matchingMessages.push({ timestamp: relatedMessages[i].createdAt, message: relatedMessages[i].content })
+                        matchingMessages.push(relatedMessages[i])
                         for (const k in messagesCopy) {
                             if (relatedMessages[i]._id == messagesCopy[k]._id) {
                                 messagesCopy.splice(k, 1)

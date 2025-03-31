@@ -220,7 +220,7 @@ router.put('/:id', async (req, res) => {
   if (error)
     return res.status(400).send(error.details[0].message)
   error = validateQuiz(req.body)
-  error = error.error
+  error = error ? error.error : error
   if (error)
     return res.status(400).send(error.details[0].message)
 

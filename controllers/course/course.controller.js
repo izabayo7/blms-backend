@@ -647,7 +647,7 @@ async function injectInstructor(courses) {
     })
     courses[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
     if (courses[i].instructor.profile) {
-      courses[i].instructor.profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}`
+      courses[i].instructor.profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}/${instructor.profile}`
     }
   }
   return courses
@@ -659,7 +659,7 @@ async function injectChapters(courses) {
     courses[i].assignmentsLength = 0
     // add course cover picture media path
     if (courses[i].coverPicture) {
-      courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}`
+      courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${course.coverPicture}`
     }
     let chapters = await Chapter.find({
       course: courses[i]._id

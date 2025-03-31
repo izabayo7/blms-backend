@@ -73,7 +73,7 @@ const uploadPlus = multer({
 
 /**
  * @swagger
- * /kurious/file/collegeLogo/{id}:
+ * /kurious/file/collegeLogo/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -81,6 +81,11 @@ const uploadPlus = multer({
  *     parameters:
  *       - name: id
  *         description: College id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: College logo file name
  *         in: path
  *         required: true
  *         type: string
@@ -92,7 +97,7 @@ const uploadPlus = multer({
  *       500:
  *         description: Internal Server error
  */
-router.get('/collegeLogo/:id', async (req, res) => {
+router.get('/collegeLogo/:id/:file_name', async (req, res) => {
     try {
 
         const {
@@ -111,10 +116,34 @@ router.get('/collegeLogo/:id', async (req, res) => {
         if (!college.logo)
             return res.status(404).send(`College ${req.params.id} have not yet uploaded their logo`)
 
-        filepath = `./uploads/colleges/${req.params.id}/${college.logo}`
-        const pic = fs.readFileSync(filepath)
-        res.contentType('image/jpeg')
-        return res.status(200).send(pic)
+        if (college.logo !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
+        path = `./uploads/colleges/${req.params.id}/${college.logo}`
+
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.file_name} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -122,7 +151,7 @@ router.get('/collegeLogo/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/superAdminProfile/{id}:
+ * /kurious/file/superAdminProfile/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -130,6 +159,11 @@ router.get('/collegeLogo/:id', async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: superAdmin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: superAdmin's profile filename
  *         in: path
  *         required: true
  *         type: string
@@ -141,7 +175,7 @@ router.get('/collegeLogo/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/superAdminProfile/:id', async (req, res) => {
+router.get('/superAdminProfile/:id/:file_name', async (req, res) => {
     try {
 
         const {
@@ -160,10 +194,13 @@ router.get('/superAdminProfile/:id', async (req, res) => {
         if (!superAdmin.profile)
             return res.status(404).send(`SuperAdmin ${req.params.id} have not yet uploaded ${superAdmin.gender === 'Male' ? 'his' : 'her'} profile`)
 
+        if (superAdmin.profile !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
         path = `./uploads/system/superAdmin/${superAdmin.profile}`
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 const widthString = req.query.width
                 const heightString = req.query.height
@@ -191,7 +228,7 @@ router.get('/superAdminProfile/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/adminProfile/{id}:
+ * /kurious/file/adminProfile/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -199,6 +236,11 @@ router.get('/superAdminProfile/:id', async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: Admin's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Admin's profile filename
  *         in: path
  *         required: true
  *         type: string
@@ -210,7 +252,7 @@ router.get('/superAdminProfile/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/adminProfile/:id', async (req, res) => {
+router.get('/adminProfile/:id/:file_name', async (req, res) => {
     try {
         const {
             error
@@ -228,10 +270,13 @@ router.get('/adminProfile/:id', async (req, res) => {
         if (!admin.profile)
             return res.status(404).send(`Admin ${req.params.id} have not yet uploaded ${admin.gender === 'Male' ? 'his' : 'her'} profile`)
 
+        if (admin.profile !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
         path = `./uploads/colleges/${admin.college}/users/admin/${admin.profile}`
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 const widthString = req.query.width
                 const heightString = req.query.height
@@ -259,7 +304,7 @@ router.get('/adminProfile/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/instructorProfile/{id}:
+ * /kurious/file/instructorProfile/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -267,6 +312,11 @@ router.get('/adminProfile/:id', async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: Instructor's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Instructor's profile filename
  *         in: path
  *         required: true
  *         type: string
@@ -278,7 +328,7 @@ router.get('/adminProfile/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/instructorProfile/:id', async (req, res) => {
+router.get('/instructorProfile/:id/:file_name', async (req, res) => {
     try {
 
         const {
@@ -297,10 +347,13 @@ router.get('/instructorProfile/:id', async (req, res) => {
         if (!instructor.profile)
             return res.status(404).send(`Instructor ${req.params.id} have not yet uploaded ${instructor.gender === 'Male' ? 'his' : 'her'} profile`)
 
+        if (instructor.profile !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
         path = `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}/${instructor.profile}`
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 const widthString = req.query.width
                 const heightString = req.query.height
@@ -327,7 +380,7 @@ router.get('/instructorProfile/:id', async (req, res) => {
 })
 /**
  * @swagger
- * /kurious/file/studentProfile/{id}:
+ * /kurious/file/studentProfile/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -335,6 +388,11 @@ router.get('/instructorProfile/:id', async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: Student's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Student's profile filename
  *         in: path
  *         required: true
  *         type: string
@@ -346,7 +404,7 @@ router.get('/instructorProfile/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/studentProfile/:id', async (req, res) => {
+router.get('/studentProfile/:id/:file_name', async (req, res) => {
     try {
 
         const {
@@ -365,10 +423,13 @@ router.get('/studentProfile/:id', async (req, res) => {
         if (!student.profile)
             return res.status(404).send(`Student ${req.params.id} have not yet uploaded ${student.gender === 'Male' ? 'his' : 'her'} profile`)
 
+        if (student.profile !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
         path = `./uploads/colleges/${student.college}/users/students/${student.profile}`
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 const widthString = req.query.width
                 const heightString = req.query.height
@@ -396,7 +457,7 @@ router.get('/studentProfile/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/courseCoverPicture/{id}:
+ * /kurious/file/courseCoverPicture/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -404,6 +465,11 @@ router.get('/studentProfile/:id', async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: Course's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Course's coverPicture filename
  *         in: path
  *         required: true
  *         type: string
@@ -434,6 +500,9 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
         if (!course.coverPicture)
             return res.status(404).send(`Course ${req.params.id} does not have a cover picture`)
 
+        if (course.coverPicture !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
         const facultyCollegeYear = await FacultyCollegeYear.findOne({
             _id: course.facultyCollegeYear
         })
@@ -444,7 +513,7 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
         path = `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}/${course.coverPicture}`
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 const widthString = req.query.width
                 const heightString = req.query.height
@@ -527,7 +596,7 @@ router.get('/chapterDocument/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/chapterMainVideo/{id}:
+ * /kurious/file/chapterMainVideo/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -535,6 +604,11 @@ router.get('/chapterDocument/:id', async (req, res) => {
  *     parameters:
  *       - name: id
  *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Chapter's video filename
  *         in: path
  *         required: true
  *         type: string
@@ -546,7 +620,7 @@ router.get('/chapterDocument/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/chapterMainVideo/:id', async (req, res) => {
+router.get('/chapterMainVideo/:id/:file_name', async (req, res) => {
     try {
 
         const {
@@ -565,6 +639,9 @@ router.get('/chapterMainVideo/:id', async (req, res) => {
         if (!chapter.mainVideo)
             return res.status(404).send(`Chapter ${chapter.name} doesn't have a mainVideo`)
 
+        if (chapter.mainVideo !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+            
         const course = await Course.findOne({
             _id: chapter.course
         })
@@ -667,11 +744,11 @@ router.get('/quizAttachedFiles/:quiz/:picture', async (req, res) => {
             _id: quiz.instructor
         })
 
-        path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.quiz}/${req.params.picture}`
+        path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.quiz}/${req.params.file_name}`
 
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 const widthString = req.query.width
                 const heightString = req.query.height
@@ -753,7 +830,7 @@ router.get('/submissionAttachedFiles/:quiz/:file', async (req, res) => {
 
         fs.exists(path, (exists) => {
             if (!exists) {
-                return res.status(404).send(`${req.params.picture} was not found`)
+                return res.status(404).send(`${req.params.file_name} was not found`)
             } else {
                 // katurebe
             }
@@ -1457,7 +1534,7 @@ router.post('/addAttachments/:chapter', async (req, res) => {
 })
 
 // remove an attachment
-router.post('/removeAttachment/:id', async (req, res) => {
+router.delete('/removeAttachment/:id', async (req, res) => {
     try {
         const {
             error
@@ -1486,7 +1563,7 @@ router.post('/removeAttachment/:id', async (req, res) => {
             if (err)
                 return res.status(500).send(err)
 
-            const deletedDocument = await Attachment.findOneAndDeconste({
+            const deletedDocument = await Attachment.findOneAndDelete({
                 _id: req.params.id
             })
             if (!deletedDocument)

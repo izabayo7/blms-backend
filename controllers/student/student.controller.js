@@ -439,7 +439,7 @@ async function injectDetails(students) {
     }
     // add student profile media path
     if (students[i].profile) {
-      students[i] = `http://${process.env.HOST}/kurious/file/studentProfile/${students[i]._id}`
+      students[i] = `http://${process.env.HOST}/kurious/file/studentProfile/${students[i]._id}/${student.profile}`
     }
   }
   return students

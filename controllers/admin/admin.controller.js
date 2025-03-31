@@ -429,11 +429,11 @@ async function injectDetails(admins) {
         }).lean()
         admins[i].college = removeDocumentVersion(college)
         if (admins[i].college.logo) {
-            admins[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+            admins[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
         }
         // add admin profile media path
         if (admins[i].profile) {
-            admins[i] = `http://${process.env.HOST}/kurious/file/adminProfile/${admins[i]._id}`
+            admins[i] = `http://${process.env.HOST}/kurious/file/adminProfile/${admins[i]._id}/${admins[i].profile}`
         }
     }
     return admins
