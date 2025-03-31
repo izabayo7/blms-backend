@@ -1,4 +1,8 @@
 // import dependencies
+const {College} = require("../../utils/imports");
+const {Faculty_college} = require("../../utils/imports");
+const {Course} = require("../../utils/imports");
+const {User_group} = require("../../models/user_group/user_group.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {
     express,
@@ -130,7 +134,22 @@ router.get('/:target/:id', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Announcement'
+ *           type: object
+ *           properties:
+ *             content:
+ *               type: string
+ *               required: true
+ *             target:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   enum: ['course', 'student_group', 'faculty', 'college']
+ *                   required: true
+ *                 id:
+ *                   type: string
+ *                   required: true
+ *               required: true
  *     responses:
  *       201:
  *         description: Created
@@ -141,7 +160,7 @@ router.get('/:target/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
     try {
         const {
             error
@@ -149,43 +168,40 @@ router.post('/', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const user = await findDocument(User, {user_name: req.body.sender})
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
 
-        req.body.sender = user._id
+        req.body.sender = req.user._id
 
         req.body.target.type = req.body.target.type.toLowerCase()
 
-        const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
+        const allowedTargets = ['course', 'student_group', 'faculty', 'college']
 
         if (!allowedTargets.includes(req.body.target.type))
             return res.send(formatResult(400, 'invalid announcement target_type'))
 
         let target
-
+        // TODO check if instructor has access to the target
         switch (req.body.target.type) {
-            case 'chapter':
-                target = await findDocument(Chapter, {
+            case 'course':
+                target = await findDocument(Course, {
                     _id: req.body.target.id
                 })
                 break;
 
-            case 'live_session':
-                target = await findDocument(Live_session, {
+            case 'student_group':
+                target = await findDocument(User_group, {
                     _id: req.body.target.id
                 })
                 break;
 
-            case 'quiz_submission':
-                target = await findDocument(Quiz_submission, {
+            case 'faculty':
+                target = await findDocument(Faculty_college, {
                     _id: req.body.target.id
                 })
                 break;
 
-            case 'quiz_submission_answer':
-                target = await findDocument(Quiz_submission, {
-                    "answers._id": req.body.target.id
+            case 'college':
+                target = await findDocument(College, {
+                    _id: req.body.target.id
                 })
                 break;
 
@@ -195,6 +211,12 @@ router.post('/', async (req, res) => {
 
         if (!target)
             return res.send(formatResult(404, 'announcement target not found'))
+
+        if(req.body.target.type === 'college' && req.body.target.id != req.user.college)
+            return res.send(formatResult(403, 'You are not allowed to send announcement in another college'))
+
+        if(req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
+            return res.send(formatResult(403, 'You are not allowed to send announcement in the whole college'))
 
 
         let result = await createDocument(Announcement, req.body)
