@@ -578,7 +578,7 @@ exports.injectTarget = async (announcements) => {
                 break;
 
             case 'faculty':
-                target = await this.findDocument(Faculty_college, {
+                target = await this.findDocument(Faculty, {
                     _id: announcements[announcementsKey].target.id
                 }, {name: 1})
                 break;
