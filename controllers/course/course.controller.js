@@ -598,10 +598,22 @@ router.get('/user', async (req, res) => {
             if (!user_user_group)
                 return res.send(formatResult(200, undefined, []))
 
-            result = await Course.find({
-                user_group: user_user_group.user_group,
-                published: true
-            }).sort({createdAt: -1})
+            // result = await Course.find({
+            //     user_group: user_user_group.user_group,
+            //     published: true
+            // }).sort({createdAt: -1})
+
+
+            result = await Course.aggregate([
+                {$lookup:
+                        { from: "quiz_submision",
+                            localField: "_id",
+                            foreignField: "user", as: "studentData"
+                        }
+                }, { $addFields: {studentCount: {$size: "$studentData"}}
+                }
+            ])
+
             result = simplifyObject(result)
             result = await injectUserProgress(result, req.user._id + '')
             result = await injectUser(result, 'user')
