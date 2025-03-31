@@ -118,8 +118,7 @@ router.get('/statistics', async (req, res) => {
 router.get('/college/:faculty', async (req, res) => {
   try {
 
-    let foundFaculties = [];
-
+    let foundFaculties = [],
     const fetch_all_faculties = req.params.faculty === "ALL"
     if (!fetch_all_faculties) {
       const {
@@ -135,6 +134,15 @@ router.get('/college/:faculty', async (req, res) => {
         return res.send(formatResult(404, 'faculty not found'))
       foundFaculties.push(faculty)
     }
+
+    const faculty_colleges = await findDocuments(Faculty_college, fetch_all_faculties ? {
+      college: req.user.college
+    } : {
+        college: req.user.college,
+        faculty: req.params.faculty
+      }
+    );
+
     // let faculty_college_years = await findDocuments(Faculty_college, fetch_all_faculties ? {
     //   college: req.user.college
     // } : {
@@ -144,16 +152,6 @@ router.get('/college/:faculty', async (req, res) => {
     // let foundFaculty_college_years = []
 
     else {
-
-      let college = await findDocument(College, {
-        _id: req.user.college
-      })
-      if (!college)
-        return res.send(formatResult(404, `College ${req.params.id} Not Found`))
-
-      const faculty_colleges = await findDocuments(Faculty_college, {
-        college: req.params.id
-      })
       if (!faculty_colleges.length)
         return res.send(formatResult(404, `College ${college.name} has no faculties`))
 
