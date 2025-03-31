@@ -649,7 +649,7 @@ router.put('/:code/profile', auth, async (req, res) => {
     if (!chat_group)
       return res.send(formatResult(404, 'chat_group not found'))
 
-    const path = `./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`)
 
     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
