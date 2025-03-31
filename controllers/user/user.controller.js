@@ -1,4 +1,5 @@
 // import dependencies
+const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
 const {validateUserPasswordUpdate, validate_admin} = require('../../models/user/user.model')
 const {User_group} = require('../../models/user_group/user_group.model')
