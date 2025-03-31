@@ -383,6 +383,30 @@ async function getPaymentHistory(req, res) {
 async function getPaymentStatus(req, res) {
     try {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
+        let total_users = 1
+        if (college)
+            if (college.plan !== 'HUGUKA') {
+                if (req.user.category.name === 'ADMIN') {
+                    const admin_category = await findDocument(User_category, {name: "ADMIN"})
+                    const student_category = await findDocument(User_category, {name: "STUDENT"})
+                    const instructor_category = await findDocument(User_category, {name: "INSTRUCTOR"})
+
+                    const obj = college.plan === 'MINUZA_ACCELERATE' ?
+                        {
+                            college: college.college,
+                            $or: [{category: student_category._id.toString()}, {category: instructor_category._id.toString()}],
+                            "status.deleted": {$ne: 1}
+                        } :
+                        {
+                            college: college.college,
+                            category: {$ne: admin_category._id.toString()},
+                            "status.deleted": {$ne: 1}
+                        }
+
+                    total_users = await countDocuments(User, obj)
+                }
+            }
+
 
         if (!college) return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: true}));
         else if (college.plan === 'TRIAL') {
@@ -391,7 +415,7 @@ async function getPaymentStatus(req, res) {
             date.setMonth(date.getMonth() + 2)
             const valid = new Date() < new Date(date)
 
-            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {disabled: !valid}));
+            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {disabled: !valid,total_users}));
         }
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
@@ -401,7 +425,8 @@ async function getPaymentStatus(req, res) {
         if (!payment) return res.send(formatResult(u, 'You don\'t have a payment', {
             disabled:
                 (college.plan === 'HUGUKA' && req.user.category.name === 'STUDENT') ||
-                (req.user.category.name !== 'ADMIN')
+                (req.user.category.name !== 'ADMIN'),
+            total_users
         }));
 
         // {
@@ -414,7 +439,8 @@ async function getPaymentStatus(req, res) {
             startDate: payment.startingDate,
             endDate: payment.endingDate,
             balance: payment.balance,
-            disabled: new Date() > new Date(payment.endingDate)
+            disabled: new Date() > new Date(payment.endingDate),
+            total_users
         }));
     } catch (err) {
         return res.send(formatResult(500, err));
