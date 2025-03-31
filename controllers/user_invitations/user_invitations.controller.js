@@ -144,7 +144,8 @@ exports.createUserInvitation = async (req, res) => {
 
         for (const email of emails) {
             const user = await User.findOne({
-                email: email
+                email: email,
+                "status.deleted": {$ne: 1}
             })
             if (user) {
                 return res.send(formatResult(400, `User with email (${email}) arleady exist`))
