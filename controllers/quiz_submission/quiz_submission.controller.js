@@ -305,22 +305,27 @@ router.get('/user/:user_name', async (req, res) => {
           quizes[i].target.faculty_college_year = course.faculty_college_year
 
         }
-        let quiz_submission = await findDocuments(Quiz_submission, {
+        let quiz_submissions = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
         })
 
-        quizes[i].total_submissions = quiz_submission.length
+        quizes[i].total_submissions = quiz_submissions.length
 
-        if (quiz_submission.length) {
-          quiz_submission = await injectUser(quiz_submission, 'user')
-          // quiz_submission = await injectQuiz(quiz_submission)
-          quiz_submission = await injectUserFeedback(quiz_submission)
+        let marking_status = 0
 
-          for (const k in quiz_submission) {
-            quiz_submission[k].quiz = await addAttachmentMediaPaths([quiz_submission[k].quiz])
-            quiz_submission[k].quiz = quiz_submission[k].quiz[0]
+        if (quiz_submissions.length) {
+
+
+          if(quiz_submissions[i])
+
+          quiz_submissions = await injectUser(quiz_submissions, 'user')
+          quiz_submissions = await injectUserFeedback(quiz_submissions)
+
+          for (const k in quiz_submissions) {
+            quiz_submissions[k].quiz = await addAttachmentMediaPaths([quiz_submissions[k].quiz])
+            quiz_submissions[k].quiz = quiz_submissions[k].quiz[0]
           }
-          quizes[i].submissions = quiz_submission
+          quizes[i].submissions = quiz_submissions
           foundSubmissions.push(quizes[i])
         }
       }
