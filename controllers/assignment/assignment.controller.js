@@ -8,16 +8,15 @@ const {updateDocument} = require("../../utils/imports");
 const {
     express,
     fs,
-    Quiz,
     Chapter,
     Course,
-    validate_assigment,
+    validate_assignment,
     path,
     Faculty_college_year,
     validateObjectId,
     _,
     addAttachmentMediaPaths,
-    addQuizUsages,
+    addAssignmentUsages,
     addAttachedCourse,
     findDocuments,
     formatResult,
@@ -27,13 +26,13 @@ const {
     createDocument,
     deleteDocument,
     simplifyObject,
-    Quiz_submission,
+    Assignment_submission,
     sendResizedImage,
     findFileType,
     streamVideo,
     u,
     upload_multiple_images,
-    addQuizTarget,
+    addAssignmentTarget,
     addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {
@@ -45,19 +44,13 @@ const router = express.Router()
 
 /**
  * @swagger
- * /assignments/user/{user_name}:
+ * /assignments:
  *   get:
  *     tags:
  *       - Assignment
- *     description: Returns assigmentes of a specified user
+ *     description: Returns assignments
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: user_name
- *         description: User's user_name
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -68,9 +61,9 @@ const router = express.Router()
  */
 router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
-        let assigments
+        let assignments
         if (req.user.category.name === "INSTRUCTOR") {
-            assigments = await findDocuments(Assignment, {
+            assignments = await findDocuments(Assignment, {
                 user: req.user._id
             }, u, u, u, u, u, {_id: -1})
         } else {
@@ -82,13 +75,13 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 user: {$in: _instructors.map(x => x._id.toString())}
             })
 
-            assigments = await findDocuments(Assignment, {
+            assignments = await findDocuments(Assignment, {
                 user: {$in: instructors.map(x => x._id.toString())},
                 status: {$in: ["PUBLISHED", "RELEASED"]}
             }, u, u, u, u, u, {_id: -1})
         }
 
-        return res.send(formatResult(u, u, assigments))
+        return res.send(formatResult(u, u, assignments))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -100,7 +93,7 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
  *   get:
  *     tags:
  *       - Assignment
- *     description: Returns a assigment with the specified id
+ *     description: Returns a assignment with the specified id
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -122,29 +115,29 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
 
         const isInstructor = req.user.category.name === 'INSTRUCTOR'
 
-        let assigment = await findDocument(Quiz, isInstructor ? {
+        let assignment = await findDocument(Assignment, isInstructor ? {
             _id: req.params.id,
             user: req.user._id
         } : {_id: req.params.id})
-        if (!assigment)
-            return res.send(formatResult(404, 'assigment not found'))
+        if (!assignment)
+            return res.send(formatResult(404, 'assignment not found'))
 
         let user_group
         let chapter
         let course
 
         if (!isInstructor) {
-            if (assigment.target.type === 'chapter') {
+            if (assignment.target.type === 'chapter') {
                 chapter = await findDocument(Chapter, {
-                    _id: assigment.target.id
+                    _id: assignment.target.id
                 })
                 course = await findDocument(Course, {
                     _id: chapter.course
                 })
                 user_group = course.user_group
-            } else if (assigment.target.type === 'course') {
+            } else if (assignment.target.type === 'course') {
                 course = await findDocument(Course, {
-                    _id: assigment.target.id
+                    _id: assignment.target.id
                 })
                 user_group = course.user_group
             }
@@ -153,10 +146,10 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 user_group: user_group
             })
             if (!user_user_group)
-                return res.send(formatResult(404, 'assigment not found'))
+                return res.send(formatResult(404, 'assignment not found'))
         }
 
-        return res.send(formatResult(u, u, assigment))
+        return res.send(formatResult(u, u, assignment))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -169,12 +162,12 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
  *   get:
  *     tags:
  *       - Assignment
- *     description: Returns the files attached to a specified assigment ( use format height and width only when the attachment is a picture)
+ *     description: Returns the files attached to a specified assignment ( use format height and width only when the attachment is a picture)
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz's id
+ *         description: Assignment's id
  *         in: path
  *         required: true
  *         type: string
@@ -212,18 +205,18 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const assigment = await findDocument(Quiz, {
+        const assignment = await findDocument(Assignment, {
             _id: req.params.id
         })
-        if (!assigment)
-            return res.send(formatResult(404, 'assigment not found'))
+        if (!assignment)
+            return res.send(formatResult(404, 'assignment not found'))
 
         let file_found = false
 
-        for (const i in assigment.questions) {
-            if (assigment.questions[i].type.includes('image_select')) {
-                for (const k in assigment.questions[i].options.choices) {
-                    if (assigment.questions[i].options.choices[k].src == req.params.file_name) {
+        for (const i in assignment.questions) {
+            if (assignment.questions[i].type.includes('image_select')) {
+                for (const k in assignment.questions[i].options.choices) {
+                    if (assignment.questions[i].options.choices[k].src == req.params.file_name) {
                         file_found = true
                         break
                     }
@@ -236,10 +229,10 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
             return res.send(formatResult(404, 'file not found'))
 
         const user = await findDocument(User, {
-            _id: assigment.user
+            _id: assignment.user
         })
 
-        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assigment._id}/${req.params.file_name}`)
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assignment._id}/${req.params.file_name}`)
 
         const file_type = await findFileType(req.params.file_name)
 
@@ -262,16 +255,16 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *   post:
  *     tags:
  *       - Assignment
- *     description: Create assigment
+ *     description: Create assignment
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
- *         description: Fields for a assigment
+ *         description: Fields for a assignment
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Quiz'
+ *           $ref: '#/definitions/Assignment'
  *     responses:
  *       201:
  *         description: Created
@@ -339,21 +332,21 @@ router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
  *   put:
  *     tags:
  *       - Assignment
- *     description: Update assigment
+ *     description: Update assignment
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz id
+ *         description: Assignment id
  *         in: path
  *         required: true
  *         type: string
  *       - name: body
- *         description: Fields for a assigment
+ *         description: Fields for a assignment
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Quiz'
+ *           $ref: '#/definitions/Assignment'
  *     responses:
  *       201:
  *         description: Created
@@ -377,7 +370,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        // check if assigment exist
+        // check if assignment exist
         let assignment = await findDocument(Assignment, {
             _id: req.params.id,
             user: req.user._id
@@ -387,8 +380,8 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
         let _copy = assignment
 
-        // check if assigmentname exist
-        assignment = await findDocument(Quiz, {
+        // check if assignmentname exist
+        assignment = await findDocument(Assignment, {
             _id: {
                 $ne: req.params.id
             },
@@ -408,7 +401,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
         await assignment.save()
 
-        assignment = await addQuizUsages([assignment])
+        assignment = await addAssignmentUsages([assignment])
         assignment = await addAttachedCourse(assignment)
         assignment = assignment[0]
         return res.send(formatResult(200, 'UPDATED', assignment))
@@ -419,19 +412,25 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
 /**
  * @swagger
- * /assignments/release_marks/{id}:
+ * /assignments/release_marks/{id}/{status}:
  *   put:
  *     tags:
  *       - Assignment
- *     description: Publish assigment marks
+ *     description: Publish assignment marks
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz id
+ *         description: Assignment id
  *         in: path
  *         required: true
  *         type: string
+ *       - name: status
+ *         description: Assignment id
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ["DRAFT","PUBLISHED","RELEASED"]
  *     responses:
  *       201:
  *         description: Created
@@ -442,7 +441,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/release_marks/:id', async (req, res) => {
+router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         let {
             error
@@ -450,32 +449,36 @@ router.put('/release_marks/:id', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        // check if course exist
-        let assigment = await findDocument(Quiz, {
-            _id: req.params.id
-        })
-        if (!assigment)
-            return res.send(formatResult(404, 'assigment not found'))
+        if (!["DRAFT", "PUBLISHED", "RELEASED"].includes(req.params.status))
+            return res.send(formatResult(400, "Invalid status"))
 
-
-        let result = await updateDocument(Quiz, req.params.id,
-            {
-                status: assigment.status == 1 ? 2 : 1
+            // check if course exist
+            let assignment = await findDocument(Assignment, {
+                _id: req.params.id
             })
-        if (assigment.status === 1) {
-            const submissions = await Quiz_submission.find({assigment: req.params.id}).populate('user')
-            for (const i in submissions) {
-                if (submissions[i].user.email) {
-                    await sendReleaseMarskEmail({
-                        email: submissions[i].user.email,
-                        user_names: `Mr${submissions[i].user.gender === 'female' ? 's' : ''} ${submissions[i].user.sur_name} ${submissions[i].user.other_names}`,
-                        instructor_names: req.user.sur_name + ' ' + req.user.other_names,
-                        assignment_name: assigment.name,
-                        assignment_type: 'assigment',
-                        link: `https://${process.env.FRONTEND_HOST}/assignments/${assigment.name}/${submissions[i].user.user_name}`
-                    })
-                }
-            }
+        if (!assignment)
+            return res.send(formatResult(404, 'assignment not found'))
+
+
+        let result = await updateDocument(Assignment, req.params.id,
+            {
+                status: req.params.status
+            })
+
+        if (assignment.status === "RELEASED") {
+            // const submissions = await Assignment_submission.find({assignment: req.params.id}).populate('user')
+            // for (const i in submissions) {
+            //     if (submissions[i].user.email) {
+            //         await sendReleaseMarskEmail({
+            //             email: submissions[i].user.email,
+            //             user_names: `Mr${submissions[i].user.gender === 'female' ? 's' : ''} ${submissions[i].user.sur_name} ${submissions[i].user.other_names}`,
+            //             instructor_names: req.user.sur_name + ' ' + req.user.other_names,
+            //             assignment_name: assignment.name,
+            //             assignment_type: 'assignment',
+            //             link: `https://${process.env.FRONTEND_HOST}/assignments/${assignment.name}/${submissions[i].user.user_name}`
+            //         })
+            //     }
+            // }
         }
         return res.send(result)
     } catch (error) {
@@ -489,12 +492,12 @@ router.put('/release_marks/:id', async (req, res) => {
  *   post:
  *     tags:
  *       - Assignment
- *     description: Upload assigment attacments
+ *     description: Upload assignment attacments
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz id
+ *         description: Assignment id
  *         in: path
  *         required: true
  *         type: string
@@ -516,14 +519,14 @@ router.post('/:id/attachment', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const assigment = await findDocument(Quiz, {
+        const assignment = await findDocument(Assignment, {
             _id: req.params.id
         })
-        if (!assigment)
-            return res.send(formatResult(404, 'assigment not found'))
+        if (!assignment)
+            return res.send(formatResult(404, 'assignment not found'))
 
         const user = await findDocument(User, {
-            _id: assigment.user
+            _id: assignment.user
         })
 
         const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
@@ -534,10 +537,10 @@ router.post('/:id/attachment', async (req, res) => {
 
         let file_missing = false
 
-        for (const i in assigment.questions) {
-            if (assigment.questions[i].type.includes('image_select')) {
-                for (const k in assigment.questions[i].options.choices) {
-                    const file_found = await fs.exists(`${path}/${assigment.questions[i].options.choices[k].src}`)
+        for (const i in assignment.questions) {
+            if (assignment.questions[i].type.includes('image_select')) {
+                for (const k in assignment.questions[i].options.choices) {
+                    const file_found = await fs.exists(`${path}/${assignment.questions[i].options.choices[k].src}`)
                     if (!file_found) {
                         file_missing = true
                     }
@@ -545,7 +548,7 @@ router.post('/:id/attachment', async (req, res) => {
             }
         }
         if (!file_missing)
-            return res.send(formatResult(400, 'all attachments for this assigment were already uploaded'))
+            return res.send(formatResult(400, 'all attachments for this assignment were already uploaded'))
 
         upload_multiple_images(req, res, async (err) => {
             if (err)
@@ -565,12 +568,12 @@ router.post('/:id/attachment', async (req, res) => {
  *   delete:
  *     tags:
  *       - Assignment
- *     description: Delete a assigment
+ *     description: Delete a assignment
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz id
+ *         description: Assignment id
  *         in: path
  *         required: true
  *         type: string
@@ -600,10 +603,10 @@ router.delete('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
 
-        // check if the assigment is never used
+        // check if the assignment is never used
         let used = false
 
-        const submission = await findDocument(Quiz_submission, {
+        const submission = await findDocument(Assignment_submission, {
             assignment: req.params.id
         })
         if (submission)
@@ -623,7 +626,7 @@ router.delete('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
             return res.send(result)
         }
 
-        await updateDocument(Quiz, req.params.id, {
+        await updateDocument(Assignment, req.params.id, {
             status: "DELETED"
         })
         return res.send(formatResult(200, 'DELETED'))
