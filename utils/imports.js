@@ -480,43 +480,27 @@ function removeIds(message) {
 
 // remove messages in the same discussion
 function removeDuplicateDiscussions(sentMessages, receivedMessages) {
-  console.log('ibyambere\n',sentMessages, receivedMessages)
+  let _sentMessagesCopy =  module.exports.simplifyObject(sentMessages), _receivedMessagesCopy = module.exports.simplifyObject(receivedMessages)
   let messagesToDelete = [
     // indices to remove in sentMessages
     [],
     // indices to remove in receivedMessages
     []
   ]
-  for (const i in sentMessages) {
-    for (const k in receivedMessages) {
-      console.log('_________________________\n',receivedMessages[k],sentMessages[i])
+  for (const i in _sentMessagesCopy) {
+    for (const k in _receivedMessagesCopy) {
       if (
-        (sentMessages[i].sender == receivedMessages[k].receivers[0].id && receivedMessages[k].sender == sentMessages[i].receivers[0].id) ||
-        (receivedMessages[k].sender == 'SYSTEM' && receiversMatch(sentMessages[i].receivers, receivedMessages[k].receivers))) {
-        if (sentMessages[i].realId > receivedMessages[k].realId) {
-          receivedMessages.splice(k, 1)
-          // messagesToDelete[1].push(parseInt(k))
+        (_sentMessagesCopy[i].sender == _receivedMessagesCopy[k].receivers[0].id && _receivedMessagesCopy[k].sender == _sentMessagesCopy[i].receivers[0].id) ||
+        (_receivedMessagesCopy[k].sender == 'SYSTEM' && receiversMatch(_sentMessagesCopy[i].receivers, _receivedMessagesCopy[k].receivers))) {
+        if (sentMessages[i].realId > _receivedMessagesCopy[k].realId) {
+          receivedMessages.splice(receivedMessages.indexOf(_receivedMessagesCopy[k]), 1)
         } else {
-          sentMessages.splice(i, 1)
-          // messagesToDelete[0].push(parseInt(i))
+          sentMessages.splice(sentMessages.indexOf(_sentMessagesCopy[i]), 1)
         }
       }
-      console.log(messagesToDelete, '_________________________\n')
     }
   }
 
-  if (messagesToDelete[0].length > 0) {
-    for (const index of messagesToDelete[0]) {
-      sentMessages.splice(index, 1)
-    }
-  }
-  if (messagesToDelete[1].length > 0) {
-    for (const index of messagesToDelete[1]) {
-      console.log(index)
-      receivedMessages.splice(index, 1)
-    }
-  }
-  console.log('ibyanyuma\n',sentMessages, receivedMessages)
   return {
     sent: sentMessages,
     received: receivedMessages
@@ -755,12 +739,13 @@ module.exports.getLatestMessages = async (user_id) => {
     }
   }
   ])
+  
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
   const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
 
   for (const message of receivedMessages) {
-    if (!systemMessageFound.length)
+    if (!systemMessageFound.length || receivedMessages.length === 1)
       latestMessages.push(message)
     else {
       if (!latestMessages.includes(message)) {

@@ -56,10 +56,8 @@ module.exports.listen = (app) => {
     socket.on('message/contacts', async () => {
       // get the latest conversations
       const latestMessages = await getLatestMessages(id)
-
       // format the contacts
       const contacts = await formatContacts(latestMessages, id)
-
       // send the contacts
       socket.emit('res/message/contacts', {
         contacts: contacts
@@ -92,7 +90,6 @@ module.exports.listen = (app) => {
       receiver,
       content
     }) => {
-      console.log(receiver)
       const receiver_type = typeof receiver
 
       const { error } = validate_message({ sender: user_name, receiver: receiver_type === 'string' ? receiver : receiver.toString(), content: content })
@@ -133,7 +130,6 @@ module.exports.listen = (app) => {
 
       // avoid dupplicate initialisation
       const conversation_found = await getConversationMessages({ user_id: id, conversation_id: conversation_id, limit: 1 })
-console.log('ahaaaaaaaaaaaaaaiiii',conversation_found)
       if (!conversation_found.length) {
 
         const user = await findDocument(User, { user_name: conversation_id })

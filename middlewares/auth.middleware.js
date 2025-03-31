@@ -12,7 +12,7 @@ function auth(req, res, next) {
         next()
     }
     catch (err) {
-        res.send(formatResult(401, 'Invalid Token'))
+        res.send(formatResult(401, 'Invalid Token', err))
     }
 }
 module.exports.auth = auth
