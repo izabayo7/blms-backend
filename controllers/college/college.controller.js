@@ -78,7 +78,7 @@ router.get('/', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
         let colleges = await findDocuments(College)
         if (!colleges.length)
             return res.send(formatResult(404, 'College list is empty'))
-        colleges = await injectLogoMediaPaths(colleges)
+        colleges = await injectMediaPaths(colleges)
         return res.send(formatResult(u, u, colleges))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -115,7 +115,7 @@ router.get('/name/:name', auth, async (req, res) => {
         })
         if (!college)
             return res.send(formatResult(404, 'College not found'))
-        college = await injectLogoMediaPaths([college])
+        college = await injectMediaPaths([college])
         college = college[0]
         return res.send(formatResult(u, u, college))
     } catch (error) {
@@ -154,7 +154,7 @@ router.get('/open/:name', async (req, res) => {
         })
         if (!college)
             return res.send(formatResult(404, 'College not found'))
-        college = await injectLogoMediaPaths([college])
+        college = await injectMediaPaths([college])
         college = college[0]
         return res.send(formatResult(u, u, college))
     } catch (error) {
@@ -198,7 +198,7 @@ router.get('/:id', auth, async (req, res) => {
         })
         if (!college)
             return res.status(404).send(`College ${req.params.id} Not Found`)
-        college = await injectLogoMediaPaths([college])
+        college = await injectMediaPaths([college])
         college = college[0]
         return res.send(formatResult(u, u, college))
     } catch (error) {
@@ -362,7 +362,7 @@ router.post('/', async (req, res) => {
             // phone: req.body.phone
         })
 
-        result = await injectLogoMediaPaths([result])
+        result = await injectMediaPaths([result])
         result = result[0]
         return res.send(result)
 
@@ -458,7 +458,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
         }
         // never go back to trial
         let result = await updateDocument(College, req.params.id, req.body)
-        result.data = await injectLogoMediaPaths([result.data])
+        result.data = await injectMediaPaths([result.data])
         result.data = result.data[0]
         return res.send(result)
     } catch (error) {
@@ -468,7 +468,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
 
 /**
  * @swagger
- * /college/{id}/logo:
+ * /college/{id}/{pictureType}:
  *   put:
  *     tags:
  *       - College
@@ -483,6 +483,12 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
+ *       - name: pictureType
+ *         description: Type of the picture to get
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: [logo, banner]
  *       - in: formData
  *         name: file
  *         type: file
@@ -497,8 +503,15 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/logo', auth, filterUsers(['ADMIN']), async (req, res) => {
+router.put('/:id/:pictureType', auth, filterUsers(['ADMIN']), async (req, res) => {
     try {
+
+        const {
+            pictureType
+        } = req.params;
+        if (!pictureTypes.includes(pictureType))
+            return res.send(formatResult(404, 'invalid picture type'))
+
         let {
             error
         } = validateObjectId(req.params.id)
@@ -541,16 +554,16 @@ router.put('/:id/logo', auth, filterUsers(['ADMIN']), async (req, res) => {
         upload_single_image(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
-            if (college.logo && college.logo != req.file.filename) {
-                fs.unlink(`${path}/${college.logo}`, (err) => {
+            if (college[pictureType] && college[pictureType] != req.file.filename) {
+                fs.unlink(`${path}/${college[pictureType]}`, (err) => {
                     if (err)
                         return res.send(formatResult(500, err))
                 })
             }
             const result = await updateDocument(College, req.params.id, {
-                logo: req.file.filename
+                [pictureType]: req.file.filename
             })
-            result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
+            result.data[pictureType] = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data[pictureType]}`
             return res.send(result)
         })
     } catch (error) {
@@ -702,10 +715,13 @@ async function checkCollegeNameExistance(req, res) {
     }
 };
 
-async function injectLogoMediaPaths(colleges) {
+async function injectMediaPaths(colleges) {
     for (const i in colleges) {
         if (colleges[i].logo) {
             colleges[i].logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/college/${colleges[i].name}/logo/${colleges[i].logo}`
+        }
+        if (colleges[i].banner) {
+            colleges[i].banner = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/college/${colleges[i].name}/logo/${colleges[i].banner}`
         }
     }
     return colleges
