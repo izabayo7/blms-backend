@@ -263,13 +263,15 @@ router.get('/user/:user_name', async (req, res) => {
 
 /**
  * @swagger
- * /course/user/{userId}/{courseName}:
+ * /course/user/{user_name}/{courseName}:
  *   get:
  *     tags:
  *       - Course
  *     description: Returns a course with the specified name
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
- *       - name: userId
+ *       - name: user_name
  *         description: User id
  *         in: path
  *         required: true
