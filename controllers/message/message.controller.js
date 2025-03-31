@@ -85,6 +85,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Message
  *     description: Returns messages to and from a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: user_name
  *         description: Users's user_name
