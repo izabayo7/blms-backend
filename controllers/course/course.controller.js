@@ -214,6 +214,9 @@ router.get('/college', async (req, res) => {
                     let total_chapters = await countDocuments(Chapter, { course: courses[i]._id })
                     courses[i].total_topics = total_chapters
 
+                    if (!courses[i].total_marks)
+                        courses[i].total_marks = 0
+
                     foundCourses.push(courses[i])
                 }
             }
