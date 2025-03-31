@@ -3,6 +3,7 @@ const {
     mongoose,
     Joi,
     timestamps,
+    base64EncodedImage,
 } = require('../../utils/imports')
 const member_schema = new mongoose.Schema({
     id: {
@@ -74,9 +75,16 @@ function validate_chat_group(credentials, method = 'create') {
             user_name: Joi.string().required()
         }).required()
     } : {
-        name: Joi.string().required(), // regex needed
-        desctiption: Joi.string(),
-        status: Joi.number(),
+                name: Joi.string().required(), // regex needed
+                desctiption: Joi.string(),
+                status: Joi.number(),
+            }
+    return Joi.validate(credentials, schema)
+}
+
+function validate_chat_group_profile_udpate(credentials) {
+    const schema = method == {
+        profile: Joi.string().regex(base64EncodedImage).required()
     }
     return Joi.validate(credentials, schema)
 }

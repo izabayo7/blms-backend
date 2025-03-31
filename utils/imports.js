@@ -1278,9 +1278,7 @@ exports.decodeAuthToken = async ({
 }
 
 // all regex expressions
-exports.Patterns = {
-  promotionPattern: /\b[y][e][a][r][_][0-9]\b/ // work on these regex staff
-}
+exports.base64EncodedImage = /^data:([A-Za-z-+\/]+);base64,(.+)$/;
 
 exports.add_user_details = async (users) => {
   for (const i in users) {

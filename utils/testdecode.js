@@ -2,7 +2,7 @@ const fs = require('fs')
 var data = 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAA..kJggg==';
 
 function decodeBase64Image(dataString) {
-    var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
+    var matches = dataString.match(),
         response = {};
 
     if (matches.length !== 3) {

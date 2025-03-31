@@ -608,6 +608,14 @@ router.put('/:code', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
+ *        - name: body
+ *          description: Fields for chatgroup profile upload (profile takes base64 encoded string)
+ *          in: body
+ *          required: true
+ *          schema:
+ *            properties:
+ *              profile:
+ *                type: string
  *     responses:
  *       201:
  *         description: Created
