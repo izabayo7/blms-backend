@@ -406,7 +406,7 @@ router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req,
                 status: "ACTIVE"
             }).populate('user')
             for (const j in user_user_groups) {
-                if (user_user_groups[j].user.category === user_category._id || req.params.category === 'ALL')
+                if (!user_category || user_user_groups[j].user.category === user_category._id)
                     result.push(user_user_groups[j].user)
             }
         }
