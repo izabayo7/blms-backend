@@ -113,6 +113,8 @@ const router = express.Router()
  *     tags:
  *       - User
  *     description: Get all Users
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
@@ -121,7 +123,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     let users = await findDocuments(User)
 
@@ -149,6 +151,14 @@ router.get('/', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
+ *       - name: category
+ *         description: User category
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ['STUDENT','INSTRUCTOR', 'ALL']
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
@@ -157,13 +167,16 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id', async (req, res) => {
+router.get('/college/:id/:category', auth, async (req, res) => {
   try {
     const {
       error
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
+
+    if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
+      return res.send(formatResult(400, "Invalid category"))
 
     let college = await findDocument(College, {
       _id: req.params.id
@@ -202,7 +215,7 @@ router.get('/college/:id', async (req, res) => {
  *         required: true
  *         type: string
  *       - name: category
- *         description: User type
+ *         description: User category
  *         in: path
  *         required: true
  *         type: string
