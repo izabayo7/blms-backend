@@ -657,8 +657,9 @@ exports.replaceUserIds = async (messages, userId) => {
             }
             messages[messagesKey].content = messageSegments.join(" ")
         }
-        if (messages[messagesKey].attachments.length)
-            messages[messagesKey] = this.injectAttachementsMediaPath(messages[messagesKey])
+        if (messages[messagesKey].attachment)
+            if (messages[messagesKey].attachments.length)
+                messages[messagesKey] = this.injectAttachementsMediaPath(messages[messagesKey])
     }
     return messages
 }
