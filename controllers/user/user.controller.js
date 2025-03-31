@@ -34,7 +34,8 @@ const {
   Faculty_college_year,
   upload_single_image,
   Compress_images,
-  Chat_group
+  Chat_group,
+  Quiz
 } = require('../../utils/imports')
 
 // create router
