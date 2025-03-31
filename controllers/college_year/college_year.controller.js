@@ -33,6 +33,8 @@ const router = express.Router()
  *     tags:
  *       - College_year
  *     description: Get all college_years
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
