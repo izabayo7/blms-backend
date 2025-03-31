@@ -49,7 +49,7 @@ function validate_chapter(credentials, document = false) {
         name: Joi.string().min(3).required(),
         number: Joi.number().min(1),
         course: Joi.ObjectId().required(),
-        description: Joi.string().max(500).min(10),
+        description: Joi.string().max(1000).min(10),
         document: Joi.string(),
         attachments: Joi.array().items(Joi.object({
             _id: Joi.ObjectId(),

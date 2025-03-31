@@ -48,7 +48,7 @@ function validate_course(credentials) {
         name: Joi.string().min(3).required(),
         user: Joi.ObjectId().required(),
         faculty_college_year: Joi.ObjectId().required(),
-        description: Joi.string().max(500).min(10),
+        description: Joi.string().max(1000).min(10),
         cover_picture: Joi.string(),
         published: Joi.boolean(),
         status: Joi.number().min(0).max(1)
