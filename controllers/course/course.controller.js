@@ -234,9 +234,27 @@ router.get('/statistics/user_access', async (req, res) => {
 router.get('/statistics/creations', async (req, res) => {
     try {
         const { start_date, end_date } = req.query
+
+        const faculty_college_years = []
+
+        let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+        if (!faculty_college.length)
+            return res.send(formatResult(404, 'courses not found'))
+
+        for (const i in faculty_college) {
+            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+            if (!faculty_college_year.length)
+                continue
+
+            for (const k in faculty_college_year) {
+                faculty_college_years.push(faculty_college_year[k]._id.toString())
+            }
+
+        }
+
         const result = await Course.aggregate([
             { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
-            // { "$match": { college: req.user.college } },
+            { "$match": { faculty_college_year: { $in: faculty_college_years } } },
             {
                 "$group": {
                     "_id": {
