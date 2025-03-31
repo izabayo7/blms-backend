@@ -25,24 +25,13 @@ const router = express.Router()
 
 /**
  * @swagger
- * /announcement/{target}/{id}:
+ * /announcement/user:
  *   get:
  *     tags:
  *       - Announcement
  *     description: Returns announcements in the specified target
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: target
- *         description: target type
- *         in: path
- *         required: true
- *         type: string
- *       - name: id
- *         description: target id
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -89,8 +78,9 @@ router.get('/user', async (req, res) => {
                 {"target.id": {$in: ids}},
                 {user: req.user._id},
             ]
-        }).sort({_id: -1})
+        }).populate('viewers').sort({_id: -1})
         announcements = await injectUser(announcements, 'sender')
+
         return res.send(formatResult(u, u, announcements))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -260,6 +250,58 @@ router.put('/:id', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
 
         const result = await updateDocument(Announcement, req.params.id, req.body)
         return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
+ * /announcement/viewed/{id}:
+ *   put:
+ *     tags:
+ *       - Announcement
+ *     description: Record announcement viewers
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Announcement's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/viewed/:id', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, "invalid id"))
+
+        const announcement = await Announcement.findOne({
+            _id: req.params.id
+        })
+        if (!announcement)
+            return res.send(formatResult(404, 'announcement not found'))
+
+        if (announcement.viewers.includes(req.user._id.toString()))
+            return res.send(formatResult(200, 'view already recorded'))
+
+        announcement.viewers.push(req.user._id.toString())
+        await announcement.save()
+
+        return res.send(formatResult(u, u, "View successfully recorded"))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
