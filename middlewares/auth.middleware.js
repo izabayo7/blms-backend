@@ -8,7 +8,12 @@ function auth(req, res, next) {
         return res.send(formatResult(401, 'No Token Found'))
     try {
         const decoded = jwt.verify(token, config.get('auth_key'))
-        req.user = decoded
+        const user = await User.findOne({
+            user_name: decoded.user_name
+        })
+        if (!user)
+            return res.send(formatResult(401, 'Invalid Token'))
+        req.user = user
         next()
     }
     catch (err) {
