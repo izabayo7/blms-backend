@@ -1,5 +1,5 @@
 // import dependencies
-const { Schema } = require('mongoose')
+const {Schema} = require('mongoose')
 const {
     mongoose,
     Joi,
@@ -27,6 +27,11 @@ const live_session_schema = new mongoose.Schema({
     },
     quiz: {
         type: Schema.Types.ObjectId
+    },
+    status: {
+        type: String,
+        enum: ["PENDING","LIVE","FINISHED"],
+        default: "PENDING"
     }
 })
 
