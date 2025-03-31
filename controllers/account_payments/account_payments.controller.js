@@ -1,4 +1,5 @@
 // import dependencies
+const {calculateAmount} = require("../../utils/imports");
 const {User_category} = require("../../utils/imports");
 const {findDocument} = require("../../utils/imports");
 const {User} = require("../../utils/imports");
@@ -198,7 +199,9 @@ async function createPayment(req, res) {
         if (payment)
             balance -= payment.balance
 
-        const startingDate = findPaymentStartingTime(payment)
+
+        const startingDate = payment ? payment.endingDate : new Date().toISOString()
+        const endingDate = findPaymentEndingTime(startingDate, req.body.periodType, req.body.periodValue)
 
         // subtract the current months user value directly
 
@@ -209,6 +212,7 @@ async function createPayment(req, res) {
             balance,
             total_users: req.body.total_users,
             startingDate,
+            endingDate,
             periodType: req.body.periodType,
             periodValue: req.body.periodValue,
         }
@@ -267,10 +271,11 @@ async function getTotalBills(req, res) {
 
         const payment = await Account_payments.findOne({user: req.user._id, status: 'ACTIVE'})
 
-        const startingDate = findPaymentStartingTime(payment)
+        let startingDate = new Date().toISOString()
 
         if (payment) {
             amount -= payment.balance
+            startingDate = new Date(payment.endingDate).toISOString()
         }
 
         return res.send(formatResult(u, u, {amount, startingDate}));
@@ -279,63 +284,17 @@ async function getTotalBills(req, res) {
     }
 }
 
-function findPaymentStartingTime(previousPayment) {
-    const today = new Date()
+function findPaymentEndingTime(startingDate, periodType, periodValue) {
 
-    if (!previousPayment)
-        return today.toISOString()
-
-    const endDate = new Date(previousPayment.startingDate)
-    switch (previousPayment.periodType) {
+    const endDate = new Date(startingDate)
+    switch (periodType) {
         case 'MONTH': {
-            return new Date(endDate.setMonth(endDate.getMonth() + previousPayment.periodValue)).toISOString()
+            return new Date(endDate.setMonth(endDate.getMonth() + periodValue)).toISOString()
         }
         case 'YEAR': {
-            return new Date(endDate.setFullYear(endDate.getFullYear() + previousPayment.periodValue)).toISOString()
+            return new Date(endDate.setFullYear(endDate.getFullYear() + periodValue)).toISOString()
         }
     }
-}
-
-async function calculateAmount(collegePlan, periodType, periodValue, total_users) {
-
-    switch (collegePlan.plan) {
-        case 'HUGUKA': {
-            if (periodType === 'MONTH')
-                return 4000 * periodValue
-            else if (periodType === 'YEAR')
-                return ((4000 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
-        }
-            break;
-        case 'JIJUKA': {
-            if (periodType === 'MONTH')
-                return 2500 * periodValue * total_users
-            else if (periodType === 'YEAR')
-                return ((2500 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_users
-        }
-            break;
-        case 'MINUZA_STARTER': {
-            if (periodType === 'MONTH')
-                return 2299 * periodValue * 200
-            else if (periodType === 'YEAR')
-                return ((2299 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * 200
-        }
-            break;
-        case 'MINUZA_GROWTH': {
-            if (periodType === 'MONTH')
-                return 1899 * periodValue * 600
-            else if (periodType === 'YEAR')
-                return ((1899 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * 600
-        }
-            break;
-        case 'MINUZA_ACCELERATE': {
-            if (periodType === 'MONTH')
-                return 1599 * periodValue * total_users
-            else if (periodType === 'YEAR')
-                return ((1599 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_users
-        }
-            break;
-    }
-
 }
 
 /**
@@ -375,8 +334,6 @@ async function getPaymentStatus(req, res) {
 
         if (!payment) return res.send(formatResult(u, 'You don\'t have a payment'));
 
-        const endDate = findPaymentStartingTime(payment)
-
         // {
         //     startDate,
         //         endDate,
@@ -385,7 +342,7 @@ async function getPaymentStatus(req, res) {
 
         return res.send(formatResult(200, u, {
             startDate: payment.startingDate,
-            endDate,
+            endDate: payment.endingDate,
             balance: payment.balance
         }));
     } catch (err) {

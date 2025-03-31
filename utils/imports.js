@@ -230,6 +230,48 @@ exports.update_password = async ({password, user_id}) => {
     });
 }
 
+exports.calculateAmount = (collegePlan, periodType, periodValue, total_users) => {
+
+    switch (collegePlan.plan) {
+        case 'HUGUKA': {
+            if (periodType === 'MONTH')
+                return 4000 * periodValue
+            else if (periodType === 'YEAR')
+                return ((4000 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
+        }
+            break;
+        case 'JIJUKA': {
+            if (periodType === 'MONTH')
+                return 2500 * periodValue * total_users
+            else if (periodType === 'YEAR')
+                return ((2500 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_users
+        }
+            break;
+        case 'MINUZA_STARTER': {
+            if (periodType === 'MONTH')
+                return 2299 * periodValue * 200
+            else if (periodType === 'YEAR')
+                return ((2299 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * 200
+        }
+            break;
+        case 'MINUZA_GROWTH': {
+            if (periodType === 'MONTH')
+                return 1899 * periodValue * 600
+            else if (periodType === 'YEAR')
+                return ((1899 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * 600
+        }
+            break;
+        case 'MINUZA_ACCELERATE': {
+            if (periodType === 'MONTH')
+                return 1599 * periodValue * total_users
+            else if (periodType === 'YEAR')
+                return ((1599 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_users
+        }
+            break;
+    }
+
+}
+
 /**
  *  returns a formatted result (made to avoid console errors caused by statuses and to utilise the results we give)
  * @param {Number} status  Status code

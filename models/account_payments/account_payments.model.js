@@ -29,6 +29,9 @@ const {
  *       startingDate:
  *         type: string
  *         formate: date
+ *       endingDate:
+ *         type: string
+ *         formate: date
  *       status:
  *         type: string
  *         enum: ['ACTIVE', 'INACTIVE']
@@ -93,6 +96,10 @@ const userPaymentsSchema = new mongoose.Schema({
         ref: "college"
     },
     startingDate: {
+        type: Date,
+        required: true
+    },
+    endingDate: {
         type: Date,
         required: true
     },
