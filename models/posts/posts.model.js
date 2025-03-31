@@ -6,6 +6,38 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
+/**
+ * @swagger
+ * definitions:
+ *   Post:
+ *     properties:
+ *       creator:
+ *         type: string
+ *       title:
+ *         type: string
+ *         description: post title
+ *       content:
+ *         type: string
+ *         description: inviters id
+ *       cover_picture:
+ *         type: string
+ *       likes:
+ *         type: array
+ *         items:
+ *           type: string
+ *       dislikes:
+ *         type: array
+ *         items:
+ *           type: string
+ *       status:
+ *         type: string
+ *         enum: ['DRAFT', 'PUBLISHED', 'DELETED']
+ *     required:
+ *       - creator
+ *       - title
+ *       - content
+ */
+
 const post_schema = new mongoose.Schema({
     creator: {
         type: Schema.Types.ObjectId,
