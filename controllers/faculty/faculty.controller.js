@@ -345,6 +345,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - Faculty
  *     description: Delete as Faculty
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Faculty's id
