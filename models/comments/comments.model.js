@@ -9,6 +9,7 @@ const {
 const comment_schema = new mongoose.Schema({
     sender: {
         type: Schema.Types.ObjectId,
+        ref: 'user',
         required: true
     },
     target: {

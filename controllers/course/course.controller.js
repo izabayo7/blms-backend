@@ -170,20 +170,27 @@ router.get('/statistics/user', async (req, res) => {
         let total_courses = 0
         if (req.user.category.name == "INSTRUCTOR") {
 
-            let courses = await Course.find({user: req.user._id},{_id:1})
+            let courses = await Course.find({user: req.user._id}, {_id: 1})
             const course_ids = courses.map(x => x._id.toString())
             let students = await User_progress.distinct('user', {course: {$in: course_ids}})
 
-            let chapters = await Chapter.find({course: {$in: course_ids}},{_id:1})
+            let chapters = await Chapter.find({course: {$in: course_ids}}, {_id: 1})
 
             let comments = await Comment.find({
                 "target.type": 'chapter',
                 "target.id": {$in: chapters.map(x => x._id.toString())}
-            }).sort({_id:-1}).limit(4)
+            }).populate('sender',
+                {sur_name: 1, other_names: 1, user_name: 1,_id:0}
+            ).sort({_id: -1}).limit(4)
 
-            return res.send(formatResult(u, u, {total_courses: courses.length, total_students: students.length, latestComments: comments}))
+            return res.send(formatResult(u, u, {
+                total_courses: courses.length,
+                total_students: students.length,
+                latestComments: comments
+            }))
         }
-    } catch (error) {
+    } catch
+        (error) {
         return res.send(formatResult(500, error))
     }
 })
