@@ -17,7 +17,10 @@ const {
   College,
   deleteDocument,
   sendResizedImage,
-  u
+  u,
+  upload_single_image,
+  Compress_images,
+  fs
 } = require('../../utils/imports')
 
 // create router
@@ -380,6 +383,81 @@ router.put('/:id', async (req, res) => {
 
     return res.send(result)
   } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chat_group/{id}/profile:
+ *   put:
+ *     tags:
+ *       - Chat_group
+ *     description: Upload chat_group profile (file upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: Chat_group id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/profile', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if chat_group exist
+    const chat_goup = await findDocument(Chat_group, {
+      _id: req.params.id
+    })
+    if (!chat_goup)
+      return res.send(formatResult(404, 'chat_group not found'))
+
+    const path = `./uploads/colleges/${chat_goup.college}/chat/groups/${req.params.id}`
+    const temp_path = `./uploads/colleges/${chat_goup.college}/temp`
+    req.kuriousStorageData = {
+      dir: temp_path,
+    }
+    upload_single_image(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+
+      await Compress_images(temp_path, path)
+
+      setTimeout(() => {
+        fs.unlink(`${temp_path}/${req.file.filename}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }, 1000);
+
+      if (chat_goup.profile && chat_goup.profile != req.file.filename) {
+        fs.unlink(`${path}/${chat_goup.profile}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }
+      const result = await updateDocument(Chat_group, req.params.id, {
+        profile: req.file.filename
+      })
+      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${req.params.id}/profile/${result.data.profile}`
+      return res.send(result)
+    })
+
+  } catch (error) {
+    console.log(error)
     return res.send(formatResult(500, error))
   }
 })
