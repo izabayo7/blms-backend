@@ -1413,7 +1413,7 @@ exports.injectFaculty_college_year = async (courses) => {
     }, { college_year: 1, faculty_college: 1 }, true, false)
 
     courses[i].faculty_college_year = faculty_college_year
-    console.log(faculty_college_year) 
+
     const collegeYear = await this.findDocument(this.College_year, {
       _id: faculty_college_year.college_year
     }, { digit: 1 }, true, false)

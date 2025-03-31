@@ -201,7 +201,7 @@ router.get('/user/:user', async (req, res) => {
 
     let quiz = await findDocuments(Quiz, {
       user: user._id
-    })
+    }, u, u, u, u, u, { _id: -1 })
 
     quiz = await addAttachmentMediaPaths(quiz)
     quiz = await addQuizUsages(quiz)
