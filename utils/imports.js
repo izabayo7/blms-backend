@@ -1259,7 +1259,7 @@ exports.generateAuthToken = async (user) => {
     college: user.college,
     profile: user.profile,
   }, this.config.get('auth_key'), {
-    expiresIn: this.ONE_DAY / 1000
+    expiresIn: this.ONE_DAY * 7 / 1000
   })
 }
 
