@@ -462,17 +462,16 @@ module.exports.listen = (app) => {
 
 
         // tell user that someone replied his or her comment
-        socket.on('comment-replied', async ({
-                                                userName,
-                                                route,
-                                                comment_id
-                                            }) => {
-
+        socket.on('chapter-comment', async ({
+                                        userName,
+                                        route,
+                                        content
+                                    }) => {
 
             let newDocument = new Notification({
                 user: id,
-                content: 'replied your comment',
-                link: `${route}#${comment_id}`,
+                content: content,
+                link: route,
             })
             const saveDocument = await newDocument.save()
             if (saveDocument) {
