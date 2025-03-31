@@ -418,6 +418,8 @@ router.get('/:code', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Send a chat_group
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a chat_group
