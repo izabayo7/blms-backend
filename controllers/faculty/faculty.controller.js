@@ -107,16 +107,21 @@ exports.createFaculty = async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
+    req.body.college = req.user.college
+    req.body.created_by = req.user._id
+
+    // ensure no redundancy
+    req.body.name = req.body.name.toLowerCase();
+
     // check name is available
     let faculty = await findDocument(Faculty, {
-      name: req.body.name
+      name: req.body.name,
+      college: req.user.college,
     })
     if (faculty)
       return res.send(formatResult(403, 'name was taken'))
 
-    let result = await createDocument(Faculty, {
-      name: req.body.name,
-    })
+    let result = await createDocument(Faculty, req.body)
 
     return res.send(result)
   } catch (error) {

@@ -62,7 +62,7 @@ faculty_schema.plugin(paginate)
 function validate_faculty(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
-        college: Joi.string().required(),
+        // college: Joi.string().required(),
         description: Joi.string()
     }
     return Joi.validate(credentials, schema)
