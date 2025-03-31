@@ -371,6 +371,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - College
  *     description: Upload college logo (file upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: College id
