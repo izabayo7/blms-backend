@@ -70,7 +70,8 @@ function validateQuiz(body) {
             },
         })).required(),
         totalMarks: Joi.number(),
-        instructor: Joi.ObjectId().required()
+        instructor: Joi.ObjectId().required(),
+        published: Joi.boolean()
     }
     return Joi.validate(body, schema)
 }
