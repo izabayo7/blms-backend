@@ -227,6 +227,8 @@ router.get('/user/:user_name', async (req, res) => {
  *     tags:
  *       - Faculty_college_year
  *     description: Create faculty_college_year
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a faculty_college_year
