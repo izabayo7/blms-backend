@@ -701,7 +701,7 @@ router.get('/chapterMainVideo/:id/:file_name', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/quizAttachedFiles/{quiz}/{picture}:
+ * /kurious/file/quizAttachedFiles/{quiz}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -725,7 +725,7 @@ router.get('/chapterMainVideo/:id/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/quizAttachedFiles/:quiz/:picture', async (req, res) => {
+router.get('/quizAttachedFiles/:quiz/:file_name', async (req, res) => {
     try {
 
         const {

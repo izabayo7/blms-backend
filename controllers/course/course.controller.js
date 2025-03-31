@@ -235,16 +235,14 @@ router.get('/instructor/:instructorId/:courseName', async (req, res) => {
     if (!instructor)
       return res.status(404).send(`Sudent with code ${req.params.instructorId} doens't exist`)
 
-    let courses = await Course.find({
-      instructor: req.params.instructorId
+    let course = await Course.findOne({
+      instructor: req.params.instructorId,
+      name: req.params.courseName
     }).lean()
-    if (courses.length < 1)
+    if (!course)
       return res.status(404).send(`The requested course was not found`)
-    let course = courses.filter(c => c.name == req.params.courseName)
-    if (course.length < 1) {
-      return res.status(404).send(`The requested course was not found`)
-    }
-    course = await injectChapters(course)
+
+    course = await injectChapters([course])
     course = await injectFacultyCollegeYear(course)
 
     return res.status(200).send(course[0])
@@ -442,37 +440,37 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-  const {
-    error
-  } = validateCourse(req.body)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+    const {
+      error
+    } = validateCourse(req.body)
+    if (error)
+      return res.status(400).send(error.details[0].message)
 
-  let facultyCollegeYear = await FacultyCollegeYear.findOne({
-    _id: req.body.facultyCollegeYear
-  })
-  if (!facultyCollegeYear)
-    return res.status(404).send(`facultyCollegeYear of Code ${req.body.facultyCollegeYear} Not Found`)
+    let facultyCollegeYear = await FacultyCollegeYear.findOne({
+      _id: req.body.facultyCollegeYear
+    })
+    if (!facultyCollegeYear)
+      return res.status(404).send(`facultyCollegeYear of Code ${req.body.facultyCollegeYear} Not Found`)
 
-  let newDocument = new Course({
-    name: req.body.name,
-    instructor: req.body.instructor,
-    facultyCollegeYear: req.body.facultyCollegeYear,
-    description: req.body.description,
-    coverPicture: req.file === undefined ? undefined : req.file.filename
-  })
+    let newDocument = new Course({
+      name: req.body.name,
+      instructor: req.body.instructor,
+      facultyCollegeYear: req.body.facultyCollegeYear,
+      description: req.body.description,
+      coverPicture: req.file === undefined ? undefined : req.file.filename
+    })
 
-  let saveDocument = await newDocument.save()
-  if (!saveDocument)
-    return res.status(500).send('New Course not Registered')
+    let saveDocument = await newDocument.save()
+    if (!saveDocument)
+      return res.status(500).send('New Course not Registered')
 
-  saveDocument= JSON.parse(JSON.stringify(saveDocument))
-  saveDocument = await injectChapters([saveDocument])
-  saveDocument = await injectFacultyCollegeYear(saveDocument)
-  return res.status(201).send(saveDocument[0])
-} catch (error) {
-  return res.status(500).send(error)
-}
+    saveDocument = JSON.parse(JSON.stringify(saveDocument))
+    saveDocument = await injectChapters([saveDocument])
+    saveDocument = await injectFacultyCollegeYear(saveDocument)
+    return res.status(201).send(saveDocument[0])
+  } catch (error) {
+    return res.status(500).send(error)
+  }
 })
 
 /**
@@ -658,7 +656,7 @@ async function injectInstructor(courses) {
 }
 
 // add chapters in their parent courses
-async function  injectChapters(courses) {
+async function injectChapters(courses) {
   for (const i in courses) {
     courses[i].assignmentsLength = 0
     // add course cover picture media path

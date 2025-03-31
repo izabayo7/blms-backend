@@ -9,7 +9,8 @@ const {
   validateQuiz,
   FacilityCollegeYear,
   validateObjectId,
-  _
+  _,
+  StudentFacultyCollegeYear
 } = require('../../utils/imports')
 const {
   parseInt
@@ -132,10 +133,94 @@ router.get('/instructor/:id', async (req, res) => {
   }
 })
 
+// Get quizes for a specific instructor by name
+router.get('/instructor/:id/:quiz_name', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+
+    let instructor = await Instructor.findOne({
+      _id: req.params.id
+    })
+    if (!instructor)
+      return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
+
+    let quiz = await Quiz.findOne({
+      instructor: req.params.id,
+      name: req.params.quiz_name
+    }).lean()
+
+    if (!quiz)
+      return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
+
+    quiz = await addAttachmentMediaPaths([quiz])
+
+    return res.status(200).send(quiz[0])
+  } catch (error) {
+    return res.status(500).send(error)
+  }
+})
+
+// Get quizes for a specific student by name
+router.get('/student/:id/:quiz_name', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.status(400).send(error.details[0].message)
+
+    let student = await Student.findOne({
+      _id: req.params.id
+    })
+    if (!student)
+      return res.status(404).send(`Student with Code ${req.params.id} Not Found`)
+
+    let quiz = await Quiz.find({
+      name: req.params.quiz_name,
+      published: true
+    }).lean()
+
+    if (!quiz)
+      return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
+
+    let facultycollegeyear = ''
+    let chapter
+    let course = ''
+
+    if (quiz.target.type === 'chapter') {
+      chapter = await Chapter.findOne({ _id: quiz.target.id })
+      course = await Course.findOne({ _id: chapter.course })
+    }
+    else if (quiz.target.type === 'course') {
+      course = await Course.findOne({ _id: quiz.target.id })
+      facultycollegeyear = course.facultycollegeyear
+    }
+
+    if (quiz.target.type === 'facultycollegeyear') {
+      facultycollegeyear = quiz.target.id
+    }
+    
+    const studentFacultyCollegeYear = await StudentFacultyCollegeYear({student: req.params.student, facultycollegeyear: facultycollegeyear})
+
+    if (!studentFacultyCollegeYear)
+      return res.status(404).send(`Student is not allowed to do this quiz`)
+    
+    quiz = await addAttachmentMediaPaths([quiz])
+
+    return res.status(200).send(quiz[0])
+  } catch (error) {
+    return res.status(500).send(error)
+  }
+})
+
 // post an quiz
 router.post('/', async (req, res) => {
   try {
-    let {
+    const {
       error
     } = validateQuiz(req.body)
     if (error)
@@ -150,7 +235,7 @@ router.post('/', async (req, res) => {
     if (req.body.target) {
       req.body.target.type = req.body.target.type.toLowerCase()
 
-      const allowedTargets = ['chapter', 'course', 'facilitycollegeyear']
+      const allowedTargets = ['chapter', 'course', 'facultycollegeyear']
 
       if (!allowedTargets.includes(req.body.target.type))
         return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
@@ -176,7 +261,7 @@ router.post('/', async (req, res) => {
           })
           break;
 
-        case 'facilitycollegeyear':
+        case 'facultycollegeyear':
           Target = await FacilityCollegeYear.findOne({
             _id: req.body.target.id
           })
@@ -208,6 +293,7 @@ router.post('/', async (req, res) => {
       return res.status(201).send(saveDocument)
     return res.status(500).send('New Quiz not Registered')
   } catch (error) {
+    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -241,7 +327,7 @@ router.put('/:id', async (req, res) => {
 
     req.body.target.type = req.body.target.type.toLowerCase()
 
-    const allowedTargets = ['chapter', 'course', 'facilitycollegeyear']
+    const allowedTargets = ['chapter', 'course', 'facultycollegeyear']
 
     if (!allowedTargets.includes(req.body.target.type))
       return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
@@ -261,7 +347,7 @@ router.put('/:id', async (req, res) => {
         })
         break;
 
-      case 'facilitycollegeyear':
+      case 'facultycollegeyear':
         Target = await FacilityCollegeYear.find({
           _id: req.body.target.id
         })
@@ -275,7 +361,7 @@ router.put('/:id', async (req, res) => {
       return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
 
     const latesTargetedQuiz = await Quiz.findOne({ target: req.body.target })
-    if (latesTargetedQuiz){
+    if (latesTargetedQuiz) {
       latesTargetedQuiz.target = undefined
       latesTargetedQuiz.save()
     }
@@ -312,7 +398,7 @@ router.delete('/:id', async (req, res) => {
     })
     if (!quiz)
       return res.status(404).send(`Quiz of Code ${req.params.id} Not Found`)
-
+    console.log('ajaja')
     let instructor = await Instructor.findOne({
       _id: quiz.instructor
     })
@@ -405,8 +491,8 @@ async function addAttachmentMediaPaths(quizes) {
     for (const k in quizes[i].questions) {
       if (quizes[i].questions[k].options) {
         for (const j in quizes[i].questions[k].options.choices) {
-          if (quizes[i].questions[k].options.choices[j].src) {
-            quizes[i].questions[k].options.choices[j].src = `${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
+          if (quizes[i].questions[k].options.choices[j].src && !quizes[i].questions[k].options.choices[j].src.includes('http')) {
+            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
           }
         }
       }

@@ -60,6 +60,7 @@ function validateQuiz(body) {
         }),
         duration: Joi.number().min(1).required(),
         questions: Joi.array().min(1).items(Joi.object({
+            _id: Joi.ObjectId(),
             type: Joi.string().required(),
             marks: Joi.number().required(),
             details: Joi.string().min(5).required(),
@@ -68,10 +69,11 @@ function validateQuiz(body) {
                 choices: Joi.array().min(1).items(Joi.object({ text: Joi.string(), src: Joi.string() })).required(),
             },
         })).required(),
-        totalMarks: Joi.number,
+        totalMarks: Joi.number(),
         instructor: Joi.ObjectId().required(),
         published: Joi.boolean()
     }
+    return Joi.validate(body, schema)
 }
 
 // create Quizs model
