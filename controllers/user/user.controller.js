@@ -1092,21 +1092,28 @@ router.post('/admin', async (req, res) => {
             $or: [
                 {
                     email: req.body.email,
-                    "status.deleted": {$ne: 1}
                 },
                 {
                     email: req.body.college_email,
-                    "status.deleted": {$ne: 1}
+                },
+                {
+                    phone: req.body.phone,
+                },
+                {
+                    phone: req.body.college_phone,
                 },
                 {
                     user_name: req.body.user_name
                 }],
+            "status.deleted": {$ne: 1}
         })
 
         if (user) {
-            const emailFound = req.body.email == user.email
-            const user_nameFound = req.body.user_name == user.user_name
-            return res.send(formatResult(403, `User with ${emailFound ? 'same email ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+            const emailFound = [req.body.email, req.body.college_email].includes(user.email)
+            const phoneFound = [req.body.phone, req.body.college_phone].includes(user.phone)
+            const user_nameFound = req.body.user_name === user.user_name
+            return res.send(formatResult(403,
+                `User ${emailFound ? 'email' : user_nameFound ? 'user_name ' : phoneFound ? 'phone' : ''} was arleady used`))
         }
 
 
@@ -1125,10 +1132,28 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let college = await findDocument(College, {
-            $or: [{name: req.body.college}, {email: req.body.college_email}]
+            $or: [
+                {name: req.body.college},
+                {
+                    email: req.body.email,
+                },
+                {
+                    email: req.body.college_email,
+                },
+                {
+                    phone: req.body.phone,
+                },
+                {
+                    phone: req.body.college_phone,
+                },
+            ]
         })
-        if (college)
-            return res.send(formatResult(403, `College with same ${college.email === req.body.college_email ? 'email' : 'name'} is arleady registered`))
+        if (college) {
+            const emailFound = [req.body.email, req.body.college_email].includes(college.email)
+            const phoneFound = [req.body.phone, req.body.college_phone].includes(college.phone)
+            return res.send(formatResult(403,
+                `Institution ${emailFound ? 'email' : phoneFound ? 'phone' : ''} was arleady used`))
+        }
 
 
         let saved_college = await createDocument(College, {

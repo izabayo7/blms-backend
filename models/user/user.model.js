@@ -114,10 +114,11 @@ exports.validate_admin = (credentials, method = 'create') => {
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         email: Joi.string().email().required(),
-        phone: Joi.string().max(10).min(10).required(), // regex needed
+        phone: Joi.string().regex(this.PhoneRegex).required(),
         maximum_users: Joi.number().required().required(),
         college: Joi.string().min(3).max(200).required(),
         college_email: Joi.string().email().required(),
+        college_phone: Joi.string().regex(this.PhoneRegex).required(),
         position: Joi.string().min(3).max(50).required()
     }
     return Joi.validate(credentials, schema)
