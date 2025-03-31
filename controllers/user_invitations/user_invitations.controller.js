@@ -53,7 +53,7 @@ exports.getInvitationbyToken = async (req, res) => {
     let { token } = req.params;
     if (!token)
       return res.send(formatResult(400, 'Token is required'))
-    console.log(token)
+
     if (!(uuidValidate(token)))
       return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 

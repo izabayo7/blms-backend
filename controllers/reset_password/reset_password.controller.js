@@ -3,6 +3,31 @@ const { formatResult, User, ONE_DAY, update_password } = require("../../utils/im
 const { sendResetPasswordEmail } = require("../email/email.controller");
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 
+/***
+ * Get password reset by token
+ * @param req
+ * @param res
+ */
+exports.getPasswordResetbyToken = async (req, res) => {
+  try {
+    let { token } = req.params;
+    if (!token)
+      return res.send(formatResult(400, 'Token is required'))
+
+    if (!(uuidValidate(token)))
+      return res.status(400).send(formatResult(400, 'Invalid password reset token'));
+
+    const result = await Reset_password.findOne({ token: token }).populate(['user']);
+    if (!result)
+      return res.send(formatResult(400, 'Password reset was not found'))
+
+    res.send(formatResult(200, u, result))
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
+
 /**
  * Create (open) a password reset
  * @param req
