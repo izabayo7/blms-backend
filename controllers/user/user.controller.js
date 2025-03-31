@@ -243,21 +243,14 @@ router.get('/faculty/:id', auth, async (req, res) => {
         }).populate('user')
         for (const j in user_faculty_college_years) {
           if (user_faculty_college_years[j].user.category == user_category._id)
-            result.push(user_faculty_college_years[j])
+            result.push(user_faculty_college_years[j].user)
         }
       }
     }
 
-    // let users = await findDocuments(User, {
-    //   college: req.user.college,
-    // })
+    users = await add_user_details(result)
 
-    // if (!users.length)
-    //   return res.send(formatResult(404, `${college.name} user list is empty`))
-
-    // users = await add_user_details(users)
-
-    return res.send(formatResult(u, u, result))
+    return res.send(formatResult(u, u, users))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
