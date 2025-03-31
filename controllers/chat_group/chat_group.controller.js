@@ -239,8 +239,6 @@ router.get('/:code/profile/:file_name', async (req, res) => {
     if (!group)
       return res.send(formatResult(404, 'group not found'))
 
-    console.log(group)
-
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
