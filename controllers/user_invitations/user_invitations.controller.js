@@ -44,6 +44,28 @@ exports.getAllInvitations = async (req, res) => {
 }
 
 /***
+ * Get invitation by token
+ * @param req
+ * @param res
+ */
+exports.getInvitationbyToken = async (req, res) => {
+  try {
+    let { token } = req.query;
+    if (!token)
+      return res.send(formatResult(400, 'Token is required'))
+
+    const invitation = await User_invitation.findOne({ token: token });
+    if (!invitation)
+      return res.send(formatResult(400, 'User invitation was not found'))
+
+    res.send(formatResult(200, u, invitation))
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
+
+/***
  * Get current invitations invitations
  * @param req
  * @param res
