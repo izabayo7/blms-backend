@@ -16,7 +16,7 @@ exports.requestCallback = ({
     
     <body style="margin: 0; background-color: #ececec">
       <div class="logo" style="text-align: center; margin: 25px auto">
-        <img src="https://apis.kurious.rw/assets/images/image%204.png" alt="" />
+        <img src="https://apis.kurious.rw/assets/images/logo.png" alt="" />
       </div>
       <div class="flex">
         <div class="">
@@ -100,7 +100,7 @@ exports.requestCallback = ({
                     top: 499px;
                     border-radius: 0px;
                     margin: 24px 12px;
-                  " src="https://apis.kurious.rw/assets/images/ig.svg" alt="" />
+                  " src="https://apis.kurious.rw/assets/images/ig.png" alt="" />
             </a>
             <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
               <img class="fb_icon" style="
@@ -110,11 +110,11 @@ exports.requestCallback = ({
                     top: 499px;
                     border-radius: 0px;
                     margin: 24px 12px;
-                  " src="https://apis.kurious.rw/assets/images/fb.svg" alt="" />
+                  " src="https://apis.kurious.rw/assets/images/fb.png" alt="" />
             </a>
             <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
               <img class="twitter_icon" style="left: 87px; margin: 24px 12px"
-                src="https://apis.kurious.rw/assets/images/twitter.svg" alt="" />
+                src="https://apis.kurious.rw/assets/images/twitter.png" alt="" />
             </a>
           </div>
         </div>
@@ -144,7 +144,7 @@ exports.contactUs = ({
     
     <body style="margin: 0; background-color: #ececec">
       <div class="logo" style="text-align: center; margin: 25px auto">
-        <img src="https://apis.kurious.rw/assets/images/image%204.png" alt="" />
+        <img src="https://apis.kurious.rw/assets/images/logo.png" alt="" />
       </div>
       <div class="flex">
         <div class="">
@@ -243,7 +243,7 @@ exports.contactUs = ({
                     top: 499px;
                     border-radius: 0px;
                     margin: 24px 12px;
-                  " src="https://apis.kurious.rw/assets/images/ig.svg" alt="" />
+                  " src="https://apis.kurious.rw/assets/images/ig.png" alt="" />
             </a>
             <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
               <img class="fb_icon" style="
@@ -253,11 +253,11 @@ exports.contactUs = ({
                     top: 499px;
                     border-radius: 0px;
                     margin: 24px 12px;
-                  " src="https://apis.kurious.rw/assets/images/fb.svg" alt="" />
+                  " src="https://apis.kurious.rw/assets/images/fb.png" alt="" />
             </a>
             <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
               <img class="twitter_icon" style="left: 87px; margin: 24px 12px"
-                src="https://apis.kurious.rw/assets/images/twitter.svg" alt="" />
+                src="https://apis.kurious.rw/assets/images/twitter.png" alt="" />
             </a>
           </div>
         </div>
@@ -286,7 +286,7 @@ exports.invitationToSystem = ({
     
       <body style="margin: 0; background-color: #ececec">
         <div class="logo" style="text-align: center; margin: 25px auto">
-          <img src="https://apis.kurious.rw/assets/images/image%204.png" alt="" />
+          <img src="https://apis.kurious.rw/assets/images/logo.png" alt="" />
         </div>
         <div
           class="flex"
@@ -400,7 +400,7 @@ exports.invitationToSystem = ({
                     border-radius: 0px;
                     margin: 24px 12px;
                   "
-                  src="https://apis.kurious.rw/assets/images/ig.svg"
+                  src="https://apis.kurious.rw/assets/images/ig.png"
                   alt=""
                 />
               </a>
@@ -419,7 +419,7 @@ exports.invitationToSystem = ({
                     border-radius: 0px;
                     margin: 24px 12px;
                   "
-                  src="https://apis.kurious.rw/assets/images/fb.svg"
+                  src="https://apis.kurious.rw/assets/images/fb.png"
                   alt=""
                 />
               </a>
@@ -431,7 +431,7 @@ exports.invitationToSystem = ({
                 <img
                   class="twitter_icon"
                   style="left: 87px; margin: 24px 12px"
-                  src="https://apis.kurious.rw/assets/images/twitter.svg"
+                  src="https://apis.kurious.rw/assets/images/twitter.png"
                   alt=""
                 />
               </a>
