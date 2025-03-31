@@ -243,7 +243,7 @@ router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
  *         required: true
  *         type: string
  *       - name: pictureType
- *         description: Type of the picture to get
+ *         description: Type of the picture
  *         in: path
  *         required: true
  *         type: string
@@ -440,6 +440,12 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
             arr.push({
                 phone: req.body.phone
             })
+
+        if (req.body.abbreviation)
+            arr.push({
+                abbreviation: req.body.abbreviation
+            })
+
         if (arr.length) {
             // check if the name or email were not used
             college = await findDocument(College, {
@@ -484,7 +490,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
  *         required: true
  *         type: string
  *       - name: pictureType
- *         description: Type of the picture to get
+ *         description: Type of the picture
  *         in: path
  *         required: true
  *         type: string
@@ -573,7 +579,7 @@ router.put('/:id/:pictureType', auth, filterUsers(['ADMIN']), async (req, res) =
 
 /**
  * @swagger
- * /college/{id}/logo/{file_name}:
+ * /college/{id}/{pictureType}/{file_name}:
  *   delete:
  *     tags:
  *       - College
@@ -586,6 +592,12 @@ router.put('/:id/:pictureType', auth, filterUsers(['ADMIN']), async (req, res) =
  *         in: path
  *         required: true
  *         type: string
+ *       - name: pictureType
+ *         description: Type of the picture
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: [logo, banner]
  *       - name: file_name
  *         description: File name
  *         in: path
@@ -601,8 +613,15 @@ router.put('/:id/:pictureType', auth, filterUsers(['ADMIN']), async (req, res) =
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id/logo/:file_name', auth, async (req, res) => {
+router.delete('/:id/:pictureType/:file_name', auth, async (req, res) => {
     try {
+
+        const {
+            pictureType
+        } = req.params;
+        if (!pictureTypes.includes(pictureType))
+            return res.send(formatResult(404, 'invalid picture type'))
+
         const {
             error
         } = validateObjectId(req.params.id)
@@ -616,16 +635,16 @@ router.delete('/:id/logo/:file_name', auth, async (req, res) => {
         if (!college)
             return res.send(formatResult(404, 'college not found'))
 
-        if (!college.logo || college.logo !== req.params.file_name)
+        if (!college[pictureType] || college[pictureType] !== req.params.file_name)
             return res.send(formatResult(404, 'file not found'))
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}/${college.logo}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}/${college[pictureType]}`)
 
         fs.unlink(path, (err) => {
             if (err)
                 return res.send(formatResult(500, err))
         })
-        college.logo = u
+        college[pictureType] = u
         await college.save()
         return res.send(formatResult(u, u, college))
     } catch (error) {
