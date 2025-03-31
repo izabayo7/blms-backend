@@ -101,7 +101,7 @@ function validate_quiz(body) {
             },
         })).required(),
         total_marks: Joi.number(),
-        user: Joi.ObjectId().required(),
+        user: Joi.string().min(3).max(100).required(),
         published: Joi.boolean(),
         status: Joi.number().min(0).max(1)
     }
