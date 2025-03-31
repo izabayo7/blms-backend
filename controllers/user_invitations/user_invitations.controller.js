@@ -113,7 +113,7 @@ exports.createUserInvitation = async (req, res) => {
         return res.send(formatResult(400, `User with email (${email}) arleady exist`))
       }
 
-      const newDocument = new User({
+      const newDocument = new User_invitation({
         user: req.user._id,
         email: email,
         category: category,
