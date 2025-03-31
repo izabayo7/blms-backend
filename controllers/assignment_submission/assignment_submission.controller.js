@@ -466,6 +466,9 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (assignment_submission)
             return res.send(formatResult(400, 'assignment_submission already exist'))
 
+        if (!assignment.allowMultipleFilesSubmission && req.body.attachments.length > 1)
+            return res.send(formatResult(400, 'You can only upload one file'))
+
         req.body.user = req.user._id
 
         let result = await createDocument(Assignment_submission, req.body)
