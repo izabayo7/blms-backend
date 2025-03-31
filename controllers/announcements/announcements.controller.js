@@ -80,7 +80,7 @@ router.get('/user', async (req, res) => {
                 {sender: req.user._id},
                 {specific_receivers: req.user._id.toString()},
             ]
-        }).populate('viewers', ['sur_name', 'other_names','user_name']).populate('specific_receivers', ['sur_name', 'other_names','user_name']).sort({_id: -1}).lean()
+        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({_id: -1}).lean()
 
         announcements = await injectUser(announcements, 'sender')
         announcements = await injectTarget(announcements)
@@ -91,32 +91,34 @@ router.get('/user', async (req, res) => {
     }
 })
 
-async function injectTarget(announcements){
+async function injectTarget(announcements) {
     for (const announcementsKey in announcements) {
+        if (!announcements[announcementsKey].target)
+            continue;
         let target
         switch (announcements[announcementsKey].target.type) {
             case 'course':
                 target = await findDocument(Course, {
                     _id: announcements[announcementsKey].target.id
-                },{name: 1})
+                }, {name: 1})
                 break;
 
             case 'student_group':
                 target = await findDocument(User_group, {
                     _id: announcements[announcementsKey].target.id
-                },{name: 1})
+                }, {name: 1})
                 break;
 
             case 'faculty':
                 target = await findDocument(Faculty_college, {
                     _id: announcements[announcementsKey].target.id
-                },{name: 1})
+                }, {name: 1})
                 break;
 
             case 'college':
                 target = await findDocument(College, {
                     _id: announcements[announcementsKey].target.id
-                },{name: 1})
+                }, {name: 1})
                 break;
 
             default:
@@ -181,7 +183,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
     try {
         const {
             error
-        } = validate_announcement(req.body,'create',req.params.receivers)
+        } = validate_announcement(req.body, 'create', req.params.receivers)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
