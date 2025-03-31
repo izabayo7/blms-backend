@@ -377,15 +377,21 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
                 }
 
 
-                const user_category = user_categories.map(x => {
-                    if (x.name === rows[i].category)
-                        return x._id
-                })[0]
+                let user_category
+                user_categories.map(x => {
+                    if (x.name === rows[i].category) {
+                        user_category = x._id
+                        break
+                    }
+                })
 
-                const user_group = user_groups.map(x => {
-                    if (x.name === rows[i].user_group)
-                        return x._id
-                })[0]
+                let user_group
+                user_groups.map(x => {
+                    if (x.name === rows[i].user_group) {
+                        user_group = x._id
+                        break
+                    }
+                })
 
                 let result = await User_invitation.findOne({
                     user: req.user._id,
