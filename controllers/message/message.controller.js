@@ -354,14 +354,14 @@ router.put('/:id/attachements', async (req, res) => {
 router.put('/voiceNote/:receiver', async (req, res) => {
     try {
 
-        const name = `voice_${req.params.receiver}_${new Date().getTime()}`
+        const name = `voice_${req.params.receiver}_${new Date().getTime()}.mp3`
 
         const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u,u,u,[{src: name}])
 
         if(result.status !== 404)
         {
             const msg = result.data
-            const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+            const path = addStorageDirectoryToPath(`./uploakds/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
 
             req.kuriousStorageData = {
                 dir: path,
