@@ -159,23 +159,27 @@ async function createPayment(req, res) {
         if (college.plan !== 'HUGUKA' && req.user.category.name !== 'ADMIN')
             return res.send(formatResult(403, `Your administration is in charge of the payment process`));
 
-        // const requiredAmount = 5000
-        //
-        // if(req.body.amount_paid !== requiredAmount)
+        let balance = req.body.amount_paid
+
+        const payment = await Account_payments.findOneAndUpdate({
+            user: req.user._id,
+            status: 'ACTIVE'
+        }, {status: 'INACTIVE'})
+
+        if (payment)
+            balance -= payment.balance
 
         const obj = {
             method_used: req.body.method_used,
             user: req.user._id,
             amount_paid: req.body.amount_paid,
-            balance: '',
+            balance,
             startingDate: req.body.startingDate,
             periodType: req.body.periodType,
             periodValue: req.body.periodValue,
         }
         if (college.plan !== 'HUGUKA')
             obj.college = req.user.college
-
-        await Account_payments.findOneAndUpdate({user: req.user._id, status: 'ACTIVE'}, {status: 'INACTIVE'})
 
         let result = await createDocument(College, obj)
         return res.send(result);
@@ -222,7 +226,7 @@ async function getTotalBills(req, res) {
             const total_users = await countDocuments(User, obj)
 
             if (req.body.total_users < total_users)
-                return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total students in your college)`));
+                return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total ${college.plan === 'MINUZA_ACCELERATE' ? 'non admin users' : 'students'} in your college)`));
         }
 
         let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_users)
