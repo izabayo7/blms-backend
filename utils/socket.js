@@ -51,6 +51,7 @@ const {
 } = require('./imports')
 const {Exam_submission} = require("../models/exam_submission/exam_submission.model");
 const {Exam} = require("../models/exams/exam.model");
+const {fs, addStorageDirectoryToPath} = require("./imports");
 
 module.exports.listen = (app) => {
 
@@ -234,7 +235,7 @@ module.exports.listen = (app) => {
         socket.on('message/create', async ({
                                                receiver,
                                                content,
-                                                reply
+                                               reply
                                            }) => {
             const receiver_type = typeof receiver
             if (content === "")
@@ -252,7 +253,7 @@ module.exports.listen = (app) => {
                 return
             }
 
-            let result = await Create_or_update_message(user.user_name, receiver, content,u,u,u,reply)
+            let result = await Create_or_update_message(user.user_name, receiver, content, u, u, u, reply)
 
             result = simplifyObject(result)
 
@@ -949,6 +950,35 @@ module.exports.listen = (app) => {
                 socket.emit('exam-progress-saved', {index, end, cheated});
             }
 
+        });
+
+        socket.on('save-exam-video', async ({
+                                                data,
+                                                saved,
+                                                exam_id,
+                                                submission_id
+                                            }) => {
+            if (!submission_id)
+                return
+            try {
+
+                const dir = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam_id}/submissions/${submission_id}`)
+
+                !fs.existsSync(dir) && fs.mkdirSync(dir, { recursive: true })
+
+                const path = `${dir}/video.webm`
+                const dataBuffer = new Buffer(data, 'base64');
+                const fileStream = fs.createWriteStream(path, {flags: 'a'});
+                console.log(submission_id,'twahageze')
+                fileStream.write(dataBuffer);
+                if (!saved) {
+                    await Exam_submission.updateOne({_id: submission_id}, {hasVideo: true})
+                }
+                socket.emit('exam-video-saved',{saved: true});
+            } catch (error) {
+                console.log(error)
+                socket.emit('exam-video-saved',{saved: false});
+            }
         });
 
     });
