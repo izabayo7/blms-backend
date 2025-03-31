@@ -51,10 +51,11 @@ const {
 } = require('./imports')
 const {Exam_submission} = require("../models/exam_submission/exam_submission.model");
 const {Exam} = require("../models/exams/exam.model");
+const {fs, addStorageDirectoryToPath} = require("./imports");
 
 module.exports.listen = (app) => {
 
-    const io = socket_io.listen(app)
+    const io = socket_io.listen(app,{ cors: { origin: '*' } })
 
     io.on('connection', async (socket) => {
 
@@ -108,6 +109,14 @@ module.exports.listen = (app) => {
                 socket.emit('new-notification', {
                     notification: data
                 })
+            }
+
+            if (name === `live_class_ended_${user._id}`) {
+                socket.emit('live/classEnded')
+            }
+
+            if (name === `conversation_created_${user._id}`) {
+                socket.emit('res/message/conversation_created', data)
             }
 
             if (name === `join_group_${id}`) {
@@ -233,7 +242,8 @@ module.exports.listen = (app) => {
         // save and deriver new messages
         socket.on('message/create', async ({
                                                receiver,
-                                               content
+                                               content,
+                                               reply
                                            }) => {
             const receiver_type = typeof receiver
             if (content === "")
@@ -242,7 +252,8 @@ module.exports.listen = (app) => {
             const {error} = validate_message({
                 sender: user.user_name,
                 receiver: receiver_type === 'string' ? receiver : receiver.toString(),
-                content: content
+                content: content,
+                reply
             })
 
             if (error) {
@@ -250,7 +261,7 @@ module.exports.listen = (app) => {
                 return
             }
 
-            let result = await Create_or_update_message(user.user_name, receiver, content)
+            let result = await Create_or_update_message(user.user_name, receiver, content, u, u, u, reply)
 
             result = simplifyObject(result)
 
@@ -961,6 +972,32 @@ module.exports.listen = (app) => {
                 socket.emit('exam-progress-saved', {index, end, cheated});
             }
 
+        });
+
+        socket.on('save-exam-video', async ({
+                                                data,
+                                                saved,
+                                                exam_id,
+                                                submission_id
+                                            }) => {
+            if (!submission_id)
+                return
+            try {
+                const dir = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam_id}/submissions/${submission_id}`)
+
+                !fs.existsSync(dir) && fs.mkdirSync(dir, { recursive: true })
+
+                const path = `${dir}/video.webm`
+                const dataBuffer = new Buffer(data, 'base64');
+                const fileStream = fs.createWriteStream(path, {flags: 'a'});
+                fileStream.write(dataBuffer);
+                if (!saved) {
+                    await Exam_submission.updateOne({_id: submission_id}, {hasVideo: true})
+                }
+                socket.emit('exam-video-saved',{saved: true});
+            } catch (error) {
+                socket.emit('exam-video-saved',{saved: false});
+            }
         });
 
     });

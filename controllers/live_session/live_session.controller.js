@@ -6,6 +6,7 @@ const {simplifyObject} = require("../../utils/imports");
 const {MyEmitter} = require("../../utils/imports");
 const {scheduleEvent} = require("../../utils/imports");
 const {handleChunk} = require("../../utils/imports");
+const https = require('https');
 const {
     express,
     Live_session,
@@ -578,6 +579,52 @@ async function sendLiveNotifications({isLive, liveId, user_ids}) {
 
 
     }
+    if (isLive) {
+        // automatically end the session 30 min later if instructor didn't join
+        setTimeout(() => {
+                AutomaticallyEndLiveSession({liveId})
+            },
+            1200000
+        )
+    }
+}
+
+async function AutomaticallyEndLiveSession({liveId}) {
+    let session = await Live_session.findOne({_id: liveId});
+
+    https.get(`https://stream.kurious.rw/api/live_sessions/${liveId}/users`, (resp) => {
+        let data = '';
+
+        // A chunk of data has been received.
+        resp.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', async () => {
+            data = JSON.parse(data)
+            const instructorFound = false
+            for (const i in data) {
+                if (data[i] == session.user) {
+                    instructorFound = true;
+                    break;
+                }
+            }
+            if (!instructorFound) {
+                await updateDocument(Live_session, liveId, {status: "FINISHED"})
+                for (const i in data) {
+                    console.log(data[i])
+                    MyEmitter.emit('socket_event', {
+                        name: `live_class_ended_${data[i]}`
+                    });
+                }
+            }
+
+        });
+
+    }).on("error", (err) => {
+        console.log("Error: " + err.message);
+    });
 }
 
 // export the router
