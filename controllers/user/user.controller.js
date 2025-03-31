@@ -775,7 +775,12 @@ router.put('/profile', auth, async (req, res) => {
       const result = await User.findByIdAndUpdate(user._id, {
         profile: req.file.filename
       })
-      result.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${result.profile}`
+      let user_category = await findDocument(User_category, {
+        _id: user.category
+      })
+      result = simplifyObject(result)
+      result.category = _.pick(user_category, 'name')
+      result.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${req.file.filename}`
       return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
     })
 
