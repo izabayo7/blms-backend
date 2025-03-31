@@ -140,7 +140,7 @@ router.get('/', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user/college/{id}:
+ * /user/college/{id}/{category}:
  *   get:
  *     tags:
  *       - User
@@ -178,18 +178,16 @@ router.get('/college/:id/:category', auth, async (req, res) => {
     if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
       return res.send(formatResult(400, "Invalid category"))
 
-    let college = await findDocument(College, {
-      _id: req.params.id
-    })
-    if (!college)
-      return res.send(formatResult(404, `College ${req.params.id} Not Found`))
-
-    let users = await findDocuments(User, {
-      college: req.params.id
+    let user_category = await findDocument(User_category, {
+      name: req.params.category
     })
 
-    if (!users.length)
-      return res.send(formatResult(404, `${college.name} user list is empty`))
+    let users = await findDocuments(User, req.params.category == 'ALL' ? {
+      college: req.user.college
+    } : {
+        college: req.user.college,
+        category: user_category._id
+      })
 
     users = await add_user_details(users)
 
