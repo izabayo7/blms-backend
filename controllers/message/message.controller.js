@@ -56,6 +56,8 @@ const router = express.Router()
  *     tags:
  *       - Message
  *     description: Get all messages
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
