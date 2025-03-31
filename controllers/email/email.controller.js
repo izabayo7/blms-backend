@@ -52,6 +52,38 @@ const transporter = createTransport(smtpTransport({
 //     }
 // });
 
+exports.sendUserGroupInvitationMail = async ({
+    names,
+                                        email, user_names,
+                                        user_group_name,
+                                        user_type
+                                    }) => {
+    try {
+
+        const mail = invitationToUserGroup({
+            user_names,
+            user_group_name,
+            user_type
+        })
+
+        const message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: names + ' Added you in ' + user_group_name,
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
 exports.sendInvitationMail = async ({email, token, names, institution, user_group}) => {
     try {
 
@@ -247,11 +279,11 @@ exports.sendReleaseMarskEmail = async ({
 };
 
 exports.sendAssignmentExpirationEmail = async ({
-                                           email,
-                                           user_names,
-                                           assignment_name,
-                                           link
-                                       }) => {
+                                                   email,
+                                                   user_names,
+                                                   assignment_name,
+                                                   link
+                                               }) => {
     try {
 
         const mail = assingment_expiration({user_names, assignment_name, link})

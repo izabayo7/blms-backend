@@ -17,6 +17,7 @@ const {
     User_category,
     u,
 } = require('../../utils/imports')
+const {sendUserGroupInvitationMail} = require('../email/email.controller');
 
 // create router
 const router = express.Router()
@@ -131,9 +132,9 @@ router.post('/', async (req, res) => {
             return res.send(formatResult(404, 'user_group not found'))
 
         // check if user exist
-        let user = await findDocument(User, {
+        let user = await User.findOne({
             user_name: req.body.user
-        })
+        }).populate('category')
         if (!user)
             return res.send(formatResult(404, 'user not found'))
 
@@ -168,6 +169,15 @@ router.post('/', async (req, res) => {
 
         // result = await injectDetails([simplifyObject(result)])
         // result = result[0]
+
+        if(req.query.sendEmail==true){
+            const {sent, err} = await sendUserGroupInvitationMail({
+                email,
+                user_names: `${req.user.sur_name} ${req.user.other_names}`,
+                user_group_name: user_group.name,
+                user_type: user.category.name
+            });
+        }
 
         return res.send(result)
     } catch (error) {
