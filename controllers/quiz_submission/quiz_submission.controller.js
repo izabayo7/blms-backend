@@ -89,91 +89,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /quiz_submission/attachment/{id}/{file_name}:
- *   get:
- *     tags:
- *       - Quiz_submission
- *     description: Returns the files attached to the specified quiz_submission
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Quiz_submission's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: file's name
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/attachment/:id/:file_name', auth, async (req, res) => {
-  try {
-
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
-    const submission = await findDocument(Quiz_submission, {
-      _id: req.params.id
-    })
-    if (!submission)
-      return res.send(formatResult(404, 'quiz_submission not found'))
-
-    const quiz = await findDocument(Quiz, {
-      _id: submission.quiz
-    })
-
-    const user = await findDocument(User, {
-      _id: quiz.user
-    })
-
-    let file_found = false
-
-    for (let i in submission.answers) {
-      i = parseInt(i)
-      if (quiz.questions[i].type == 'file_upload') {
-        if (submission.answers[i].src == req.params.file_name) {
-          file_found = true
-          break
-        }
-      }
-      if (file_found)
-        break
-    }
-    if (!file_found)
-      return res.send(formatResult(404, 'file not found'))
-
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`)
-
-    const file_type = await findFileType(req.params.file_name)
-
-    if (file_type === 'image') {
-      sendResizedImage(req, res, file_path)
-    } else if (file_type == 'video') {
-      streamVideo(req, res, file_path)
-    } else {
-      return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
-    }
-
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-
-/**
- * @swagger
  * /quiz_submission:
  *   get:
  *     tags:
@@ -547,6 +462,90 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
     result.quiz = result.quiz[0]
     result = await injectUserFeedback(result)
     return res.send(formatResult(u, u, result))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /quiz_submission/{id}/attachment/{file_name}:
+ *   get:
+ *     tags:
+ *       - Quiz_submission
+ *     description: Returns the files attached to the specified quiz_submission
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz_submission's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: file's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/attachment/:file_name', auth, async (req, res) => {
+  try {
+
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const submission = await findDocument(Quiz_submission, {
+      _id: req.params.id
+    })
+    if (!submission)
+      return res.send(formatResult(404, 'quiz_submission not found'))
+
+    const quiz = await findDocument(Quiz, {
+      _id: submission.quiz
+    })
+
+    const user = await findDocument(User, {
+      _id: quiz.user
+    })
+
+    let file_found = false
+
+    for (let i in submission.answers) {
+      i = parseInt(i)
+      if (quiz.questions[i].type == 'file_upload') {
+        if (submission.answers[i].src == req.params.file_name) {
+          file_found = true
+          break
+        }
+      }
+      if (file_found)
+        break
+    }
+    if (!file_found)
+      return res.send(formatResult(404, 'file not found'))
+
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`)
+
+    const file_type = await findFileType(req.params.file_name)
+
+    if (file_type === 'image') {
+      sendResizedImage(req, res, file_path)
+    } else if (file_type == 'video') {
+      streamVideo(req, res, file_path)
+    } else {
+      return res.sendFile(path.normalize(file_path))
+    }
+
   } catch (error) {
     return res.send(formatResult(500, error))
   }
