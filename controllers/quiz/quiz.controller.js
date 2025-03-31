@@ -22,6 +22,7 @@ const {
     User,
     User_category,
     createDocument,
+    countDocuments,
     deleteDocument,
     simplifyObject,
     Quiz_submission,
