@@ -1329,7 +1329,7 @@ router.post('/login', async (req, res) => {
         if (!validPassword)
             return res.send(formatResult(400, erroMessage))
 
-        const confirmation = await Account_confirmation.findOne({user: user._id.toString()})
+        const confirmation = await Account_confirmation.findOne({user: user._id.toString(), hasEmail: {$ne: true}})
         if (confirmation) {
             if (confirmation.status === "PENDING")
                 return res.send(formatResult(403, "Your request has not yet been approved."))
