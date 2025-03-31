@@ -542,7 +542,7 @@ router.get('/current', auth, async (req, res) => {
  * /college/checkUserNameExistance/{user_name}:
  *   get:
  *     tags:
- *       - College
+ *       - User
  *     description: tells whether the username is available or taken
  *     parameters:
  *       - name: user_name
@@ -565,7 +565,7 @@ router.get('/checkUserNameExistance/:user_name', this.checkUsernameExistence)
  * /college/checkEmailExistance/{email}:
  *   get:
  *     tags:
- *       - College
+ *       - User
  *     description: tells whether the email is available or taken
  *     parameters:
  *       - name: email
