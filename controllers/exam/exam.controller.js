@@ -142,8 +142,7 @@ router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
                 return res.send(formatResult(404, 'exam not available'))
 
             let date = new Date(exam.starting_time)
-            date.setHours(date.getUTCHours())
-            date.setMinutes(date.getUTCMinutes())
+            date.setHours(date.getHours() - 2)
 
             if (new Date() < new Date(date))
                 return res.send(formatResult(404, 'exam not available'))
