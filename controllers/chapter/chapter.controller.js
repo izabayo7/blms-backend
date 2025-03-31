@@ -744,6 +744,65 @@ router.post('/:id/attachments', async (req, res) => {
 
 /**
  * @swagger
+ * /chapter/{id}/uploaded_content:
+ *   post:
+ *     tags:
+ *       - Chapter
+ *     description: Upload chapter uploaded_content
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/:id/uploaded_content', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        const chapter = await findDocument(Chapter, {
+            _id: req.params.id
+        })
+        if (!chapter)
+            return res.send(formatResult(404, 'chapter not found'))
+
+        req.kuriousStorageData = {
+            dir: addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`),
+        }
+
+        upload_single(req, res, async (err) => {
+            if (err)
+                return res.send(formatResult(500, err.message))
+
+            const result = await updateDocument(Chapter, req.params.id, {
+                uploaded_content: req.file.filename
+            })
+            return res.send(result)
+        })
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /chapter/{id}/attachment:
  *   delete:
  *     tags:
