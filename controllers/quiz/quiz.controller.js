@@ -457,6 +457,57 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
+ * /quiz/dupplicate/{id}:
+ *   post:
+ *     tags:
+ *       - Quiz
+ *     description: Dupllicate quiz
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Id of the quiz you want to dupplicate
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/dupplicate/:id', async (req, res) => {
+    try {
+
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id,
+            user: req.user._id
+        })
+        if (quiz)
+            return res.send(formatResult(404, 'Quiz not found'))
+
+        let result = await createDocument(Quiz, {
+            name: `${req.body.name} copy(${Math.floor(1000 + Math.random() * 9000)})`,
+            duration: quiz.duration,
+            instructions: quiz.instructions,
+            user: req.user._id,
+            questions: quiz.questions,
+            total_marks: quiz.total_marks,
+            passMarks: quiz.passMarks
+        })
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
  * /quiz/{id}:
  *   put:
  *     tags:
