@@ -95,7 +95,7 @@ router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
             }
         }
 
-        exam = await addAttachmentMediaPaths(exam,req.user.category.name === 'STUDENT',true)
+        exam = await addAttachmentMediaPaths(exam, req.user.category.name === 'STUDENT', true)
 
         return res.send(formatResult(u, u, exam))
     } catch (error) {
@@ -126,7 +126,7 @@ router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
+router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
         let exam = await Exam.findOne({_id: req.params.id}).populate('course').lean()
         if (!exam)
@@ -144,7 +144,10 @@ router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
             let date = new Date(exam.starting_time)
             date.setHours(date.getHours() - 2)
 
-            if (new Date() < new Date(date))
+            let endDate = new Date(date)
+            endDate.setTime(endDate.getTime() + (exam.duration * 60000))
+
+            if (new Date() < new Date(date) || new Date() > new Date(endDate))
                 return res.send(formatResult(404, 'exam not available'))
 
             exam.submission = await Exam_submission.findOne({
@@ -152,7 +155,7 @@ router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
                 user: req.user._id
             })
         }
-        exam = await addAttachmentMediaPaths([exam],req.user.category.name === 'STUDENT',true)
+        exam = await addAttachmentMediaPaths([exam], req.user.category.name === 'STUDENT', true)
         exam = exam[0]
         return res.send(formatResult(u, u, exam))
     } catch (error) {
@@ -390,7 +393,7 @@ router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
         exam.course = req.body.course
         exam.type = req.body.type
         exam.starting_time = req.body.starting_time,
-        exam.instructions = req.body.instructions
+            exam.instructions = req.body.instructions
         exam.duration = req.body.duration
         exam.questions = req.body.questions
         exam.total_marks = req.body.total_marks
