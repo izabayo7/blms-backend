@@ -496,7 +496,7 @@ router.get('/search', auth, async (req, res) => {
  *   get:
  *     tags:
  *       - User
- *     description: Returns a specified user
+ *     description: Returns a the logged in user info
  *     security:
  *       - bearerAuth: -[]
  *     responses:
@@ -530,6 +530,8 @@ router.get('/current', auth, async (req, res) => {
  *     tags:
  *       - User
  *     description: Returns a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: user_name
  *         description: User's id
@@ -544,7 +546,7 @@ router.get('/current', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:user_name', async (req, res) => {
+router.get('/:user_name', auth, async (req, res) => {
   try {
     let user = await findDocument(User, {
       user_name: req.params.user_name
