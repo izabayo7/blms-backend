@@ -21,7 +21,8 @@ const {
     simplifyObject,
     User,
     Course,
-    User_category
+    User_category,
+    User_faculty_college_year
 } = require('../../utils/imports')
 // create router
 const router = express.Router()
@@ -371,7 +372,7 @@ router.delete('/:id', async (req, res) => {
             return res.send(formatResult(404, `user_groups of Code ${req.params.id} Not Found`))
 
         // check if the user_groups is never used
-        const user_groups_found = await findDocument(User_user_groups, {
+        const user_groups_found = await findDocument(User_faculty_college_year, {
             user_groups: req.params.id
         })
         if (!user_groups_found) {

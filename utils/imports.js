@@ -64,7 +64,7 @@ exports.validate_college = validate_college
 const {
   user_faculty_college_year,
   validate_user_faculty_college_year
-} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
+} = require('../models/user_user_group/user_user_group.model')
 
 exports.User_faculty_college_year = user_faculty_college_year
 exports.validate_user_faculty_college_year = validate_user_faculty_college_year
