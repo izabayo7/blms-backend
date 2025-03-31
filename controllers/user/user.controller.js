@@ -539,7 +539,7 @@ router.get('/current', auth, async (req, res) => {
 
 /**
  * @swagger
- * /college/checkUserNameExistance/{user_name}:
+ * /user/checkUserNameExistance/{user_name}:
  *   get:
  *     tags:
  *       - User
@@ -562,7 +562,7 @@ router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
 
 /**
  * @swagger
- * /college/checkEmailExistance/{email}:
+ * /user/checkEmailExistance/{email}:
  *   get:
  *     tags:
  *       - User
