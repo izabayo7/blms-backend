@@ -532,7 +532,7 @@ module.exports.listen = (app) => {
         // handle raise or lower hand requests and responses
         // message can be [request_presenting, revert_presenting_request, accept_presenting, deny_presenting, 'request_sent' to owner]
         socket.on('live/presentation_request', async ({receiver, message}) => {
-            socket.broadcast.to(receiver.id).emit('res/live/presentation_request', {message})
+            socket.broadcast.to(receiver.id).emit('res/live/presentation_request', {message,sender:id})
             socket.emit('res/live/presentation_request/sent', {message})
         })
 
