@@ -995,15 +995,18 @@ exports.injectChapters = async (courses) => {
 exports.injectUser = async (array, property, newProperty) => {
   let name = newProperty ? newProperty : property
   for (const i in array) {
-    const user = await this.findDocument(this.User, {
-      _id: array[i][`${property}`]
-    })
-    const category = await this.findDocument(this.User_category, { _id: user.category })
-    user.category = category.name
-    // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
-    array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
-    if (array[i][`${name}`].profile) {
-      array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
+    if (array[i]) {
+      const user = await this.findDocument(this.User, {
+        _id: array[i][`${property}`]
+      })
+      console.log(array[i][`${property}`], array[i])
+      const category = await this.findDocument(this.User_category, { _id: user.category })
+      user.category = category.name
+      // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
+      array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
+      if (array[i][`${name}`].profile) {
+        array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
+      }
     }
   }
   return array

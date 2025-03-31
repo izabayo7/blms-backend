@@ -385,14 +385,18 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     if (!result)
       return res.send(formatResult(404, 'quiz_submission not found'))
     result = simplifyObject(result)
-    result = await injectQuiz([result])
-    result[0].quiz = await addAttachmentMediaPaths([result[0].quiz])
-    result[0].quiz = simplifyObject(result[0].quiz)
-    result[0].quiz = await injectUser(result[0].quiz, 'user')
-    result = await injectUser(result, 'user')
-    result[0].quiz = result[0].quiz[0]
-    result = await injectUserFeedback(result)
+    result = simplifyObject(await injectQuiz([result]))
     result = result[0]
+    console.log(result.quiz)
+    result.quiz = await addQuizTarget([result.quiz])
+    result.quiz = await addAttachmentMediaPaths(result.quiz)
+    result.quiz = simplifyObject(result.quiz)
+    result.quiz = await injectUser(result.quiz, 'user')
+    // console.log(result)
+    // result = await injectUser(result, 'user')
+    // console.log(result)
+    result.quiz = result.quiz[0]
+    result = await injectUserFeedback(result)
     return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
