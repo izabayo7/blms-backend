@@ -348,6 +348,17 @@ module.exports.listen = (app) => {
             socket.emit('res/comment/new', result)
         })
 
+        // notify members that quiz is released
+        socket.on('live/releaseQuiz', async ({quiz, receivers}) => {
+
+            receivers.forEach(receiver => {
+                socket.broadcast.to(receiver.id).emit('live/quizReleased', quiz)
+            })
+
+            // send success mesage
+            socket.emit('live/quizReleased')
+        })
+
         /**
          * notifications
          */
