@@ -140,49 +140,32 @@ router.get('/', async (req, res) => {
 router.get('/college/:faculty', async (req, res) => {
     try {
         const fetch_all_faculties = req.params.faculty === "ALL"
-        if (!fetch_all_faculties) {
-            const faculty = await findDocument(Faculty, {
-                _id: req.params.faculty
-            })
-            if (!faculty)
-                return res.send(formatResult(404, 'faculty not found'))
-        }
-        let user_groups = await findDocuments(Faculty_college, fetch_all_faculties ? {
+
+        const faculties = await findDocuments(Faculty, fetch_all_faculties ? {
             college: req.user.college
         } : {
-            college: req.user.college, faculty: req.params.faculty
+            _id: req.params.faculty,
+            college: req.user.college
         })
+
+        if (!faculties.length && !fetch_all_faculties)
+            return res.send(formatResult(404, 'faculty not found'))
 
         let foundUser_groups = []
 
-        for (const faculty_college of user_groups) {
-
-            const faculty_details = await findDocument(Faculty, {
-                _id: faculty_college.faculty
-            })
-
-            const response = await findDocuments(User_group, {
-                faculty_college: faculty_college._id
-            })
-
-            for (const user_groups of response) {
-
-                const year_details = await findDocument(College_year, {
-                    _id: user_groups.college_year
-                })
-
-                foundUser_groups.push({
-                    _id: user_groups._id,
-                    faculty_college: user_groups.faculty_college,
-                    college_year: user_groups.college_year,
-                    name: `${faculty_details.name} Year ${year_details.digit}`
-                })
+        for (const i in faculties) {
+            let user_groups = await User_group.find({
+                faculty: faculties[i]._id
+            }).populate('faculty').lean()
+            
+            for (const item of user_groups) {
+                foundUser_groups.push(item)
             }
         }
 
-        foundFaculty_acollege_years = await injectDetails(foundUser_groups)
+        const result = await injectDetails(foundUser_groups)
 
-        return res.send(formatResult(u, u, foundUser_groups))
+        return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -363,34 +346,10 @@ router.delete('/:id', async (req, res) => {
 })
 
 // link the student with his/her current college
-async function injectDetails(user_groupss) {
+async function injectDetails(user_groups) {
     const student_category = await findDocument(User_category, { name: "STUDENT" })
     const instructor_category = await findDocument(User_category, { name: "INSTRUCTOR" })
-
     for (const i in user_groups) {
-
-        const faculty_college = await findDocument(Faculty_college, {
-            _id: user_groups[i].faculty_college
-        })
-        user_groups[i].faculty_college = simplifyObject(removeDocumentVersion(faculty_college))
-
-        const faculty = await findDocument(Faculty, {
-            _id: user_groups[i].faculty_college.faculty
-        })
-        user_groups[i].faculty_college.faculty = simplifyObject(removeDocumentVersion(faculty))
-
-        const college = await findDocument(College, {
-            _id: user_groups[i].faculty_college.college
-        })
-        user_groups[i].faculty_college.college = simplifyObject(removeDocumentVersion(college))
-        if (user_groupss[i].faculty_college.college.logo) {
-            user_groups[i].faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
-        }
-
-        const college_year = await findDocument(College_year, {
-            _id: user_groups[i].college_year
-        })
-        user_groups[i].college_year = removeDocumentVersion(college_year)
 
         const total_courses = await countDocuments(Course, {
             user_groups: user_groups[i]._id
@@ -399,8 +358,8 @@ async function injectDetails(user_groupss) {
         user_groups[i].total_courses = total_courses
 
         // add the number of students
-        const attendants = await User_user_groups.find({
-            user_groups: user_groups[i]._id
+        const attendants = await User_user_group.find({
+            user_group: user_groups[i]._id
         }).populate('user')
 
         let total_students = 0, total_instructors = 0
