@@ -173,11 +173,11 @@ router.post('/', async (req, res) => {
         if(req.query.sendEmail){
             const {sent, err} = await sendUserGroupInvitationMail({
                 email: user.email,
-                user_names: `${req.user.sur_name} ${req.user.other_names}`,
+                user_names: `${user.sur_name} ${user.other_names}`,
+                names: `${req.user.sur_name} ${req.user.other_names}`,
                 user_group_name: user_group.name,
                 user_type: user.category.name
             });
-            return res.send({result,error:err.toString()})
         }
 
         return res.send(result)
