@@ -459,6 +459,8 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Create course
+  *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a course
