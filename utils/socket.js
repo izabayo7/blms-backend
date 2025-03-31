@@ -242,6 +242,9 @@ module.exports.listen = (app) => {
             const receiver_type = typeof receiver
             if (content === "")
                 content = undefined
+            if (!attachments.length)
+                attachments = undefined
+
             const {error} = validate_message({
                 sender: user.user_name,
                 receiver: receiver_type === 'string' ? receiver : receiver.toString(),

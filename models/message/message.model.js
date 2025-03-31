@@ -44,7 +44,7 @@ function validate_message(credentials) {
     if (credentials.attachments)
         if (credentials.attachments.length)
             requireContent = false
-console.log(requireContent)
+
     const schema = {
         sender: Joi.string().required(),
         receiver: Joi.string().required(),
