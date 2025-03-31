@@ -563,7 +563,7 @@ router.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /user/{id}:
+ * /user/{user_name}:
  *   put:
  *     tags:
  *       - User
@@ -571,10 +571,10 @@ router.post('/login', async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *        - name: id
+ *        - name: user_name
  *          in: path
  *          type: string
- *          description: User's Id
+ *          description: User's user name
  *        - name: body
  *          description: Fields for a User
  *          in: body
@@ -598,12 +598,6 @@ router.post('/login', async (req, res) => {
  *              type: string
  *            email:
  *              type: string
- *            college:
- *              type: string
- *            category:
- *              type: string
- *            password:
- *              type: string
  *     responses:
  *       201:
  *         description: Created
@@ -614,25 +608,24 @@ router.post('/login', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:user_name', auth, async (req, res) => {
   try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
 
-    error = validate_user(req.body, 'update')
+    const {
+      error
+    } = validate_user(req.body, 'update')
     error = error.error
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    // check if user exist
-    let user = await findDocument(User, {
-      _id: req.params.id
-    })
+    let user = await User.findOne({
+      user_name: req.params.user_name
+    }).populate('category')
     if (!user)
-      return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
+      return res.send(formatResult(400, `user not found`))
+
+    if (req.user.user_name !== user.user_name)
+      return res.send(formatResult(403, 'YOU ARE NOT AUTHORIZED'))
 
     // check if the name or email were not used
     user = await findDocument(User, {
