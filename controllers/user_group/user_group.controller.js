@@ -1,7 +1,7 @@
 // import dependencies
+const { User_group } = require('../../models/user_group/user_group.model')
 const {
     express,
-    Faculty_college_year,
     Faculty_college,
     College_year,
     findDocuments,
@@ -29,7 +29,7 @@ const router = express.Router()
 /**
  * @swagger
  * definitions:
- *   Faculty_college_year:
+ *   User_group:
  *     properties:
  *       faculty_college:
  *         type: string
@@ -61,12 +61,12 @@ router.get('/statistics', async (req, res) => {
     try {
         let total_student_groups = 0
         if (req.user.category.name == "SUPERADMIN") {
-            total_student_groups = await countDocuments(Faculty_college_year)
+            total_student_groups = await countDocuments(User_group)
         } else {
 
             let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
             for (const i in faculty_college) {
-                let faculty_college_year = await countDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+                let faculty_college_year = await countDocuments(User_group, { faculty_college: faculty_college[i]._id })
                 total_student_groups += faculty_college_year
             }
         }
@@ -81,7 +81,7 @@ router.get('/statistics', async (req, res) => {
  * /faculty_college_year:
  *   get:
  *     tags:
- *       - Faculty_college_year
+ *       - User_group
  *     description: Get all faculty_college_years
  *     security:
  *       - bearerAuth: -[]
@@ -95,7 +95,7 @@ router.get('/statistics', async (req, res) => {
  */
 router.get('/', async (req, res) => {
     try {
-        let result = await findDocuments(Faculty_college_year)
+        let result = await findDocuments(User_group)
 
         if (result.length === 0)
             return res.send(formatResult(404, 'faculty_college_year list is empty'))
@@ -113,7 +113,7 @@ router.get('/', async (req, res) => {
  * /faculty_college_year/college/{faculty}:
  *   get:
  *     tags:
- *       - Faculty_college_year
+ *       - User_group
  *     description: Returns faculty_college_years in a specified college
  *     parameters:
  *       - name: faculty
@@ -147,7 +147,7 @@ router.get('/college/:faculty', async (req, res) => {
                 college: req.user.college, faculty: req.params.faculty
             })
 
-        let foundFaculty_college_years = []
+        let foundUser_groups = []
 
         for (const faculty_college of faculty_college_years) {
 
@@ -155,7 +155,7 @@ router.get('/college/:faculty', async (req, res) => {
                 _id: faculty_college.faculty
             })
 
-            const response = await findDocuments(Faculty_college_year, {
+            const response = await findDocuments(User_group, {
                 faculty_college: faculty_college._id
             })
 
@@ -165,7 +165,7 @@ router.get('/college/:faculty', async (req, res) => {
                     _id: faculty_college_year.college_year
                 })
 
-                foundFaculty_college_years.push({
+                foundUser_groups.push({
                     _id: faculty_college_year._id,
                     faculty_college: faculty_college_year.faculty_college,
                     college_year: faculty_college_year.college_year,
@@ -174,9 +174,9 @@ router.get('/college/:faculty', async (req, res) => {
             }
         }
 
-        foundFaculty_acollege_years = await injectDetails(foundFaculty_college_years)
+        foundFaculty_acollege_years = await injectDetails(foundUser_groups)
 
-        return res.send(formatResult(u, u, foundFaculty_college_years))
+        return res.send(formatResult(u, u, foundUser_groups))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -188,7 +188,7 @@ router.get('/college/:faculty', async (req, res) => {
  * /faculty_college_year/user/{user_name}:
  *   get:
  *     tags:
- *       - Faculty_college_year
+ *       - User_group
  *     description: Returns faculty_college_years for a specified user
  *     security:
  *       - bearerAuth: -[]
@@ -220,11 +220,11 @@ router.get('/user/:user_name', async (req, res) => {
             status: 1
         })
 
-        let foundFaculty_college_years = []
+        let foundUser_groups = []
 
         for (const user_faculty_college_year of user_faculty_college_years) {
 
-            const faculty_college_year = await findDocument(Faculty_college_year, {
+            const faculty_college_year = await findDocument(User_group, {
                 _id: user_faculty_college_year.faculty_college_year
             })
 
@@ -241,7 +241,7 @@ router.get('/user/:user_name', async (req, res) => {
                 _id: faculty_college_year.college_year
             })
 
-            foundFaculty_college_years.push({
+            foundUser_groups.push({
                 _id: faculty_college_year._id,
                 faculty_college: faculty_college_year.faculty_college,
                 college_year: faculty_college_year.college_year,
@@ -250,9 +250,9 @@ router.get('/user/:user_name', async (req, res) => {
 
         }
 
-        foundFaculty_acollege_years = await injectDetails(foundFaculty_college_years)
+        foundFaculty_acollege_years = await injectDetails(foundUser_groups)
 
-        return res.send(formatResult(u, u, foundFaculty_college_years))
+        return res.send(formatResult(u, u, foundUser_groups))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -263,7 +263,7 @@ router.get('/user/:user_name', async (req, res) => {
  * /faculty_college_year:
  *   post:
  *     tags:
- *       - Faculty_college_year
+ *       - User_group
  *     description: Create faculty_college_year
  *     security:
  *       - bearerAuth: -[]
@@ -273,7 +273,7 @@ router.get('/user/:user_name', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Faculty_college_year'
+ *           $ref: '#/definitions/User_group'
  *     responses:
  *       201:
  *         description: Created
@@ -306,14 +306,14 @@ router.post('/', async (req, res) => {
         if (!college_year)
             return res.send(formatResult(404, `College_year with code ${req.body.college_year} doens't exist`))
 
-        let faculty_college_year = await findDocument(Faculty_college_year, {
+        let faculty_college_year = await findDocument(User_group, {
             faculty_college: req.body.faculty_college,
             college_year: req.body.college_year
         })
         if (faculty_college_year)
             return res.send(formatResult(400, `faculty_college_year you want to create arleady exist`))
 
-        let result = await createDocument(Faculty_college_year, {
+        let result = await createDocument(User_group, {
             faculty_college: req.body.faculty_college,
             college_year: req.body.college_year
         })
@@ -331,7 +331,7 @@ router.post('/', async (req, res) => {
  * /faculty_college_year/{id}:
  *   delete:
  *     tags:
- *       - Faculty_college_year
+ *       - User_group
  *     description: Delete a faculty_college_year
  *     security:
  *       - bearerAuth: -[]
@@ -359,7 +359,7 @@ router.delete('/:id', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let faculty_college_year = await findDocument(Faculty_college_year, {
+        let faculty_college_year = await findDocument(User_group, {
             _id: req.params.id
         })
         if (!faculty_college_year)
@@ -370,11 +370,11 @@ router.delete('/:id', async (req, res) => {
             faculty_college_year: req.params.id
         })
         if (!faculty_college_year_found) {
-            let result = await deleteDocument(Faculty_college_year, req.params.id)
+            let result = await deleteDocument(User_group, req.params.id)
             return res.send(result)
         }
 
-        const update_faculty_college_year = await updateDocument(Faculty_college_year, req.params.id, {
+        const update_faculty_college_year = await updateDocument(User_group, req.params.id, {
             status: 0
         })
         return res.send(formatResult(200, `User ${update_faculty_college_year._id} couldn't be deleted because it was used, instead it was disabled`, update_faculty_college_year.data))

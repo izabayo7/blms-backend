@@ -64,22 +64,23 @@ exports.getFaculties = async (req, res) => {
       faculties = await findDocuments(Faculty, fetch_all_faculties ? {
         college: req.user.college
       } : {
-          _id: req.params.faculty,
-          college: req.user.college
-        }
+        _id: req.params.faculty,
+        college: req.user.college
+      }
       )
     } else if (req.user.category.name == "INSTRUCTOR") {
       const user_groups = await findDocuments(User_faculty_college_year, {
         user: req.user._id
       })
-
+      // stack here
       for (const i in user_groups) {
         const res = await findDocuments(Faculty, fetch_all_faculties ? {
-          college: req.user.college
+          college: req.user.college,
+          _id: user_groups[i].faculty_college
         } : {
-            _id: req.params.faculty,
-            college: req.user.college
-          }
+          _id: req.params.faculty,
+          college: req.user.college
+        }
         )
       }
 
