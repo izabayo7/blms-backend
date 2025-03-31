@@ -1249,9 +1249,10 @@ exports.streamVideo = async (req, res, path) => {
   });
 }
 
+exports.ONE_DAY = 60 * 60 * 24 * 1000
+
 // generateAuthToken on user login
 exports.generateAuthToken = async (user) => {
-  const ONE_DAY = 60 * 60 * 24
   return this.jwt.sign({
     // _id: user._id,
     sur_name: user.sur_name,
@@ -1268,7 +1269,7 @@ exports.generateAuthToken = async (user) => {
     college: user.college,
     profile: user.profile,
   }, this.config.get('auth_key'), {
-    expiresIn: ONE_DAY
+    expiresIn: this.ONE_DAY / 1000
   })
 }
 
