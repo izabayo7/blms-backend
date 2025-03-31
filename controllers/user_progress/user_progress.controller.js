@@ -260,6 +260,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - User_progress
  *     description: Create user_progress
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: user_progress id
