@@ -909,10 +909,14 @@ exports.getStudentExams = async (user_id, undone = false) => {
         user_group: {$in: user_user_groups.map(x => x.user_group)}
     })
     const ids = courses.map(x => x._id.toString())
-    const exams = Exam.find({
+    const exams = undone ? Exam.find({
         "course": {$in: ids},
         status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
-    }).sort({_id: -1}).lean()
+    }).sort({_id: -1}) : Exam.find({
+        "course": {$in: ids},
+        status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
+    }).sort({_id: -1}).populate('course').lean()
+
     if (!undone)
         return exams
     const result = []
