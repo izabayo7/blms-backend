@@ -599,7 +599,7 @@ router.put('/:id', async (req, res) => {
     quiz.duration = req.body.duration
     quiz.questions = req.body.questions
     quiz.total_marks = req.body.total_marks
-    quiz.user = req.body.user
+    quiz.user = user._id
     quiz.published = req.body.published
 
     await quiz.save()
