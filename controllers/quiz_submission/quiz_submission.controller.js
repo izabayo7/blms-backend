@@ -311,14 +311,11 @@ router.get('/user/:user_name', auth, async (req, res) => {
               quiz_submissions = await injectUser(quiz_submissions, 'user')
               quiz_submissions = await injectUserFeedback(quiz_submissions)
 
-              // courses[j].marking_status = 0
-              // const percentage_of_one_submission = 100 / quiz_submissions.length
+
 
               for (const k in quiz_submissions) {
 
-                // if (quiz_submissions[k].marked) {
-                //     quizes[i].marking_status += percentage_of_one_submission
-                // }
+
 
                 quiz_submissions[k].total_feedbacks = 0
 
@@ -327,11 +324,18 @@ router.get('/user/:user_name', auth, async (req, res) => {
                 }
                 foundSubmissions.push(quiz_submissions[k])
               }
-              // quizes[i].marking_status += '%'
             }
           }
           if (foundSubmissions.length) {
             courses[j].submissions = foundSubmissions
+            courses[j].marking_status = 0
+            const percentage_of_one_submission = 100 / foundSubmissions.length
+            for (const a in foundSubmissions) {
+              if (foundSubmissions[a].marked) {
+                courses[j].marking_status += percentage_of_one_submission
+              }
+            }
+            courses[j].marking_status += '%'
             coursesWithSubmissions.push(courses[j])
           }
 
