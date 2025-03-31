@@ -22,7 +22,6 @@ const {
     Chat_group,
     findDocuments,
     validate_message,
-    RTCMultiConnectionServer,
     validate_comment,
     Chapter,
     formatResult,
@@ -36,9 +35,7 @@ module.exports.listen = (app) => {
     const io = socket_io.listen(app)
 
     io.on('connection', async (socket) => {
-
-        RTCMultiConnectionServer.addSocket(socket);
-
+        // TODO add_token for more security
         const user_name = socket.handshake.query.user_name
         const user = await User.findOne({user_name: user_name}).populate('category')
         if (!user) {
