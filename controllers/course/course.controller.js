@@ -237,7 +237,8 @@ router.get('/user/:user_name', async (req, res) => {
                 return res.send(formatResult(200, undefined, []))
 
             result = await findDocuments(Course, {
-                faculty_college_year: user_faculty_college_year.faculty_college_year
+                faculty_college_year: user_faculty_college_year.faculty_college_year,
+                published: true
             })
             result = simplifyObject(result)
             result = await injectUserProgress(result, user._id + '')
