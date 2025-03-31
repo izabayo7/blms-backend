@@ -16,7 +16,8 @@ const {
   sendResizedImage,
   u,
   upload_single_image,
-  addStorageDirectoryToPath
+  addStorageDirectoryToPath,
+  auth
 } = require('../../utils/imports')
 
 // create router
@@ -63,7 +64,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     let colleges = await findDocuments(College)
     if (!colleges.length)
@@ -98,7 +99,7 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/name/:name', async (req, res) => {
+router.get('/name/:name', auth, async (req, res) => {
   try {
     let college = await findDocument(College, {
       name: req.params.name
@@ -136,7 +137,7 @@ router.get('/name/:name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     let {
       error
@@ -197,7 +198,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:college_name/logo/:file_name', async (req, res) => {
+router.get('/:college_name/logo/:file_name', auth, async (req, res) => {
   try {
 
     // check if college exist
@@ -226,8 +227,6 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
  *     tags:
  *       - College
  *     description: Create a college
- *     security:
- *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a college
@@ -254,14 +253,14 @@ router.post('/', async (req, res) => {
     // check if the name or email were not used
     let college = await findDocument(College, {
       $or: [
-      //   {
-      //   email: req.body.email
-      // },
-       {
-        name: req.body.name
-      }, {
-        phone: req.body.phone
-      }]
+        //   {
+        //   email: req.body.email
+        // },
+        {
+          name: req.body.name
+        }, {
+          phone: req.body.phone
+        }]
     })
 
     if (college) {
@@ -317,7 +316,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     let {
       error
@@ -391,7 +390,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/logo', async (req, res) => {
+router.put('/:id/logo', auth, async (req, res) => {
   try {
     const {
       error
@@ -462,7 +461,7 @@ router.put('/:id/logo', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id/logo/:file_name', async (req, res) => {
+router.delete('/:id/logo/:file_name', auth, async (req, res) => {
   try {
     const {
       error
@@ -519,7 +518,7 @@ router.delete('/:id/logo/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
 
     let college = await findDocument(College, { _id: req.params.id })
