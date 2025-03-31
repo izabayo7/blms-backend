@@ -318,6 +318,95 @@ router.put('/:id/attachements', async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /message/{id}/attachment/{file_name}:
+ *   get:
+ *     tags:
+ *       - Quiz
+ *     description: Returns the files attached to a specified message ( use format height and width only when the attachment is a picture)
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: file's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: format
+ *         description: File format one of (jpeg, jpg, png, webp)
+ *         in: query
+ *         type: string
+ *       - name: height
+ *         description: custom height
+ *         in: query
+ *         type: string
+ *       - name: width
+ *         description: custom width
+ *         in: query
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/attachment/:file_name', async (req, res) => {
+    try {
+
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        const msg = await findDocument(Message, {
+            _id: req.params.id
+        })
+        if (!msg)
+            return res.send(formatResult(404, 'message not found'))
+
+        let file_found = false
+
+        for (const i in msg.attachments) {
+            if (msg.attachments[i].src === req.params.file_name) {
+                file_found = true
+                break
+            }
+        }
+
+        if (!file_found)
+            return res.send(formatResult(404, 'file not found'))
+
+        const user = await findDocument(User, {
+            _id: msg.sender
+        })
+
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles/' + user._id}/${req.params.file_name}`)
+
+        const file_type = await findFileType(req.params.file_name)
+
+        if (file_type === 'image') {
+            sendResizedImage(req, res, file_path)
+        } else if (file_type === 'video') {
+            streamVideo(req, res, file_path)
+        } else {
+            return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+        }
+
+    } catch
+        (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 
 /**
  * @swagger
