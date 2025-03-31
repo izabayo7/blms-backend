@@ -511,7 +511,8 @@ router.post('/', async (req, res) => {
         })
 
         result = simplifyObject(result)
-        result.data = await injectFaculty_college_year(result.data)
+        console.log(result.data)
+        result.data = await injectFaculty_college_year([result.data])
         result.data = result.data[0]
         return res.send(result)
     } catch (error) {
