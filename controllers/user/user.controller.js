@@ -1462,7 +1462,7 @@ router.put('/', auth, async (req, res) => {
             req.body.email = req.user.email
             const {sent, err} = await sendEmailConfirmation({
                 email: confirmation.email,
-                user_name: req.user.sur_name + ' ' + re1.user.other_names,
+                user_name: req.user.sur_name + ' ' + req.user.other_names,
                 token: confirmation.token,
             });
             if (err)
