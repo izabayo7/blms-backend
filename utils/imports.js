@@ -870,24 +870,15 @@ module.exports.simplifyObject = (obj) => {
     return JSON.parse(JSON.stringify(obj))
 }
 
-// add doer information to a notification
-module.exports.injectDoer = async (notification) => {
-    notification = await this.injectUser([notification], 'doer_id')
-    notification = notification[0]
-    notification.doer = notification.doer_id
-    notification.doer_id = undefined
-    return notification
-}
-
 // inject notification
 module.exports.injectNotification = async (array) => {
     for (const i in array) {
         for (const k in array[i].notifications) {
-            let notification = await this.Notification.findOne({
+            let notification = await this.findDocument(this.Notification, {
                 _id: array[i].notifications[k].id
-            }).lean()
-            notification = await this.injectDoer(notification)
-            array[i].notifications[k].id = undefinedzzzzzzz
+            })
+            notification = await this.injectUser(notification, 'user')
+            array[i].notifications[k].id = undefined
             array[i].notifications[k].notification = notification
         }
     }

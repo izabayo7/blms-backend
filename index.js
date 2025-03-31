@@ -51,7 +51,6 @@ require('./models/mongodb')
 // import controllers
 // const messageController = require('./controllers/message/message.controller')
 // const fileController = require('./controllers/file/file.controller')
-// const userNotificationController = require('./controllers/user_notification/user_notification.controller')
 // const chatGroupController = require('./controllers/chat-group/chat-group.controller')
 const user_controller = require('./controllers/user/user.controller')
 const user_category_controller = require('./controllers/user_category/user_category.controller')
@@ -68,6 +67,7 @@ const quiz_controller = require('./controllers/quiz/quiz.controller')
 const quiz_submission_controller = require('./controllers/quiz_submission/quiz_submission.controller')
 const user_progress_contoller = require('./controllers/user_progress/user_progress.controller')
 const notification_controller = require('./controllers/notification/notification.controller')
+const user_notification_controller = require('./controllers/user_notification/user_notification.controller')
 
 // use middlewares
 app.use(cors())
@@ -92,7 +92,6 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 
 // app.use('/kurious/message', messageController)
 // app.use('/kurious/file', fileController)
-// app.use('/kurious/user_notification', userNotificationController)
 // app.use('/kurious/chat_group', chatGroupController)
 
 app.use(`${basePath}/user`, user_controller)
@@ -110,6 +109,7 @@ app.use(`${basePath}/quiz`, quiz_controller)
 app.use(`${basePath}/quiz_submission`, quiz_submission_controller)
 app.use(`${basePath}/user_progress`, user_progress_contoller)
 app.use(`${basePath}/notification`, notification_controller)
+app.use(`${basePath}/user_notification`, user_notification_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

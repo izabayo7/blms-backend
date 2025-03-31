@@ -7,8 +7,7 @@ const {
 const notification_schema = new mongoose.Schema({
     id: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     // notification status 3(not seen) 2(seen but not marked as read) 1(read but not deleted) 0(deleted (this wont be shown but will still be kept))
     status: {
@@ -19,7 +18,7 @@ const notification_schema = new mongoose.Schema({
 notification_schema.plugin(timestamps)
 
 const user_notification_schema = new mongoose.Schema({
-    user_id: {
+    user: {
         type: String,
         required: true
     },
@@ -31,8 +30,8 @@ user_notification_schema.plugin(timestamps)
 // validate notification
 function validat_user_notification(credentials) {
     const schema = {
-        user_id: Joi.ObjectId().required(),
-        notification_id: Joi.ObjectId().required(),
+        user: Joi.ObjectId().required(),
+        notification: Joi.ObjectId().required(),
         status: Joi.number().min(0).max(3)
     }
     return Joi.validate(credentials, schema)

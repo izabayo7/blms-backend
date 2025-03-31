@@ -23,8 +23,6 @@ const router = express.Router()
  * definitions:
  *   Notification:
  *     properties:
- *       user_type:
- *         type: string
  *       user:
  *         type: string
  *       link:
@@ -274,7 +272,6 @@ router.delete('/:id', async (req, res) => {
       }
     }
 
-    // need to delete all attachments
     let result = await deleteDocument(Notification, req.params.id)
 
     return res.send(result)
