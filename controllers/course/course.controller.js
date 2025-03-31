@@ -816,6 +816,8 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
  *     tags:
  *       - Course
  *     description: remove Course cover_picture
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
@@ -884,6 +886,8 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Delete a course
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Course id
