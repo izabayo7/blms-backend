@@ -847,6 +847,8 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
  *     tags:
  *       - User
  *     description: Delete as User
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User's id
