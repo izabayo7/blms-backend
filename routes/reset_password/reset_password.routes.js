@@ -31,7 +31,7 @@ router.route('/')
     .post(createPasswordReset)
     /**
      * @swagger
-     * /reset_password/{id}:
+     * /reset_password:
      *   put:
      *     tags:
      *       - User

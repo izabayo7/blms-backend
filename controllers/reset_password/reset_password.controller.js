@@ -37,7 +37,7 @@ exports.createPasswordReset = async (req, res) => {
 
       await resetPassword.save();
     }
-    console.log(user)
+
     const { sent, err } = await sendResetPasswordEmail({ email: user.email, user_name: user.sur_name + ' ' + user.other_names, token, institution_name: user.college.name });
     if (err)
       return res.send(formatResult(500, err));
@@ -79,7 +79,7 @@ exports.updatePasswordReset = async (req, res) => {
     if (token.expiration < Date.now())
       return res.send(formatResult(400, 'PasswordReset Token has expired'))
 
-    if (user._id != token.user)
+    if (JSON.stringify(user._id) == JSON.stringify(token.user))
       return res.send(formatResult(403, 'Invalid Token'));
 
     await update_password({ password: req.body.password, user_id: user._id })
