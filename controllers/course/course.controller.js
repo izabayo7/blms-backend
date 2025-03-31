@@ -146,6 +146,7 @@ router.get('/statistics', async (req, res) => {
     }
 })
 
+// not done
 /**
  * @swagger
  * /course/statistics/user_access:
@@ -203,7 +204,7 @@ router.get('/statistics/user_access', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
+// not done
 /**
  * @swagger
  * /course/statistics/creations:
@@ -279,7 +280,7 @@ router.get('/statistics/creations', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
+// not done
 /**
  * @swagger
  * /course/statistics/user_access:
@@ -483,24 +484,19 @@ router.get('/faculty/:id', async (req, res) => {
 
         let foundCourses = []
 
-        let faculty_college = await findDocuments(Faculty_college, { faculty: req.params.id })
+        let user_groups = await findDocuments(User_group, { faculty: faculty._id })
 
-        for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
-            if (!faculty_college_year.length)
+        for (const k in user_groups) {
+            let courses = await findDocuments(Course, {
+                user_group: user_groups[k]._id
+            })
+            if (!courses.length)
                 continue
 
-            for (const k in faculty_college_year) {
-                let courses = await findDocuments(Course, {
-                    faculty_college_year: faculty_college_year[i]._id
-                })
-                if (!courses.length)
-                    continue
-
-                for (const course of courses) {
-                    foundCourses.push(course)
-                }
+            for (const course of courses) {
+                foundCourses.push(course)
             }
+
 
         }
 
