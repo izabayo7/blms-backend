@@ -253,6 +253,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - Message
  *     description: Delete a message
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Message's id
