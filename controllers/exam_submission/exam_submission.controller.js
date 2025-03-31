@@ -46,7 +46,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /submission/user:
+ * /submission:
  *   get:
  *     tags:
  *       - Exam_submission
@@ -61,7 +61,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/user', auth, async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
 
         let result
