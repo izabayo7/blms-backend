@@ -57,7 +57,7 @@ exports.sendUserGroupInvitationMail = async ({
     names,
                                         email, user_names,
                                         user_group_name,
-                                        user_type
+                                        user_type,
                                     }) => {
     try {
 
