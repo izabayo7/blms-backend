@@ -11,6 +11,8 @@ router.route('/')
      *     tags:
      *       - User_invitation
      *     description: Returns current logged in user_invitations
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: page
      *         description: page number
@@ -34,6 +36,8 @@ router.route('/')
      *     tags:
      *       - User_invitation
      *     description: Creates a User_invitation
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: body
      *         description: User_invitation fields
@@ -76,6 +80,8 @@ router.route('/all')
      *     tags:
      *       - User_invitation
      *     description: Returns all user_invitations
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: page
      *         description: page number
@@ -118,7 +124,7 @@ router.route('/:token/:action')
      *       500:
      *         description: Internal Server Error
      */
-    .get([auth, acceptOrDenyInvitation])
+    .get(acceptOrDenyInvitation)
 
 router.route('/:token/renew')
     /**
@@ -128,6 +134,8 @@ router.route('/:token/renew')
      *     tags:
      *       - User_invitation
      *     description: Extends the expiration time of an invitation
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: token
      *         description: invitation token
@@ -150,6 +158,8 @@ router.route('/:token/delete')
      *     tags:
      *       - User_invitation
      *     description: Deletes a user_invitation
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: token
      *         description: invitation token
