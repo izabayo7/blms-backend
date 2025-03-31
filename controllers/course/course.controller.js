@@ -55,7 +55,8 @@ const {
     addStorageDirectoryToPath,
     Faculty,
     countDocuments,
-    date
+    date,
+    auth
 } = require('../../utils/imports')
 const {
     v4: uuid
@@ -108,7 +109,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics', async (req, res) => {
+router.get('/statistics', auth, async (req, res) => {
     try {
         let total_courses = 0
         if (req.user.category.name == "SUPERADMIN") {
@@ -159,7 +160,7 @@ router.get('/statistics', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics/user', async (req, res) => {
+router.get('/statistics/user', auth, async (req, res) => {
     try {
         let total_courses = 0
         if (req.user.category.name == "INSTRUCTOR") {
@@ -247,7 +248,7 @@ router.get('/statistics/user', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
+router.get('/statistics/course/:id', auth, filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         let course = await Course.findOne({
             user: req.user._id,
@@ -402,7 +403,7 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
  *       500:
  *         description: Internal Server error
  */
-router.get('/college', filterUsers("ADMIN"), async (req, res) => {
+router.get('/college', auth, filterUsers("ADMIN"), async (req, res) => {
     try {
 
         let faculty_college = await findDocuments(Faculty, {
@@ -450,7 +451,7 @@ router.get('/college', filterUsers("ADMIN"), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
+router.get('/faculty/:id', auth, filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
@@ -518,7 +519,7 @@ router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user_group/:id', filterUsers(["ADMIN"]), async (req, res) => {
+router.get('/user_group/:id', auth, filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
@@ -577,7 +578,7 @@ router.get('/user_group/:id', filterUsers(["ADMIN"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/attendants', async (req, res) => {
+router.get('/:id/attendants', auth, async (req, res) => {
     try {
         const {
             error
@@ -630,7 +631,7 @@ router.get('/:id/attendants', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user', async (req, res) => {
+router.get('/user', auth, async (req, res) => {
     try {
         let result
         if (req.user.category.name === 'STUDENT') {
@@ -714,28 +715,20 @@ router.get('/school/:abbreviation', async (req, res) => {
         for (const faculty of faculties) {
             let courses = await findDocuments(Course, {
                 user_group: {
-                    $in: await User_group.find({
+                    $in: (await User_group.find({
                         faculty: faculty._id,
                         status: "ACTIVE"
-                    }).select('_id')
+                    }).select('_id')).map(x => x._id)
                 },
                 published: true
             }, {
-                name: true
+                name: true,
+                user: true,
+                cover_picture: true,
             }, undefined, undefined, true);
 
-            for (const course of courses) {
-                let chapter = await findDocuments(Chapter, {
-                    course: course._id,
-                    number: 1
-                }, {
-                    name: true,
-                    uploaded_video: true,
-                    description: true
-                }, undefined, undefined, true);
-
-                course.chapter = chapter;
-            }
+            courses = await injectUser(courses, 'user')
+            courses = await injectChapters(courses)
 
             faculty.courses = courses;
         }
@@ -775,7 +768,7 @@ router.get('/school/:abbreviation', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:courseName', async (req, res) => {
+router.get('/user/:user_name/:courseName', auth, async (req, res) => {
     try {
         let user = await findDocument(User, {
             user_name: req.params.user_name
@@ -844,7 +837,7 @@ router.get('/user/:user_name/:courseName', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
     try {
         const {
             error
@@ -909,7 +902,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
+router.get('/:course_name/cover_picture/:file_name', auth, async (req, res) => {
     try {
 
         // check if college exist
@@ -956,7 +949,7 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
     try {
         const {
             error
@@ -1041,7 +1034,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/toogle_publishment_status/:id', async (req, res) => {
+router.put('/toogle_publishment_status/:id', auth, async (req, res) => {
     try {
         let {
             error
@@ -1105,7 +1098,7 @@ router.put('/toogle_publishment_status/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
     try {
         let {
             error
@@ -1183,7 +1176,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/cover_picture', async (req, res) => {
+router.put('/:id/cover_picture', auth, async (req, res) => {
     try {
         const {
             error
@@ -1249,7 +1242,7 @@ router.put('/:id/cover_picture', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id/cover_picture/:file_name', async (req, res) => {
+router.delete('/:id/cover_picture/:file_name', auth, async (req, res) => {
     try {
         let {
             error
@@ -1313,7 +1306,7 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         const {
             error
