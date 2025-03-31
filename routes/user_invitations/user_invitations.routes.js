@@ -27,3 +27,44 @@ router.route('/')
      *         description: Internal Server Error
      */
     .get([auth, getMyInvitations])
+    /**
+     * @swagger
+     * /users:
+     *   post:
+     *     tags:
+     *       - User_invitation
+     *     description: Creates a User_invitation
+     *     parameters:
+     *       - name: body
+     *         description: User_invitation fields
+     *         in: body
+     *         required: true
+     *         schema:
+     *           properties:
+     *             college:
+     *               type: string
+     *             category:
+     *               type: string
+     *             emails:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   name:
+     *                     type: string
+     *                   is_exam:
+     *                     type: boolean
+     *                   is_ignored:
+     *                     type: boolean
+     *                   maximum_marks:
+     *                     type: number
+     *           required:
+     *             - college
+     *             - category
+     *             - emails
+     *     responses:
+     *       200:
+     *         description: Success
+     */
+    .post([auth, createUserInvitation])
+
