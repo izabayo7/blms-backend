@@ -198,6 +198,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - User_notification
  *     description: Update a notification
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         in: path
