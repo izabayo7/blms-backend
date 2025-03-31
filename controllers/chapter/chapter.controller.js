@@ -891,7 +891,7 @@ router.delete('/:id', async (req, res) => {
         _id: faculty_college_year.faculty_college
       })
 
-      const path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path, {
