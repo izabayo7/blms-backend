@@ -72,6 +72,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Notification
  *     description: Returns notifications that were caused by a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Users's id
