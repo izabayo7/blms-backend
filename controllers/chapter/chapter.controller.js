@@ -631,7 +631,9 @@ router.put('/:id/video', async (req, res) => {
       if (err)
         return res.send(formatResult(500, err.message))
 
-      if (chapter.uploaded_video && chapter.uploaded_video != req.file.filename) {
+      const exists = fs.existsSync(`${req.kuriousStorageData.dir}/${chapter.uploaded_video}`)
+
+      if (exists && chapter.uploaded_video && chapter.uploaded_video != req.file.filename) {
         fs.unlink(`${req.kuriousStorageData.dir}/${chapter.uploaded_video}`, (err) => {
           if (err) {
             return res.send(formatResult(500, err))
