@@ -695,22 +695,12 @@ router.put('/:id/profile', async (req, res) => {
       return res.send(formatResult(404, 'user not found'))
 
     const path = user.college ? `./uploads/colleges/${user.college}/user_profiles` : `./uploads/system/user_profiles`
-    const temp_path = user.college ? `./uploads/colleges/${user.college}/temp` : `./uploads/system/temp`
     req.kuriousStorageData = {
-      dir: temp_path,
+      dir: path,
     }
     upload_single_image(req, res, async (err) => {
       if (err)
         return res.send(formatResult(500, err.message))
-
-      await Compress_images(temp_path, path)
-
-      setTimeout(() => {
-        fs.unlink(`${temp_path}/${req.file.filename}`, (err) => {
-          if (err)
-            return res.send(formatResult(500, err))
-        })
-      }, 1000);
 
       if (user.profile && user.profile != req.file.filename) {
         fs.unlink(`${path}/${user.profile}`, (err) => {
