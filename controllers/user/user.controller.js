@@ -392,7 +392,7 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
             name: req.params.category
         })
 
-        let users = await findDocuments(User, req.params.category === 'ALL' ? {
+        let users = await User.find(req.params.category === 'ALL' ? {
             college: req.user.college,
             _id: {$ne: req.user._id},
             "status.deleted": {$ne: 1}
@@ -400,7 +400,7 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
             college: req.user.college,
             category: user_category._id,
             _id: {$ne: req.user._id}
-        })
+        }).sort({category: 1}).lean()
 
         users = await add_user_details(users)
 
