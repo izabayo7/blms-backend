@@ -81,11 +81,11 @@ const router = express.Router()
  *             type: string
  *           id:
  *             type: string
- *       profile:
- *         type: string
  *     required:
  *       - name
  *       - user
+ *       - duration
+ *       - questions
  */
 
 /**

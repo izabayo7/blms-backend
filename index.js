@@ -52,7 +52,6 @@ require('./models/mongodb')
 // const studentProgressController = require('./controllers/studentProgress/studentProgress.controller')
 // const messageController = require('./controllers/message/message.controller')
 // const fileController = require('./controllers/file/file.controller')
-// const quizSubmissionController = require('./controllers/quizSubmission/quizSubmission.controller')
 // const notificationController = require('./controllers/notification/notification.controller')
 // const userNotificationController = require('./controllers/user_notification/user_notification.controller')
 // const chatGroupController = require('./controllers/chat-group/chat-group.controller')
@@ -68,6 +67,7 @@ const user_faculty_college_year_controller = require('./controllers/user_faculty
 const course_controller = require('./controllers/course/course.controller')
 const chapter_controller = require('./controllers/chapter/chapter.controller')
 const quiz_controller = require('./controllers/quiz/quiz.controller')
+const quiz_submission_controller = require('./controllers/quiz_submission/quiz_submission.controller')
 
 // use middlewares
 app.use(cors())
@@ -93,7 +93,6 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 // app.use('/kurious/studentProgress', studentProgressController)
 // app.use('/kurious/message', messageController)
 // app.use('/kurious/file', fileController)
-// app.use('/kurious/quiz-submission', quizSubmissionController)
 // app.use('/kurious/notification', notificationController)
 // app.use('/kurious/user_notification', userNotificationController)
 // app.use('/kurious/chat_group', chatGroupController)
@@ -110,6 +109,7 @@ app.use(`${basePath}/user_faculty_college_year`, user_faculty_college_year_contr
 app.use(`${basePath}/course`, course_controller)
 app.use(`${basePath}/chapter`, chapter_controller)
 app.use(`${basePath}/quiz`, quiz_controller)
+app.use(`${basePath}/quiz_submission`, quiz_submission_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

@@ -10,7 +10,7 @@ const quiz_submission_schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    student: {
+    user: {
         type: String,
         required: true
     },
@@ -18,10 +18,25 @@ const quiz_submission_schema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    answers: {
-        type: Array,
-        required: true
-    },
+    answers: [{
+        text: {
+            type: String
+        },
+        marks: {
+            type: Number
+        },
+        src: {
+            type: String
+        },
+        choosed_options: [{
+            text: {
+                type: String
+            },
+            src: {
+                type: String
+            }
+        }]
+    }],
     total_marks: {
         type: Number,
         default: 0
@@ -47,8 +62,17 @@ function validate_quiz_submission(credentials) {
     const schema = {
         quiz: Joi.ObjectId().required(),
         used_time: Joi.number().required(),
-        answers: Joi.array().min(1).required(),
-        student: Joi.ObjectId().required(),
+        answers: Joi.array().min(1).items(Joi.object({
+            _id: Joi.ObjectId(),
+            text: Joi.string(),
+            marks: Joi.number(),
+            src: Joi.number(),
+            choosed_options: Joi.array().items(Joi.object({
+                text: Joi.string(),
+                src: Joi.string()
+            })),
+        })).required(),
+        user: Joi.ObjectId().required(),
         auto_submitted: Joi.boolean(),
         marked: Joi.boolean(),
         published: Joi.boolean()
