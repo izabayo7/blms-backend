@@ -25,7 +25,7 @@ user_faculty_college_year_schema.plugin(timestamps)
 // validate user_faculty_college_year
 function validate_user_faculty_college_year(credentials) {
     const schema = {
-        user: Joi.ObjectId().required(),
+        user: Joi.string().min(3).max(100).required(),
         faculty_college_year: Joi.ObjectId().required(),
         status: Joi.number().min(0).max(1)
     }
