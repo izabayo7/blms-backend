@@ -90,14 +90,7 @@ exports.confirmAccount = async (req, res) => {
 
         if (!(uuidValidate(req.params.token))) return res.status(400).send(formatResult(400, 'Invalid confirmation token'));
 
-        const confirmation = await Account_confirmation.findOne({token: req.params.token, status: "CONFIRMED"});
-        if (confirmation)
-            return res.send(formatResult(403, 'account confirmation has already been closed'));
-
-        const _confirmation = await Account_confirmation.findOne({
-            token: req.params.token,
-            status: 'ACCEPTED'
-        }).populate({
+        const confirmation = await Account_confirmation.findOne({token: req.params.token, status: "CONFIRMED"}).populate({
             path: 'user',
             model: 'user',
             populate: {
@@ -107,15 +100,17 @@ exports.confirmAccount = async (req, res) => {
                 }
             }
         });
-
-        if (!_confirmation)
+        if (!confirmation)
             return res.send(formatResult(403, 'account confirmation not found'));
+        if (confirmation.status === "CONFIRMED")
+            return res.send(formatResult(403, 'account confirmation has already been closed'));
 
-        _confirmation.status = "CONFIRMED"
 
-        await _confirmation.save()
+        confirmation.status = "CONFIRMED"
 
-        return res.redirect(`https://elearning.rw/login?institution=${_confirmation.user.college.name}`)
+        await confirmation.save()
+
+        return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}`)
 
     } catch (err) {
         return res.send(formatResult(500, err));
