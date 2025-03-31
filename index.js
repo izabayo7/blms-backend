@@ -122,6 +122,7 @@ app.use(`${basePath}/message`, auth, message_controller)
 app.use(`${basePath}/comment`, auth, comment_controller)
 app.use(`${basePath}/live_session`, auth, live_session_controller)
 app.use(`${basePath}/user_invitations`, User_invitation_routes)
+app.use(`${basePath}/posts`, Post_routes)
 
 // serve assets
 app.use(
