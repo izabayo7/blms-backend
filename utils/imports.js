@@ -1011,8 +1011,8 @@ exports.injectUser = async (array, property, newProperty) => {
   let name = newProperty ? newProperty : property
   for (const i in array) {
     if (array[i]) {
-        if (array[i][`${property}`]['email'])
-          continue;
+      if (array[i][`${property}`]['email'])
+        continue;
       const user = await this.findDocument(this.User, {
         _id: array[i][`${property}`]
       })
@@ -1488,16 +1488,16 @@ exports.addQuizTarget = async (quizes) => {
           _id: chapter.course
         })
       }
-      course = await this.findDocument(this.Course, {
+      course = await this.Course.findOne({
         _id: chapter ? chapter.course : quiz.target.id
-      })
+      }).populate('user_group')
 
       course = await this.injectFaculty_college_year([course])
       course = course[0]
 
       quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt'])
       quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
-      quizes[i].target.faculty_college_year = course.faculty_college_year
+      quizes[i].target.user_group = course.user_group
 
     }
   }
