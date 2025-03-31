@@ -501,7 +501,36 @@ router.post('/', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/User'
+ *           properties:
+ *             sur_name:
+ *               type: string
+ *             other_names:
+ *               type: string
+ *             user_name:
+ *               type: string
+ *             gender:
+ *               type: string
+ *               enum: ['male', 'female']
+ *             email:
+ *               type: string
+ *             password:
+ *               type: string  
+ *             college:
+ *               type: string
+ *             position:
+ *               type: string
+ *             maximum_users:
+ *               type: number
+ *     required:
+ *       - sur_name
+ *       - other_names
+ *       - user_name
+ *       - gender
+ *       - password
+ *       - email
+ *       - college
+ *       - position
+ *       - maximum_users
  *     responses:
  *       201:
  *         description: Created
