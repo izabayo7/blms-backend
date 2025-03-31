@@ -1089,12 +1089,18 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let user = await findDocument(User, {
-            $or: [{
-                email: req.body.email,
-                "status.deleted": {$ne: 1}
-            }, {
-                user_name: req.body.user_name
-            }],
+            $or: [
+                {
+                    email: req.body.email,
+                    "status.deleted": {$ne: 1}
+                },
+                {
+                    email: req.body.college_email,
+                    "status.deleted": {$ne: 1}
+                },
+                {
+                    user_name: req.body.user_name
+                }],
         })
 
         if (user) {
@@ -1119,14 +1125,15 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let college = await findDocument(College, {
-            name: req.body.college
+            $or: [{name: req.body.college}, {email: req.body.college_email}]
         })
         if (college)
-            return res.send(formatResult(403, `College with same name is arleady registered`))
+            return res.send(formatResult(403, `College with same ${college.email === req.body.college_email ? 'email' : 'name'} is arleady registered`))
 
 
         let saved_college = await createDocument(College, {
             name: req.body.college,
+            email: req.body.college,
             maximum_users: req.body.maximum_users
         })
 

@@ -3,7 +3,7 @@ const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
-const { invitationToSystem, contactUs, requestCallback, reset_password, confirm_email } = require('../../utils/emailGenerator');
+const { invitationToSystem, contactUs, requestCallback, reset_password, confirmation_email } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
 
@@ -199,10 +199,10 @@ exports.sendResetPasswordEmail = async ({ email, token, user_name, institution_n
     }
 };
 
-exports.sendConfirmEmail = async ({ email, user_name, institution_name, institution_address, subscription, token }) => {
+exports.sendConfirmEmail = async ({ user_name, institution_name, institution_email, subscription, token }) => {
     try {
 
-        const mail = confirm_email({ email, user_name, institution_name, institution_address, subscription, token })
+        const mail = confirmation_email({ user_name, institution_name, institution_email, subscription, token })
         console.log(email)
         const _message = {
             from: process.env.EMAIL,
