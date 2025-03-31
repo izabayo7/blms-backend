@@ -76,35 +76,38 @@ const quiz_schema = new mongoose.Schema({
 quiz_schema.plugin(timestamps);
 
 // validate quiz
-function validate_quiz(body) {
-    const schema = {
-        name: Joi.string().min(3).required(),
-        instructions: Joi.string().min(3),
-        target: Joi.object({
-            type: Joi.string().required(),
-            id: Joi.ObjectId().required()
-        }),
-        duration: Joi.number().min(1).required(),
-        questions: Joi.array().min(1).items(Joi.object({
-            _id: Joi.ObjectId(),
-            type: Joi.string().required(),
-            marks: Joi.number().required(),
-            details: Joi.string().min(5).required(),
-            options: {
-                list_style_type: Joi.string(),
-                choices: Joi.array().items(Joi.object({
-                    _id: Joi.ObjectId(),
-                    text: Joi.string(),
-                    src: Joi.string(),
-                    right: Joi.boolean()
-                })).required(),
-            },
-        })).required(),
-        total_marks: Joi.number(),
-        user: Joi.string().min(3).max(100).required(),
-        published: Joi.boolean(),
-        status: Joi.number().min(0).max(1)
-    }
+function validate_quiz(body, target = false) {
+    const schema = target ? {
+        type: Joi.string().required(),
+        id: Joi.ObjectId().required()
+    } : {
+            name: Joi.string().min(3).required(),
+            instructions: Joi.string().min(3),
+            target: Joi.object({
+                type: Joi.string().required(),
+                id: Joi.ObjectId().required()
+            }),
+            duration: Joi.number().min(1).required(),
+            questions: Joi.array().min(1).items(Joi.object({
+                _id: Joi.ObjectId(),
+                type: Joi.string().required(),
+                marks: Joi.number().required(),
+                details: Joi.string().min(5).required(),
+                options: {
+                    list_style_type: Joi.string(),
+                    choices: Joi.array().items(Joi.object({
+                        _id: Joi.ObjectId(),
+                        text: Joi.string(),
+                        src: Joi.string(),
+                        right: Joi.boolean()
+                    })).required(),
+                },
+            })).required(),
+            total_marks: Joi.number(),
+            user: Joi.string().min(3).max(100).required(),
+            published: Joi.boolean(),
+            status: Joi.number().min(0).max(1)
+        }
     return Joi.validate(body, schema)
 }
 

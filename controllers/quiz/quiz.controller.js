@@ -643,6 +643,119 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /quiz/{id}/target:
+ *   put:
+ *     tags:
+ *       - Quiz
+ *     description: Update quiz target
+ *     parameters:
+ *       - name: id
+ *         description: Quiz id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Fields for a quiz
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type:
+ *             type: string
+ *             required: true
+ *           id:
+ *             type: string
+ *             required: true
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/target', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    error = validate_quiz(req.body, true)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if quiz exist
+    let quiz = await findDocument(Quiz, {
+      _id: req.params.id
+    }, u, false)
+    if (!quiz)
+      return res.send(formatResult(404, 'quiz not found'))
+
+
+    req.body.type = req.body.type.toLowerCase()
+
+    const allowedTargets = ['chapter', 'course', 'faculty_college_year']
+
+    if (!allowedTargets.includes(req.body.type))
+      return res.send(formatResult(400, 'invalid quiz target_type'))
+
+    let target
+
+    switch (req.body.type) {
+      case 'chapter':
+        target = await findDocument(Chapter, {
+          _id: req.body.id
+        })
+        break;
+
+      case 'course':
+        target = await findDocument(Course, {
+          _id: req.body.id
+        })
+        break;
+
+      case 'faculty_college_year':
+        target = await findDocument(Faculty_college_year, {
+          _id: req.body.id
+        })
+        break;
+
+      default:
+        break;
+    }
+
+    if (!target)
+      return res.send(formatResult(404, 'quiz target not found'))
+
+    // remove the previously attached quiz
+    const last_targeted_quiz = await findDocument(Quiz, {
+      "target.id": req.body.id
+    })
+    if (last_targeted_quiz) {
+      last_targeted_quiz.target = undefined
+      await last_targeted_quiz.save()
+    }
+
+    quiz.target = {
+      type: req.body.type,
+      id: req.body.id
+    }
+
+    await quiz.save()
+
+    return res.send(formatResult(200, 'UPDATED', quiz))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+
+/**
+ * @swagger
  * /quiz/{id}/attachment:
  *   post:
  *     tags:
