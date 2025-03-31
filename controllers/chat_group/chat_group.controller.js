@@ -544,7 +544,7 @@ async function injectDetails(chat_groups) {
     })
     chat_groups[i].college = college
     if (college.logo) {
-      chat_groups[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+      chat_groups[i].college.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${colleges.name}/logo/${colleges.logo}`
     }
     chat_groups[i].members = await injectUser(chat_groups[i].members, 'id', 'data')
   }
