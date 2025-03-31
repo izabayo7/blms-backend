@@ -149,10 +149,12 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 if (!req.user.registration_number)
                     return res.send(formatResult(403, 'user must have a registration number (since the college is verifying your college payment status)'))
 
-                let {paid} = await checkCollegePayment({
-                    registration_number: req.user.registration_number,
+                let resp = await checkCollegePayment({
+                    users: [{registration_number: req.user.registration_number}],
                     link: college.users_verification_link
                 })
+                let paid = resp[0].paid
+
                 if (!paid)
                     return res.send(formatResult(403, 'user must pay the college to be able to do an exam'))
             }

@@ -17,7 +17,7 @@ const {Chapter} = require("../../utils/imports");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
-const {validateUserPasswordUpdate, validate_admin} = require('../../models/user/user.model')
+const {validateUserPasswordUpdate, validate_admin, validateUserPaymentVerification} = require('../../models/user/user.model')
 const {User_group} = require('../../models/user_group/user_group.model')
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
@@ -127,40 +127,82 @@ const router = express.Router()
  *         type: string
  */
 
-router.get('/reg_number/:regnumber', async (req, res) => {
+/**
+ *  Method:
+ *      POST
+ *  Request body:
+ *      name: users
+ *      description: The array containing user registration numbers
+ *      required: true
+ *      type: array
+ *      schema:
+ *        properties:
+ *          registration_number:
+ *            type: string
+ *            required: true
+ *
+ *  Response:
+ *    status: 200
+ *      name: users
+ *      description: The array containing user registration numbers
+ *      required: true
+ *      type: array
+ *      schema:
+ *        properties:
+ *          registration_number:
+ *            type: string
+ *            required: true
+ *          paid:
+ *            type: boolean
+ *            required: true
+ */
+
+// the path can be as you wish
+router.post('/reg_number/', async (req, res) => {
     try {
 
+        // you can validate the request
+        const {error} = validateUserPaymentVerification(req.body)
+        // if you find errors return the response with status 400 and the error
+        if(error)
+            return res.status(400).send(error.details[0].message)
+
+        // fetch users with registration_numbers in the ones that were given in body
         const test_users = [
             {
-                regnumber: "ULK-2021-100",
+                regNumber: "ULK-2021-100",
                 paid: false
             }, {
-                regnumber: "ULK-2021-105",
+                regNumber: "ULK-2021-105",
                 paid: true
             }, {
-                regnumber: "ULK-2021-110",
+                regNumber: "ULK-2021-110",
                 paid: false
             }, {
-                regnumber: "ULK-2021-115",
+                regNumber: "ULK-2021-115",
                 paid: true
             }, {
-                regnumber: "ULK-2021-120",
+                regNumber: "ULK-2021-120",
                 paid: false
             }, {
-                regnumber: "ULK-2021-125",
+                regNumber: "ULK-2021-125",
                 paid: true
             },
         ]
 
+        // Add the payment status to the given users
+        for (const i in req.body.users) {
+            for (const j in test_users) {
+                if(req.body.users[i].registration_number === test_users[j].regNumber){
+                    req.body.users[i].paid = test_users[j].paid
+                    break
+                }
+            }
+        }
 
-        let found = test_users.filter(x => x.regnumber === req.params.regnumber)
+        // return the response
+        return res.send(req.body.users)
 
-        if (!found.length)
-            return res.status(404).send("Reg number is invalid")
-
-        return res.send({
-            paid: found[0].paid
-        })
     } catch (error) {
         return res.send(formatResult(500, error))
     }

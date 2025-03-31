@@ -392,10 +392,10 @@ async function getPaymentStatus(req, res) {
                 paid = false
             else {
                 let resp = await checkCollegePayment({
-                    registration_number: req.user.registration_number,
+                    users: [{registration_number: req.user.registration_number}],
                     link: _college.users_verification_link
                 })
-                paid = resp.paid
+                paid = resp[0].paid
             }
         }
 

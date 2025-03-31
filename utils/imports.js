@@ -318,18 +318,31 @@ exports.validateUserLogin = (credentials) => {
 
 /**
  *  checks if user payed the school
- * @param {{registration_number: String,link: string}} arguements
  */
-exports.checkCollegePayment = async (arguements) => {
+exports.checkCollegePayment = async ({link, users}) => {
     try {
-        let paid = false
-        const {link, registration_number} = arguements
-        const res = await axios.get(link + '/' + registration_number)
-        if (res.data)
-            paid = res.data.paid
-        return {paid}
+        const custom_users = []
+
+        for (let i in users) {
+            if (users[i].registration_number)
+                custom_users.push({registration_number: users[i].registration_number})
+            else
+                users[i].paid = false
+        }
+
+        if (custom_users.length) {
+            const res = await axios.post(link, {users: custom_users})
+            for (const i in res.data) {
+                for (let j in users) {
+                    if (users[j].registration_number === res.data[i].registration_number)
+                        users[j].paid = res.data[i].paid
+                }
+            }
+        }
+
+        return users
     } catch (e) {
-        return {err: e.response.status, paid: false}
+        return {err: e.response.status}
     }
 }
 
