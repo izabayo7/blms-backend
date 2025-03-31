@@ -25,7 +25,9 @@ const {
   sendResizedImage,
   findFileType,
   streamVideo,
-  u
+  u,
+  upload_multiple_images,
+  Compress_images
 } = require('../../utils/imports')
 const {
   parseInt
@@ -117,7 +119,7 @@ router.get('/', async (req, res) => {
     // result = await injectInstructor(result)
     // result = await addAttachmentMediaPaths(result)
 
-    return res.send(formatResult(u,u,result))
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -162,7 +164,7 @@ router.get('/:id', async (req, res) => {
     // quiz = await addAttachmentMediaPaths(quiz)
     // quiz = quiz[0]
 
-    return res.send(formatResult(u,u,quiz))
+    return res.send(formatResult(u, u, quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -214,7 +216,7 @@ router.get('/user/:id', async (req, res) => {
     // quiz = await addQuizUsages(quiz)
     // quiz = await addAttachedCourse(quiz)
 
-    return res.send(formatResult(u,u,quiz))
+    return res.send(formatResult(u, u, quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -305,7 +307,7 @@ router.get('/user/:id/:quiz_name', async (req, res) => {
     quiz = await addAttachedCourse(quiz)
     quiz = quiz[0]
 
-    return res.send(formatResult(u,u,quiz))
+    return res.send(formatResult(u, u, quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -533,7 +535,7 @@ router.put('/:id', async (req, res) => {
     let quiz = await findDocument(Quiz, {
       _id: req.params.id,
       user: req.body.user
-    })
+    }, u, false)
     if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
@@ -659,7 +661,7 @@ router.put('/:id', async (req, res) => {
  *   post:
  *     tags:
  *       - Quiz
- *     description: Upload chapter attacments (file upload using swagger is still under construction)
+ *     description: Upload quiz attacments (file upload using swagger is still under construction)
  *     parameters:
  *       - name: id
  *         description: Quiz id
@@ -684,49 +686,59 @@ router.post('/:id/attachment', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    const chapter = await findDocument(Chapter, {
+    const quiz = await findDocument(Quiz, {
       _id: req.params.id
     })
-    if (!chapter)
-      return res.send(formatResult(404, 'chapter not found'))
+    if (!quiz)
+      return res.send(formatResult(404, 'quiz not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
+    const user = await findDocument(User, {
+      _id: quiz.user
     })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
+
+    const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`, temp_path = `./uploads/colleges/${user.college}/temp`
 
     req.kuriousStorageData = {
-      dir: `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`,
+      dir: temp_path,
     }
-    let savedAttachments = []
 
-    upload_multiple(req, res, async (err) => {
-      if (err)
-        return res.send(formatResult(500, err.message))
-      const status = true
-      for (const i in req.files) {
-        const file_found = chapter.attachments.filter(attachment => attachment.src == req.files[i].filename)
-        if (!file_found.length) {
-          chapter.attachments.push({ src: req.files[i].filename })
+    let file_missing = false
+
+    for (const i in quiz.questions) {
+      if (quiz.questions[i].type.includes('file_select')) {
+        for (const k in quiz.questions[i].options.choices) {
+          const file_found = await fs.exists(`${path}/${quiz.questions[i].options.choices[k].src}`)
+          if (!file_found) {
+            file_missing = true
+          }
         }
       }
+    }
+    if (!file_missing)
+      return res.send(formatResult(400, 'all attachments for this quiz were already uploaded'))
 
-      const result = await updateDocument(Chapter, req.params.id, {
-        attachments: chapter.attachments
-      })
-      return res.status(201).send(result)
+    upload_multiple_images(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+
+      await Compress_images(temp_path, path)
+
+      for (const i in req.files) {
+        setTimeout(() => {
+          fs.unlink(`${temp_path}/${req.files[i].filename}`, (err) => {
+            if (err)
+              return res.send(formatResult(500, err))
+          })
+        }, 1000);
+      }
+
+      return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
     })
 
   } catch (error) {
     return res.send(formatResult(500, error))
   }
 })
-
 
 /**
  * @swagger

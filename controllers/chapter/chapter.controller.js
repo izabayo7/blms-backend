@@ -690,7 +690,6 @@ router.post('/:id/attachment', async (req, res) => {
     upload_multiple(req, res, async (err) => {
       if (err)
         return res.send(formatResult(500, err.message))
-      const status = true
       for (const i in req.files) {
         const file_found = chapter.attachments.filter(attachment => attachment.src == req.files[i].filename)
         if (!file_found.length) {
@@ -701,7 +700,7 @@ router.post('/:id/attachment', async (req, res) => {
       const result = await updateDocument(Chapter, req.params.id, {
         attachments: chapter.attachments
       })
-      return res.status(201).send(result)
+      return res.send(result)
     })
 
   } catch (error) {

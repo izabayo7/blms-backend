@@ -1007,6 +1007,12 @@ module.exports.upload_multiple = this.multer({
     storage: this.dynamic_storage
 }).any()
 
+// upload multiple filies
+module.exports.upload_multiple_images = this.multer({
+    storage: this.dynamic_storage,
+    fileFilter: imageFilter
+}).any()
+
 // send resized Image
 module.exports.sendResizedImage = async (req, res, path) => {
     this.fs.exists(path, (exists) => {
