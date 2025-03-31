@@ -705,7 +705,7 @@ exports.getLatestMessages = async (user_id) => {
     }
   }
   ])
-
+  
   // get latest messages sent to us
   let sentMessages = await this.Message.aggregate([{
     $sort: {
@@ -742,7 +742,9 @@ exports.getLatestMessages = async (user_id) => {
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
   const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
-
+  
+  var start = new Date().getTime();
+  let i = 0
   for (const message of receivedMessages) {
     if (!systemMessageFound.length || receivedMessages.length === 1)
       latestMessages.push(message)
@@ -752,7 +754,8 @@ exports.getLatestMessages = async (user_id) => {
           if (receivedMessages[k]._id !== message._id) {
             const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
             const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
-            if (await receiversMatch(minorMessage.receivers, majorMessage.receivers)) {
+
+            if (!await receiversMatch(minorMessage.receivers, majorMessage.receivers) && (!latestMessages.includes(majorMessage) && !latestMessages.includes(minorMessage))) {
               latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
             }
           }
@@ -760,6 +763,10 @@ exports.getLatestMessages = async (user_id) => {
       }
     }
   }
+
+  var end = new Date().getTime();
+  var time = end - start;
+  console.log('Execution time: ' + time);
 
   for (const message of sentMessages) {
     latestMessages.push(message)
