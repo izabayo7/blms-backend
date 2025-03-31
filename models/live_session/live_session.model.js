@@ -40,7 +40,7 @@ function validate_live_session(credentials) {
             id: Joi.ObjectId().required()
         }).required(),
         date: Joi.date().required(),
-        time: Joi.string().required(),
+        time: Joi.string().regex(/^([0-9]{2})\:([0-9]{2})$/).required(),
         quiz: Joi.ObjectId()
     }
     return Joi.validate(credentials, schema)

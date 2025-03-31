@@ -31,8 +31,10 @@ const router = express.Router()
  *             type: string
  *           id:
  *             type: string
- *       starting_time:
+ *       date:
  *         type: date-time
+ *       time:
+ *         type: string
  *       quiz:
  *         type: string
  *     required:
