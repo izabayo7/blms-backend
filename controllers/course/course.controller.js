@@ -19,7 +19,8 @@ const {
   StudentProgress,
   removeDocumentVersion,
   injectUser,
-  simplifyObject
+  simplifyObject,
+  injectStudentProgress
 } = require('../../utils/imports')
 
 // create router
@@ -640,18 +641,6 @@ router.delete('/:id', async (req, res) => {
   })
   return res.status(200).send(`Course ${deletedCourse._id} Successfully deleted`)
 })
-
-// replace instructor id by the instructor information
-async function injectStudentProgress(courses, studentId) {
-  for (const i in courses) {
-    const studentProgress = await StudentProgress.findOne({
-      course: courses[i]._id, student: studentId
-    })
-
-    courses[i].progress = studentProgress ? { id: studentProgress._id, progress: studentProgress.progress, dateStarted: studentProgress.createdAt } : undefined
-  }
-  return courses
-}
 
 // inject faculty college Year
 async function injectFacultyCollegeYear(courses) {

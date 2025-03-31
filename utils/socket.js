@@ -23,7 +23,8 @@ const {
     injectUser,
     Course,
     UserNotification,
-    injectDoer
+    injectDoer,
+    injectStudentProgress
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -398,11 +399,11 @@ module.exports.listen = (app) => {
 
                 const studentFaucultyCollegeYears = await StudentFacultyCollegeYear.find({ facultyCollegeYear: course.facultyCollegeYear })
 
-                studentFaucultyCollegeYears.forEach( async _doc => {
+                studentFaucultyCollegeYears.forEach(async _doc => {
 
                     // create notification for user
                     let userNotification = await UserNotification.findOne
-                    ({ user_id: _doc.student })
+                        ({ user_id: _doc.student })
                     if (!userNotification) {
                         userNotification = new UserNotification({
                             user_id: _doc.student,
@@ -416,12 +417,18 @@ module.exports.listen = (app) => {
                     _newDocument = await userNotification.save()
 
                     if (_newDocument) {
+                        console.log(_newDocument)
+                        let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                        notification.id = undefined
+                        notification.notification = newDocument
+                            // send the notification
+                            socket.broadcast.to(_doc.student).emit('new-notification', { notification: notification })
 
-                        // send the notification
-                        socket.broadcast.to(_doc.student).emit('new-notification', { notification: newDocument })
+                        // add student progress
+                        const _course =  await injectStudentProgress([course], _doc.student)
 
                         // send the course
-                        socket.broadcast.to(_doc.student).emit('new-course', course)
+                        socket.broadcast.to(_doc.student).emit('new-course', _course[0])
                     }
                 })
             }

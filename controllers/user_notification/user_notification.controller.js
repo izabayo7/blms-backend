@@ -99,7 +99,8 @@ router.get('/user/:id', async (req, res) => {
   if (user_notifications.length === 0)
     return res.status(404).send('UserNotification list is empty')
   user_notifications = await injectNotification(user_notifications)
-  return res.status(200).send(user_notifications[0].notifications)
+  user_notifications = user_notifications[0].notifications.reverse()
+  return res.status(200).send(user_notifications)
 })
 
 /**

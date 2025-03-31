@@ -761,6 +761,18 @@ module.exports.injectNotification = async (array) => {
     return array
 }
 
+// add student progress
+module.exports.injectStudentProgress = async (courses, studentId) => {
+    for (const i in courses) {
+        const studentProgress = await StudentProgress.findOne({
+            course: courses[i]._id, student: studentId
+        })
+
+        courses[i].progress = studentProgress ? { id: studentProgress._id, progress: studentProgress.progress, dateStarted: studentProgress.createdAt } : undefined
+    }
+    return courses
+}
+
 // authentication middlewares
 const {
     auth
