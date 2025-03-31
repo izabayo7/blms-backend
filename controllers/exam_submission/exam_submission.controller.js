@@ -383,6 +383,8 @@ router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
             return res.send(formatResult(404, 'submission not found'))
 
         result = simplifyObject(result)
+        if (result.hasVideo)
+            result.videoUrl = `http${process.env.NODE_ENV === 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/exam_submission/${result._id}/video`
         result = await injectUserFeedback([result])
         result = await injectUser(result, 'user')
         result = await injectUserFeedback(result)
@@ -521,7 +523,7 @@ router.get('/:id/video', filterUsers(["INSTRUCTOR"]), auth, async (req, res) => 
             _id: exam.user
         })
 
-        if (req.user._id !== exam.user)
+        if (req.user._id.toString() !== exam.user)
             return res.send(formatResult(403, 'you don\'t have access'))
 
 
