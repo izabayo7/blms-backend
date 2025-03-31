@@ -54,13 +54,15 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     status: {
-        stillMember: {
-            type: Boolean,
-            default: true,
+        // disabled status 0(enabled) 1(disabled)
+        disabled: {
+            type: Number,
+            default: 0,
         },
+        // disabled status 0(offline) 1(set to away but active) 2(active)
         active: {
-            type: Boolean,
-            default: false,
+            type: Number,
+            default: 0,
         }
     },
     profile: {
@@ -84,6 +86,7 @@ function validate_user(credentials, method = 'create') {
         date_of_birth: Joi.date(),
         college: Joi.ObjectId(),
         category: Joi.ObjectId().required(),
+        status: Joi.object({disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required()})
     }
     return Joi.validate(credentials, schema)
 }

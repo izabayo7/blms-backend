@@ -12,6 +12,7 @@ const {
   updateDocument,
   deleteDocument,
   validate_faculty,
+  College,
 } = require('../../utils/imports')
 
 // create router

@@ -32,7 +32,11 @@ const faculty_college_year_schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    leaders: [leader_schema]
+    leaders: [leader_schema],
+    status: {
+        type: Number,
+        default: 1
+    },
 })
 
 faculty_college_year_schema.plugin(timestamps)
@@ -46,7 +50,8 @@ function validate_faculty_college_year(credentials) {
             id: Joi.ObjectId().required(),
             start_date: Joi.date().required(),
             end_date: Joi.date().required()
-        })
+        }),
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

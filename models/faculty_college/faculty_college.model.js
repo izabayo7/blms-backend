@@ -50,7 +50,8 @@ function validate_faculty_college(credentials) {
             id: Joi.ObjectId().required(),
             start_date: Joi.date().required(),
             end_date: Joi.date().required()
-        })
+        }),
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

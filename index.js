@@ -53,7 +53,6 @@ require('./models/mongodb')
 // const adminController = require('./controllers/admin/admin.controller')
 // const instructorController = require('./controllers/instructor/instructor.controller')
 // const studentController = require('./controllers/student/student.controller')
-// const facultyCollegeYearController = require('./controllers/faculty-college-year/faculty-college-year.controller')
 // const studentFacultyCollegeYearController = require('./controllers/student-faculty-college-year/student-faculty-college-year.controller')
 // const instructorFacultyCollegeYearController = require('./controllers/instructor-faculty-college-year/instructor-faculty-college-year.controller')
 // const studentProgressController = require('./controllers/studentProgress/studentProgress.controller')
@@ -73,6 +72,7 @@ const college_controller = require('./controllers/college/college.controller')
 const college_year_controller = require('./controllers/college_year/college_year.controller')
 const faculty_controller = require('./controllers/faculty/faculty.controller')
 const faculty_college_controller = require('./controllers/faculty_college/faculty_college.controller')
+const faculty_college_year_controller = require('./controllers/faculty_college_year/faculty_college_year.controller')
 
 // use middlewares
 app.use(cors())
@@ -95,12 +95,7 @@ app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
 
 app.get("/", express.static(path.join(__dirname, 'views')))
 
-// app.use('/kurious/super-admin', superAdminController)
-// app.use('/kurious/admin', adminController)
-// app.use('/kurious/college', collegeController)
-// app.use('/kurious/instructor', instructorController)
-// app.use('/kurious/student', studentController)
-// app.use('/kurious/faculty-college-year', facultyCollegeYearController)
+
 // app.use('/kurious/student-faculty-college-year', studentFacultyCollegeYearController)
 // app.use('/kurious/instructor-faculty-college-year', instructorFacultyCollegeYearController)
 // app.use('/kurious/studentProgress', studentProgressController)
@@ -113,6 +108,7 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 // app.use('/kurious/notification', notificationController)
 // app.use('/kurious/user_notification', userNotificationController)
 // app.use('/kurious/chat_group', chatGroupController)
+
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, user_category_controller)
 app.use(`${basePath}/user_role`, user_role_controller)
@@ -120,6 +116,7 @@ app.use(`${basePath}/college`, college_controller)
 app.use(`${basePath}/college_year`, college_year_controller)
 app.use(`${basePath}/faculty`, faculty_controller)
 app.use(`${basePath}/faculty_college`, faculty_college_controller)
+app.use(`${basePath}/faculty_college_year`, faculty_college_year_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

@@ -179,7 +179,7 @@ router.delete('/:id', async (req, res) => {
     const update_faculty_college = await updateDocument(Faculty_college, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, `Faculty_college ${update_faculty_college.data._id} couldn't be deleted because it was used, instead it was disabled`))
+    return res.send(formatResult(200, `Faculty_college ${update_faculty_college.data._id} couldn't be deleted because it was used, instead it was disabled`, update_faculty_college.data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
