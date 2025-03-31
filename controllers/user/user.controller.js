@@ -617,7 +617,7 @@ router.put('/:user_name', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message + 'jjjjjjjjjjjjjj'))
 
-    let user = await User.findOne({
+    const user = await User.findOne({
       user_name: req.params.user_name
     }).populate('category')
     if (!user)
@@ -627,9 +627,9 @@ router.put('/:user_name', auth, async (req, res) => {
       return res.send(formatResult(403, 'YOU ARE NOT AUTHORIZED'))
 
     // check if the name or email were not used
-    user = await findDocument(User, {
+    const _user = await findDocument(User, {
       _id: {
-        $ne: req.params.id
+        $ne: user._id
       },
       $or: [{
         email: req.body.email
@@ -642,11 +642,11 @@ router.put('/:user_name', auth, async (req, res) => {
       }],
     })
 
-    if (user) {
-      const phoneFound = req.body.phone == user.phone
-      const national_idFound = req.body.national_id == user.national_id
-      const emailFound = req.body.email == user.email
-      const user_nameFound = req.body.user_name == user.user_name
+    if (_user) {
+      const phoneFound = req.body.phone == _user.phone
+      const national_idFound = req.body.national_id == _user.national_id
+      const emailFound = req.body.email == _user.email
+      const user_nameFound = req.body.user_name == _user.user_name
       return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
     }
 

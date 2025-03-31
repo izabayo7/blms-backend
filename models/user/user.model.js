@@ -92,7 +92,7 @@ exports.validate_user = (credentials, method = 'create') => {
     } : {
             sur_name: Joi.string().min(3).max(100),
             other_names: Joi.string().min(3).max(100),
-            user_name: method == Joi.string().min(3).max(100), // regex needed
+            user_name: Joi.string().min(3).max(100), // regex needed
             national_id: Joi.string().min(16).max(16), // regex needed
             gender: Joi.string().min(4).max(6).valid('male', 'female'),
             phone: Joi.string().max(10).min(10), // regex needed
