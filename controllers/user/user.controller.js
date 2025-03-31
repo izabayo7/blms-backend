@@ -934,7 +934,7 @@ router.post('/admin', async (req, res) => {
             college: saved_college.data._id,
             category: user_category._id
         })
-
+console.log(result)
         const {sent, err} = await sendConfirmEmail({
             email: result.data.email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
@@ -1378,12 +1378,17 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         // check if user exist
-        let user = await User.findOneAndUpdate({
+        let user = await User.findOne({
             _id: req.params.id,
             college: req.user.college,
-        }, {"status.deleted": 1})
+        })
         if (!user)
             return res.send(formatResult(400, `User not found`))
+
+        user.status.deleted = 1
+        user.email = u
+
+        user = await user.save()
 
         //  disable all user_user groups
         await User_user_group.updateMany({
