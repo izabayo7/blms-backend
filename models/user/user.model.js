@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema({
             type: Number,
             default: 0,
         },
+        deleted: {
+            type: Number,
+            default: 0,
+        },
         // disabled status 0(offline) 1(set to away but active) 2(active)
         active: {
             type: Number,
