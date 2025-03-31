@@ -664,7 +664,7 @@ router.put('/:id/results_seen', auth,filterUsers(["STUDENT"]), async (req, res) 
  *       500:
  *         description: Internal Server error
  */
-router.post('/:id/attachment', auth, async (req, res) => {
+router.post('/:id/attachment', auth,filterUsers(["STUDENT"]), async (req, res) => {
     try {
         const {
             error
@@ -673,22 +673,13 @@ router.post('/:id/attachment', auth, async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         const assignment_submission = await findDocument(Assignment_submission, {
-            _id: req.params.id
-        })
+            _id: req.params.id,
+            user: req.user._id
+        }).populate('assignment')
         if (!assignment_submission)
             return res.send(formatResult(404, 'assignment_submission not found'))
 
-        const assignment = await findDocument(Assignment, {
-            _id: assignment_submission.assignment
-        })
-        if (!assignment)
-            return res.send(formatResult(404, 'assignment not found'))
-
-        const user = await findDocument(User, {
-            _id: assignment.user
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assignment._id}/submissions/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment._id}/submissions/${req.params.id}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -696,9 +687,9 @@ router.post('/:id/attachment', auth, async (req, res) => {
 
         let file_missing = false
 
-        for (const i in assignment_submission.answers) {
-            if (assignment_submission.answers[i].src) {
-                const file_found = await fs.exists(`${path}/${assignment_submission.answers[i].src}`)
+        for (const i in assignment_submission.attachments) {
+            if (assignment_submission.attachments[i].src) {
+                const file_found = await fs.exists(`${path}/${assignment_submission.attachments[i].src}`)
                 if (!file_found) {
                     file_missing = true
                 }
