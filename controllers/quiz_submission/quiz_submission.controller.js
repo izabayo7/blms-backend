@@ -277,7 +277,7 @@ router.get('/user/:user_name', async (req, res) => {
         target: {
           $ne: undefined
         }
-      })
+      }, u, u, u, u, u, { _id: -1 })
       if (!quizes.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
