@@ -99,7 +99,7 @@ exports.confirmAccount = async (req, res) => {
         if (!confirmation)
             return res.send(formatResult(403, 'account confirmation not found'));
         if (confirmation.status === "CONFIRMED")
-            return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}`);
+            return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}&forceLogout=true`);
 
 
         confirmation.status = "CONFIRMED"
@@ -108,7 +108,7 @@ exports.confirmAccount = async (req, res) => {
         if (confirmation.email)
             await User.findOneAndUpdate({_id: confirmation.user._id.toString()}, {email: confirmation.email})
 
-        return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}`)
+        return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}&forceLogout=true`)
 
     } catch (err) {
         return res.send(formatResult(500, err));
