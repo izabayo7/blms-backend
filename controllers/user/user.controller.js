@@ -744,11 +744,6 @@ router.put('/password', auth, async (req, res) => {
  */
 router.put('/profile', auth, async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
 
     // check if user exist
     const user = await findDocument(User, {
@@ -756,6 +751,8 @@ router.put('/profile', auth, async (req, res) => {
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
+
+    console.log(user)
 
     const path = user.college ? `./uploads/colleges/${user.college}/user_profiles` : `./uploads/system/user_profiles`
     req.kuriousStorageData = {
@@ -771,7 +768,7 @@ router.put('/profile', auth, async (req, res) => {
             return res.send(formatResult(500, err))
         })
       }
-      const result = await updateDocument(User, req.params.id, {
+      const result = await updateDocument(User, user._id, {
         profile: req.file.filename
       })
       result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${result.data.profile}`
