@@ -140,7 +140,8 @@ module.exports.listen = (app) => {
         if (user.category.name === "ADMIN") {
             socket.on("users/recentlyJoined", async () => {
                 const res = await User.find({
-                    college: user.college
+                    college: user.college,
+                    "status.deleted": {$ne: 1}
                 }, {
                     sur_name: 1,
                     other_names: 1,
@@ -162,6 +163,20 @@ module.exports.listen = (app) => {
                 contacts: contacts
             });
         })
+
+        // socket.on('notifications/updateStatus', async ({
+        //     notification_ids,
+        //     status
+        //                                                }) => {
+        //     // get the latest conversations
+        //     const latestMessages = await getLatestMessages(id)
+        //     // format the contacts
+        //     const contacts = await formatContacts(latestMessages, id)
+        //     // send the contacts
+        //     socket.emit('res/message/contacts', {
+        //         contacts: contacts
+        //     });
+        // })
 
         socket.on('message/conversation', async ({
                                                      conversation_id,
