@@ -284,17 +284,10 @@ module.exports.listen = (app) => {
                                                        }) => {
             const Receiver = await findDocument(User, {user_name: conversation_id})
             if (Receiver) {
-
+                const content = `This is the begining of conversation between __user__${id} and __user__${Receiver._id}`
                 // avoid dupplicate initialisation
-                const conversation_found = await getConversationMessages({
-                    user_id: id,
-                    conversation_id: conversation_id,
-                    limit: 1
-                })
-                if (!conversation_found.length) {
-
-                    const content = `This is the begining of conversation between __user__${id} and __user__${Receiver._id}`
-
+                const conversation_found = await Message.findOne({content: content})
+                if (!conversation_found) {
                     const {error} = validate_message({sender: 'SYSTEM', receiver: conversation_id, content: content})
 
                     if (error) {
