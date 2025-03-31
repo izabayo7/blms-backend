@@ -1740,12 +1740,34 @@ async function checkEmailExistance(req, res) {
     try {
         const user = await User.findOne({email: req.params.email, "status.deleted": {$ne: 1}});
         if (user) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+
+        const college = await User.findOne({email: req.params.email);
+        if (college) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+
         return res.send(formatResult(200, 'Email Available', {exists: false}));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
-};
+}
 
+/**
+ * Check Email Existence
+ * @param req
+ * @param res
+ */
+async function checkEmailExistance(req, res) {
+    try {
+        const user = await User.findOne({email: req.params.email, "status.deleted": {$ne: 1}});
+        if (user) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+
+        const college = await User.findOne({email: req.params.email);
+        if (college) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+
+        return res.send(formatResult(200, 'Email Available', {exists: false}));
+    } catch (err) {
+        return res.send(formatResult(500, err));
+    }
+}
 
 /**
  * Check Username Existence
