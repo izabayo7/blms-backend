@@ -158,15 +158,15 @@ router.get('/', auth, async (req, res) => {
             }).sort({
                 _id: -1
             }).populate({
-                  path: 'course',
-                  model: 'course',
-                  populate: {
+                path: 'course',
+                model: 'course',
+                populate: {
                     path: 'user_group', populate: {
-                      path: 'faculty',
-                      model: 'faculty'
+                        path: 'faculty',
+                        model: 'faculty'
                     }
-                  }
-                })
+                }
+            })
                 .lean()
 
             if (!exams.length)
@@ -373,6 +373,7 @@ router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
             model: 'exam',
             populate: {
                 path: 'course',
+                model: 'course'
             }
         })
 
@@ -380,18 +381,16 @@ router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
             return res.send(formatResult(404, 'submission not found'))
 
         result = simplifyObject(result)
-        result = simplifyObject(await injectExam([result]))
-        result = await injectUserFeedback(result)
+        result = await injectUserFeedback([result])
         result = await injectUser(result, 'user')
         result = result[0]
         result.exam = await injectUser([result.exam], 'user')
-        result.exam = await addAttachmentMediaPaths(result.exam,false,true)
+        result.exam = await addAttachmentMediaPaths(result.exam, false, true)
         // result = await injectUser(result, 'user')
         result.exam = result.exam[0]
         result = await injectUserFeedback(result)
         return res.send(formatResult(u, u, result))
     } catch (error) {
-        console.log(error)
         return res.send(formatResult(500, error))
     }
 })
