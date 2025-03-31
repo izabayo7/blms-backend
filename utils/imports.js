@@ -14,6 +14,7 @@ module.exports.multer = require('multer')
 module.exports.fs = require('fs-extra')
 module.exports.timestamps = require('mongoose-timestamp');
 module.exports._ = require('lodash')
+module.exports.path = require('path')
 
 // models & functions
 const { SuperAdmin, validateSuperAdmin } = require('../models/superAdmin/superAdmin.model')
@@ -141,6 +142,31 @@ module.exports.getCourse = async (id) => {
 module.exports.removeDocumentVersion = (obj) => {
     return module.exports._.omit(obj, '__v')
 }
+
+module.exports.getUnreadMesages = async (userId) => {
+    const messages = await Message.find(
+        { "receivers.id": userId, read: false }
+    ).lean()
+    return messages
+}
+
+module.exports.getPreviousMessages = async (users) => {
+    const messages = await Message.find({ $or: [{ sender: users[0], "receivers.id": users[1] }, { sender: users[1], "receivers.id": users[0] }] }).lean()
+    return messages
+}
+module.exports.returnUser = async (id) => {
+    let user = await Admin.findOne({ _id: id })
+    if (user)
+        return user
+    user = await Instructor.findOne({ _id: id })
+    if (user)
+        return user
+    user = await Student.findOne({ _id: id })
+    if (user)
+        return user
+    return null
+}
+
 const fs = require('fs')
 const sharp = require('sharp')
 

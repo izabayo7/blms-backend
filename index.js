@@ -2,6 +2,7 @@
 const {
     express,
     cors,
+    path
 } = require('./utils/imports')
 
 const dotenv = require('dotenv');
@@ -14,7 +15,7 @@ const swaggerUi = require("swagger-ui-express");
 const app = express()
 
 const port = process.env.PORT || 7070
-const path = process.env.HOST
+const host = process.env.HOST
 
 const swaggerOptions = {
     swaggerDefinition: {
@@ -25,7 +26,7 @@ const swaggerOptions = {
             description: "Explore APIs as you wish",
         },
         schemes: ['http'],
-        host: path,
+        host: host,
         basePath: '/',
         securityDefinitions: {
             bearerAuth: {
@@ -72,6 +73,17 @@ app.use(express.urlencoded({
     extended: true
 }));
 
+// create an http server
+const http = require('http');
+const server = http.createServer(app);
+
+// importing our socket
+const io = require('./utils/socket')
+io.listen(server)
+
+// Serve the chatdemo
+app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
+
 app.get("/", (req, res) => {
     res.send("WELCOME TO Kurious 🎓").status(200)
 })
@@ -89,10 +101,10 @@ app.use('/kurious/student-facility-college-year', studentFacilityCollegeYearCont
 app.use('/kurious/studentProgress', studentProgressController)
 app.use('/kurious/course', courseController)
 app.use('/kurious/chapter', chapterController)
-app.use('/kurious/message', messageController) // well be renewed
+app.use('/kurious/message', messageController)
 app.use('/kurious/file', fileController)
 app.use('/kurious/quiz', quizController)
 app.use('/kurious/quizSubmission', quizSubmissionController)
 
 // start the server
-app.listen(port, () => console.log(`Kurious Server activated on port...${port}`))
+server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

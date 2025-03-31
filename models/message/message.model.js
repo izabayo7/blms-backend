@@ -4,16 +4,23 @@ const {
     Joi,
     timestamps,
 } = require('../../utils/imports')
-
+const recieverSchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true
+    },
+    read: {
+        type: Boolean,
+        default: false
+    },
+})
+recieverSchema.plugin(timestamps)
 const messageSchema = new mongoose.Schema({
     sender: {
         type: String,
         required: true
     },
-    reciever: {
-        type: String,
-        required: true
-    },
+    receivers: [recieverSchema],
     content: {
         type: String,
     },
@@ -32,7 +39,7 @@ messageSchema.plugin(timestamps)
 function validateMessage(credentials) {
     const schema = {
         sender: Joi.ObjectId().required(),
-        reciever: Joi.ObjectId().required(),
+        receivers: Joi.array().min(1).items({ id: Joi.ObjectId().required() }),
         content: Joi.string().max(9000),
         attachments: Joi.array(),
         read: Joi.boolean(),

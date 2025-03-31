@@ -33,8 +33,15 @@ const upload = multer({
  *         type: string
  *       sender:
  *         type: string
- *       reciever:
- *         type: string
+ *       receivers  :
+ *         type: array
+ *         items:
+ *            type: object
+ *            properties:
+ *              id:
+ *                type: string
+ *              read:
+ *                type: boolean
  *       content:
  *         type: string
  *       attachments:
@@ -44,7 +51,7 @@ const upload = multer({
  *          default: false
  *     required:
  *       - sender
- *       - reciever
+ *       - receivers
  *       - content
  */
 
@@ -103,7 +110,7 @@ router.get('/user/:id', async (req, res) => {
   if (!userFound)
     return res.send('The User id is invalid')
   const sent = await Message.find({ sender: req.params.id })
-  const recieved = await Message.find({ reciever: req.params.id })
+  const recieved = await Message.find({ receiver: req.params.id })
 
   return res.send({ sent: sent, recieved: recieved }).status(200)
 })
@@ -140,14 +147,16 @@ router.post('/', upload.single('attachments'), async (req, res) => {
   let sender = await findUser(req.body.sender)
   if (!sender)
     return res.send(`Sender Not Found`)
+  for (const i in req.body.receivers) {
+    let receiver = await findUser(req.body.receivers[i].id)
+    if (!receiver)
+      return res.send(`Reciever Not Found`)
+  }
 
-  let reciever = await findUser(req.body.reciever)
-  if (!reciever)
-    return res.send(`Reciever Not Found`)
 
   let newDocument = new Message({
     sender: req.body.sender,
-    reciever: req.body.reciever,
+    receivers: req.body.receivers,
     content: req.body.content,
     attachments: req.files === undefined ? undefined : req.files
   })
