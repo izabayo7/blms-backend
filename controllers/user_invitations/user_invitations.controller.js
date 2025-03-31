@@ -121,20 +121,23 @@ exports.createUserInvitation = async (req, res) => {
         return res.send(formatResult(400, `User with email (${email}) have a pending invitation`))
       }
 
+      const token = uuid()
+
+
+      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: token, institutionn: { name: _college.name } });
+      if (err)
+        return res.send(formatResult(500, err));
+
       const newDocument = new User_invitation({
         user: req.user._id,
         email: email,
         category: category,
         college: college,
-        token: uuid(),
+        token: token,
         expiration_date: expiration_date,
       });
 
       const result = await newDocument.save();
-
-      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token, institutionn: { name: _college.name } });
-      if (err)
-        return res.send(formatResult(500, err));
 
       if (sent) {
         savedInvitations.push(result)
