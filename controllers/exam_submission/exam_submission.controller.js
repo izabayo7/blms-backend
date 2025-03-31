@@ -236,7 +236,7 @@ router.get('/user', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -283,7 +283,7 @@ router.get('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/exam/:id', auth, async (req, res) => {
+router.get('/exam/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -293,7 +293,8 @@ router.get('/exam/:id', auth, async (req, res) => {
 
         // check if exam exist
         let exam = await findDocument(Exam, {
-            _id: req.params.id
+            _id: req.params.id,
+            user: req.user._id
         })
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
