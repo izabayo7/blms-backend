@@ -291,6 +291,8 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
                 height: 66px;
                 left: 0px;
                 top: 476px;
+                max-width: 600px;
+                margin: auto;
                 border-radius: 0px;
                 background: #193074;
               "
