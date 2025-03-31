@@ -1356,7 +1356,7 @@ exports.injectChapters = async (courses, user_id) => {
                 courses[i].chapters[k].uploaded_video = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
             }
             if (courses[i].chapters[k].uploaded_content) {
-                courses[i].chapters[k].uploaded_content = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/uploaded_content`
+                courses[i].chapters[k].uploaded_content_url = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/uploaded_content`
             }
             if (!courses[i].chapters[k].attachments)
                 courses[i].chapters[k].attachments = []
