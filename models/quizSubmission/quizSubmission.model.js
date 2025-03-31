@@ -5,7 +5,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const QuizAnswersSchema = new mongoose.Schema({
+const QuizSubmissionSchema = new mongoose.Schema({
     quiz: {
         type: String,
         required: true
@@ -18,7 +18,6 @@ const QuizAnswersSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-
     answers: {
         type: Array,
         required: true
@@ -27,7 +26,7 @@ const QuizAnswersSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    autoSubbmitted: {
+    autoSubmitted: {
         type: Boolean,
         default: false
     },
@@ -41,25 +40,25 @@ const QuizAnswersSchema = new mongoose.Schema({
     }
 })
 
-QuizAnswersSchema.plugin(timestamps)
+QuizSubmissionSchema.plugin(timestamps)
 
-// validate QuizAnswers
-function validateQuizAnswers(credentials) {
+// validate QuizSubmission
+function validateQuizSubmission(credentials) {
     const schema = {
         quiz: Joi.ObjectId().required(),
         usedTime: Joi.number().required(),
         answers: Joi.array().min(1).required(),
         student: Joi.ObjectId().required(),
-        autoSubbmitted: Joi.boolean(),
+        autoSubmitted: Joi.boolean(),
         marked: Joi.boolean(),
         published: Joi.boolean()
     }
     return Joi.validate(credentials, schema)
 }
 
-// create QuizAnswerss model
-const QuizAnswers = mongoose.model('QuizAnswers', QuizAnswersSchema)
+// create QuizSubmissions model
+const QuizSubmission = mongoose.model('QuizSubmission', QuizSubmissionSchema)
 
 // export the model and the validation function
-module.exports.QuizAnswers = QuizAnswers
-module.exports.validateQuizAnswers = validateQuizAnswers
+module.exports.QuizSubmission = QuizSubmission
+module.exports.validateQuizSubmission = validateQuizSubmission

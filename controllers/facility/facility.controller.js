@@ -1,5 +1,5 @@
 // import dependencies
-const { express, facilityCollege, Facility, validateFacility, auth, _superAdmin, _admin, validateObjectId, _facility } = require('../../utils/imports')
+const { express, facilityCollege, College, Facility, validateFacility, auth, _superAdmin, _admin, validateObjectId, _facility, FacilityCollege } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -69,21 +69,30 @@ router.get('/college/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
       return res.send(error.details[0].message).status(400)
-    let college = await Facility.findOne({ _id: req.params.id })
+    let college = await College.findOne({ _id: req.params.id })
     if (!college)
-      return res.send(`College ${req.params.id} Not Found`)
-    const facilityColleges = await facilityCollege.find({ college: req.params.id })
+      return res.status(404).send(`College ${req.params.id} Not Found`)
+
+    const facilityColleges = await FacilityCollege.find({ college: req.params.id })
     if (facilityColleges.length === 0)
-      return res.send(`College ${req.params.id} facility list is empty`).status(404)
+      return res.send(`College ${college.name} has no faculties`).status(404)
+
     let foundFacilities = []
+
     for (const facilityCollege of facilityColleges) {
-      const facility = await Facility.find({ _id: facilityCollege.facility })
-      if (!facility)
-        return res.send(`Facility ${facilityCollege.facility} Not Found`)
-      foundFacilities.push(facility)
+      const facilities = await Facility.find({ _id: facilityCollege.facility })
+      if (facilities.length < 1)
+        return res.send(`Facility ${facilityCollege.facility} Not Found`) // recheck use case
+      for (const facility of facilities) {
+        foundFacilities.push(facility)
+      }
     }
+    if (foundFacilities.length < 1)
+      return res.status(404).send(`College ${college.name} has no faculties`)
     return res.send(foundFacilities).status(200)
+
   } catch (error) {
+    console.log(error)
     return res.send(error).status(500)
   }
 })

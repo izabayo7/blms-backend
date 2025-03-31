@@ -154,7 +154,7 @@ router.put('/:id', async (req, res) => {
       return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
   }
 
-  const validQuestions = validateQuestions(req.body.questions, 'PUT')
+  const validQuestions = validateQuestions(req.body.questions)
   if (validQuestions.status !== true)
     return res.status(400).send(validQuestions.error)
 
@@ -181,7 +181,7 @@ router.delete('/:id', async (req, res) => {
   return res.status(200).send(`Quiz ${deletedQuiz._id} Successfully deleted`)
 })
 
-function validateQuestions(questions, method) {
+function validateQuestions(questions) {
   const allowedQuestionTypes = ['open-ended', 'single-text-select', 'multi-text-select', 'single-file-select', 'multi-file-select', 'file-upload']
   let message = ''
   let marks = 0
@@ -213,7 +213,7 @@ function validateQuestions(questions, method) {
         }
       }
     }
-    marks += questions[i].marks
+    marks += parseInt(questions[i].marks)
     // more validations later
   }
   return message === '' ? { status: true, totalMarks: marks } : { status: false, error: message }

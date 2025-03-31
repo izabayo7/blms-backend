@@ -31,7 +31,7 @@ const { Attachment, validateAttachment } = require('../models/attachments/attach
 const { studentFacilityCollegeYear, validateStudentFacilityCollegeYear } = require('../models/student-facility-college-year/student-facility-college-year.model')
 const { StudentProgress, validateStudentProgress } = require('../models/studentProgress/studentProgress.model')
 const { Quiz, validateQuiz } = require('../models/quiz/quiz.model')
-const { QuizAnswers, validateQuizAnswers } = require('../models/quizAnswers/quizAnswers.model')
+const { QuizSubmission, validateQuizSubmission } = require('../models/quizSubmission/quizSubmission.model')
 const { fileFilter } = require('./multer/fileFilter')
 
 module.exports.Admin = Admin
@@ -66,8 +66,8 @@ module.exports.StudentProgress = StudentProgress
 module.exports.validateStudentProgress = validateStudentProgress
 module.exports.Quiz = Quiz
 module.exports.validateQuiz = validateQuiz
-module.exports.QuizAnswers = QuizAnswers
-module.exports.validateQuizAnswers = validateQuizAnswers
+module.exports.QuizSubmission = QuizSubmission
+module.exports.validateQuizSubmission = validateQuizSubmission
 module.exports.fileFilter = fileFilter
 
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())

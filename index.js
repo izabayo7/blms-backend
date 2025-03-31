@@ -14,7 +14,7 @@ const swaggerUi = require("swagger-ui-express");
 const app = express()
 
 const port = process.env.PORT || 7070
-const path = process.env.NODE_ENV === "production" ? `142.93.110.248:${port}` : `localhost:${port}`
+const path = process.env.NODE_ENV === "production" ? `161.35.199.197:${port}` : `localhost:${port}`
 
 const swaggerOptions = {
     swaggerDefinition: {
@@ -63,6 +63,7 @@ const chapterController = require('./controllers/chapter/chapter.controller')
 const messageController = require('./controllers/message/message.controller')
 const fileController = require('./controllers/file/file.controller')
 const quizController = require('./controllers/quiz/quiz.controller')
+const quizSubmissionController = require('./controllers/quizSubmission/quizSubmission.controller')
 
 // use middlewares
 app.use(cors())
@@ -91,6 +92,7 @@ app.use('/kurious/chapter', chapterController)
 app.use('/kurious/message', messageController) // well be renewed
 app.use('/kurious/file', fileController)
 app.use('/kurious/quiz', quizController)
+app.use('/kurious/quizSubmission', quizSubmissionController)
 
 // start the server
 app.listen(port, () => console.log(`Kurious Server activated on port...${port}`))
