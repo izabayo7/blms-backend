@@ -383,6 +383,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - User_progress
  *     description: Delete a user_progress
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User_progress id
