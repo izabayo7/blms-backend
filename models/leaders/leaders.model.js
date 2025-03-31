@@ -1,4 +1,5 @@
 // import dependencies
+const { Types } = require('mongoose')
 const {
     mongoose,
     Joi,
@@ -8,6 +9,7 @@ const {
 const leader_schema = new mongoose.Schema({
     id: {
         type: String,
+        ref: 'user',
         required: true
     },
     start_date: {
@@ -24,19 +26,25 @@ const leader_schema = new mongoose.Schema({
 leader_schema.plugin(timestamps)
 
 const faculty_college_schema = new mongoose.Schema({
-    faculty: {
-        type: String,
-        required: true
-    },
     college: {
-        type: String,
+        type: Types.ObjectId,
+        ref: 'college',
         required: true
     },
     description: {
         type: String,
         min: 20
     },
+    name: {
+        type: String,
+        required: true
+    },
     leaders: [leader_schema],
+    createdBy: {
+        type: Types.ObjectId,
+        ref: 'user',
+        required: true
+    },
     status: {
         type: Number,
         default: 1
@@ -45,10 +53,10 @@ const faculty_college_schema = new mongoose.Schema({
 
 faculty_college_schema.plugin(timestamps)
 
-// validate faculty-college
+// validate faculty
 function validate_faculty_college(credentials) {
     const schema = {
-        faculty: Joi.string().required(),
+        name: Joi.string().min(3).required(),
         college: Joi.string().required(),
         description: Joi.string(),
         leader: Joi.object({

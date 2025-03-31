@@ -88,7 +88,7 @@ exports.validate_faculty = validate_faculty
 const {
   faculty_college,
   validate_faculty_college
-} = require('../models/faculty_college/faculty_college.model')
+} = require('../models/faculty/faculty.model')
 
 exports.Faculty_college = faculty_college
 exports.validate_faculty_college = validate_faculty_college
