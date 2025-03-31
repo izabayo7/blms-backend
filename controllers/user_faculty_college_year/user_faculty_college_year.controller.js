@@ -45,6 +45,8 @@ const router = express.Router()
  *     tags:
  *       - User_faculty_college_year
  *     description: Get all user_faculty_college_year
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
