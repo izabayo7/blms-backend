@@ -658,6 +658,109 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /user/{id}/password:
+ *   put:
+ *     tags:
+ *       - User
+ *     description: Update User password
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *        - name: id
+ *          in: path
+ *          type: string
+ *          description: User's Id
+ *        - name: body
+ *          description: Fields for a User
+ *          in: body
+ *          required: true
+ *          schema:
+ *            properties:
+ *              current_password:
+ *                type: string
+ *              new_password:
+ *                type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    error = validate_user(req.body, 'update')
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if user exist
+    let user = await findDocument(User, {
+      _id: req.params.id
+    })
+    if (!user)
+      return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
+
+    // check if the name or email were not used
+    user = await findDocument(User, {
+      _id: {
+        $ne: req.params.id
+      },
+      $or: [{
+        email: req.body.email
+      }, {
+        national_id: req.body.national_id
+      }, {
+        user_name: req.body.user_name
+      }, {
+        phone: req.body.phone
+      }],
+    })
+
+    if (user) {
+      const phoneFound = req.body.phone == user.phone
+      const national_idFound = req.body.national_id == user.national_id
+      const emailFound = req.body.email == user.email
+      const user_nameFound = req.body.user_name == user.user_name
+      return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+    }
+
+    // avoid user_name === group name
+    let chat_group = await findDocument(Chat_group, {
+      name: req.body.user_name
+    })
+    if (chat_group)
+      return res.send(formatResult(403, 'user_name was taken'))
+
+    let user_category = await findDocument(User_category, {
+      _id: req.body.category
+    })
+    if (!user_category)
+      return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
+
+    if (req.body.password)
+      req.body.password = await hashPassword(req.body.password)
+    let result = await updateDocument(User, req.params.id, req.body)
+
+    // result = await add_user_details([result])
+    // result = result[0]
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /user/{id}/profile:
  *   put:
  *     tags:

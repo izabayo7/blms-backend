@@ -73,7 +73,7 @@ userSchema.plugin(timestamps)
 
 // validate user
 function validate_user(credentials, method = 'create') {
-    const schema = {
+    const schema = method = 'create' ? {
         sur_name: Joi.string().min(3).max(100).required(),
         other_names: Joi.string().min(3).max(100).required(),
         user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100).required(), // regex needed
@@ -86,8 +86,22 @@ function validate_user(credentials, method = 'create') {
         date_of_birth: Joi.date(),
         college: Joi.ObjectId(),
         category: Joi.ObjectId().required(),
-        status: Joi.object({disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required()})
-    }
+        status: Joi.object({ disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required() })
+    } : {
+            sur_name: Joi.string().min(3).max(100).required(),
+            other_names: Joi.string().min(3).max(100).required(),
+            user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100).required(), // regex needed
+            national_id: Joi.string().length(16).required(), // regex needed
+            gender: Joi.string().min(4).max(6).required(), // regex needed
+            // password: Joi.string().min(8),
+            phone: Joi.string().max(10).min(10).required(), // regex needed
+            email: Joi.string().email().required(),
+            // profile: Joi.string(), // regex needed
+            date_of_birth: Joi.date(),
+            // college: Joi.ObjectId(),
+            // category: Joi.ObjectId().required(),
+            // status: Joi.object({disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required()})
+        }
     return Joi.validate(credentials, schema)
 }
 
