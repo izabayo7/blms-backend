@@ -2,7 +2,7 @@
 const {sendReleaseMarskEmail, sendAssignmentExpirationEmail} = require("../email/email.controller");
 const {
     updateDocument, countDocuments, scheduleEvent, addAssignmentTarget, Notification, User_notification, MyEmitter,
-    Quiz_submission, validateQuestions
+    Quiz_submission, validateQuestions, College, checkCollegePayment
 } = require("../../utils/imports");
 const {
     express,
@@ -149,6 +149,21 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
 
             if (new Date() < new Date(date) || new Date() > new Date(endDate))
                 return res.send(formatResult(404, 'exam not available'))
+
+            const college = await College.findOne({_id: req.user.college})
+
+            if (college.users_verification_link) {
+
+                if (!req.user.registration_number)
+                    return res.send(formatResult(403, 'user must have a registration number (since the college is verifying your college payment status)'))
+
+                let paid = await checkCollegePayment({
+                    registration_number: req.user.registration_number,
+                    link: college.users_verification_link
+                })
+                if (!paid)
+                    return res.send(formatResult(403, 'user must pay the college to be able to do an exam'))
+            }
 
             exam.submission = await Exam_submission.findOne({
                 exam: exam._id,
