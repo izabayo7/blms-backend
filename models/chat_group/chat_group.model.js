@@ -56,7 +56,7 @@ chat_group_schema.plugin(timestamps)
 function validate_chat_group(credentials, method = 'create') {
     const schema = method == 'create' ? {
         name: Joi.string().required(), // regex needed
-        members: Joi.array().min(3).items({
+        members: Joi.array().min(2).items({
             _id: Joi.ObjectId(),
             isCreator: Joi.boolean(),
             status: Joi.boolean(),
