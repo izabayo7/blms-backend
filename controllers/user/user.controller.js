@@ -38,6 +38,7 @@ const {
   upload_single_image,
   Chat_group,
   Quiz,
+  date,
   auth,
   validate_chat_group_profile_udpate,
   savedecodedBase64Image,
@@ -205,10 +206,6 @@ router.get('/statistics', auth, async (req, res) => {
     return res.send(formatResult(500, error))
   }
 })
-
-function date(date) {
-  return new Date(date)
-}
 
 /**
  * @swagger

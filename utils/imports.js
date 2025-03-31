@@ -20,7 +20,7 @@ exports.path = require('path')
 exports.RTCMultiConnectionServer = require('rtcmulticonnection-server');
 const EventEmitter = require('events');
 
-class MyEmitter extends EventEmitter {}
+class MyEmitter extends EventEmitter { }
 const myEmitter = new MyEmitter();
 exports.MyEmitter = myEmitter
 
@@ -206,6 +206,11 @@ exports.u = undefined
 /**
  * other functions
  */
+
+
+exports.date = (date) => {
+  return new Date(date)
+}
 
 /**
  *  returns a formatted result (made to avoid console errors caused by statuses and to utilise the results we give)

@@ -31,7 +31,8 @@ const {
     injectFaculty_college_year,
     addStorageDirectoryToPath,
     Faculty,
-    countDocuments
+    countDocuments,
+    date
 } = require('../../utils/imports')
 
 // create router
@@ -139,6 +140,122 @@ router.get('/statistics', async (req, res) => {
             }
         }
         return res.send(formatResult(u, u, { total_courses }))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /course/statistics/user_access:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of how user joined
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: start_date
+ *         description: The starting date
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: end_date
+ *         description: The ending date
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/user_access', async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query
+        const result = await User.aggregate([
+            { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
+            { "$match": { college: req.user.college } },
+            {
+                "$group": {
+                    "_id": {
+                        "$subtract": [
+                            "$createdAt",
+                            {
+                                "$mod": [
+                                    { "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")] },
+                                    1000 * 60 * 60 * 24
+                                ]
+                            }
+                        ]
+                    },
+                    "total_users": { "$sum": 1 }
+                }
+            },
+            { "$sort": { "_id": 1 } }
+        ])
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /course/statistics/creations:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of how courses are created per day
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: start_date
+ *         description: The starting date
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: end_date
+ *         description: The ending date
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/creations', async (req, res) => {
+    try {
+        const { start_date, end_date } = req.query
+        const result = await Course.aggregate([
+            { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
+            // { "$match": { college: req.user.college } },
+            {
+                "$group": {
+                    "_id": {
+                        "$subtract": [
+                            "$createdAt",
+                            {
+                                "$mod": [
+                                    { "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")] },
+                                    1000 * 60 * 60 * 24
+                                ]
+                            }
+                        ]
+                    },
+                    "total_courses": { "$sum": 1 }
+                }
+            },
+            { "$sort": { "_id": 1 } }
+        ])
+        return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
