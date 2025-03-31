@@ -84,7 +84,7 @@ router.route('/all')
 router.route('/:id')
     /**
      * @swagger
-     * /posts:
+     * /posts/{id}:
      *   put:
      *     tags:
      *       - Post
@@ -116,41 +116,17 @@ router.route('/:id')
      */
     .post([auth, updatePost])
 
-router.route('/:token/renew')
+router.route('/:id/:action')
     /**
      * @swagger
-     * /user_invitations/{token}/renew:
+     * /user_invitations/{id}/{action}:
      *   put:
      *     tags:
      *       - Post
-     *     description: Extends the expiration time of an invitation
-     *     security:
-     *       - bearerAuth: -[]
+     *     description: Change post status
      *     parameters:
-     *       - name: token
-     *         description: invitation token
-     *         in: path
-     *         type: string
-     *         required: true
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     */
-    .put([auth, renewInvitation])
-
-router.route('/:token/:action')
-    /**
-     * @swagger
-     * /user_invitations/{token}/{action}:
-     *   put:
-     *     tags:
-     *       - Post
-     *     description: Accept or deny user_invitations
-     *     parameters:
-     *       - name: token
-     *         description: invitation token
+     *       - name: id
+     *         description: post id
      *         in: path
      *         type: string
      *         required: true
@@ -158,6 +134,7 @@ router.route('/:token/:action')
      *         description: action you want to perform
      *         in: path
      *         type: string
+     *         enum: ['publish', 'unpublish', 'delete']
      *         required: true
      *     responses:
      *       200:
@@ -165,7 +142,7 @@ router.route('/:token/:action')
      *       500:
      *         description: Internal Server Error
      */
-    .put(acceptOrDenyInvitation)
+    .put(updatePostStatus)
 
 
 router.route('/:token/delete')
