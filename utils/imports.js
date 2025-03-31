@@ -795,7 +795,7 @@ module.exports.Create_or_update_message = async (sender, reciever, content, _id,
     return this.formatResult(404, 'sender not found')
 
   let chat_group = await this.findDocument(this.Chat_group, {
-    name: reciever
+    code: reciever
   })
   if (chat_group) {
     reciever_found = true
