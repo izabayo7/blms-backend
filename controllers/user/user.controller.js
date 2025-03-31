@@ -1458,7 +1458,7 @@ router.put('/', auth, async (req, res) => {
         if (req.body.email) {
             // create user account confirmation
             await createAccountConfirmation({user_id: req.user._id, email: req.body.email})
-            req.body.email = undefined
+            req.body.email = req.user.email
         }
 
         let result = await updateDocument(User, req.user._id, req.body)
