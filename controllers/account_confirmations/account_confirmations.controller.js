@@ -90,13 +90,13 @@ exports.confirmAccount = async (req, res) => {
 
         if (!(uuidValidate(req.params.token))) return res.status(400).send(formatResult(400, 'Invalid confirmation token'));
 
-        const confirmation = await Account_confirmation.findOne({token: req.params.token, status: {$ne: 'PENDING'}});
+        const confirmation = await Account_confirmation.findOne({token: req.params.token, status: "CONFIRMED"});
         if (confirmation)
             return res.send(formatResult(403, 'account onfirmation has already been closed'));
 
         const _confirmation = await Account_confirmation.findOne({
             token: req.params.token,
-            status: 'PENDING'
+            status: 'ACCEPTED'
         }).populate({
             path: 'user',
             model: 'user',
