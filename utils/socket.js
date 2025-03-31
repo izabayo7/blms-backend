@@ -1,4 +1,5 @@
 const socket_io = require('socket.io')
+const {countDocuments} = require("./imports");
 const {User_attendance} = require("../models/user_attendance/user_attendance.model");
 const {autoMarkSelectionQuestions} = require("./imports");
 const {Quiz_submission} = require("./imports");
@@ -129,7 +130,7 @@ module.exports.listen = (app) => {
 
                 }
 
-            if(name === `join_group_${id}`) {
+            if (name === `join_group_${id}`) {
                 const contacts = await formatContacts([data])
                 socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})
             }
@@ -154,7 +155,6 @@ module.exports.listen = (app) => {
         socket.on('message/contacts', async () => {
             // get the latest conversations
             const latestMessages = await getLatestMessages(id)
-            // console.log(latestMessages)
             // format the contacts
             const contacts = await formatContacts(latestMessages, id)
             // send the contacts
@@ -251,20 +251,17 @@ module.exports.listen = (app) => {
 
         })
 
-        // // notify members after group creation
-        // socket.on('message/create', async ({
-        //                                        inviter,
-        //                                        group_code
-        //                                    }) => {
-        //     // handle errors
-        //     const group = await findDocument(Chat_group, {code: group_code})
-        //     const message = await findDocument(Message, {group: group._id}, {receivers: 0, _id: 0})
-        //
-        //     group.members.forEach(m => {
-        //         // send the message
-        //         socket.broadcast.to(m.id).emit('res/message/new', message)
-        //     })
-        // })
+        socket.on("messages/unread", async () => {
+            const number = await countDocuments(Message, {
+                receivers: {
+                    $elemMatch: {
+                        id: id,
+                        read: false
+                    }
+                }
+            })
+            socket.emit('res/messages/unread', number);
+        })
 
         // start a new conversation
         socket.on('message/start_conversation', async ({
@@ -328,7 +325,10 @@ module.exports.listen = (app) => {
                 let sender = await findDocument(User, {user_name: conversation_id})
                 // save the message
                 documents = await findDocuments(Message, {
-                    sender: sender._id,
+                    $or: [
+                        {sender: "SYSTEM"},
+                        {sender: sender._id,}
+                    ],
                     group: undefined,
                     receivers: {
                         $elemMatch: {
