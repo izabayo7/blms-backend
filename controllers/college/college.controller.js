@@ -14,7 +14,9 @@ const {
   deleteDocument,
   validateObjectId,
   sendResizedImage,
-  u
+  u,
+  Compress_images,
+  upload_single_image
 } = require('../../utils/imports')
 
 // create router
@@ -345,6 +347,140 @@ router.put('/:id', async (req, res) => {
     result = await injectLogoMediaPaths([result])
     result = result[0]
     return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /college/{id}/logo:
+ *   put:
+ *     tags:
+ *       - College
+ *     description: Upload college logo (file upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: College id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/logo', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if college exist
+    const college = await findDocument(College, {
+      _id: req.params.id
+    })
+    if (!college)
+      return res.send(formatResult(404, 'college not found'))
+
+    const path = `./uploads/colleges/${req.params.id}`
+    const temp_path = `./uploads/colleges/${req.params.id}/temp`
+    req.kuriousStorageData = {
+      dir: temp_path,
+    }
+    upload_single_image(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+
+      await Compress_images(temp_path, path)
+
+      setTimeout(() => {
+        fs.unlink(`${temp_path}/${req.file.filename}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }, 1000);
+
+      if (college.logo && college.logo != req.file.filename) {
+        fs.unlink(`${path}/${college.logo}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }
+      const result = await updateDocument(College, req.params.id, {
+        logo: req.file.filename
+      })
+      result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
+      return res.send(result)
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /college/{id}/logo/{file_name}:
+ *   delete:
+ *     tags:
+ *       - College
+ *     description: remove College logo
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id/logo/:file_name', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if college exist
+    const college = await findDocument(College, {
+      _id: req.params.id
+    }, u, false)
+    if (!college)
+      return res.send(formatResult(404, 'college not found'))
+
+    if (!college.logo || college.logo !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    const path = `./uploads/colleges/${req.params.id}/${college.logo}`
+
+    fs.unlink(path, (err) => {
+      if (err)
+        return res.send(formatResult(500, err))
+    })
+    college.logo = u
+    await college.save()
+    return res.send(formatResult(u, u, college))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

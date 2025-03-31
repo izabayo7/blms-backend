@@ -9,10 +9,3 @@ mongoose.connect(`mongodb://${dbHost}`, {
   }).then(() => console.log('Successfully connected to Database '))
   .catch(err => console.log('Failed to Connect to Database', err))
 mongoose.set('useFindAndModify', false)
-
-// check if these are needed
-// require('./admin/admin.model')
-// require('./college/college.model')
-// require('./instructor/instructor.model')
-// require('./student/student.model')
-// require('./superAdmin/superAdmin.model')

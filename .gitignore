@@ -3,5 +3,6 @@
 /node_modules
 /sketchs
 /uploads
+/log
 /xd
 .env

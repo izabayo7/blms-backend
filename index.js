@@ -73,7 +73,9 @@ const chat_group_controller = require('./controllers/chat_group/chat_group.contr
 
 // use middlewares
 app.use(cors())
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({
+    limit: '50mb'
+}));
 app.use(express.urlencoded({
     limit: '50mb',
     extended: true
@@ -94,7 +96,6 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 
 // app.use('/kurious/message', messageController)
 // app.use('/kurious/file', fileController)
-// app.use('/kurious/chat_group', chatGroupController)
 
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, user_category_controller)
@@ -115,4 +116,9 @@ app.use(`${basePath}/user_notification`, user_notification_controller)
 app.use(`${basePath}/chat_group`, chat_group_controller)
 
 // start the server
-server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))
+server.listen(port, () => {
+    if (process.env.DEBUG == "false") {
+        console.log = function () { }
+    }
+    console.log(`Kurious Server activated on port...${port}`)
+})

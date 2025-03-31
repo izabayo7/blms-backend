@@ -2,6 +2,7 @@
  * dependencies
  */
 const Joi = require('joi')
+const compress_images = require('compress-images')
 const bcrypt = require('bcryptjs')
 Joi.ObjectId = require('joi-objectid')(Joi)
 module.exports.express = require('express')
@@ -144,11 +145,11 @@ module.exports.Quiz_submission = quiz_submision
 module.exports.validate_quiz_submission = validate_quiz_submission
 
 
-const {
-    fileFilter
-} = require('./multer/fileFilter')
+// const {
+//     fileFilter
+// } = require('./multer/fileFilter')
 
-module.exports.fileFilter = fileFilter
+// module.exports.fileFilter = fileFilter
 
 const {
     chat_group,
@@ -974,6 +975,15 @@ module.exports.dynamic_storage = this.multer.diskStorage({
 // file size limits needed
 // type checking also needed
 
+const imageFilter = function (req, file, cb) {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        req.fileValidationError = 'file type not allowed';
+        return cb(new Error(req.fileValidationError), false);
+    }
+    cb(null, true);
+};
+
 // upload sing file
 module.exports.upload_single = this.multer({
     storage: this.dynamic_storage,
@@ -983,6 +993,14 @@ module.exports.upload_single = this.multer({
     // fileFilter: fileFilter
 }).single('file')
 
+// upload single image
+module.exports.upload_single_image = this.multer({
+    storage: this.dynamic_storage,
+    // limits: {
+    //     fileSize: 1024 * 1024 * 5
+    // },
+    fileFilter: imageFilter
+}).single('file')
 
 // upload multiple filies
 module.exports.upload_multiple = this.multer({
@@ -1015,6 +1033,18 @@ module.exports.sendResizedImage = async (req, res, path) => {
         }
     })
 }
+// compress images
+module.exports.Compress_images = async (input_path, output_path, formatResult = this.formatResult) => compress_images(input_path + '/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}', output_path + '/', { compress_force: false, statistic: true, autoupdate: true }, false,
+    { jpg: { engine: "mozjpeg", command: ["-quality", "60"] } },
+    { png: { engine: "pngquant", command: ["--quality=20-50", "-o"] } },
+    { svg: { engine: "svgo", command: "--multipass" } },
+    { gif: { engine: "gifsicle", command: ["--colors", "64", "--use-col=web"] } },
+    function (error) {
+        if (error)
+            return formatResult(500, error)
+    }
+);
+
 
 // send video
 module.exports.streamVideo = async (req, res, path) => {
