@@ -102,7 +102,7 @@ app.use('/live', express.static(path.join(__dirname, 'views/live')));
 app.get("/", express.static(path.join(__dirname, 'views')))
 
 app.use(`${basePath}/user`, user_controller)
-app.use(`${basePath}/user_category`, auth, user_category_controller)
+app.use(`${basePath}/user_category`, user_category_controller)
 app.use(`${basePath}/user_role`, auth, user_role_controller)
 app.use(`${basePath}/college`, auth, college_controller)
 app.use(`${basePath}/college_year`, auth, college_year_controller)

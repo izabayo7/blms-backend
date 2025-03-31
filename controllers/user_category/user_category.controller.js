@@ -13,7 +13,8 @@ const {
   findDocuments,
   User,
   u,
-  User_role
+  User_role,
+  auth
 } = require('../../utils/imports')
 
 // create router
@@ -49,7 +50,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const user_categories = await findDocuments(User_category)
     if (user_categories.length === 0)
@@ -123,7 +124,7 @@ router.get('/open', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     const {
       error
@@ -169,7 +170,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const {
       error
@@ -230,7 +231,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     let {
       error
@@ -299,7 +300,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const {
       error
