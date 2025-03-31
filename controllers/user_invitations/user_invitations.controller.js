@@ -653,7 +653,7 @@ exports.createMultipleUsers = async (req, res, next) => {
                     college: req.user.college,
                     category: user_category,
                     gender: rows[i].gender,
-                    user_name: await makeUserName(),
+                    user_name: rows[i].registration_number || await makeUserName(),
                     password: await hashPassword(rows[i].password)
                 });
 
