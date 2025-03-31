@@ -500,7 +500,7 @@ function receiversMatch(receiver_g1, receiver_g2) {
     return true
 }
 
-exports.injectTarget = async  (announcements) => {
+exports.injectTarget = async (announcements) => {
     for (const announcementsKey in announcements) {
         if (!announcements[announcementsKey].target)
             continue;
@@ -509,25 +509,25 @@ exports.injectTarget = async  (announcements) => {
             case 'course':
                 target = await this.findDocument(this.Course, {
                     _id: announcements[announcementsKey].target.id
-                }, {name: 1})
+                }, { name: 1 })
                 break;
 
             case 'student_group':
                 target = await this.findDocument(User_group, {
                     _id: announcements[announcementsKey].target.id
-                }, {name: 1})
+                }, { name: 1 })
                 break;
 
             case 'faculty':
                 target = await this.findDocument(Faculty_college, {
                     _id: announcements[announcementsKey].target.id
-                }, {name: 1})
+                }, { name: 1 })
                 break;
 
             case 'college':
                 target = await this.findDocument(this.College, {
                     _id: announcements[announcementsKey].target.id
-                }, {name: 1})
+                }, { name: 1 })
                 break;
 
             default:
@@ -538,14 +538,14 @@ exports.injectTarget = async  (announcements) => {
     return announcements
 }
 
-exports.getUserAnnouncements = async (user, getOne = false)=>{
+exports.getUserAnnouncements = async (user, getOne = false) => {
     const ids = [user.college]
 
     const user_user_group = await User_user_group.find({
         user: user._id.toString(),
         status: "ACTIVE"
-    }, {user_group: 1}).populate('user_group',
-        {faculty: 1}
+    }, { user_group: 1 }).populate('user_group',
+        { faculty: 1 }
     )
 
     user_user_group.map(async (x) => {
@@ -556,9 +556,9 @@ exports.getUserAnnouncements = async (user, getOne = false)=>{
     if (user.category.name === 'STUDENT') {
 
         const courses = await this.Course.find({
-            user_group: {$in: user_user_group.map(x => x.user_group._id.toString())},
+            user_group: { $in: user_user_group.map(x => x.user_group._id.toString()) },
             published: true
-        }, {_id: 1})
+        }, { _id: 1 })
 
         courses.map(async (x) => {
             ids.push(x._id.toString())
@@ -566,40 +566,61 @@ exports.getUserAnnouncements = async (user, getOne = false)=>{
 
     }
 
-    let announcements 
-
-    if(getOne){
+    let announcements
+let unreads
+    if (getOne) {
         announcements = await Announcement.findOne({
             $or: [
-                {"target.id": {$in: ids}},
-                {sender: user._id},
-                {specific_receivers: user._id.toString()},
+                { "target.id": { $in: ids } },
+                { sender: user._id },
+                { specific_receivers: user._id.toString() },
             ]
-        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({_id: -1}).lean()
+        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: -1 }).lean()
+        if (!announcements)
+            return {announcement: undefined}
         announcements = await this.injectUser([announcements], 'sender')
-    } else{
+        unreads = await Announcement.find({
+            $or: [
+                { "target.id": { $in: ids } },
+                { sender: user._id },
+                { specific_receivers: user._id.toString() },
+            ],
+            viewers: { $nin: user._id.toString() }
+        }).count()
+    } else {
         announcements = await Announcement.find({
             $or: [
-                {"target.id": {$in: ids}},
-                {sender: user._id},
-                {specific_receivers: user._id.toString()},
+                { "target.id": { $in: ids } },
+                { sender: user._id },
+                { specific_receivers: user._id.toString() },
             ]
-        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({_id: -1}).lean()
+        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: -1 }).lean()
         announcements = await this.injectUser(announcements, 'sender')
     }
-    
+
     announcements = await this.injectTarget(announcements)
 
-    return getOne ? announcements[0] : announcements
+    return getOne ? {announcement: announcements[0], unreads} : announcements
 
 }
 
-exports.injectAnnouncementContact = async (contacts,user_id)=>{
+exports.injectAnnouncementContact = async (contacts, user) => {
+    const {announcement,unreads} = await this.getUserAnnouncements(user, true)
 
+    if (!announcement)
+        return contacts
+
+    contacts.unshift({
+        id: 'announcements',
+        name: "Announcements",
+        last_message: announcement,
+        unreadMessagesLength: unreads
+    }) 
+    return contacts
 }
 
 // format contacts
-exports.formatContacts = async (messages, user_id) => {
+exports.formatContacts = async (messages, user_id,user) => {
 
     let formatedContacts = []
     for (const message of messages) {
@@ -682,7 +703,9 @@ exports.formatContacts = async (messages, user_id) => {
             members: members
         })
     }
-    
+
+    console.log(await this.injectAnnouncementContact(formatedContacts,user))
+
     return formatedContacts
 }
 

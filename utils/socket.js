@@ -134,7 +134,7 @@ module.exports.listen = (app) => {
                 }
 
             if (name === `join_group_${id}`) {
-                const contacts = await formatContacts([data])
+                const contacts = await formatContacts([data],user)
                 socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})
             }
             if (name === `send_message_${id}`) {
@@ -164,7 +164,7 @@ module.exports.listen = (app) => {
             // get the latest conversations
             const latestMessages = await getLatestMessages(id)
             // format the contacts
-            const contacts = await formatContacts(latestMessages, id)
+            const contacts = await formatContacts(latestMessages, id,user)
             // send the contacts
             socket.emit('res/message/contacts', {
                 contacts: contacts
@@ -307,7 +307,7 @@ module.exports.listen = (app) => {
 
                     const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
                     result.data = await replaceUserIds([result.data], Receiver._id.toString())
-                    result.data = await formatContacts(result.data, Receiver._id.toString())
+                    result.data = await formatContacts(result.data, Receiver._id.toString(),user)
                     socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', {contact: result.data[0]})
                 }
 
