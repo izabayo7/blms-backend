@@ -273,7 +273,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
         let chapter
         let course
 
-        if (quiz.target && quiz.target != {}) {
+        if (quiz.target) {
             if (quiz.target.type === 'chapter') {
                 chapter = await findDocument(Chapter, {
                     _id: quiz.target.id

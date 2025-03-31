@@ -1008,7 +1008,7 @@ exports.injectChapters = async (courses, user_id) => {
                     }, {
                         total_marks: 1
                     })
-                    if(submission) {
+                    if (submission) {
                         total_got_marks += submission.total_marks
                         total_required_marks += chapterQuiz[i].total_marks
                     }
@@ -1448,33 +1448,35 @@ exports.savedecodedBase64Image = (dataString, dir) => {
 
 exports.addQuizTarget = async (quizes) => {
     for (const i in quizes) {
-        if (quizes[i].target.type !== 'faculty_college_year') {
+        if (quizes[i].target)
+            if (quizes[i].target.type !== 'faculty_college_year') {
 
-            let chapter, course, live_session
+                let chapter, course, live_session
 
-            if (quizes[i].target.type === 'chapter') {
-                chapter = await this.findDocument(this.Chapter, {
-                    _id: quizes[i].target.id
-                }, this.u, true)
-                course = await this.findDocument(this.Course, {
-                    _id: chapter.course
-                })
-            } if(quizes[i].target.type === 'live_session'){
-                live_session = await  this.findDocument(this.Live_session,{
-                    _id: quizes[i].target.id
-                })
-                chapter = await this.findDocument(this.Chapter, {
-                    _id: live_session.target.id
-                }, this.u, true)
+                if (quizes[i].target.type === 'chapter') {
+                    chapter = await this.findDocument(this.Chapter, {
+                        _id: quizes[i].target.id
+                    }, this.u, true)
+                    course = await this.findDocument(this.Course, {
+                        _id: chapter.course
+                    })
+                }
+                if (quizes[i].target.type === 'live_session') {
+                    live_session = await this.findDocument(this.Live_session, {
+                        _id: quizes[i].target.id
+                    })
+                    chapter = await this.findDocument(this.Chapter, {
+                        _id: live_session.target.id
+                    }, this.u, true)
+                }
+
+                course = await this.Course.findOne({
+                    _id: chapter ? chapter.course : quizes[i].target.id
+                }).populate('user_group')
+                quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group'])
+                quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
+
             }
-
-            course = await this.Course.findOne({
-                _id: chapter ? chapter.course : quizes[i].target.id
-            }).populate('user_group')
-            quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group'])
-            quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
-
-        }
     }
     return quizes
 }
