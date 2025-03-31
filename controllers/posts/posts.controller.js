@@ -138,38 +138,38 @@ exports.updatePost = async (req, res) => {
  * @param req
  * @param res
  */
-exports.updatePost = async (req, res) => {
-  try {
+// exports.updatePost = async (req, res) => {
+//   try {
 
-    const { error } = validate_chat_group_profile_udpate(req.body)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+//     const { error } = validate_chat_group_profile_udpate(req.body)
+//     if (error)
+//       return res.send(formatResult(400, error.details[0].message))
 
-    const path = addStorageDirectoryToPath(req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`)
-    const { filename } = await savedecodedBase64Image(req.body.profile, path)
+//     const path = addStorageDirectoryToPath(req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`)
+//     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
-    if (req.user.profile) {
-      fs.unlink(`${path}/${req.user.profile}`, (err) => {
-        if (err)
-          return res.send(formatResult(500, err))
-      })
-    }
-    let result = await User.findByIdAndUpdate(req.user._id, {
-      profile: filename
-    })
-    let user_category = await findDocument(User_category, {
-      _id: req.user.category
-    })
-    result = simplifyObject(result)
-    result.category = _.pick(user_category, 'name')
-    result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${req.user.user_name}/profile/${filename}`
-    return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
+//     if (req.user.profile) {
+//       fs.unlink(`${path}/${req.user.profile}`, (err) => {
+//         if (err)
+//           return res.send(formatResult(500, err))
+//       })
+//     }
+//     let result = await User.findByIdAndUpdate(req.user._id, {
+//       profile: filename
+//     })
+//     let user_category = await findDocument(User_category, {
+//       _id: req.user.category
+//     })
+//     result = simplifyObject(result)
+//     result.category = _.pick(user_category, 'name')
+//     result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${req.user.user_name}/profile/${filename}`
+//     return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
 
 
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-}
+//   } catch (error) {
+//     return res.send(formatResult(500, error))
+//   }
+// }
 
 /***
  *  change post status

@@ -126,6 +126,8 @@ router.route('/:id/:action')
      *     tags:
      *       - Post
      *     description: Change post status
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: id
      *         description: post id
