@@ -57,6 +57,9 @@ const exam_submission_schema = new mongoose.Schema({
         ref: 'exam',
         required: true
     },
+    hasVideo: {
+        type: Boolean,
+    },
     user: {
         type: String,
         ref: 'user',
@@ -130,6 +133,7 @@ function validate_exam_submission(credentials) {
     const schema = {
         exam: Joi.ObjectId().required(),
         used_time: Joi.number().required(),
+        hasVideo: Joi.boolean(),
         answers: Joi.array().min(1).items(Joi.object({
             _id: Joi.ObjectId(),
             text: Joi.string(),
