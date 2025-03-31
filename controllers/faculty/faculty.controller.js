@@ -180,7 +180,7 @@ exports.deleteFaculty = async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.send(formatResult(400, error.details[0].message))
+    return res.send(formatResult(400, "invalid id"))
 
   let faculty = await findDocument(Faculty, {
     _id: req.params.id
@@ -191,7 +191,7 @@ exports.deleteFaculty = async (req, res) => {
 
 
   // check if the faculty is never used
-  const faculty_college_found = await findDocument(Faculty_college, {
+  const faculty_college_found = await findDocument(Faculty_college_year, {
     faculty: req.params.id
   })
   if (!faculty_college_found) {
