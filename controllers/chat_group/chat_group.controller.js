@@ -152,6 +152,8 @@ router.get('/college/:name', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Returns chat_groups a specified user belongs in
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: user_name
  *         description: Users's user_name
