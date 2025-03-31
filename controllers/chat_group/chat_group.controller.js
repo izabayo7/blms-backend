@@ -23,7 +23,8 @@ const {
   Create_or_update_message,
   Search,
   simplifyObject,
-  generateGroupCode
+  generateGroupCode,
+  validateChat_group_code
 } = require('../../utils/imports')
 
 // create router
@@ -364,11 +365,18 @@ router.get('/:code/search_members', async (req, res) => {
  */
 router.get('/:code', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     let result = await findDocument(Chat_group, { code: req.params.code })
 
     if (!result)
       return res.send(formatResult(404, 'Chat_group not found'))
-
+    console.log(result)
     result = await injectDetails([result])
     result = result[0]
 

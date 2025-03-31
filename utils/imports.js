@@ -205,6 +205,12 @@ module.exports.formatResult = (status = 200, message = 'OK', data = undefined) =
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
 
 /**
+ *  checks if the given id is a mongoose objectId
+ * @param {Number} code  groupCOde
+ */
+module.exports.validateChat_group_code = (code) => Joi.validate(code, Joi.number().required())
+
+/**
  *  encrypts the given password
  * @param {String} password  password string
  * @returns {String} hashed_password
