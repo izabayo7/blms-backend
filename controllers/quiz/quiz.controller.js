@@ -247,10 +247,16 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    let quiz = await findDocument(Quiz, {
+    let user_category = await findDocument(User_category, {
+      name: 'INSTRUCTOR'
+    })
+
+    const isInstructor = user.category == user_category._id
+
+    let quiz = await findDocument(Quiz, isInstructor ? {
       name: req.params.quiz_name,
       user: user._id
-    })
+    } : { name: req.params.quiz_name })
     if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
@@ -275,7 +281,6 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
       } else if (quiz.target.type === 'faculty_college_year') {
         faculty_college_year = quiz.target.id
       }
-      console.log(user._id, faculty_college_year)
       const user_faculty_college_year = await findDocument(User_faculty_college_year, {
         user: user._id,
         faculty_college_year: faculty_college_year
@@ -287,8 +292,11 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
         return res.send(formatResult(404, 'quiz not found'))
     }
 
+    if (isInstructor) {
+      quiz = await addQuizUsages(quiz)
+    }
+
     quiz = await addAttachmentMediaPaths([quiz])
-    quiz = await addQuizUsages(quiz)
     quiz = await addAttachedCourse(quiz)
     quiz = quiz[0]
 
@@ -540,53 +548,6 @@ router.put('/:id', async (req, res) => {
     quiz = quiz_copy
     quiz_copy = simplifyObject(quiz)
 
-    if (req.body.target) {
-
-      req.body.target.type = req.body.target.type.toLowerCase()
-
-      const allowedTargets = ['chapter', 'course', 'faculty_college_year']
-
-      if (!allowedTargets.includes(req.body.target.type))
-        return res.send(formatResult(400, 'invalid quiz target_type'))
-
-      let target
-
-      switch (req.body.target.type) {
-        case 'chapter':
-          target = await findDocument(Chapter, {
-            _id: req.body.target.id
-          })
-          break;
-
-        case 'course':
-          target = await findDocument(Course, {
-            _id: req.body.target.id
-          })
-          break;
-
-        case 'faculty_college_year':
-          target = await findDocument(Faculty_college_year, {
-            _id: req.body.target.id
-          })
-          break;
-
-        default:
-          break;
-      }
-
-      if (!target)
-        return res.send(formatResult(404, 'quiz target not found'))
-
-      // remove the previously attached quiz
-      const last_targeted_quiz = await findDocument(Quiz, {
-        target: req.body.target
-      })
-      if (last_targeted_quiz) {
-        last_targeted_quiz.target = undefined
-        await last_targeted_quiz.save()
-      }
-    }
-
     const validQuestions = validateQuestions(req.body.questions)
     if (validQuestions.status !== true)
       return res.send(formatResult(400, validQuestions.error))
@@ -595,7 +556,6 @@ router.put('/:id', async (req, res) => {
 
     quiz.name = req.body.name
     quiz.instructions = req.body.instructions
-    quiz.target = req.body.target
     quiz.duration = req.body.duration
     quiz.questions = req.body.questions
     quiz.total_marks = req.body.total_marks
