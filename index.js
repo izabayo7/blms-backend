@@ -33,7 +33,7 @@ const swaggerOptions = {
         securityDefinitions: {
             bearerAuth: {
                 type: 'apiKey',
-                name: 'Authorization',
+                name: 'authorization',
                 scheme: 'bearer',
                 in: 'header',
             },
@@ -71,6 +71,7 @@ const user_notification_controller = require('./controllers/user_notification/us
 const chat_group_controller = require('./controllers/chat_group/chat_group.controller')
 const message_controller = require('./controllers/message/message.controller')
 const comment_controller = require('./controllers/comments/comments.controller')
+const live_session_controller = require('./controllers/live_session/live_session.controller')
 
 // use middlewares
 app.use(cors())
@@ -122,6 +123,7 @@ app.use(`${basePath}/user_notification`, user_notification_controller)
 app.use(`${basePath}/chat_group`, auth, chat_group_controller)
 app.use(`${basePath}/message`, auth, message_controller)
 app.use(`${basePath}/comment`, comment_controller)
+app.use(`${basePath}/live_session`, live_session_controller)
 
 // start the server
 server.listen(port, () => {
