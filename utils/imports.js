@@ -481,6 +481,13 @@ module.exports.formatContacts = async (messages, user_id) => {
         content: message.content,
         sender: message.sender
       }
+    if (message.sender == user_id) {
+      last_message.sender = { sur_name: 'You' }
+    } else {
+      let sender = await this.injectUser([{ id: message.sender }], 'id', 'data')
+      sender = sender[0].data
+      last_message.sender = { sur_name: sender.sur_name }
+    }
 
     if (message.group) {
       const group = await this.findDocument(this.Chat_group, {
@@ -501,7 +508,6 @@ module.exports.formatContacts = async (messages, user_id) => {
           }
         }
       })
-      console.log(message)
     } else {
       let user = await this.injectUser([{ id: message.sender == user_id ? message.receivers[0].id : message.sender }], 'id', 'data')
       user = user[0].data
@@ -598,7 +604,7 @@ module.exports.getLatestMessages = async (user_id) => {
       _id: -1
     })
     if (message) {
-      latestMessages.push(message)
+      latestMessages.push(message[0])
     }
 
   }

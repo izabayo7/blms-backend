@@ -230,7 +230,7 @@ module.exports.listen = (app) => {
         }
       }
       receivers.forEach(receiver => {
-        socket.broadcast.to(receiver.id).emit('message/typing', user_name)
+        socket.broadcast.to(receiver.id).emit('message/typing', user_name, chat_group ? conversation_id : u)
       })
     })
 
