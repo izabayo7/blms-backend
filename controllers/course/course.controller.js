@@ -251,7 +251,7 @@ router.get('/user/:user_name', async (req, res) => {
 
 
         result = await injectChapters(result)
-
+        result = await injectFaculty_college_year(result)
 
         return res.send(formatResult(u, u, result))
     } catch (error) {
