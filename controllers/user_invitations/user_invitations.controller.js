@@ -137,7 +137,7 @@ exports.createUserInvitation = async (req, res) => {
  * @param req
  * @param res
  */
-exports.acceptInvitation = async (req, res) => {
+exports.acceptOrDenyInvitation = async (req, res) => {
   try {
 
     if (!(uuidValidate(req.body.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
