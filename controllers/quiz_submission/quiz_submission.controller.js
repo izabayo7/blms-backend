@@ -209,14 +209,14 @@ router.get('/quiz/:id', async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/user/{id}:
+ * /quiz_submission/user/{user_name}:
  *   get:
  *     tags:
  *       - Quiz_submission
  *     description: Returns quiz_submissions of the specified user
  *     parameters:
- *       - name: id
- *         description: Student id
+ *       - name: user_name
+ *         description: user name
  *         in: path
  *         required: true
  *         type: string
@@ -228,17 +228,11 @@ router.get('/quiz/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:user_name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     // check if user exist
     let user = await findDocument(User, {
-      _id: req.params.id
+      user_name: req.params.id
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
@@ -251,7 +245,7 @@ router.get('/user/:id', async (req, res) => {
 
     if (user_category.name == 'STUDENT') {
       result = simplifyObject(await findDocuments(Quiz_submission, {
-        user: req.params.id
+        user: user._id
       }))
       if (!result.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
