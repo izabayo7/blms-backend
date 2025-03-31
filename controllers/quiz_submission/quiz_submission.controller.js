@@ -1,5 +1,5 @@
 // import dependencies
-const {autoMarkSelectionQuestions} = require("../../utils/imports");
+const {autoMarkSelectionQuestions, Live_session} = require("../../utils/imports");
 const {
     quiz
 } = require('../../models/quiz/quiz.model')
@@ -14,6 +14,7 @@ const {
     validateObjectId,
     addAttachmentMediaPaths,
     injectUser,
+    mongoose,
     _,
     formatResult,
     findDocuments,
@@ -180,10 +181,23 @@ router.get('/user', auth, async (req, res) => {
 
                     let quizes = await findDocuments(Quiz, {
                         "target.id": chapters[l]._id,
-                        status: 2 // only released marks
+                        // status: 2 // only released marks
                     }, u, u, u, u, u, {
                         _id: -1
                     })
+
+                    let live_sessions = await findDocuments(Live_session, {
+                        "target.id": mongoose.Types.ObjectId(chapters[l]._id)
+                    })
+                    if(live_sessions.length){
+                        let live_quizes = await findDocuments(Quiz, {
+                            "target.id": {$in: live_sessions.map(x=>x._id.toString())},
+                            // status: 2 // only released marks
+                        }, u, u, u, u, u, {
+                            _id: -1
+                        })
+                        quizes = quizes.concat(live_quizes)
+                    }
 
                     let foundSubmissions = []
                     quizes = await addQuizTarget(quizes)
