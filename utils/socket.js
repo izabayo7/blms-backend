@@ -100,61 +100,13 @@ module.exports.listen = (app) => {
                     });
                 else if (name === `user_limit_reached_${user.college}`)
                     socket.emit('user_limit_reached');
-            } else if (user.category.name === "INSTRUCTOR")
-                if (name === `upcoming_livesession_${user._id}`) {
-                    const {user_group, isLive, liveId} = data
-                    let newDocument = new Notification(isLive ? {
-                            link: `/live/${liveId}`,
-                            content: "Live session just started"
-                        } : {
-                            content: "you have a live class in 5 minutes",
-                        }
-                    )
-                    console.log()
-                    const saveDocument = await newDocument.save()
-                    if (saveDocument) {
+            }
 
-                        const user_user_groups = await User_user_group.find({
-                            user_group: user_group
-                        })
-
-                        user_user_groups.forEach(async _doc => {
-                            if (_doc.user !== id) {
-                                // create notification for user
-                                let userNotification = await User_notification.findOne({
-                                    user: _doc.user
-                                })
-                                if (!userNotification) {
-                                    userNotification = new User_notification({
-                                        user: _doc.user,
-                                        notifications: [{
-                                            id: newDocument._id
-                                        }]
-                                    })
-
-                                } else {
-                                    userNotification.notifications.push({
-                                        id: newDocument._id
-                                    })
-                                }
-
-                                let _newDocument = await userNotification.save()
-
-                                if (_newDocument) {
-                                    let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
-                                    notification.id = undefined
-                                    notification.notification = newDocument
-                                    // send the notification
-                                    socket.broadcast.to(_doc.user).emit('new-notification', {
-                                        notification: notification
-                                    })
-                                }
-                            }
-                        })
-
-                    }
-
-                }
+            if (name === `upcoming_livesession_${user._id}`) {
+                socket.emit('new-notification', {
+                    notification: data
+                })
+            }
 
             if (name === `join_group_${id}`) {
                 const contacts = await formatContacts([data], user)
@@ -323,7 +275,7 @@ module.exports.listen = (app) => {
             })
             let total_assignments = 0
             if (user.category.name === 'STUDENT') {
-                let assignments = await getStudentAssignments(id,true)
+                let assignments = await getStudentAssignments(id, true)
                 total_assignments = await countDocuments(Assignment_submission, {
                     assignment: {
                         $in: assignments.map(x => x._id.toString())

@@ -1,4 +1,5 @@
 // import dependencies
+const {MyEmitter} = require("../../utils/imports");
 const {countDocuments} = require("../../utils/imports");
 const {getStudentAssignments} = require("../../utils/imports");
 const {Assignment_submission} = require("../../models/assignment_submission/assignment_submission.model");
@@ -494,6 +495,17 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
             })
 
         if (req.params.status === "RELEASED") {
+            const date = new Date(assignment.dueDate)
+            console.log(date)
+            date.setHours(date.setHours() - 2)
+            console.log(new Date(date))
+
+            let callback = function () {
+                MyEmitter.emit('socket_event', {
+                    name: `upcoming_livesession_${req.user._id}`, data: {user_group: target.course.user_group}
+                });
+            }
+
             // const submissions = await Assignment_submission.find({assignment: req.params.id}).populate('user')
             // for (const i in submissions) {
             //     if (submissions[i].user.email) {
@@ -507,8 +519,6 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
             //         })
             //     }
             // }
-        } else if (req.params.status === 'PUBLISHED') {
-
         }
         return res.send(result)
     } catch (error) {

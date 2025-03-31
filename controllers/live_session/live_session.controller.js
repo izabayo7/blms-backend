@@ -1,4 +1,8 @@
 // import dependencies
+const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
+const {filterUsers} = require("../../middlewares/auth.middleware");
+const {User_notification} = require("../../utils/imports");
+const {simplifyObject} = require("../../utils/imports");
 const {MyEmitter} = require("../../utils/imports");
 const {scheduleEvent} = require("../../utils/imports");
 const {handleChunk} = require("../../utils/imports");
@@ -7,6 +11,7 @@ const {
     Live_session,
     validate_live_session,
     validateObjectId,
+    Notification,
     formatResult,
     findDocument,
     User,
@@ -236,7 +241,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         const {
             error
@@ -287,10 +292,17 @@ router.post('/', async (req, res) => {
         const time = req.body.time.split(':')
         const date = new Date(givenDate.getFullYear(), givenDate.getMonth(), givenDate.getDate(), parseInt(time[0]), parseInt(time[1]), 0);
         date.setMinutes(date.getMinutes() - 5)
+
+        let user_user_groups = await User_user_group.find({
+            user_group: target.course.user_group,
+        }).populate('user')
+
+        user_user_groups = user_user_groups.filter(x => x.user.category !== req.user.category._id.toString())
+
+        const user_ids = user_user_groups.map(x => x.user._id.toString())
+
         let callback = function () {
-            MyEmitter.emit('socket_event', {
-                name: `upcoming_livesession_${req.user._id}`, data: {user_group: target.course.user_group}
-            });
+            sendLiveNotifications({user_ids})
         }
 
 
@@ -299,12 +311,7 @@ router.post('/', async (req, res) => {
         date.setMinutes(date.getMinutes() + 5)
 
         callback = function () {
-            MyEmitter.emit('socket_event', {
-                name: `upcoming_livesession_${req.user._id}`,
-                data: {
-                    user_group: target.course.user_group, isLive: true, liveId: result.data._id
-                }
-            });
+            sendLiveNotifications({isLive: true, liveId: result.data._id, user_ids})
         }
 
         scheduleEvent(date, callback)
@@ -550,6 +557,57 @@ router.delete('/:id', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+async function sendLiveNotifications({isLive, liveId, user_ids}) {
+    let newDocument = new Notification(isLive ? {
+            link: `/live/${liveId}`,
+            content: "Live session just started"
+        } : {
+            content: "you have a live class in 5 minutes",
+        }
+    )
+    const saveDocument = await newDocument.save()
+    if (saveDocument) {
+
+        for (const i in user_ids) {
+
+            // create notification for user
+            let userNotification = await User_notification.findOne({
+                user: user_ids[i]
+            })
+            if (!userNotification) {
+                userNotification = new User_notification({
+                    user: user_ids[i],
+                    notifications: [{
+                        id: newDocument._id
+                    }]
+                })
+
+            } else {
+                userNotification.notifications.push({
+                    id: newDocument._id
+                })
+            }
+
+            let _newDocument = await userNotification.save()
+
+            if (_newDocument) {
+                let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                notification.id = undefined
+                notification.notification = newDocument
+
+                // send the notification
+                MyEmitter.emit('socket_event', {
+                    name: `upcoming_livesession_${user_ids[i]}`, data: notification
+                });
+
+            }
+
+        }
+
+
+    }
+}
 
 // export the router
 module.exports = router
