@@ -1,11 +1,26 @@
 // import dependencies
-const {Live_session, checkCollegePayment} = require("../../utils/imports");
-const {User_attendance} = require("../../models/user_attendance/user_attendance.model");
-const {Quiz_submission} = require("../../utils/imports");
-const {add_user_details} = require("../../utils/imports");
-const {filterUsers} = require("../../middlewares/auth.middleware");
-const {User_group} = require('../../models/user_group/user_group.model')
-const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
+const {
+    Live_session,
+    checkCollegePayment
+} = require("../../utils/imports");
+const {
+    User_attendance
+} = require("../../models/user_attendance/user_attendance.model");
+const {
+    Quiz_submission
+} = require("../../utils/imports");
+const {
+    add_user_details
+} = require("../../utils/imports");
+const {
+    filterUsers
+} = require("../../middlewares/auth.middleware");
+const {
+    User_group
+} = require('../../models/user_group/user_group.model')
+const {
+    User_user_group
+} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     fs,
@@ -42,6 +57,9 @@ const {
     countDocuments,
     date
 } = require('../../utils/imports')
+const {
+    v4: uuid
+} = require('uuid');
 
 // create router
 const router = express.Router()
@@ -97,9 +115,13 @@ router.get('/statistics', async (req, res) => {
             total_courses = await countDocuments(Course)
         } else {
 
-            let faculties = await findDocuments(Faculty, {college: req.user.college})
+            let faculties = await findDocuments(Faculty, {
+                college: req.user.college
+            })
             for (const i in faculties) {
-                let user_groups = await findDocuments(User_group, {faculty: faculties[i]._id})
+                let user_groups = await findDocuments(User_group, {
+                    faculty: faculties[i]._id
+                })
                 if (!user_groups.length)
                     continue
 
@@ -112,7 +134,9 @@ router.get('/statistics', async (req, res) => {
 
             }
         }
-        return res.send(formatResult(u, u, {total_courses}))
+        return res.send(formatResult(u, u, {
+            total_courses
+        }))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -140,18 +164,42 @@ router.get('/statistics/user', async (req, res) => {
         let total_courses = 0
         if (req.user.category.name == "INSTRUCTOR") {
 
-            let courses = await Course.find({user: req.user._id}, {_id: 1, name: 1})
+            let courses = await Course.find({
+                user: req.user._id
+            }, {
+                _id: 1,
+                name: 1
+            })
             const course_ids = courses.map(x => x._id.toString())
-            let students = await User_progress.distinct('user', {course: {$in: course_ids}})
+            let students = await User_progress.distinct('user', {
+                course: {
+                    $in: course_ids
+                }
+            })
 
-            let chapters = await Chapter.find({course: {$in: course_ids}}, {_id: 1, name: 1, course: 1})
+            let chapters = await Chapter.find({
+                course: {
+                    $in: course_ids
+                }
+            }, {
+                _id: 1,
+                name: 1,
+                course: 1
+            })
 
             let comments = await Comment.find({
                 "target.type": 'chapter',
-                "target.id": {$in: chapters.map(x => x._id.toString())}
-            }).populate('sender',
-                {sur_name: 1, other_names: 1, user_name: 1, _id: 0}
-            ).sort({_id: -1}).limit(4)
+                "target.id": {
+                    $in: chapters.map(x => x._id.toString())
+                }
+            }).populate('sender', {
+                sur_name: 1,
+                other_names: 1,
+                user_name: 1,
+                _id: 0
+            }).sort({
+                _id: -1
+            }).limit(4)
 
             comments = simplifyObject(comments)
 
@@ -171,8 +219,7 @@ router.get('/statistics/user', async (req, res) => {
                 latestComments: comments
             }))
         }
-    } catch
-        (error) {
+    } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
@@ -202,47 +249,78 @@ router.get('/statistics/user', async (req, res) => {
  */
 router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
-        let course = await Course.findOne({user: req.user._id, _id: req.params.id})
+        let course = await Course.findOne({
+            user: req.user._id,
+            _id: req.params.id
+        })
         if (!course)
             return res.send(formatResult(404, 'course not found'))
 
-        let students_progress = await User_progress.find({course: req.params.id})
+        let students_progress = await User_progress.find({
+            course: req.params.id
+        })
 
-        let students = await User.find({_id: {$in: students_progress.map(x => x.user.toString())}}).lean()
+        let students = await User.find({
+            _id: {
+                $in: students_progress.map(x => x.user.toString())
+            }
+        }).lean()
 
         students = await add_user_details(students)
 
-        const college = await College.findOne({_id: req.user.college})
+        const college = await College.findOne({
+            _id: req.user.college
+        })
         if (college.users_verification_link)
             students = await checkCollegePayment({
                 users: students,
                 link: college.users_verification_link
             })
 
-        let chapters = await Chapter.find({course: req.params.id}, {_id: 1, name: 1})
+        let chapters = await Chapter.find({
+            course: req.params.id
+        }, {
+            _id: 1,
+            name: 1
+        })
 
         let quiz = await Quiz.find({
             "target.type": "chapter",
-            "target.id": {$in: chapters.map(x => x._id.toString())}
-        }, {_id: 1})
+            "target.id": {
+                $in: chapters.map(x => x._id.toString())
+            }
+        }, {
+            _id: 1
+        })
 
         const submissions = await Quiz_submission.find({
             marked: true,
-            quiz: {$in: quiz.map(x => x._id.toString())}
-        }).populate('quiz',
-            {total_marks: 1}
-        ).sort({_id: -1})
+            quiz: {
+                $in: quiz.map(x => x._id.toString())
+            }
+        }).populate('quiz', {
+            total_marks: 1
+        }).sort({
+            _id: -1
+        })
 
         let live_sessions = await Live_session.find({
             "target.type": "chapter",
-            "target.id": {$in: chapters.map(x => x._id.toString())}
-        }, {_id: 1})
+            "target.id": {
+                $in: chapters.map(x => x._id.toString())
+            }
+        }, {
+            _id: 1
+        })
 
         const attendances = await User_attendance.find({
-            live_session: {$in: live_sessions.map(x => x._id.toString())}
-        }).populate('live_session',
-            {attendance_check: 1, _id: 0}
-        )
+            live_session: {
+                $in: live_sessions.map(x => x._id.toString())
+            }
+        }).populate('live_session', {
+            attendance_check: 1,
+            _id: 0
+        })
 
         let total_required_marks = 0
         let total_got_marks = 0
@@ -301,8 +379,7 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
             total_perfomance: total_required_marks ? (total_got_marks / total_required_marks) * 100 : 0,
             total_attendance: students.length ? total_attendance / students.length : 0
         }))
-    } catch
-        (error) {
+    } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
@@ -328,10 +405,21 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
 router.get('/college', filterUsers("ADMIN"), async (req, res) => {
     try {
 
-        let faculty_college = await findDocuments(Faculty, {college: req.user.college})
+        let faculty_college = await findDocuments(Faculty, {
+            college: req.user.college
+        })
 
-        const user_groups = await User_group.find({faculty: {$in: faculty_college.map(x => x._id.toString())}})
-        const courses = await Course.find({user_group: {$in: user_groups.map(x => x._id.toString())}, published: true})
+        const user_groups = await User_group.find({
+            faculty: {
+                $in: faculty_college.map(x => x._id.toString())
+            }
+        })
+        const courses = await Course.find({
+            user_group: {
+                $in: user_groups.map(x => x._id.toString())
+            },
+            published: true
+        })
 
         return res.send(formatResult(u, u, courses))
     } catch (error) {
@@ -378,7 +466,10 @@ router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
 
         let foundCourses = []
 
-        let user_groups = await findDocuments(User_group, {faculty: faculty._id, status: "ACTIVE"})
+        let user_groups = await findDocuments(User_group, {
+            faculty: faculty._id,
+            status: "ACTIVE"
+        })
 
         for (const k in user_groups) {
             let courses = await findDocuments(Course, {
@@ -437,8 +528,11 @@ router.get('/user_group/:id', filterUsers(["ADMIN"]), async (req, res) => {
 
         let foundCourses = []
 
-        let user_group = await findDocument(User_group, {_id: req.params.id, status: "ACTIVE"})
-        if(!user_group)
+        let user_group = await findDocument(User_group, {
+            _id: req.params.id,
+            status: "ACTIVE"
+        })
+        if (!user_group)
             return res.send(formatResult(404, 'user_group not found'))
 
         let courses = await findDocuments(Course, {
@@ -497,13 +591,20 @@ router.get('/:id/attendants', async (req, res) => {
         if (!course)
             return res.send(formatResult(404, 'course not found'))
 
-        const attendants = await User_progress.find({course: req.params.id}, {
+        const attendants = await User_progress.find({
+            course: req.params.id
+        }, {
             user: 1,
             progress: 1,
             createdAt: 1
         }).populate({
             path: 'user',
-            select: {'sur_name': 1, 'other_names': 1, 'gender': 1,'user_name': 1}
+            select: {
+                'sur_name': 1,
+                'other_names': 1,
+                'gender': 1,
+                'user_name': 1
+            }
         })
 
         return res.send(formatResult(u, u, attendants))
@@ -536,14 +637,20 @@ router.get('/user', async (req, res) => {
             const user_user_group = await findDocuments(User_user_group, {
                 user: req.user._id,
                 status: "ACTIVE"
-            }, {user_group: 1})
+            }, {
+                user_group: 1
+            })
             if (!user_user_group.length)
                 return res.send(formatResult(200, undefined, []))
 
             result = await Course.find({
-                user_group: {$in: user_user_group.map(x => x.user_group.toString())},
+                user_group: {
+                    $in: user_user_group.map(x => x.user_group.toString())
+                },
                 published: true
-            }).sort({createdAt: -1})
+            }).sort({
+                createdAt: -1
+            })
 
             result = simplifyObject(result)
             result = await injectUserProgress(result, req.user._id + '')
@@ -551,7 +658,9 @@ router.get('/user', async (req, res) => {
         } else {
             result = await Course.find({
                 user: req.user._id
-            }).sort({createdAt: -1})
+            }).sort({
+                createdAt: -1
+            })
             result = simplifyObject(result)
         }
         // ******* while adding permissions remember to filter data according to the user requesting *******
@@ -782,11 +891,34 @@ router.post('/', async (req, res) => {
         } = validate_course(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
-        let user_group = await findDocument(User_group, {
-            _id: req.body.user_group
-        })
-        if (!user_group)
-            return res.send(formatResult(404, 'User_group not found'))
+
+        if (req.user.isPublic) {
+            if (!req.body.faculty)
+                return res.send(formatResult(400, 'Faculty is required'))
+
+            let faculty = await findDocument(Faculty, {
+                _id: req.body.faculty,
+                isPublic: true
+            })
+            if (!faculty)
+                return res.send(formatResult(404, 'Faculty not found'))
+
+            let result = await createDocument(User_group, {
+                faculty: req.body.faculty,
+                name: uuid(),
+            })
+            req.body.user_group = result.data._id;
+        } else {
+            if (!req.body.user_group)
+                return res.send(formatResult(400, 'user_group is required'))
+
+            let user_group = await findDocument(User_group, {
+                _id: req.body.user_group
+            })
+            if (!user_group)
+                return res.send(formatResult(404, 'User_group not found'))
+        }
+
 
         if (req.user.category.name != "INSTRUCTOR")
             return res.send(formatResult(404, 'you can\'t create course'))
@@ -798,11 +930,9 @@ router.post('/', async (req, res) => {
             return res.send(formatResult(403, 'name was taken'))
 
         let result = await createDocument(Course, {
-            name: req.body.name,
+            ...req.body,
             user: req.user._id,
-            user_group: req.body.user_group,
-            description: req.body.description,
-            maximum_marks: req.body.maximum_marks
+            faculty: undefined
         })
 
         result = simplifyObject(result)
@@ -1142,7 +1272,9 @@ router.delete('/:id', async (req, res) => {
 
         if (!course_used) {
 
-            const chapters = await findDocuments(Chapter, {course: req.params.id})
+            const chapters = await findDocuments(Chapter, {
+                course: req.params.id
+            })
 
             if (chapters.length) {
                 for (const i in chapters) {
