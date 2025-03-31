@@ -381,7 +381,6 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
                 user_categories.map(x => {
                     if (x.name === rows[i].category) {
                         user_category = x._id
-                        break
                     }
                 })
 
@@ -389,7 +388,6 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
                 user_groups.map(x => {
                     if (x.name === rows[i].user_group) {
                         user_group = x._id
-                        break
                     }
                 })
 
