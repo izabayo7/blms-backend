@@ -461,8 +461,8 @@ router.post('/', async (req, res) => {
       members.push({ id: user._id, isAdmin: user._id === creator._id })
     }
 
-    if (!members.includes({ id: user._id, isAdmin: true }))
-      members.push({ id: user._id, isAdmin: true })
+    if (!members.includes({ id: req.user._id, isAdmin: true }))
+      members.push({ id: req.user._id, isAdmin: true })
 
     let result = await createDocument(Chat_group, {
       name: req.body.name,
