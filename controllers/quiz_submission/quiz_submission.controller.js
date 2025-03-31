@@ -885,7 +885,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
         if (!file_missing)
             return res.send(formatResult(400, 'all attachments for this quiz_submission were already uploaded'))
 
-        upload_single(req, res, async (err) => {
+        upload_multiple(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
@@ -969,9 +969,9 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
 
         const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].feedback_src}`)
         if (file_found)
-            return res.send(formatResult(400, 'feedbacks for this answer was already uploaded'))
+            return res.send(formatResult(400, 'feedback for this answer was already uploaded'))
 
-        upload_multiple(req, res, async (err) => {
+        upload_single(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
