@@ -142,16 +142,10 @@ router.post('/', async (req, res) => {
 
         // check if notification exist
         let user_notification = await findDocument(User_notification, {
-            user: req.body.user
+            user: req.user._id
         })
         if (user_notification)
             return res.send(formatResult(404, 'User_notification already exist'))
-
-        let user_found = await findDocument(User, {
-            _id: req.body.user
-        })
-        if (!user_found)
-            return res.send(formatResult(404, 'user not found'))
 
         // check if notification exist
         let notification = await findDocument(Notification, {
@@ -161,7 +155,7 @@ router.post('/', async (req, res) => {
             return res.send(formatResult(404, 'notification not found'))
 
         let result = await createDocument(User_notification, {
-            user: req.body.user,
+            user: req.user._id,
             notifications: [{
                 id: req.body.notification
             }]
@@ -223,11 +217,6 @@ router.put('/:id', async (req, res) => {
         if (!user_notification)
             return res.send(formatResult(404, 'user_notification not found'))
 
-        let user_found = await findDocument(User, {
-            _id: req.body.user
-        })
-        if (!user_found)
-            return res.send(formatResult(404, 'user not found'))
 
         // check if notification exist
         let notification = await findDocument(Notification, {

@@ -30,7 +30,7 @@ user_notification_schema.plugin(timestamps)
 // validate notification
 function validat_user_notification(credentials) {
     const schema = {
-        user: Joi.ObjectId().required(),
+        // user: Joi.ObjectId().required(),
         notification: Joi.ObjectId().required(),
         status: Joi.number().min(0).max(3)
     }
