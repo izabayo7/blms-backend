@@ -178,7 +178,7 @@ router.get('/:id', async (req, res) => {
 
         const result = await Live_session.findById({
             _id: req.params.id
-        })
+        }).lean()
 
         const chapter = await Chapter.findById(result.target.id)
 
