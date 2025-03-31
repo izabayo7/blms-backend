@@ -32,7 +32,8 @@ const {
   fs,
   upload_multiple,
   Comment,
-  addQuizTarget
+  addQuizTarget,
+  auth
 } = require('../../utils/imports')
 
 // create router
@@ -101,7 +102,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
 
     let result = await findDocuments(Quiz_submission)
@@ -141,7 +142,7 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     const {
       error
@@ -188,7 +189,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/quiz/:id', async (req, res) => {
+router.get('/quiz/:id', auth, async (req, res) => {
   try {
     const {
       error
@@ -241,7 +242,7 @@ router.get('/quiz/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name', async (req, res) => {
+router.get('/user/:user_name', auth, async (req, res) => {
   try {
     // check if user exist
     let user = await findDocument(User, {
@@ -372,7 +373,7 @@ router.get('/user/:user_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:quiz_name', async (req, res) => {
+router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
   try {
 
     // check if user exist
@@ -439,7 +440,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/attachment/:file_name', async (req, res) => {
+router.get('/:id/attachment/:file_name', auth, async (req, res) => {
   try {
 
     const {
@@ -521,7 +522,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
 
     let {
@@ -625,7 +626,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     let {
       error
@@ -717,7 +718,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/results_seen', async (req, res) => {
+router.put('/:id/results_seen', auth, async (req, res) => {
   try {
     const {
       error
@@ -766,7 +767,7 @@ router.put('/:id/results_seen', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/:id/attachment', async (req, res) => {
+router.post('/:id/attachment', auth, async (req, res) => {
   try {
     const {
       error
@@ -846,7 +847,7 @@ router.post('/:id/attachment', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const {
       error
@@ -1024,7 +1025,7 @@ async function injectUserFeedback(submissions) {
   for (const i in submissions) {
     for (const k in submissions[i].answers) {
       let feedback = await Comment.find({
-        "target.type": 'quiz_submission_answer',
+        "target.type": 'quiz_submission_answer', auth,
         "target.id": submissions[i].answers[k]._id
       })
       feedback = await injectUser(simplifyObject(feedback), 'sender')
