@@ -533,8 +533,8 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
         if (assignment_submission.assignment.status !== "PUBLISHED")
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
-        if(req.user.category.name === 'INSTRUCTOR')
-        req.body.user = req.user._id
+        if (req.user.category.name !== 'INSTRUCTOR')
+            req.body.user = req.user._id
 
         const user_group = await get_faculty_college_year(assignment_submission.assignment)
 
