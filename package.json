@@ -4,9 +4,9 @@
   "description": "e learning platform",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --name \"Kurious\"",
-    "restart": "pm2 restart Kurious --update-env",
-    "stop": "pm2 stop Kurious",
+    "start": "pm2 start index.js --name \"Kurious_1\"",
+    "restart": "pm2 restart Kurious_1 --update-env",
+    "stop": "pm2 stop Kurious_1",
     "serve": "nodemon .\\index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
