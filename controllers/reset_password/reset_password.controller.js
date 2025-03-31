@@ -17,7 +17,7 @@ exports.getPasswordResetbyToken = async (req, res) => {
     if (!(uuidValidate(token)))
       return res.status(400).send(formatResult(400, 'Invalid password reset token'));
 
-    let result = await findDocuments(Reset_password, { token: token });
+    let result = await findDocuments(Reset_password, { token: token, status: 'OPEN' });
     if (!result.length)
       return res.send(formatResult(400, 'Password reset was not found'))
 
