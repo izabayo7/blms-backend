@@ -142,7 +142,7 @@ router.get('/statistics/course_access', async (req, res) => {
         const result = await User_logs.aggregate([
             {"$match": {"createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
             {"$match": {user: {$in: users.map(x => x._id.toString())}}},
-            {"$project": {createdAt: 1, accessed_course: { $size: "$accessed_course" }}},
+            {"$project": {createdAt: 1, accessed_course: { $size: {"$ifNull": [ "$accessed_course", [] ]} }}},
             {
                 "$group": {
                     "_id": {
