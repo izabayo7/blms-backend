@@ -121,6 +121,8 @@ router.get('/user/:id', async (req, res) => {
  *     tags:
  *       - Notification
  *     description: Send a notification
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a notification
