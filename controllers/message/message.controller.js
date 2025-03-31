@@ -406,7 +406,7 @@ router.put('/voiceNote/:receiver', async (req, res) => {
                         data: msg
                     });
                 }
-                return res.send(formatResult(u, 'Happy test bro'))
+                return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
             })
         } else {
             return res.send(result)
