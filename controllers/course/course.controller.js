@@ -513,6 +513,55 @@ router.get('/faculty/:id', async (req, res) => {
     }
 })
 
+//
+
+/**
+ * @swagger
+ * /course/{id}/attendants:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns students who studies the given course
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/attendants', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        let course = await findDocument(Course, {
+            _id: req.params.id
+        })
+        if (!course)
+            return res.send(formatResult(404, 'course not found'))
+
+        let foundCourses = []
+
+        return res.send(formatResult(u, u, foundCourses))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+//
+
 /**
  * @swagger
  * /course/user:
