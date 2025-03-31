@@ -214,7 +214,7 @@ module.exports.listen = (app) => {
       conversation_id
     }) => {
       let receivers = []
-      const chat_group = await findDocument(Chat_group, { name: conversation_id })
+      const chat_group = await findDocument(Chat_group, { code: conversation_id })
       if (chat_group) {
         for (const i in chat_group.members) {
           if (chat_group.members[i].id != id)
