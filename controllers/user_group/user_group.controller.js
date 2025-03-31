@@ -1,5 +1,6 @@
 // import dependencies
 const { User_group, validate_user_group } = require('../../models/user_group/user_group.model')
+const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     Faculty_college,
@@ -208,42 +209,25 @@ router.get('/college/:faculty', async (req, res) => {
 router.get('/user', async (req, res) => {
     try {
 
-        let user_user_groupss = await findDocuments(User_user_groups, {
+        let user_user_groups = await findDocuments(User_user_group, {
             user: req.user._id,
-            status: 1
+            status: "ACTIVE"
         })
+
+        // console.log(user_user_groups)
 
         let foundUser_groups = []
 
-        for (const user_user_groups of user_user_groupss) {
+        for (const user_user_group of user_user_groups) {
 
-            const user_groups = await findDocument(User_group, {
-                _id: user_user_groups.user_groups
-            })
+            const user_group = await User_group.findOne({
+                _id: user_user_group.user_group
+            }).populate('college')
 
-            const faculty_college = await findDocument(Faculty_college, {
-                _id: user_groups.faculty_college
-            })
-
-            const faculty = await findDocument(Faculty, {
-                _id: faculty_college.faculty
-            })
-
-
-            const year = await findDocument(College_year, {
-                _id: user_groups.college_year
-            })
-
-            foundUser_groups.push({
-                _id: user_groups._id,
-                faculty_college: user_groups.faculty_college,
-                college_year: user_groups.college_year,
-                name: `${faculty.name} Year ${year.digit}`
-            })
+            foundUser_groups.push(user_group)
 
         }
-
-        foundFaculty_acollege_years = await injectDetails(foundUser_groups)
+        // foundFaculty_acollege_years = await injectDetails(foundUser_groups)
 
         return res.send(formatResult(u, u, foundUser_groups))
     } catch (error) {
