@@ -1371,8 +1371,10 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
             }, {
                 new: true
             })
-            if (updateDocument)
+            if (updateDocument){
+                updateDocument.coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${req.params.id}/${updateDocument.coverPicture}`
                 return res.status(201).send(updateDocument)
+            }
             return res.status(500).send("Error ocurred")
         })
 
@@ -1468,7 +1470,7 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
                 new: true
             })
             if (updateDocument)
-                return res.status(201).send('Chapter Main Video was successfully uploaded')
+                return res.status(201).send({message: 'Chapter Main Video was successfully uploaded', filepath: `http://${process.env.HOST}/kurious/file/chapterMainVideo/${req.params.chapter}/${updateDocument.mainVideo}`})
             return res.status(500).send("Error ocurred")
         })
 
@@ -1480,7 +1482,6 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
 // add an attachment
 router.post('/addAttachments/:chapter', async (req, res) => {
     try {
-        console.log(req)
         const {
             error
         } = validateObjectId(req.params.chapter)

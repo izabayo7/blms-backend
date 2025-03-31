@@ -49,7 +49,8 @@ module.exports.listen = (app) => {
             const formatedMessages = await formatMessages(messages, id)
 
             // send the messages
-            socket.emit('receive_conversation', { conversation: formatedMessages });
+            socket.emit('receive_conversation', { conversation: formatedMessages == [] ? { status: 404, message: "No massage found for these users" } : formatedMessages });
+
         })
 
 
@@ -219,7 +220,7 @@ module.exports.listen = (app) => {
 
                 recipients.forEach(recipient => {
                     // send the message
-                    socket.broadcast.to(recipient.id).emit('receive-message',newDocument)
+                    socket.broadcast.to(recipient.id).emit('receive-message', newDocument)
                 })
                 // send success mesage
                 socket.emit('message-sent', saveDocument)

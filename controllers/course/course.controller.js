@@ -658,7 +658,7 @@ async function  injectChapters(courses) {
   for (const i in courses) {
     courses[i].assignmentsLength = 0
     // add course cover picture media path
-    if (courses[i].coverPicture) {
+    if (courses[i].coverPicture && !courses[i].coverPicture.includes('http')) {
       courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${courses[i].coverPicture}`
     }
     let chapters = await Chapter.find({
@@ -750,7 +750,7 @@ async function injectFacultyCollegeYear(courses) {
 
     courses[i].facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
     if (courses[i].facultyCollegeYear.facultyCollege.college.logo) {
-      courses[i].facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+      courses[i].facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }
   }
   return courses

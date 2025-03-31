@@ -64,6 +64,11 @@ router.post('/', async (req, res) => {
   if (!course)
     return res.send(`Course with code ${req.body.course} doens't exist`)
 
+  // avoid chapters with same names in the same course
+  let chapter = await Chapter.findOne({ course: req.body.course, name: req.body.name })
+  if (chapter)
+    return res.send(`Two chapters with the same in the same course are not allowed`)
+
   const number = await Chapter.find({ course: req.body.course }).countDocuments() + 1
 
   let newDocument = new Chapter({
