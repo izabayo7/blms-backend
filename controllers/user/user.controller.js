@@ -663,6 +663,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - User
  *     description: Upload user profile (file upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User id
