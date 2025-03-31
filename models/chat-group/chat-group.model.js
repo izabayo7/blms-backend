@@ -9,11 +9,10 @@ const memberSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    isCreator:{
+    isCreator: {
         type: Boolean,
-        unique: true,
     },
-    isAdmin:{
+    isAdmin: {
         type: Boolean,
         default: false,
     },
@@ -56,10 +55,11 @@ chatGroupSchema.plugin(timestamps)
 function validatechatGroup(credentials) {
     const schema = {
         name: Joi.string().required(),
-        members: Joi.array().min(1).items({ id: Joi.ObjectId().required() }),
+        members: Joi.array().min(1).items({ _id: Joi.ObjectId(), isCreator: Joi.boolean(), status: Joi.boolean(), isAdmin: Joi.boolean(), id: Joi.ObjectId().required() }),
         desctiption: Joi.string(),
         college: Joi.ObjectId().required(),
-        private: Joi.boolean().required()
+        private: Joi.boolean(),
+        status: Joi.boolean(),
     }
     return Joi.validate(credentials, schema)
 }

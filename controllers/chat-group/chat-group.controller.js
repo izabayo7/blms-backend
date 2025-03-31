@@ -8,7 +8,9 @@ const {
   ChatGroup,
   validatechatGroup,
   validateObjectId,
-  returnUser
+  returnUser,
+  removeDocumentVersion,
+  injectUser
 } = require('../../utils/imports')
 
 // create router
@@ -71,11 +73,13 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    const chat_groups = await ChatGroup.find()
+    let chat_groups = await ChatGroup.find().lean()
 
     if (chat_groups.length === 0)
       return res.status(404).send('ChatGroup list is empty')
-      
+
+    chat_groups = await injectDetails(chat_groups)
+
     return res.status(200).send(chat_groups)
   } catch (error) {
     return res.status(500).send(error)
@@ -108,7 +112,7 @@ router.get('/college/:id', async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.status(400).send(error.details[0].chat_group)
+    return res.status(400).send(error.details[0].message)
   let college = await College.findOne({
     _id: req.params.id
   })
@@ -146,7 +150,7 @@ router.get('/user/:id', async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.status(400).send(error.details[0].chat_group)
+    return res.status(400).send(error.details[0].message)
   let userFound = await returnUser(req.params.id)
   if (!userFound)
     return res.status(400).send('The User id is invalid')
@@ -186,35 +190,42 @@ router.get('/user/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  const {
-    error
-  } = validatechatGroup(req.body)
-  if (error)
-    return res.status(400).send(error.details[0].chat_group)
+  try {
 
-  let college = await College.findOne({
-    _id: req.body.college
-  })
-  if (!college)
-    return res.status(400).send('The College was not found')
+    const {
+      error
+    } = validatechatGroup(req.body)
+    if (error)
+      return res.status(400).send(error.details[0].message)
 
-  for (const i in req.body.members) {
-    let receiver = await returnUser(req.body.members[i].id)
-    if (!receiver)
-      return res.status(400).send(`Member ${req.body.members[i].id} was Not Found`)
+    let college = await College.findOne({
+      _id: req.body.college
+    })
+    if (!college)
+      return res.status(400).send('The College was not found')
+
+    for (const i in req.body.members) {
+      let receiver = await returnUser(req.body.members[i].id)
+      if (!receiver)
+        return res.status(400).send(`Member ${req.body.members[i].id} was Not Found`)
+    }
+
+    let newDocument = new ChatGroup({
+      name: req.body.name,
+      description: req.body.description,
+      private: req.body.private,
+      members: req.body.members,
+      college: req.body.college,
+    })
+
+    const saveDocument = await newDocument.save()
+    if (saveDocument)
+      return res.status(201).send(saveDocument)
+    return res.status(500).send('New ChatGroup not Registered')
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send(error)
   }
-
-  let newDocument = new ChatGroup({
-    name: req.body.name,
-    description: req.body.description,
-    private: req.body.private,
-    members: req.body.members,
-  })
-
-  const saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.status(201).send(saveDocument)
-  return res.status(500).send('New ChatGroup not Registered')
 })
 
 /**
@@ -250,11 +261,11 @@ router.put('/:id', async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.status(400).send(error.details[0].chat_group)
+    return res.status(400).send(error.details[0].message)
   error = validatechatGroup(req.body)
   error = error.error
   if (error)
-    return res.status(400).send(error.details[0].chat_group)
+    return res.status(400).send(error.details[0].message)
 
   // check if chat_group exist
   let chat_group = await ChatGroup.findOne({
@@ -302,7 +313,7 @@ router.delete('/:id', async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.status(400).send(error.details[0].chat_group)
+    return res.status(400).send(error.details[0].message)
   let chat_group = await ChatGroup.findOne({
     _id: req.params.id
   })
@@ -329,14 +340,15 @@ async function injectDetails(chat_groups) {
       chat_groups[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
 
-    for (const k in chat_groups[i].members) {
-      const member = await returnUser(chat_groups[i].members[k].id)
-      hat_groups[i].members[k] = removeDocumentVersion(member)
-      // add student profile media path
-      if (chat_groups[i].members[k].profile) {
-        chat_groups[i].members[k].profile = `http://${process.env.HOST}/kurious/file/studentProfile/${chat_groups[i]._id}/${student.profile}`
-      }
-    }
+    // for (const k in chat_groups[i].members) {
+    //   const member = await returnUser(chat_groups[i].members[k].id)
+    //   chat_groups[i].members[k] = removeDocumentVersion(member)
+    //   // add student profile media path
+    //   if (chat_groups[i].members[k].profile) {
+    //     chat_groups[i].members[k].profile = `http://${process.env.HOST}/kurious/file/studentProfile/${chat_groups[i]._id}/${student.profile}`
+    //   }
+    // }
+    chat_groups[i].members = await injectUser(chat_groups[i].members, 'id', 'data')
 
   }
   return chat_groups

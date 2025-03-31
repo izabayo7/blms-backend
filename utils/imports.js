@@ -757,12 +757,14 @@ module.exports.injectChapters = async (courses) => {
 }
 
 // replace user id by the user information
-module.exports.injectUser = async (array, property) => {
+module.exports.injectUser = async (array, property, newProperty) => {
+    let name = newProperty ? newProperty : property
     for (const i in array) {
         const user = await this.returnUser(array[i][`${property}`])
-        array[i][`${property}`] = this._.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
-        if (array[i][`${property}`].profile) {
-            array[i][`${property}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user._id}/${user.profile}`
+
+        array[i][`${name}`] = this._.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
+        if (array[i][`${name}`].profile) {
+            array[i][`${name}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user._id}/${user.profile}`
         }
     }
     return array
