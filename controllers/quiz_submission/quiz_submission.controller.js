@@ -348,6 +348,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     result[0].quiz = await addAttachmentMediaPaths([result[0].quiz])
     result[0].quiz = simplifyObject(result[0].quiz)
     result[0].quiz = await injectUser(result[0].quiz, 'user')
+    result = await injectUser(result, 'user')
     result[0].quiz = result[0].quiz[0]
     result = result[0]
 
