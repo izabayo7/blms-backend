@@ -706,9 +706,9 @@ router.put('/:id/password', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let user = await findDocument(User, {
+    let user = await User.findOne({
       _id: req.params.id
-    }, u, false)
+    }).populate('category')
     if (!user)
       return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 

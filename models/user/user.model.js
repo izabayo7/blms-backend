@@ -48,6 +48,7 @@ const userSchema = new mongoose.Schema({
     },
     category: {
         type: String,
+        ref: "user_category",
         required: true
     },
     college: {
