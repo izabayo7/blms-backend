@@ -261,7 +261,7 @@ router.get('/user/:user_name', async (req, res) => {
     } else {
       // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
-        user: req.params.id
+        user: user._id
       })
       if (!quizes.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
@@ -351,7 +351,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     result[0].quiz = result[0].quiz[0]
     result = result[0]
 
-    return res.send(formatResult(u,u,result))
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -473,7 +473,7 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(400, error.details[0].message))
 
     let user = await findDocument(User, {
-      _id: req.body.user
+      user_name: req.body.user
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
@@ -509,14 +509,14 @@ router.post('/', async (req, res) => {
 
     // check if quiz_submissions exist
     let quiz_submission = await findDocument(Quiz_submission, {
-      user: req.body.user,
+      user: user._id,
       quiz: req.body.quiz
     })
     if (quiz_submission)
       return res.send(formatResult(400, 'quiz_submission already exist'))
 
     let result = await createDocument(Quiz_submission, {
-      user: req.body.user,
+      user: user._id,
       quiz: req.body.quiz,
       answers: req.body.answers,
       used_time: req.body.used_time,
@@ -652,56 +652,56 @@ router.put('/:id', async (req, res) => {
  */
 router.post('/:id/attachment', async (req, res) => {
   try {
-      const {
-          error
-      } = validateObjectId(req.params.id)
-      if (error)
-          return res.send(formatResult(400, error.details[0].message))
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-      const quiz_submission = await findDocument(Quiz_submission, {
-          _id: req.params.id
-      })
-      if (!quiz_submission)
-          return res.send(formatResult(404, 'quiz_submission not found'))
+    const quiz_submission = await findDocument(Quiz_submission, {
+      _id: req.params.id
+    })
+    if (!quiz_submission)
+      return res.send(formatResult(404, 'quiz_submission not found'))
 
-      const quiz = await findDocument(Quiz, {
-          _id: quiz_submission.quiz
-      })
-      if (!quiz)
-          return res.send(formatResult(404, 'quiz not found'))
+    const quiz = await findDocument(Quiz, {
+      _id: quiz_submission.quiz
+    })
+    if (!quiz)
+      return res.send(formatResult(404, 'quiz not found'))
 
-      const user = await findDocument(User, {
-          _id: quiz.user
-      })
+    const user = await findDocument(User, {
+      _id: quiz.user
+    })
 
-      const path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`
+    const path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`
 
-      req.kuriousStorageData = {
-          dir: path,
+    req.kuriousStorageData = {
+      dir: path,
+    }
+
+    let file_missing = false
+
+    for (const i in quiz_submission.answers) {
+      if (quiz_submission.answers[i].src) {
+        const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].src}`)
+        if (!file_found) {
+          file_missing = true
+        }
       }
+    }
+    if (!file_missing)
+      return res.send(formatResult(400, 'all attachments for this quiz_submission were already uploaded'))
 
-      let file_missing = false
+    upload_multiple(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
 
-      for (const i in quiz_submission.answers) {
-          if (quiz_submission.answers[i].src) {
-              const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].src}`)
-              if (!file_found) {
-                  file_missing = true
-              }
-          }
-      }
-      if (!file_missing)
-          return res.send(formatResult(400, 'all attachments for this quiz_submission were already uploaded'))
-
-      upload_multiple(req, res, async (err) => {
-          if (err)
-              return res.send(formatResult(500, err.message))
-
-          return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
-      })
+      return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
+    })
 
   } catch (error) {
-      return res.send(formatResult(500, error))
+    return res.send(formatResult(500, error))
   }
 })
 

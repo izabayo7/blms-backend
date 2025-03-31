@@ -72,7 +72,7 @@ function validate_quiz_submission(credentials) {
                 src: Joi.string()
             })),
         })).required(),
-        user: Joi.ObjectId().required(),
+        user: Joi.string().min(3).max(100).required(),
         auto_submitted: Joi.boolean(),
         marked: Joi.boolean(),
         published: Joi.boolean()
