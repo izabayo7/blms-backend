@@ -132,9 +132,6 @@ router.get('/statistics', async (req, res) => {
                     let courses = await countDocuments(Course, {
                         faculty_college_year: faculty_college_year[k]._id
                     })
-                    if (!courses.length)
-                        continue
-                    console.log(courses)
                     total_courses += courses
                 }
 
