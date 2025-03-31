@@ -371,6 +371,8 @@ router.get('/:code/search_members', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Get all chat_groups
+ *     security:
+ *       - bearerAuth: -[]
  *     params:
  *       - name: code
  *         description: Chat_group's id
