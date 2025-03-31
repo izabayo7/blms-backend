@@ -333,7 +333,7 @@ router.get('/user/:user_name', async (req, res) => {
 
             quiz_submissions[k].total_feedbacks = 0
 
-            for (const l in quiz_submissions[i].answers) {
+            for (const l in quiz_submissions[k].answers) {
               quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
             }
           }
