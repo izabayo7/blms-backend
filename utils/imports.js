@@ -555,7 +555,6 @@ module.exports.formatContacts = async (messages, user_id) => {
       const group = await this.findDocument(this.Chat_group, {
         _id: message.group
       })
-
       id = group.code
       is_group = true
       name = group.name
@@ -793,8 +792,10 @@ module.exports.Create_or_update_message = async (sender, receiver, content, _id,
   if (!_sender)
     return this.formatResult(404, 'sender not found')
 
+  let chat_group
+
   if (typeof receiver !== 'string') {
-    const chat_group = await this.findDocument(this.Chat_group, {
+    chat_group = await this.findDocument(this.Chat_group, {
       code: parseInt(receiver)
     })
 
