@@ -193,7 +193,7 @@ router.get('/:id', async (req, res) => {
         result.chapter = chapter
 
         result.quiz = await Quiz.findOne({
-            "target.type": 'chapter',
+            "target.type": 'live_session',
             "target.id": result._id
         })
 
@@ -260,7 +260,30 @@ router.post('/', async (req, res) => {
         if (!target)
             return res.send(formatResult(404, 'live_session target not found'))
 
+        let quiz
+
+        if(req.body.quiz){
+            quiz = await Quiz.findOne({
+                _id: req.body.quiz
+            })
+            if (!quiz)
+                return res.send(formatResult(404, 'quiz not found'))
+
+            if(quiz.target){
+                return res.send(formatResult(404, 'quiz already taken'))
+            }
+
+        }
+
         const result = await createDocument(Live_session, req.body)
+
+        if(quiz){
+            quiz.target = {
+                type: 'live_session',
+                id: result.data._id
+            }
+            await quiz.save()
+        }
 
         return res.send(result)
     } catch (error) {
