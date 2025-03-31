@@ -105,6 +105,9 @@ router.get('/current', getCollegeCurrentPaymentPlan)
  *             discount:
  *               type: number
  *               default: 20
+ *             pricePerUser:
+ *               type: number
+ *               default: 3532.45
  *     responses:
  *       200:
  *         description: OK
