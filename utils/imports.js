@@ -765,10 +765,6 @@ exports.getLatestMessages = async (user_id) => {
     }
   }
 
-  var end = new Date().getTime();
-  var time = end - start;
-  console.log('Execution time: ' + time);
-
   for (const message of sentMessages) {
     latestMessages.push(message)
   }

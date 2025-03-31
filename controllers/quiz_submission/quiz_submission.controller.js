@@ -259,24 +259,94 @@ router.get('/user/:user_name', auth, async (req, res) => {
     })
 
     if (user_category.name == 'STUDENT') {
-      result = simplifyObject(await findDocuments(Quiz_submission, {
-        user: user._id
+
+      const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+        user: user._id,
+        status: 1
+      })
+      if (!user_faculty_college_year)
+        return res.send(formatResult(200, undefined, []))
+
+      let courses = await findDocuments(Course, {
+        faculty_college_year: user_faculty_college_year.faculty_college_year,
+        published: true
       }, u, u, u, u, u, {
         _id: -1
-      }))
-      if (!result.length)
-        return res.send(formatResult(404, 'quiz_submissions not found'))
+      })
+      if (!courses.length)
+        return res.send(formatResult(200, undefined, []))
 
-      result = simplifyObject(await injectQuiz(result))
-      result = await injectUserFeedback(result)
-      for (const i in result) {
-        if (result[i].quiz) {
-          result[i].quiz = await addAttachmentMediaPaths([result[i].quiz])
-          result[i].quiz = await injectUser(result[i].quiz, 'user')
-          result[i].quiz = await addQuizTarget(result[i].quiz)
-          result[i].quiz = result[i].quiz[0]
+      let coursesWithSubmissions = []
+
+      for (const j in courses) {
+        // check if there are quizes made by the user
+        let chapters = await findDocuments(Chapter, {
+          course: courses[j]._id
+        }, u, u, u, u, u, {
+          _id: -1
+        })
+
+        for (const l in chapters) {
+
+          let quizes = await findDocuments(Quiz, {
+            "target.id": chapters[l]._id
+          }, u, u, u, u, u, {
+            _id: -1
+          })
+
+          let foundSubmissions = []
+          quizes = await addQuizTarget(quizes)
+          for (const i in quizes) {
+
+            let quiz_submissions = await findDocuments(Quiz_submission, {
+              quiz: quizes[i]._id
+            }, u, u, u, u, u, {
+              _id: -1
+            })
+            if (quiz_submissions.length) {
+
+              quiz_submissions = await injectUserFeedback(quiz_submissions)
+
+              for (const k in quiz_submissions) {
+
+                quiz_submissions[k].total_feedbacks = 0
+
+                for (const l in quiz_submissions[k].answers) {
+                  quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+                }
+                quiz_submissions[k].quiz = quizes[i]
+                foundSubmissions.push(quiz_submissions[k])
+              }
+            }
+          }
+          if (foundSubmissions.length) {
+            foundSubmissions = foundSubmissions.sort((a, b) => {
+              if (a.createdAt > b.createdAt) return -1;
+              if (a.createdAt < b.createdAt) return 1;
+              return 0;
+            })
+            courses[j].submissions = foundSubmissions
+            courses[j].marking_status = 0
+            courses[j].unread_results = 0
+            const percentage_of_one_submission = 100 / foundSubmissions.length
+            for (const a in foundSubmissions) {
+              if (foundSubmissions[a].marked) {
+                courses[j].marking_status += percentage_of_one_submission
+              }
+              if (!foundSubmissions[a].results_seen) {
+                courses[j].unread_results++
+              }
+            }
+            courses[j].marking_status += '%'
+            courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
+            coursesWithSubmissions.push(courses[j])
+          }
+
         }
+
       }
+
+      result = coursesWithSubmissions
     } else {
       // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
@@ -587,7 +657,6 @@ router.post('/', auth, async (req, res) => {
       total_marks: total_marks,
       marked: is_selection_only
     })
-
     result = simplifyObject(result)
     result.data = await injectQuiz([result.data])
     result.data = {
@@ -978,6 +1047,7 @@ function autoMarkSelectionQuestions(questions, answers) {
   let is_selection_only = true, total_marks = 0;
   for (const i in questions) {
     if (questions[i].type.includes("select")) {
+      answers[i].marks = 0
       if (answers[i].choosed_options.length) {
         const rightChoices = questions[i].options.choices.filter((choice) => choice.right);
         if (questions[i].type.includes("single")) {
