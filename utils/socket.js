@@ -14,6 +14,8 @@ const {
     injectChapters,
     simplifyObject,
     makeCode,
+    jwt,
+    config,
     _,
     u,
     Comment,
@@ -42,11 +44,15 @@ module.exports.listen = (app) => {
     const io = socket_io.listen(app)
 
     io.on('connection', async (socket) => {
-        // TODO add_token for more security
-        const user_name = socket.handshake.query.user_name
-        const user = await User.findOne({user_name: user_name}).populate('category')
-        if (!user) {
-            socket.error('user not found')
+
+        let user
+
+        const token = socket.handshake.query.token
+        try{
+            const decoded = jwt.verify(token, config.get('auth_key'))
+            user = await User.findOne({user_name: decoded.user_name}).populate('category')
+        } catch (e) {
+            socket.error('invalid token')
             return socket.disconnect(true)
         }
 
