@@ -66,23 +66,29 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
-        let user = await findDocument(User, {
-            user_name: req.params.user_name
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
+        let assigments
+        if (req.user.category.name === "INSTRUCTOR") {
+            assigments = await findDocuments(Assignment, {
+                user: req.user._id
+            }, u, u, u, u, u, {_id: -1})
+        } else {
+            const instructor_category = await User_category.findOne({name: "INSTRUCTOR"})
+            const user_user_groups = await User_user_group.find({user: req.user._id})
+            const _instructors = await User.find({college: req.user.college, category: instructor_category._id})
+            const instructors = await User_user_group.find({
+                user_group: {$in: user_user_groups.map(x => x.user_group)},
+                user: {$in: _instructors.map(x => x._id.toString())}
+            })
 
-        let assigment = await findDocuments(Quiz, {
-            user: user._id
-        }, u, u, u, u, u, {_id: -1})
+            assigments = await findDocuments(Assignment, {
+                user: {$in: instructors.map(x => x._id.toString())},
+                status: {$in: ["PUBLISHED", "RELEASED"]}
+            }, u, u, u, u, u, {_id: -1})
+        }
 
-        assigment = await addAttachmentMediaPaths(assigment)
-        assigment = await addQuizUsages(assigment)
-        assigment = await addAttachedCourse(assigment)
-
-        return res.send(formatResult(u, u, assigment))
+        return res.send(formatResult(u, u, assigments))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
