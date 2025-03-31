@@ -74,6 +74,7 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - User_faculty_college_year
  *     description: Get a user's current userFaculty_college_year
+ *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
@@ -116,6 +117,7 @@ router.get('/user/:id', async (req, res) => {
  *     tags:
  *       - User_faculty_college_year
  *     description: Create userFaculty_college_year
+ *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
@@ -201,6 +203,7 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - User_faculty_college_year
  *     description: Delete a userFaculty_college_year
+ *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
