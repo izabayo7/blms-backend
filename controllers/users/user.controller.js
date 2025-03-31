@@ -331,13 +331,38 @@ router.post('/', async (req, res) => {
     if (!user_category.data)
       return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
 
-    if (req.body.college) {
+    if (user_category.data.name !== 'SUPER_ADMIN') {
+      if (!req.body.college) {
+        return res.send(formatResult(400, `The ${user_category.data.name} requires a college`))
+      }
+
       let college = await findDocument(College, {
         _id: req.body.college
       })
       if (!college.data)
         return res.send(formatResult(404, `College with code ${req.body.college} Not Found`))
+
+      if (user_category.data.name === 'ADMIN') {
+        const find_admin = await findDocument(User, {
+          _id: {
+            $ne: req.params.id
+          },
+          category: user_category.data._id,
+          college: req.body.college
+        })
+
+        if (find_admin.data)
+          return res.send(formatResult(404, `College ${college.data.name} can't have more than one admin`))
+      }
+    } else {
+      const find_super_admin = await findDocument(User, {
+        category: req.body.category
+      })
+
+      if (find_super_admin.data)
+        return res.send(formatResult(404, `System can't have more than one super_admin`))
     }
+
     let result = await createDocument(User, {
       user_name: random_user_name,
       sur_name: req.body.sur_name,
@@ -503,14 +528,6 @@ router.put('/:id', async (req, res) => {
     })
     if (!user_category.data)
       return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
-
-    if (req.body.college) {
-      let college = await findDocument(College, {
-        _id: req.body.college
-      })
-      if (!college.data)
-        return res.send(formatResult(404, `College with code ${req.body.college} Not Found`))
-    }
 
     if (req.body.password)
       req.body.password = await hashPassword(req.body.password)
