@@ -624,9 +624,7 @@ router.delete('/:id', async (req, res) => {
         const path = `./uploads/colleges/${user.data.college}/users/${user.data.profile}`
         fs.exists(path, (exists) => {
           if (exists)
-            fs.unlink(path, {
-              recursive: true
-            })
+            fs.unlink(path)
         })
       }
       return res.send(result)

@@ -19,7 +19,8 @@ const {
   User,
   User_category,
   createDocument,
-  deleteDocument
+  deleteDocument,
+  simplifyObject
 } = require('../../utils/imports')
 const {
   parseInt
@@ -452,6 +453,7 @@ router.put('/:id', async (req, res) => {
       return res.send(formatResult(400, 'name was taken'))
 
     quiz = quiz_copy
+    quiz_copy = simplifyObject(quiz)
 
     if (req.body.target) {
 
@@ -521,16 +523,15 @@ router.put('/:id', async (req, res) => {
     // delete removed files
     for (const i in quiz_copy.data.questions) {
       if (
-        quiz_copy.data.questions[i].type.includes("file-select") &&
-        quiz_copy.data.questions[i].options.choices.length > 0
+        quiz_copy.data.questions[i].type.includes("file_select")
       ) {
         let deleteAll = false
-        if (!req.body.questions[i].type.includes('file-select')) {
+        if (!req.body.questions[i].type.includes('file_select')) {
           deleteAll = true
         }
         for (const j in quiz_copy.data.questions[i].options.choices) {
           let deletePicture = true
-          if (req.body.questions[i].type.includes('file-select')) {
+          if (req.body.questions[i].type.includes('file_select')) {
             for (const k in req.body.questions[i].options.choices) {
               if (quiz_copy.data.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
                 deletePicture = false
@@ -538,12 +539,10 @@ router.put('/:id', async (req, res) => {
             }
           }
           if (deleteAll || deletePicture) {
-            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.data.questions[i].options.choices[j].src}`
+            const path = `./uploads/colleges/${user.data.college}/assignments/${req.params.id}/${quiz_copy.data.questions[i].options.choices[j].src}`
             fs.exists(path, (exists) => {
               if (exists) {
-                fs.unlink(path, {
-                  recursive: true
-                })
+                fs.unlink(path)
               }
             })
           }
