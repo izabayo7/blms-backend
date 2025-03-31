@@ -132,7 +132,7 @@ router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
-        if (exam.user !== req.user._id) {
+        if (exam.user !== req.user._id.toString()) {
             let user_user_group = User_user_group.findOne({
                 user: req.user._id,
                 user_group: exam.course.user_group,

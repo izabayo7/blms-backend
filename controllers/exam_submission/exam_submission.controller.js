@@ -383,12 +383,12 @@ router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
         result = simplifyObject(result)
         result = await injectUserFeedback([result])
         result = await injectUser(result, 'user')
+        result = await injectUserFeedback(result)
         result = result[0]
         result.exam = await injectUser([result.exam], 'user')
         result.exam = await addAttachmentMediaPaths(result.exam, false, true)
         // result = await injectUser(result, 'user')
         result.exam = result.exam[0]
-        result = await injectUserFeedback(result)
         return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
