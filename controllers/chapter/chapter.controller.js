@@ -878,6 +878,67 @@ router.delete('/:id/attachment/:file_name', async (req, res) => {
 
 /**
  * @swagger
+ * /chapter/{id}/uploaded_content:
+ *   delete:
+ *     tags:
+ *       - Course
+ *     description: Delete a chapter
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id/uploaded_content', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        const chapter = await Chapter.findOne({
+            _id: req.params.id
+        })
+        if (!chapter)
+            return res.send(formatResult(404, 'chapter not found'))
+
+        if (!chapter.uploaded_content)
+            return res.send(formatResult(404, 'file not found'))
+
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${chapter.uploaded_content}`)
+
+
+        fs.unlink(file_path, async (err) => {
+            if (err)
+                return res.send(formatResult(500, err))
+
+            chapter.uploaded_content = undefined
+            await chapter.save()
+            const result = {}
+            result.message = 'DELETED'
+            return res.status(200).send(result)
+        })
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
  * /chapter/{id}/video:
  *   delete:
  *     tags:
