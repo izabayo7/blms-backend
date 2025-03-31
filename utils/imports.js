@@ -481,7 +481,8 @@ exports.getConversationMessages = async ({
             receivers: 0
         }, limit)
     }
-    return messages
+
+    return await replaceUserIds(messages, user_id)
 }
 
 // check if the receivers are the same
@@ -666,15 +667,19 @@ exports.formatMessages = async (messages, user_id) => {
     return formatedMessages
 }
 
-async function replaceUserIds(messages){
+async function replaceUserIds(messages, userId) {
     for (const messagesKey in messages) {
-        if(messages[messagesKey].sender === 'SYSTEM'){
+        if (messages[messagesKey].sender === 'SYSTEM') {
             const messageSegments = messages[messagesKey].content.split(" ")
             for (const messageSegmentsKey in messageSegments) {
-                if(/^__user__(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i.test(messageSegments[messageSegmentsKey])){
+                if (/^__user__(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i.test(messageSegments[messageSegmentsKey])) {
                     const user_id = messageSegments[messageSegmentsKey].split('__user__')[1]
-                    const __user = await user.findById(user_id,{sur_name:1,other_names:1})
-                    messageSegments[messageSegmentsKey] = __user.sur_name + ' ' + __user.other_names
+                    if (user_id === userId)
+                        messageSegments[messageSegmentsKey] = "You"
+                    else {
+                        const __user = await user.findById(user_id, {sur_name: 1, other_names: 1})
+                        messageSegments[messageSegmentsKey] = __user.sur_name + ' ' + __user.other_names
+                    }
                 }
             }
             messages[messagesKey].content = messageSegments.join(" ")
@@ -751,7 +756,7 @@ exports.getLatestMessages = async (user_id) => {
     ])
 
 
-    latestMessages = await replaceUserIds(latestMessages)
+    latestMessages = await replaceUserIds(latestMessages, user_id)
 
     // get latest messages sent to us
     // let sentMessages = await this.Message.aggregate([{
