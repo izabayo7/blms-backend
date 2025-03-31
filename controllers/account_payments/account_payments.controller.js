@@ -1,5 +1,5 @@
 // import dependencies
-const {simplifyObject} = require("../../utils/imports");
+const {simplifyObject, checkCollegePayment} = require("../../utils/imports");
 const {calculateAmount} = require("../../utils/imports");
 const {User_category} = require("../../utils/imports");
 const {findDocument} = require("../../utils/imports");
@@ -16,6 +16,7 @@ const {
     createDocument,
     u,
 } = require('../../utils/imports')
+const https = require("http");
 
 // create router
 const router = express.Router()
@@ -382,6 +383,20 @@ async function getPaymentHistory(req, res) {
  */
 async function getPaymentStatus(req, res) {
     try {
+        let paid
+        const _college = await College.findOne({_id: req.user.college})
+
+        if (_college.users_verification_link) {
+
+            if (!req.user.registration_number)
+                paid = false
+            else
+                paid = await checkCollegePayment({
+                    registration_number: req.user.registration_number,
+                    link: _college.users_verification_link
+                })
+        }
+
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
         let total_users = 1
         if (college)
@@ -415,12 +430,18 @@ async function getPaymentStatus(req, res) {
             date.setMonth(date.getMonth() + 2)
             const valid = new Date() < new Date(date)
 
-            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {disabled: !valid,total_users, endDate: new Date(date)}));
+            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {
+                disabled: !valid,
+                total_users,
+                paid,
+                endDate: new Date(date)
+            }));
         }
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
             status: 'ACTIVE'
         }).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
+
 
         if (!payment) return res.send(formatResult(u, 'You don\'t have a payment', {
             disabled:
@@ -435,11 +456,13 @@ async function getPaymentStatus(req, res) {
         //         currentBalance
         // }
 
+
         return res.send(formatResult(200, u, {
             startDate: payment.startingDate,
             endDate: payment.endingDate,
             balance: payment.balance,
             disabled: new Date() > new Date(payment.endingDate),
+            paid,
             total_users
         }));
     } catch (err) {

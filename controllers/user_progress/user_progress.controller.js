@@ -39,35 +39,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /user_progress:
- *   get:
- *     tags:
- *       - User_progress
- *     description: Get all user_progresses
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-  try {
-    const result = await findDocuments(User_progress)
-    if (!result.length)
-      return res.send(formatResult(404, 'User_progress list is empty'))
-
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
  * /user_progress/{id}:
  *   get:
  *     tags:

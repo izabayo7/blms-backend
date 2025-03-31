@@ -2,6 +2,7 @@
  * dependencies
  */
 const Joi = require('joi')
+const axios = require('axios');
 const bcrypt = require('bcryptjs')
 const schedule = require('node-schedule');
 Joi.ObjectId = require('joi-objectid')(Joi)
@@ -52,14 +53,6 @@ exports.User_category = user_category
 exports.validate_user_category = validate_user_category
 
 const {
-    user_role,
-    validate_user_role
-} = require('../models/user_role/user_role.model')
-
-exports.User_role = user_role
-exports.validate_user_role = validate_user_role
-
-const {
     college,
     validate_college
 } = require('../models/college/college.model')
@@ -108,14 +101,6 @@ const {
 
 exports.Faculty_college_year = faculty_college_year
 exports.validate_faculty_college_year = validate_faculty_college_year
-
-const {
-    college_year,
-    validate_college_year
-} = require('../models/college_year/college_year.model')
-
-exports.College_year = college_year
-exports.validate_college_year = validate_college_year
 
 const {
     course,
@@ -245,9 +230,9 @@ exports.calculateAmount = async (collegePlan, periodType, periodValue, total_use
     switch (collegePlan.plan) {
         case 'HUGUKA': {
             if (periodType === 'MONTH')
-                return 4000 * periodValue
+                return collegePlan.pricePerUser * periodValue
             else if (periodType === 'YEAR')
-                return ((4000 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
+                return ((collegePlan.pricePerUser * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
         }
             break;
         case 'JIJUKA': {
@@ -325,10 +310,27 @@ exports.hashPassword = async (password) => {
  */
 exports.validateUserLogin = (credentials) => {
     const schema = {
-        email_user_name_or_phone: Joi.string().required(),
+        email_or_user_name: Joi.string().required(),
         password: Joi.string().min(3).max(255).required()
     }
     return Joi.validate(credentials, schema)
+}
+
+/**
+ *  checks if user payed the school
+ * @param {{registration_number: String,link: string}} arguements
+ */
+exports.checkCollegePayment = async (arguements) => {
+    try {
+        let paid = false
+        const {link, registration_number} = arguements
+        const res = await axios.get(link +'/'+ registration_number)
+        if (res.data)
+            paid = res.data.paid
+        return paid
+    } catch (e) {
+        return {err: e.response.status}
+    }
 }
 
 /**
@@ -1132,14 +1134,14 @@ exports.resizeImage = function resize(path, format, width, height) {
 }
 
 // add mediapaths to quiz attachments
-exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => {
+exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false,isExam=false) => {
     for (const i in quizes) {
         for (const k in quizes[i].questions) {
             if (quizes[i].questions[k].options) {
                 for (const j in quizes[i].questions[k].options.choices) {
                     if (quizes[i].questions[k].options.choices[j].src) {
                         if (!quizes[i].questions[k].options.choices[j].src.includes('http')) {
-                            quizes[i].questions[k].options.choices[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/quiz/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
+                            quizes[i].questions[k].options.choices[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/${isExam ? 'exams' : 'quiz'}/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
                         }
                     }
                     if (removeRightChoice) {
@@ -1161,6 +1163,16 @@ exports.addQuizUsages = async (quizes) => {
         quizes[i].usage = usages
     }
     return quizes
+}
+
+// add the number of students who did the quiz
+exports.addExamUsages = async (exams) => {
+    for (const i in exams) {
+        exams[i].usage = await this.countDocuments(Exam_submission, {
+            quiz: exams[i]._id
+        })
+    }
+    return exams
 }
 
 // add the course to which the quiz is attached
@@ -1187,6 +1199,84 @@ exports.addAttachedCourse = async (quizes) => {
     }
     return quizes
 }
+
+exports.validateQuestions = (questions) => {
+    const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_image_select', 'multiple_image_select', 'file_upload']
+    let message = ''
+    let marks = 0
+    for (let i in questions) {
+        i = parseInt(i)
+        if (!allowedQuestionTypes.includes(questions[i].type)) {
+            message = `question type "${questions[i].type}" is not supported`
+            break;
+        }
+        if (questions[i].type.includes('select')) {
+            if (!questions[i].options) {
+                message = `question ${i + 1} must have selection options`
+                break;
+            } else {
+                if (questions[i].options.choices.length < 2) {
+                    message = `question ${i + 1} must have more than one selection choices`
+                    break;
+                }
+                if (!questions[i].options.choices && !questions[i].type.includes('file')) {
+                    message = `question ${i + 1} must have selection choices`
+                    break;
+                }
+                let right_option_found = false
+                for (let k in questions[i].options.choices) {
+                    k = parseInt(k)
+                    let times
+                    if (questions[i].type === 'single_text_select' || questions[i].type === 'multiple_text_select') {
+                        times = questions[i].options.choices.filter(choice => choice.text == questions[i].options.choices[k].text).length
+                        if (!questions[i].options.choices[k].text) {
+                            message = `choice ${k + 1} in question ${i + 1} must have text`
+                            break;
+                        }
+                    }
+                    if (questions[i].type === 'single_image_select' || questions[i].type === 'multiple_image_select') {
+                        times = questions[i].options.choices.filter(choice => choice.src == questions[i].options.choices[k].src).length
+                        if (!questions[i].options.choices[k].src) {
+                            message = `choice ${k + 1} in question ${i + 1} must have attachment src`
+                            break;
+                        }
+                    }
+                    if (questions[i].options.choices[k].right) {
+                        right_option_found = true
+                    }
+                    if (times > 1) {
+                        message = `question ${i + 1} must have identical choices`
+                        break;
+                    }
+                }
+                if (!right_option_found) {
+                    message = `question ${i + 1} must have one right selection choice`
+                    break;
+                }
+            }
+        }
+
+        if (questions[i].type == "file_upload") {
+            if (!questions[i].allowed_files) {
+                message = `question"${i + 1}" must have files that students are allowed to submit`
+            }
+
+            if (!questions[i].allowed_files.length) {
+                message = `question"${i + 1}" must have files that students are allowed to submit`
+            }
+        }
+        marks += parseInt(questions[i].marks)
+        // more validations later
+    }
+    return message === '' ? {
+        status: true,
+        total_marks: marks
+    } : {
+        status: false,
+        error: message
+    }
+}
+
 // add chapters in their parent courses
 exports.injectChapters = async (courses, user_id) => {
     for (const i in courses) {
@@ -1313,14 +1403,14 @@ exports.autoMarkSelectionQuestions = (questions, answers) => {
             if (answers[i].choosed_options.length) {
                 const rightChoices = questions[i].options.choices.filter((choice) => choice.right);
                 if (questions[i].type.includes("single")) {
-                    if (questions[i].type.includes("file")) {
+                    if (questions[i].type.includes("image")) {
                         answers[i].marks = (answers[i].choosed_options[0].src == rightChoices[0].src) ? questions[i].marks : 0;
                     } else {
                         answers[i].marks = (answers[i].choosed_options[0].text == rightChoices[0].text) ? questions[i].marks : 0;
                     }
                 } else {
                     for (const k in answers[i].choosed_options) {
-                        if (questions[i].type.includes("file")) {
+                        if (questions[i].type.includes("image")) {
                             let checkStatus = rightChoices.filter((choice) => choice.src == answers[i].choosed_options[k].src);
                             if (checkStatus.length > 0) {
                                 answers[i].marks += questions[i].marks / rightChoices.length;
@@ -1601,7 +1691,7 @@ exports.generateAuthToken = async (user) => {
         sur_name: user.sur_name,
         other_names: user.other_names,
         user_name: user.user_name,
-        // national_id: user.national_id,
+        registration_number: user.registration_number,
         gender: user.gender,
         date_of_birth: user.date_of_birth,
         phone: user.phone,
@@ -1643,6 +1733,9 @@ const {
     auth
 } = require('../middlewares/auth.middleware');
 const {Announcement} = require('../models/announcements/announcements.model');
+const https = require("http");
+const {Exam_submission} = require("../models/exam_submission/exam_submission.model");
+const {parseInt} = require("lodash");
 
 exports.auth = auth
 

@@ -121,39 +121,46 @@ const router = express.Router()
  * definitions:
  *   UserLogin:
  *     properties:
- *       email_user_name_or_phone:
+ *       email_or_user_name:
  *         type: string
  *       password:
  *         type: string
  */
 
-/**
- * @swagger
- * /user:
- *   get:
- *     tags:
- *       - User
- *     description: Get all Users
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', [auth, filterUsers(["SUPERADMIN"])], async (req, res) => {
+router.get('/reg_number/:regnumber', async (req, res) => {
     try {
-        let users = await findDocuments(User)
 
-        if (!users.length)
-            return res.send(formatResult(404, 'User list is empty'))
+        const test_users = [
+            {
+                regnumber: "ULK-2021-100",
+                paid: false
+            }, {
+                regnumber: "ULK-2021-105",
+                paid: true
+            }, {
+                regnumber: "ULK-2021-110",
+                paid: false
+            }, {
+                regnumber: "ULK-2021-115",
+                paid: true
+            }, {
+                regnumber: "ULK-2021-120",
+                paid: false
+            }, {
+                regnumber: "ULK-2021-125",
+                paid: true
+            },
+        ]
 
-        users = await add_user_details(users)
 
-        return res.send(formatResult(u, u, users))
+        let found = test_users.filter(x => x.regnumber === req.params.regnumber)
+
+        if (!found.length)
+            return res.status(404).send("Reg number is invalid")
+
+        return res.send({
+            paid: found[0].paid
+        })
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -1045,10 +1052,10 @@ router.post('/', async (req, res) => {
             user_name: req.body.user_name,
             sur_name: req.body.sur_name,
             other_names: req.body.other_names,
+            registration_number: req.body.registration_number,
             phone: req.body.phone,
             gender: req.body.gender,
             email: req.body.email,
-            phone: req.body.phone,
             password: await hashPassword(req.body.password),
             college: college._id,
             category: user_category._id,
@@ -1313,6 +1320,27 @@ router.post('/admin', async (req, res) => {
  */
 router.get('/confirm/:token', confirmAccount)
 
+/**
+ * @swagger
+ * /user/confirm/{token}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: confirm user account
+ *     parameters:
+ *       - name: token
+ *         description: confirmation token
+ *         in: path
+ *         type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/confirm/:token', confirmAccount)
+
 router.get('/accept/:token', AcceptCollege)
 
 /**
@@ -1350,11 +1378,9 @@ router.post('/login', async (req, res) => {
         // find user
         let user = await findDocument(User, {
             $or: [{
-                email: req.body.email_user_name_or_phone
+                email: req.body.email_or_user_name
             }, {
-                user_name: req.body.email_user_name_or_phone
-            }, {
-                phone: req.body.email_user_name_or_phone
+                user_name: req.body.email_or_user_name
             }],
             "status.deleted": {$ne: 1}
         })

@@ -63,35 +63,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /message:
- *   get:
- *     tags:
- *       - Message
- *     description: Get all messages
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        const result = await findDocuments(Message)
-        if (!result.length)
-            return res.send(formatResult(404, 'Message list is empty'))
-
-        return res.send(result)
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /message/user/{user_name}/:type:
  *   get:
  *     tags:

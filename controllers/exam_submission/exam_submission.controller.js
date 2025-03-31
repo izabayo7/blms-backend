@@ -1,16 +1,10 @@
 // import dependencies
 const {autoMarkSelectionQuestions, Live_session, checkCollegePayment, College} = require("../../utils/imports");
-const {
-    quiz
-} = require('../../models/quiz/quiz.model')
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
-    Quiz_submission,
-    Quiz,
     User,
     date,
-    validate_quiz_submission,
     validateObjectId,
     addAttachmentMediaPaths,
     injectUser,
@@ -24,7 +18,8 @@ const {
     createDocument,
     updateDocument,
     Chapter,
-    User_group,
+    User_faculty_college_year,
+    Faculty_college_year,
     Course,
     deleteDocument,
     findFileType,
@@ -36,69 +31,26 @@ const {
     upload_multiple,
     upload_single,
     Comment,
-    addQuizTarget,
+    addExamTarget,
     auth,
     addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {filterUsers} = require("../../middlewares/auth.middleware");
+const {Exam_submission, validate_exam_submission} = require("../../models/exam_submission/exam_submission.model");
+const {Exam} = require("../../models/exams/exam.model");
 const {Faculty} = require("../../models/faculty/faculty.model");
+const {User_group} = require("../../models/user_group/user_group.model");
 
 // create router
 const router = express.Router()
 
 /**
  * @swagger
- * definitions:
- *   Quiz_submission:
- *     properties:
- *       quiz:
- *         type: string
- *       user:
- *         type: string
- *       used_time:
- *         type: number
- *       auto_submitted:
- *         type: boolean
- *       marked:
- *         type: boolean
- *       published:
- *         type: boolean
- *       total_marks:
- *         type: number
- *       answers:
- *         type: array
- *         items:
- *            type: object
- *            properties:
- *              text:
- *                type: string
- *              marks:
- *                type: number
- *              src:
- *                type: string
- *              choosed_options:
- *                type: array
- *                items:
- *                  type: object
- *                  properties:
- *                    text:
- *                      type: string
- *                    src:
- *                      type: string
- *     required:
- *       - quiz
- *       - user
- *       - used_time
- *       - answers
- */
-
-/**
- * @swagger
- * /quiz_submission/user:
+ * /submission:
  *   get:
  *     tags:
- *       - Quiz_submission
- *     description: Returns quiz_submissions of the specified user
+ *       - Exam_submission
+ *     description: Returns submissions of the specified user
  *     security:
  *       - bearerAuth: -[]
  *     responses:
@@ -109,12 +61,12 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/user', auth, async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
 
         let result
 
-        if (req.user.category.name == 'STUDENT') {
+        if (req.user.category.name === 'STUDENT') {
 
             const user_user_group = await findDocument(User_user_group, {
                 user: req.user._id,
@@ -136,82 +88,62 @@ router.get('/user', auth, async (req, res) => {
             let coursesWithSubmissions = []
 
             for (const j in courses) {
-                // check if there are quizes made by the user
-                let chapters = await findDocuments(Chapter, {
-                    course: courses[j]._id
-                }, u, u, u, u, u, {
-                    _id: -1
-                })
-                let submissions_found = false
-                for (const l in chapters) {
 
-                    let quizes = await findDocuments(Quiz, {
-                        "target.id": chapters[l]._id,
-                        // status: 2 // only released marks
+                let submissions_found = false
+
+                let exams = await Exam.find({
+                    "course": courses[j]._id,
+                }).sort({
+                    _id: -1
+                }).lean()
+
+                let foundSubmissions = []
+                for (const i in exams) {
+
+                    let submissions = await findDocuments(Exam_submission, {
+                        exam: exams[i]._id,
+                        user: req.user._id
                     }, u, u, u, u, u, {
                         _id: -1
                     })
+                    if (submissions.length) {
 
-                    let live_sessions = await findDocuments(Live_session, {
-                        "target.id": mongoose.Types.ObjectId(chapters[l]._id)
+                        submissions = await injectUserFeedback(submissions)
+
+                        for (const k in submissions) {
+
+                            submissions[k].total_feedbacks = 0
+
+                            for (const l in submissions[k].answers) {
+                                submissions[k].total_feedbacks += submissions[k].answers[l].feedback ? 1 : 0;
+                            }
+                            submissions[k].exam = exams[i]
+                            foundSubmissions.push(submissions[k])
+                        }
+                    }
+                }
+                if (foundSubmissions.length) {
+                    submissions_found = true
+                    foundSubmissions = foundSubmissions.sort((a, b) => {
+                        if (a.createdAt > b.createdAt) return -1;
+                        if (a.createdAt < b.createdAt) return 1;
+                        return 0;
                     })
-                    if (live_sessions.length) {
-                        let live_quizes = await findDocuments(Quiz, {
-                            "target.id": {$in: live_sessions.map(x => x._id.toString())},
-                            // status: 2 // only released marks
-                        }, u, u, u, u, u, {
-                            _id: -1
-                        })
-                        quizes = quizes.concat(live_quizes)
-                    }
-                    let foundSubmissions = []
-                    quizes = await addQuizTarget(quizes)
-                    for (const i in quizes) {
-
-                        let quiz_submissions = await findDocuments(Quiz_submission, {
-                            quiz: quizes[i]._id,
-                            user: req.user._id
-                        }, u, u, u, u, u, {
-                            _id: -1
-                        })
-                        if (quiz_submissions.length) {
-
-                            quiz_submissions = await injectUserFeedback(quiz_submissions)
-
-                            for (const k in quiz_submissions) {
-
-                                quiz_submissions[k].total_feedbacks = 0
-
-                                for (const l in quiz_submissions[k].answers) {
-                                    quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
-                                }
-                                quiz_submissions[k].quiz = quizes[i]
-                                foundSubmissions.push(quiz_submissions[k])
-                            }
+                    courses[j].submissions = foundSubmissions
+                    courses[j].marking_status = 0
+                    courses[j].unread_results = 0
+                    const percentage_of_one_submission = 100 / foundSubmissions.length
+                    for (const a in foundSubmissions) {
+                        if (foundSubmissions[a].marked) {
+                            courses[j].marking_status += percentage_of_one_submission
+                        }
+                        if (!foundSubmissions[a].results_seen) {
+                            courses[j].unread_results++
                         }
                     }
-                    if (foundSubmissions.length) {
-                        submissions_found = true
-                        foundSubmissions = foundSubmissions.sort((a, b) => {
-                            if (a.createdAt > b.createdAt) return -1;
-                            if (a.createdAt < b.createdAt) return 1;
-                            return 0;
-                        })
-                        courses[j].submissions = foundSubmissions
-                        courses[j].marking_status = 0
-                        courses[j].unread_results = 0
-                        const percentage_of_one_submission = 100 / foundSubmissions.length
-                        for (const a in foundSubmissions) {
-                            if (foundSubmissions[a].marked) {
-                                courses[j].marking_status += percentage_of_one_submission
-                            }
-                            if (!foundSubmissions[a].results_seen) {
-                                courses[j].unread_results++
-                            }
-                        }
-                        courses[j].marking_status += '%'
-                        courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
-                    }
+                    courses[j].marking_status += '%'
+                    courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
+
 
                 }
                 if (submissions_found)
@@ -219,55 +151,63 @@ router.get('/user', auth, async (req, res) => {
             }
             result = coursesWithSubmissions
         } else {
-            // check if there are quizes made by the user
-            let quizes = await findDocuments(Quiz, {
+            // check if there are exams made by the user
+            let exams = await Exam.find({
                 user: req.user._id,
-                target: {
-                    $ne: undefined
-                }
-            }, u, u, u, u, u, {
+                status: {$in: ['PUBLISHED', 'RELEASED']}
+            }).sort({
                 _id: -1
+            }).populate({
+                path: 'course',
+                model: 'course',
+                populate: {
+                    path: 'user_group', populate: {
+                        path: 'faculty',
+                        model: 'faculty'
+                    }
+                }
             })
-            if (!quizes.length)
+                .lean()
+
+            if (!exams.length)
                 return res.send(formatResult(u, u, []))
 
             let foundSubmissions = []
 
-            quizes = await addAttachmentMediaPaths(quizes)
+            exams = await addAttachmentMediaPaths(exams)
 
-            quizes = await addQuizTarget(quizes)
-            for (const i in quizes) {
+            for (const i in exams) {
 
-                let quiz_submissions = await findDocuments(Quiz_submission, {
-                    quiz: quizes[i]._id
+                let submissions = await findDocuments(Exam_submission, {
+                    exam: exams[i]._id
                 }, u, u, u, u, u, {
                     _id: -1
                 })
 
-                quizes[i].total_submissions = quiz_submissions.length
+                exams[i].total_submissions = submissions.length
 
-                if (quiz_submissions.length) {
-                    quiz_submissions = await injectUser(quiz_submissions, 'user')
-                    quiz_submissions = await injectUserFeedback(quiz_submissions)
+                if (submissions.length) {
+                    submissions = await injectUser(submissions, 'user')
+                    submissions = await injectUserFeedback(submissions)
 
-                    quizes[i].marking_status = 0
-                    const percentage_of_one_submission = 100 / quiz_submissions.length
+                    exams[i].marking_status = 0
+                    const percentage_of_one_submission = 100 / submissions.length
 
-                    for (const k in quiz_submissions) {
+                    for (const k in submissions) {
 
-                        if (quiz_submissions[k].marked) {
-                            quizes[i].marking_status += percentage_of_one_submission
+                        if (submissions[k].marked) {
+                            exams[i].marking_status += percentage_of_one_submission
                         }
 
-                        quiz_submissions[k].total_feedbacks = 0
+                        submissions[k].total_feedbacks = 0
 
-                        for (const l in quiz_submissions[k].answers) {
-                            quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+                        for (const l in submissions[k].answers) {
+                            submissions[k].total_feedbacks += submissions[k].answers[l].feedback ? 1 : 0;
                         }
                     }
-                    quizes[i].submissions = quiz_submissions
-                    foundSubmissions.push(quizes[i])
-                    quizes[i].marking_status += '%'
+                    exams[i].submissions = submissions
+                    foundSubmissions.push(exams[i])
+                    exams[i].marking_status += '%'
                 }
             }
             result = foundSubmissions
@@ -282,16 +222,16 @@ router.get('/user', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}:
+ * /submission/{id}:
  *   get:
  *     tags:
- *       - Quiz_submission
- *     description: Returns a specified quiz_submission
+ *       - Exam_submission
+ *     description: Returns a specified submission
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission's id
+ *         description: Exam_submission's id
  *         in: path
  *         required: true
  *         type: string
@@ -303,7 +243,7 @@ router.get('/user', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -311,14 +251,14 @@ router.get('/:id', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let result = await findDocument(Quiz_submission, {
+        let result = await findDocument(Exam_submission, {
             _id: req.params.id
         })
         if (!result)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+            return res.send(formatResult(404, 'submission not found'))
 
         // result = await injectUser([result], 'user')
-        // result = await injectQuiz(result)
+        // result = await injectExam(result)
         // result = result[0]
 
         return res.send(formatResult(u, u, result))
@@ -329,16 +269,16 @@ router.get('/:id', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/quiz/{id}:
+ * /submission/exam/{id}:
  *   get:
  *     tags:
- *       - Quiz_submission
- *     description: Returns quiz_submissions of the specified quiz
+ *       - Exam_submission
+ *     description: Returns submissions of the specified exam
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz id
+ *         description: Exam id
  *         in: path
  *         required: true
  *         type: string
@@ -350,7 +290,7 @@ router.get('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/quiz/:id', auth, async (req, res) => {
+router.get('/exam/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -358,15 +298,16 @@ router.get('/quiz/:id', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        // check if quiz exist
-        let quiz = await findDocument(Quiz, {
-            _id: req.params.id
+        // check if exam exist
+        let exam = await findDocument(Exam, {
+            _id: req.params.id,
+            user: req.user._id
         })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
-        let result = await findDocuments(Quiz_submission, {
-            quiz: req.params.id
+        let result = await findDocuments(Exam_submission, {
+            exam: req.params.id
         })
 
         if (!result.length)
@@ -382,11 +323,11 @@ router.get('/quiz/:id', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/user/{user_name}/{quiz_name}:
+ * /submission/user/{user_name}/{exam_id}:
  *   get:
  *     tags:
- *       - Quiz_submission
- *     description: Returns quiz_submission of the specified user with the specified name
+ *       - Exam_submission
+ *     description: Returns submission of the specified user with the specified user_name
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -396,7 +337,7 @@ router.get('/quiz/:id', auth, async (req, res) => {
  *         required: true
  *         type: string
  *       - name: quiz_name
- *         description: Quiz name
+ *         description: Exam name
  *         in: path
  *         required: true
  *         type: string
@@ -408,7 +349,7 @@ router.get('/quiz/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
+router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
     try {
 
         // check if user exist
@@ -418,30 +359,36 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
         if (!user)
             return res.send(formatResult(404, 'user not found'))
 
-        let quiz = await findDocument(Quiz, {
-            name: req.params.quiz_name
+        let exam = await findDocument(Exam, {
+            _id: req.params.exam_id
         })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
-        let result = await findDocument(Quiz_submission, {
+        let result = await Exam_submission.findOne({
             user: user._id,
-            quiz: quiz._id
+            exam: exam._id
+        }).populate({
+            path: 'exam',
+            model: 'exam',
+            populate: {
+                path: 'course',
+                model: 'course'
+            }
         })
+
         if (!result)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+            return res.send(formatResult(404, 'submission not found'))
+
         result = simplifyObject(result)
-        result = simplifyObject(await injectQuiz([result]))
-        result = await injectUserFeedback(result)
+        result = await injectUserFeedback([result])
         result = await injectUser(result, 'user')
-        result = result[0]
-        result.quiz = await addQuizTarget([result.quiz])
-        result.quiz = await addAttachmentMediaPaths(result.quiz)
-        result.quiz = simplifyObject(result.quiz)
-        result.quiz = await injectUser(result.quiz, 'user')
-        // result = await injectUser(result, 'user')
-        result.quiz = result.quiz[0]
         result = await injectUserFeedback(result)
+        result = result[0]
+        result.exam = await injectUser([result.exam], 'user')
+        result.exam = await addAttachmentMediaPaths(result.exam, false, true)
+        // result = await injectUser(result, 'user')
+        result.exam = result.exam[0]
         return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -450,16 +397,16 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}/attachment/{file_name}/{action}:
+ * /submission/{id}/attachment/{file_name}/{action}:
  *   get:
  *     tags:
- *       - Quiz_submission
- *     description: Returns or download the files attached to the specified quiz_submission
+ *       - Exam_submission
+ *     description: Returns or download the files attached to the specified submission attachment
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission's id
+ *         description: Exam_submission's id
  *         in: path
  *         required: true
  *         type: string
@@ -495,25 +442,25 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         if (!allowed_actions.includes(req.params.action))
             return res.send(formatResult(400, 'invalid action'))
 
-        const submission = await findDocument(Quiz_submission, {
+        const submission = await findDocument(Exam_submission, {
             _id: req.params.id
         })
         if (!submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+            return res.send(formatResult(404, 'submission not found'))
 
-        const quiz = await findDocument(Quiz, {
-            _id: submission.quiz
+        const exam = await findDocument(Exam, {
+            _id: submission.exam
         })
 
         const user = await findDocument(User, {
-            _id: quiz.user
+            _id: exam.user
         })
 
         let file_found = false
 
         for (let i in submission.answers) {
             i = parseInt(i)
-            if (quiz.questions[i].type == 'file_upload') {
+            if (exam.questions[i].type == 'file_upload') {
                 if (submission.answers[i].src == req.params.file_name || submission.answers[i].feedback_src == req.params.file_name) {
                     file_found = true
                     break
@@ -525,7 +472,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         if (!file_found)
             return res.send(formatResult(404, 'file not found'))
 
-        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`)
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.exam}/submissions/${submission._id}/${req.params.file_name}`)
 
         const file_type = await findFileType(req.params.file_name)
 
@@ -547,11 +494,11 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/statistics/submitted:
+ * /submission/statistics/submitted:
  *   get:
  *     tags:
  *       - Statistics
- *     description: Get User statistics of how user attempted quizes
+ *     description: Get User statistics of how user attempted exams
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -579,7 +526,7 @@ router.get('/statistics/submitted', async (req, res) => {
         const student = await User_category.findOne({name: "STUDENT"});
         const users = await User.find({college: req.user.college, category: student._id}, {_id: 1})
 
-        const result = await Quiz_submission.aggregate([
+        const result = await Exam_submission.aggregate([
             {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
             {"$match": {user: {$in: users.map(x => x._id.toString())}}},
             {
@@ -608,7 +555,7 @@ router.get('/statistics/submitted', async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/statistics/user:
+ * /submission/statistics/user:
  *   get:
  *     tags:
  *       - Statistics
@@ -626,21 +573,19 @@ router.get('/statistics/submitted', async (req, res) => {
 router.get('/statistics/user', async (req, res) => {
     try {
         let courses = await Course.find({user: req.user._id}, {_id: 1})
-        let chapters = await Chapter.find({course: {$in: courses.map(x => x._id.toString())}}, {_id: 1})
-        let quiz = await Quiz.find({
-            "target.type": "chapter",
-            "target.id": {$in: chapters.map(x => x._id.toString())}
+        let exam = await Exam.find({
+            "course": {$in: courses.map(x => x._id.toString())}
         }, {_id: 1, passMarks: 1, total_marks: 1})
 
-        const result = await Quiz_submission.find({quiz: {$in: quiz.map(x => x._id.toString())}}).populate('user',
+        const result = await Exam_submission.find({exam: {$in: exam.map(x => x._id.toString())}}).populate('user',
             {sur_name: 1, other_names: 1, user_name: 1, _id: 0}
-        ).populate('quiz',
+        ).populate('exam',
             {name: 1}
         ).sort({_id: -1})
         const total_submissions = result.length
         let marked = result.filter(e => e.marked)
 
-        let passed = marked.filter(e => ((e.total_marks / findQuizMarks(quiz, e.quiz._id)) * 100) >= findQuizMarks(quiz, e.quiz._id, true))
+        let passed = marked.filter(e => ((e.total_marks / findExamMarks(exam, e.exam._id)) * 100) >= findExamMarks(exam, e.exam._id, true))
 
         if (result.length > 4)
             result.length = 4
@@ -655,7 +600,7 @@ router.get('/statistics/user', async (req, res) => {
     }
 })
 
-function findQuizMarks(quizarray, quizid, passMarks = false) {
+function findExamMarks(quizarray, quizid, passMarks = false) {
     for (const i in quizarray) {
         if (quizarray[i]._id.toString() === quizid.toString()) {
             return passMarks ? quizarray[i].passMarks : quizarray[i].total_marks
@@ -665,20 +610,20 @@ function findQuizMarks(quizarray, quizid, passMarks = false) {
 
 /**
  * @swagger
- * /quiz_submission:
+ * /submission:
  *   post:
  *     tags:
- *       - Quiz_submission
- *     description: Create quiz_submission
+ *       - Exam_submission
+ *     description: Create submission
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
- *         description: Fields for a quiz_submission
+ *         description: Fields for a submission
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Quiz_submission'
+ *           $ref: '#/definitions/Exam_submission'
  *     responses:
  *       201:
  *         description: Created
@@ -694,7 +639,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         req.body.user = req.user.user_name
         let {
             error
-        } = validate_quiz_submission(req.body)
+        } = validate_exam_submission(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
@@ -713,42 +658,38 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
                 return res.send(formatResult(403, 'user must pay the college to be able to create a submission'))
         }
 
+        let exam = await Exam.findOne({
+            _id: req.body.exam,
+        }).populate('course')
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
-        let quiz = await findDocument(Quiz, {
-            _id: req.body.quiz
-        })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
-
-        if (!quiz.target.id)
-            return res.send(formatResult(404, 'quiz is not available'))
-
-        const user_group = await get_user_group(req.body.quiz)
-
+        if (exam.status !== 'PUBLISHED')
+            return res.send(formatResult(404, 'exam is not available'))
         let user_user_group = await findDocument(User_user_group, {
             user: req.user._id,
-            user_group: user_group._id
+            user_group: exam.course.user_group
         })
         if (!user_user_group)
-            return res.send(formatResult(403, 'user is not allowed to do this quiz'))
+            return res.send(formatResult(403, 'user is not allowed to do this exam'))
 
-        const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'anwsering')
+        const valid_submision = validateSubmittedAnswers(exam.questions, req.body.answers, 'anwsering')
         if (valid_submision.status !== true)
             return res.send(formatResult(400, valid_submision.error))
 
-        // check if quiz_submissions exist
-        let quiz_submission = await findDocument(Quiz_submission, {
+        // check if submissions exist
+        let submission = await findDocument(Exam_submission, {
             user: req.user._id,
-            quiz: req.body.quiz
+            exam: req.body.exam
         })
-        if (quiz_submission)
-            return res.send(formatResult(400, 'quiz_submission already exist'))
+        if (submission)
+            return res.send(formatResult(400, 'submission already exist'))
 
-        const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(quiz.questions, req.body.answers)
+        const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(exam.questions, req.body.answers)
 
-        let result = await createDocument(Quiz_submission, {
+        let result = await createDocument(Exam_submission, {
             user: req.user._id,
-            quiz: req.body.quiz,
+            exam: req.body.exam,
             answers: answers,
             used_time: req.body.used_time,
             auto_submitted: req.body.auto_submitted,
@@ -756,7 +697,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
             marked: is_selection_only
         })
         result = simplifyObject(result)
-        result.data = await injectQuiz([result.data])
+        result.data = await injectExam([result.data])
         result.data = {
             document: result.data[0],
             is_selection_only: is_selection_only
@@ -770,25 +711,25 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}:
+ * /submission/{id}:
  *   put:
  *     tags:
- *       - Quiz_submission
- *     description: Update quiz_submission
+ *       - Exam_submission
+ *     description: Update submission
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission id
+ *         description: Exam_submission id
  *         in: path
  *         required: true
  *         type: string
  *       - name: body
- *         description: Fields for a quiz_submission
+ *         description: Fields for a submission
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Quiz_submission'
+ *           $ref: '#/definitions/Exam_submission'
  *     responses:
  *       201:
  *         description: Created
@@ -807,36 +748,33 @@ router.put('/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        error = validate_quiz_submission(req.body)
+        error = validate_exam_submission(req.body)
         error = error.error
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let quiz_submission = await findDocument(Quiz_submission, {
+        let submission = await findDocument(Exam_submission, {
             _id: req.params.id
         })
-        if (!quiz_submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
 
-        let quiz = await findDocument(Quiz, {
-            _id: req.body.quiz
+        let exam = await findDocument(Exam, {
+            _id: req.body.exam
         })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
-        req.body.user = quiz_submission.user
+        req.body.user = submission.user
 
-        if (!quiz.target.id)
-            return res.send(formatResult(404, 'quiz is not available'))
-
-        const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'marking')
+        const valid_submision = validateSubmittedAnswers(exam.questions, req.body.answers, 'marking')
         if (valid_submision.status !== true)
             return res.send(formatResult(400, valid_submision.error))
 
         req.body.total_marks = valid_submision.total_marks
         req.body.marked = true
 
-        const result = await updateDocument(Quiz_submission, req.params.id, req.body)
+        const result = await updateDocument(Exam_submission, req.params.id, req.body)
 
         return res.send(result)
     } catch (error) {
@@ -846,16 +784,16 @@ router.put('/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}/results_seen:
+ * /submission/{id}/results_seen:
  *   put:
  *     tags:
- *       - Quiz_submission
+ *       - Exam_submission
  *     description: Indicate that student saw quiz_results
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission id
+ *         description: Exam_submission id
  *         in: path
  *         required: true
  *         type: string
@@ -877,14 +815,14 @@ router.put('/:id/results_seen', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let quiz_submission = await findDocument(Quiz_submission, {
+        let submission = await findDocument(Exam_submission, {
             _id: req.params.id,
             user: req.user._id
         })
-        if (!quiz_submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
 
-        const result = await updateDocument(Quiz_submission, req.params.id, {
+        const result = await updateDocument(Exam_submission, req.params.id, {
             results_seen: true
         })
 
@@ -896,18 +834,18 @@ router.put('/:id/results_seen', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}/attachment:
+ * /submission/{id}/attachment:
  *   post:
  *     tags:
- *       - Quiz_submission
- *     description: Upload quiz submission attacments
+ *       - Exam_submission
+ *     description: Upload exam submission attacments
  *     security:
  *       - bearerAuth: -[]
  *     consumes:
  *        - multipart/form-data
  *     parameters:
  *       - name: id
- *         description: Quiz_submission id
+ *         description: Exam_submission id
  *         in: path
  *         required: true
  *         type: string
@@ -933,23 +871,23 @@ router.post('/:id/attachment', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const quiz_submission = await findDocument(Quiz_submission, {
+        const submission = await findDocument(Exam_submission, {
             _id: req.params.id
         })
-        if (!quiz_submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
 
-        const quiz = await findDocument(Quiz, {
-            _id: quiz_submission.quiz
+        const exam = await findDocument(Exam, {
+            _id: submission.exam
         })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
         const user = await findDocument(User, {
-            _id: quiz.user
+            _id: exam.user
         })
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam._id}/submissions/${req.params.id}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -957,16 +895,16 @@ router.post('/:id/attachment', auth, async (req, res) => {
 
         let file_missing = false
 
-        for (const i in quiz_submission.answers) {
-            if (quiz_submission.answers[i].src) {
-                const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].src}`)
+        for (const i in submission.answers) {
+            if (submission.answers[i].src) {
+                const file_found = await fs.exists(`${path}/${submission.answers[i].src}`)
                 if (!file_found) {
                     file_missing = true
                 }
             }
         }
         if (!file_missing)
-            return res.send(formatResult(400, 'all attachments for this quiz_submission were already uploaded'))
+            return res.send(formatResult(400, 'all attachments for this submission were already uploaded'))
 
         upload_multiple(req, res, async (err) => {
             if (err)
@@ -982,16 +920,16 @@ router.post('/:id/attachment', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/feedback/{id}/{answer}:
+ * /submission/feedback/{id}/{answer}:
  *   post:
  *     tags:
- *       - Quiz_submission
- *     description: Upload quiz submission feedback attacments
+ *       - Exam_submission
+ *     description: Upload exam submission feedback attacments
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission id
+ *         description: Exam_submission id
  *         in: path
  *         required: true
  *         type: string
@@ -1016,34 +954,34 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
             error
         } = validateObjectId(req.params.id)
         if (error)
-            return res.send(formatResult(400, "invalid quiz_submission id"))
+            return res.send(formatResult(400, "invalid submission id"))
 
         error = validateObjectId(req.params.answer)
         error = error.error
         if (error)
             return res.send(formatResult(400, "invalid question id"))
 
-        const quiz_submission = await findDocument(Quiz_submission, {
+        const submission = await findDocument(Exam_submission, {
             _id: req.params.id
         })
-        if (!quiz_submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
 
-        const answer = quiz_submission.answers.filter(e => e._id == req.params.answer)
+        const answer = submission.answers.filter(e => e._id == req.params.answer)
         if (!answer.length)
             return res.send(formatResult(404, 'answer not found'))
 
-        const quiz = await findDocument(Quiz, {
-            _id: quiz_submission.quiz
+        const exam = await findDocument(Exam, {
+            _id: submission.exam
         })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
         const user = await findDocument(User, {
-            _id: quiz.user
+            _id: exam.user
         })
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam._id}/submissions/${req.params.id}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -1057,10 +995,10 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
-            quiz_submission.answers[quiz_submission.answers.indexOf(answer[0])].feedback_src = req.file.filename
+            submission.answers[submission.answers.indexOf(answer[0])].feedback_src = req.file.filename
 
-            await updateDocument(Quiz_submission, req.params.id, {
-                answers: quiz_submission.answers
+            await updateDocument(Exam_submission, req.params.id, {
+                answers: submission.answers
             })
 
             return res.send(formatResult(u, 'Feedback attachment was successfuly uploaded'))
@@ -1073,16 +1011,16 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/feedback/{id}/{answer}/{file_name}:
+ * /submission/feedback/{id}/{answer}/{file_name}:
  *   delete:
  *     tags:
- *       - Quiz_submission
- *     description: Delete quiz submission feedback attacments
+ *       - Exam_submission
+ *     description: Delete exam submission feedback attacments
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission id
+ *         description: Exam_submission id
  *         in: path
  *         required: true
  *         type: string
@@ -1112,37 +1050,37 @@ router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
             error
         } = validateObjectId(req.params.id)
         if (error)
-            return res.send(formatResult(400, "invalid quiz_submission id"))
+            return res.send(formatResult(400, "invalid submission id"))
 
         error = validateObjectId(req.params.answer)
         error = error.error
         if (error)
             return res.send(formatResult(400, "invalid question id"))
 
-        const quiz_submission = await findDocument(Quiz_submission, {
+        const submission = await findDocument(Exam_submission, {
             _id: req.params.id
         })
-        if (!quiz_submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
 
-        const answer = quiz_submission.answers.filter(e => e._id == req.params.answer)
+        const answer = submission.answers.filter(e => e._id == req.params.answer)
         if (!answer.length)
             return res.send(formatResult(404, 'answer not found'))
 
         if (answer[0].feedback_src != req.params.file_name)
             return res.send(formatResult(404, 'File not found'))
 
-        const quiz = await findDocument(Quiz, {
-            _id: quiz_submission.quiz
+        const exam = await findDocument(Exam, {
+            _id: submission.exam
         })
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!exam)
+            return res.send(formatResult(404, 'exam not found'))
 
         const user = await findDocument(User, {
-            _id: quiz.user
+            _id: exam.user
         })
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}/${req.params.file_name}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam._id}/submissions/${req.params.id}/${req.params.file_name}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -1157,10 +1095,10 @@ router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
                 return res.send(formatResult(500, err))
         })
 
-        quiz_submission.answers[quiz_submission.answers.indexOf(answer[0])].feedback_src = undefined
+        submission.answers[submission.answers.indexOf(answer[0])].feedback_src = undefined
 
-        await updateDocument(Quiz_submission, req.params.id, {
-            answers: quiz_submission.answers
+        await updateDocument(Exam_submission, req.params.id, {
+            answers: submission.answers
         })
         return res.send(formatResult(u, "DELETED"))
     } catch (error) {
@@ -1171,16 +1109,16 @@ router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}:
+ * /submission/{id}:
  *   delete:
  *     tags:
- *       - Quiz_submission
- *     description: Delete a quiz_submission
+ *       - Exam_submission
+ *     description: Delete a submission
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
- *         description: Quiz_submission id
+ *         description: Exam_submission id
  *         in: path
  *         required: true
  *         type: string
@@ -1202,25 +1140,25 @@ router.delete('/:id', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let quiz_submission = await findDocument(Quiz_submission, {
+        let submission = await findDocument(Exam_submission, {
             _id: req.params.id
         })
-        if (!quiz_submission)
-            return res.send(formatResult(404, 'quiz_submission not found'))
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
 
-        const result = await deleteDocument(Quiz_submission, req.params.id)
+        const result = await deleteDocument(Exam_submission, req.params.id)
 
-        let quiz = await findDocument(Quiz, {
-            _id: quiz_submission.quiz
-        })
-        if (!quiz.target.id) {
-            let user_group = await get_user_group(quiz._id)
+        let exam = await Exam.findOne({
+            _id: submission.exam
+        }).populate('course')
+        if (!exam.target.id) {
+            let user_group = await User_group.findOne({_id: exam.course.user_group})
 
             let faculty = await findDocument(Faculty, {
                 _id: user_group.faculty
             })
 
-            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty.college}/assignments/${exam._id}/submissions/${req.params.id}`)
             fs.exists(path, (exists) => {
                 if (exists) {
                     fs.remove(path)
@@ -1315,23 +1253,23 @@ function validateSubmittedAnswers(questions, answers, mode) {
     }
 }
 
-// replace quiz id by the quiz information
-async function injectQuiz(submissions) {
+// replace exam id by the exam information
+async function injectExam(submissions) {
     for (const i in submissions) {
-        const quiz = await Quiz.findOne({
-            _id: submissions[i].quiz
+        const exam = await Exam.findOne({
+            _id: submissions[i].exam
         })
-        submissions[i].quiz = quiz
+        submissions[i].exam = exam
     }
     return submissions
 }
 
-// add feedback to quiz submission
+// add feedback to exam submission
 async function injectUserFeedback(submissions) {
     for (const i in submissions) {
         for (const k in submissions[i].answers) {
             let feedback = await Comment.find({
-                "target.type": 'quiz_submission_answer',
+                "target.type": 'exam_submission_answer',
                 "target.id": submissions[i].answers[k]._id
             })
             feedback = await injectUser(simplifyObject(feedback), 'sender')
@@ -1341,32 +1279,32 @@ async function injectUserFeedback(submissions) {
     return submissions
 }
 
-async function get_user_group(quiz_id) {
-    let quiz = await findDocument(Quiz, {
+async function get_faculty_college_year(quiz_id) {
+    let exam = await findDocument(Exam, {
         _id: quiz_id
     })
     let course
 
-    if (quiz.target.type == 'chapter') {
+    if (exam.target.type == 'chapter') {
         let chapter = await findDocument(Chapter, {
-            _id: quiz.target.id
+            _id: exam.target.id
         })
         course = await findDocument(Course, {
             _id: chapter.course
         })
-        return await findDocument(User_group, {
-            _id: course.user_group
+        return await findDocument(Faculty_college_year, {
+            _id: course.faculty_college_year
         })
-    } else if (quiz.target.type == 'course') {
+    } else if (exam.target.type == 'course') {
         course = await findDocument(Course, {
-            _id: quiz.target.id
+            _id: exam.target.id
         })
-        return await findDocument(User_group, {
-            _id: course.user_group
+        return await findDocument(Faculty_college_year, {
+            _id: course.faculty_college_year
         })
     } else {
-        return await findDocument(User_group, {
-            _id: quiz.target.id
+        return await findDocument(Faculty_college_year, {
+            _id: exam.target.id
         })
     }
 }

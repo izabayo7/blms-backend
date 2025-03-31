@@ -21,6 +21,8 @@ const {
     simplifyObject,
     Quiz_submission
 } = require('../../utils/imports')
+const {Exam} = require("../../models/exams/exam.model");
+const {Exam_submission} = require("../../models/exam_submission/exam_submission.model");
 
 // create router
 const router = express.Router()
@@ -48,34 +50,6 @@ const router = express.Router()
  *       - target
  *       - content
  */
-
-/**
- * @swagger
- * /comment:
- *   get:
- *     tags:
- *       - Comment
- *     description: Get all comments
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        let results = await findDocuments(Comment, {reply: undefined}, u, u, u, u, u, {_id: -1})
-        results = await injectUser(results, 'sender')
-        results = await injectCommentsReplys(results)
-        return res.send(formatResult(u, u, results))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
 
 /**
  * @swagger
@@ -215,7 +189,7 @@ router.post('/', async (req, res) => {
 
         req.body.target.type = req.body.target.type.toLowerCase()
 
-        const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer', 'assignment_submission']
+        const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer', 'assignment_submission','exam_submission_answer']
 
         if (!allowedTargets.includes(req.body.target.type))
             return res.send(formatResult(400, 'invalid comment target_type'))
@@ -252,7 +226,11 @@ router.post('/', async (req, res) => {
                     _id: req.body.target.id
                 })
                 break;
-
+            case 'exam_submission_answer':
+                target = await findDocument(Exam_submission, {
+                    "answers._id": req.body.target.id
+                })
+                break;
             default:
                 break;
         }

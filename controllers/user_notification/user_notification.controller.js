@@ -44,37 +44,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /user_notification:
- *   get:
- *     tags:
- *       - User_notification
- *     description: Get all user_notifications
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-        let result = await findDocuments(User_notification)
-        if (!result.length)
-            return res.send(formatResult(404, 'User_notification list is empty'))
-
-        // result = await injectNotification(result)
-
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /user_notification/user:
  *   get:
  *     tags:

@@ -75,41 +75,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /course:
- *   get:
- *     tags:
- *       - Course
- *     description: Get all courses
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-    try {
-
-        let result = await findDocuments(Course)
-
-        if (result.length === 0)
-            return res.send(formatResult(404, 'Course list is empty'))
-
-        result = simplifyObject(result)
-        result = await injectUser(result, 'user')
-        result = await injectChapters(result)
-
-        return res.send(result)
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /course/statistics:
  *   get:
  *     tags:

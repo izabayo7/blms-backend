@@ -5,10 +5,56 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const quiz_submission_schema = new mongoose.Schema({
-    quiz: {
+/**
+ * @swagger
+ * definitions:
+ *   Exam_submission:
+ *     properties:
+ *       quiz:
+ *         type: string
+ *       user:
+ *         type: string
+ *       used_time:
+ *         type: number
+ *       auto_submitted:
+ *         type: boolean
+ *       marked:
+ *         type: boolean
+ *       published:
+ *         type: boolean
+ *       total_marks:
+ *         type: number
+ *       answers:
+ *         type: array
+ *         items:
+ *            type: object
+ *            properties:
+ *              text:
+ *                type: string
+ *              marks:
+ *                type: number
+ *              src:
+ *                type: string
+ *              choosed_options:
+ *                type: array
+ *                items:
+ *                  type: object
+ *                  properties:
+ *                    text:
+ *                      type: string
+ *                    src:
+ *                      type: string
+ *     required:
+ *       - quiz
+ *       - user
+ *       - used_time
+ *       - answers
+ */
+
+const exam_submission_schema = new mongoose.Schema({
+    exam: {
         type: String,
-        ref: 'quiz',
+        ref: 'exam',
         required: true
     },
     user: {
@@ -22,7 +68,7 @@ const quiz_submission_schema = new mongoose.Schema({
     },
     answers: [{
         not_done: {
-          type: Boolean
+            type: Boolean
         },
         text: {
             type: String
@@ -53,6 +99,10 @@ const quiz_submission_schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    cheated: {
+        type: Boolean,
+        default: false
+    },
     marked: {
         type: Boolean,
         default: false
@@ -73,12 +123,12 @@ const quiz_submission_schema = new mongoose.Schema({
     }
 })
 
-quiz_submission_schema.plugin(timestamps)
+exam_submission_schema.plugin(timestamps)
 
-// validate quiz_submision
-function validate_quiz_submission(credentials) {
+// validate exam_submission
+function validate_exam_submission(credentials) {
     const schema = {
-        quiz: Joi.ObjectId().required(),
+        exam: Joi.ObjectId().required(),
         used_time: Joi.number().required(),
         answers: Joi.array().min(1).items(Joi.object({
             _id: Joi.ObjectId(),
@@ -100,9 +150,9 @@ function validate_quiz_submission(credentials) {
     return Joi.validate(credentials, schema)
 }
 
-// create quiz_submisions model
-const quiz_submision = mongoose.model('quiz_submision', quiz_submission_schema)
+// create exam_submissions model
+const exam_submission = mongoose.model('exam_submission', exam_submission_schema)
 
 // export the model and the validation function
-module.exports.quiz_submision = quiz_submision
-module.exports.validate_quiz_submission = validate_quiz_submission
+module.exports.Exam_submission = exam_submission
+module.exports.validate_exam_submission = validate_exam_submission
