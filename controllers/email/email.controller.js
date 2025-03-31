@@ -189,6 +189,30 @@ exports.sendCollegeAccepted = async ({email, user_name, token}) => {
     }
 };
 
+exports.sendEmailConfirmation = async ({email, user_name, token}) => {
+    try {
+
+        const mail = confirm_email({user_name, token})
+        const _message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Email confirmation.',
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(_message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+
 exports.sendSubmissionEmail = async ({
                                          user_name,
                                          institution_name,

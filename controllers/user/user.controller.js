@@ -1,4 +1,5 @@
 // import dependencies
+const {sendEmailConfirmation} = require("../email/email.controller");
 const {Account_confirmation} = require("../../models/account_confirmations/account_confirmations.model");
 const {AcceptCollege} = require("../account_confirmations/account_confirmations.controller");
 const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
@@ -1457,8 +1458,15 @@ router.put('/', auth, async (req, res) => {
 
         if (req.body.email) {
             // create user account confirmation
-            await createAccountConfirmation({user_id: req.user._id, email: req.body.email})
+            const confirmation = await createAccountConfirmation({user_id: req.user._id, email: req.body.email})
             req.body.email = req.user.email
+            const {sent, err} = await sendEmailConfirmation({
+                email: confirmation.email,
+                user_name: req.user.sur_name + ' ' + rea.user.other_names,
+                token: confirmation.token,
+            });
+            if (err)
+                return res.send(formatResult(500, err));
         }
 
         let result = await updateDocument(User, req.user._id, req.body)
