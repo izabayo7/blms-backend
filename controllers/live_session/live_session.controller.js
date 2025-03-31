@@ -291,19 +291,26 @@ router.post('/', async (req, res) => {
 
         let callback = function () {
             console.log('dore wana')
-            MyEmitter.emit(`upcoming_livesession_${req.user._id}`, target.course.user_group);
+            MyEmitter.emit('socket_event', {
+                name: `upcoming_livesession_${req.user._id}`, data: target.course.user_group
+            });
         }
 
 
-        scheduleEvent(date,callback)
+        scheduleEvent(date, callback)
 
         date.setMinutes(date.getMinutes() + 1)
 
         callback = function () {
-            MyEmitter.emit(`upcoming_livesession_${req.user._id}`, target.course.user_group, true, result.data._id);
+            MyEmitter.emit('socket_event', {
+                name: `upcoming_livesession_${req.user._id}`,
+                data: {
+                    user_group: target.course.user_group, isLive: true, liveId: result.data._id
+                }
+            });
         }
 
-        scheduleEvent(date,callback)
+        scheduleEvent(date, callback)
 
         if (quiz) {
             quiz.target = {

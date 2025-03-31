@@ -164,7 +164,7 @@ router.get('/', [auth, filterUsers(["SUPERADMIN"])], async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics', [auth, filterUsers(["SUPERADMIN","ADMIN"])], async (req, res) => {
+router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (req, res) => {
     try {
         let total_users, total_students, total_instructors, total_staff;
         const student_category = await findDocument(User_category, {name: "STUDENT"})
@@ -244,7 +244,7 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN","ADMIN"])], async (re
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics/user_joins', [auth,filterUsers(["ADMIN"])], async (req, res) => {
+router.get('/statistics/user_joins', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
         const {start_date, end_date} = req.query
         const result = await User.aggregate([
@@ -303,7 +303,7 @@ router.get('/statistics/user_joins', [auth,filterUsers(["ADMIN"])], async (req, 
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:category', [auth,filterUsers(["ADMIN"])], async (req, res) => {
+router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
 
         if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
@@ -359,7 +359,7 @@ router.get('/college/:category', [auth,filterUsers(["ADMIN"])], async (req, res)
  *       500:
  *         description: Internal Server error
  */
-router.get('/faculty/:id/:category', [auth,filterUsers(["ADMIN"])], async (req, res) => {
+router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
         const {
             error
@@ -759,7 +759,9 @@ router.post('/', async (req, res) => {
                     return res.send(formatResult(404, `College ${req.body.college} users limit reached`))
                 } else if (user_count === college.maximum_users - 1) {
                     // notify the admin that user limit is over
-                    MyEmitter.emit(`user_limit_reached_${college._id}`);
+                    MyEmitter.emit('socket_event', {
+                        name: `user_limit_reached_${college._id}`
+                    });
                 }
             }
         } else {
@@ -788,12 +790,13 @@ router.post('/', async (req, res) => {
         })
 
         // notify the admin that a new user joined
-        MyEmitter.emit(`new_user_in_${college._id}`, result.data);
+        MyEmitter.emit('socket_event',{name:`new_user_in_${college._id}`, data: result.data
+    });
 
         await User_invitation.findOneAndUpdate({
             email: req.body.email,
             college: college._id,
-        },{status: "ACCEPTED"})
+        }, {status: "ACCEPTED"})
 
         const new_user = result.data
         result.data = {
@@ -1308,7 +1311,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
  */
 router.put('/status/:username/:value', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
-        if (!['hold','unhold'].includes(req.params.value))
+        if (!['hold', 'unhold'].includes(req.params.value))
             return res.send(formatResult(400, "invalid status"))
 
         // check if user exist

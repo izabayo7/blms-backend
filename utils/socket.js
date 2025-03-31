@@ -66,18 +66,77 @@ module.exports.listen = (app) => {
          * messsage events
          */
 
-        if (user.category.name == "ADMIN") {
-            MyEmitter.on(`new_user_in_${user.college}`, (user) => {
-                socket.emit('res/users/new', {
-                    user
-                });
-            });
+        MyEmitter.on('socket_event', async ({name, data}) => {
+            if (user.category.name === "ADMIN") {
+                if (name === `new_user_in_${user.college}`)
+                    socket.emit('res/users/new', {
+                        data
+                    });
+                else if (name === `user_limit_reached_${user.college}`)
+                    socket.emit('user_limit_reached');
+            } else if (user.category.name === "INSTRUCTOR")
+                if (name === `upcoming_livesession_${user._id}`) {
+                    const {user_group, isLive, liveId} = data
+                    let newDocument = new Notification(isLive ? {
+                            link: `/live/${liveId}`,
+                            content: "Live session just started"
+                        } : {
+                            content: "you have a live class in 5 minutes",
+                        }
+                    )
+                    const saveDocument = await newDocument.save()
+                    if (saveDocument) {
 
-            MyEmitter.on(`user_limit_reached_${user.college}`, () => {
-                socket.emit('user_limit_reached');
-            });
+                        const user_user_groups = await User_user_group.find({
+                            user_group: user_group
+                        })
 
+                        user_user_groups.forEach(async _doc => {
+                            if (_doc.user !== id) {
+                                // create notification for user
+                                let userNotification = await User_notification.findOne({
+                                    user: _doc.user
+                                })
+                                if (!userNotification) {
+                                    userNotification = new User_notification({
+                                        user: _doc.user,
+                                        notifications: [{
+                                            id: newDocument._id
+                                        }]
+                                    })
 
+                                } else {
+                                    userNotification.notifications.push({
+                                        id: newDocument._id
+                                    })
+                                }
+
+                                let _newDocument = await userNotification.save()
+
+                                if (_newDocument) {
+                                    let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                                    notification.id = undefined
+                                    notification.notification = newDocument
+                                    // send the notification
+                                    socket.broadcast.to(_doc.user).emit('new-notification', {
+                                        notification: notification
+                                    })
+                                }
+                            }
+                        })
+
+                    }
+
+                }
+
+            if(name === `join_group_${id}`) {
+                const contacts = await formatContacts([data])
+                socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})
+            }
+
+        })
+
+        if (user.category.name === "ADMIN") {
             socket.on("users/recentlyJoined", async () => {
                 const res = await User.find({
                     college: user.college
@@ -90,69 +149,7 @@ module.exports.listen = (app) => {
 
                 socket.emit('res/users/recentlyJoined', res);
             })
-
-        } else if (user.category.name == "INSTRUCTOR") {
-
-            // tell users that live session is near
-            MyEmitter.on(`upcoming_livesession_${user._id}`, async (user_group, isLive, liveId) => {
-                console.log('birabaye shn ', user_group, ' at ', new Date())
-                let newDocument = new Notification(isLive ? {
-                        link: `/live/${liveId}`,
-                        content: "Live session just started"
-                    } : {
-                        content: "you have a live class in 5 minutes",
-                    }
-                )
-                const saveDocument = await newDocument.save()
-                if (saveDocument) {
-
-                    const user_user_groups = await User_user_group.find({
-                        user_group: user_group
-                    })
-
-                    user_user_groups.forEach(async _doc => {
-                        if (_doc.user != id) {
-                            // create notification for user
-                            let userNotification = await User_notification.findOne({
-                                user: _doc.user
-                            })
-                            if (!userNotification) {
-                                userNotification = new User_notification({
-                                    user: _doc.user,
-                                    notifications: [{
-                                        id: newDocument._id
-                                    }]
-                                })
-
-                            } else {
-                                userNotification.notifications.push({
-                                    id: newDocument._id
-                                })
-                            }
-
-                            let _newDocument = await userNotification.save()
-
-                            if (_newDocument) {
-                                let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
-                                notification.id = undefined
-                                notification.notification = newDocument
-                                // send the notification
-                                socket.broadcast.to(_doc.user).emit('new-notification', {
-                                    notification: notification
-                                })
-                            }
-                        }
-                    })
-
-                }
-
-            });
         }
-
-        MyEmitter.on(`join_group_${id}`, async(message) => {
-            const contacts = await formatContacts([message])
-            socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: message.content.includes(id)})
-        });
 
         socket.on('message/contacts', async () => {
             // get the latest conversations
