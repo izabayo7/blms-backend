@@ -378,7 +378,7 @@ exports.marks_release_email = ({
                                 "
                     >
                         Hi ${user_names}. <br>
-                        Instructor ${instructor_names} released marks for ${assignment_name} ${assignment_type}. <br>
+                        Instructor ${instructor_names} released marks for ${assignment_type} ${assignment_name}. <br>
                         Click the button below to view your results. <br>
         
                     </div>

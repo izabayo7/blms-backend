@@ -668,7 +668,7 @@ router.put('/release_marks/:id', async (req, res) => {
             {
                 status: quiz.status == 1 ? 2 : 1
             })
-        if (quiz.status === 2) {
+        if (quiz.status === 1) {
             const submissions = await Quiz_submission.find({quiz: req.params.id}).populate('user')
             for (const i in submissions) {
                 if (submissions[i].user.email) {
