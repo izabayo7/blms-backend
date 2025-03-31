@@ -653,7 +653,7 @@ router.put('/', auth, async (req, res) => {
 
     let result = await updateDocument(User, user._id, req.body)
 
-    return res.send(result)
+    return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result.data)))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
