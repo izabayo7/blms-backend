@@ -1,4 +1,5 @@
 // import dependencies
+const {filterUsers} = require("../../middlewares/auth.middleware");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {
     express,
@@ -33,6 +34,8 @@ const router = express.Router()
  *   get:
  *     tags:
  *       - College_payment_plans
+ *     security:
+ *       - bearerAuth: -[]
  *     description: returns the college payment plans
  *     parameters:
  *       - name: college
@@ -47,7 +50,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', getCollegePaymentPlans)
+router.get('/', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegePaymentPlans)
 
 /**
  * @swagger
@@ -55,6 +58,8 @@ router.get('/', getCollegePaymentPlans)
  *   get:
  *     tags:
  *       - College_payment_plans
+ *     security:
+ *       - bearerAuth: -[]
  *     description: returns college current payment plan
  *     parameters:
  *       - name: college
@@ -69,7 +74,7 @@ router.get('/', getCollegePaymentPlans)
  *       500:
  *         description: Internal Server error
  */
-router.get('/current', getCollegeCurrentPaymentPlan)
+router.get('/current', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegeCurrentPaymentPlan)
 
 /**
  * @swagger
@@ -77,6 +82,8 @@ router.get('/current', getCollegeCurrentPaymentPlan)
  *   post:
  *     tags:
  *       - College_payment_plans
+ *     security:
+ *       - bearerAuth: -[]
  *     description: creates a college payment plan
  *     parameters:
  *       - name: college
@@ -105,7 +112,7 @@ router.get('/current', getCollegeCurrentPaymentPlan)
  *       500:
  *         description: Internal Server error
  */
-router.post('/', createCollegePaymentPlan)
+router.post('/', filterUsers(["ADMIN", "SUPERADMIN"]), createCollegePaymentPlan)
 
 /**
  * returns colleges payment plans
