@@ -300,6 +300,9 @@ exports.reset_password = ({
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width" />
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+        </style>
     </head>
   
     <body style="margin: 0; background-color: #ececec">
@@ -477,7 +480,9 @@ exports.requestCallback = ({
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width" />
-      <!-- <link rel="stylesheet" href="https://apis.kurious.rw/assets/css/invitation_email.css"> -->
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+        </style>
     </head>
     
     <body style="margin: 0; background-color: #ececec">
@@ -605,7 +610,9 @@ exports.contactUs = ({
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width" />
-      <!-- <link rel="stylesheet" href="https://apis.kurious.rw/assets/css/invitation_email.css"> -->
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+        </style>
     </head>
     
     <body style="margin: 0; background-color: #ececec">
@@ -747,7 +754,9 @@ exports.invitationToSystem = ({
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width" />
-        <!-- <link rel="stylesheet" href="https://apis.kurious.rw/assets/css/invitation_email.css"> -->
+        <style>
+          @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+        </style>
       </head>
     
       <body style="margin: 0; background-color: #ececec">
