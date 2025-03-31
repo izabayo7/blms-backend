@@ -76,6 +76,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Live_session
  *     description: Returns live_sessions to and from a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: target
  *         description: Target type of the live_session
