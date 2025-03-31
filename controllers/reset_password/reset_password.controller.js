@@ -78,6 +78,9 @@ exports.updatePasswordReset = async (req, res) => {
     if (token.expiration < Date.now())
       return res.send(formatResult(400, 'PasswordReset Token has expired'))
 
+    if (user._id != token.user)
+      return res.send(formatResult(403, 'Invalid Token'));
+
     await update_password({ password: req.body.password, user_id: user._id })
 
     token.status = 'CLOSED'
@@ -90,6 +93,3 @@ exports.updatePasswordReset = async (req, res) => {
     return res.send(formatResult(500, err))
   }
 }
-
-// export the router
-module.exports = router
