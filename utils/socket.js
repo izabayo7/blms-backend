@@ -529,6 +529,14 @@ module.exports.listen = (app) => {
 
         })
 
+        // handle raise or lower hand requests and responses
+        // message can be [request_presenting, revert_presenting_request, accept_presenting, deny_presenting]
+        socket.on('live/presentation_request', async ({receiver,message}) => {
+            receivers.forEach(receiver => {
+                socket.broadcast.to(receiver.id).emit('res/live/presentation_request', {message})
+            })
+        })
+
         // notify instructor that you are still following
         socket.on('res/live/checkAttendance', async ({receivers, attendance, session_id}) => {
 
