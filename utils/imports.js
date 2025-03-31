@@ -1405,28 +1405,28 @@ exports.injectFaculty_college_year = async (courses) => {
   for (const i in courses) {
     const faculty_college_year = await this.findDocument(this.Faculty_college_year, {
       _id: courses[i].faculty_college_year
-    }, { college_year: 1, faculty_college: 1, _id: 0 }, true, false)
+    }, { college_year: 1, faculty_college: 1 }, true, false)
 
     courses[i].faculty_college_year = faculty_college_year
 
     const collegeYear = await this.findDocument(this.College_year, {
       _id: faculty_college_year.college_year
-    }, { digit: 1, _id: 0 }, true, false)
+    }, { digit: 1 }, true, false)
     courses[i].faculty_college_year.college_year = collegeYear
 
     const faculty_college = await this.findDocument(this.Faculty_college, {
       _id: faculty_college_year.faculty_college
-    }, { faculty: 1, college: 1, _id: 0, _v: 0 }, true, false)
+    }, { faculty: 1, college: 1 }, true, false)
     courses[i].faculty_college_year.faculty_college = faculty_college
 
     const faculty = await this.findDocument(this.Faculty, {
       _id: faculty_college.faculty
-    }, { name: 1, _id: 0, _v: 0 }, true, false)
+    }, { name: 1 }, true, false)
     courses[i].faculty_college_year.faculty_college.faculty = faculty
-
+    console.log(faculty_college)
     const college = await this.findDocument(this.College, {
       _id: faculty_college.college
-    }, { name: 1, logo: 1, _id: 0 }, true, false)
+    }, { name: 1, logo: 1 }, true, false)
 
     courses[i].faculty_college_year.faculty_college.college = college
     if (courses[i].faculty_college_year.faculty_college.college.logo) {
