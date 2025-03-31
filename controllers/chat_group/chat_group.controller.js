@@ -605,7 +605,7 @@ router.put('/:code/profile', async (req, res) => {
     } = validateChat_group_code(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-
+      
     // check if chat_group exist
     const chat_group = await findDocument(Chat_group, {
       code: req.params.code

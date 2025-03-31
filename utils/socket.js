@@ -37,14 +37,14 @@ module.exports.listen = (app) => {
 
     const user_name = socket.handshake.query.user_name
 
-    // const user = await findDocument(User, { user_name: user_name })
-    // if (!user) {
-    //   socket.error('user not found')
-    //   // socket.disconnect(true)
-    // }
+    const user = await findDocument(User, { user_name: user_name })
+    if (!user) {
+      socket.error('user not found')
+      socket.disconnect(true)
+    }
 
-    // const id = user._id.toString()
-    const id = 'any'
+    const id = user._id.toString()
+    // const id = 'any'
 
     socket.join(id)
 
@@ -56,10 +56,10 @@ module.exports.listen = (app) => {
     socket.on('message/contacts', async () => {
       // get the latest conversations
       const latestMessages = await getLatestMessages(id)
-
+console.log(latestMessages)
       // format the contacts
       const contacts = await formatContacts(latestMessages, id)
-
+console.log(contacts)
       // send the contacts
       socket.emit('res/message/contacts', {
         contacts: contacts
@@ -143,7 +143,8 @@ module.exports.listen = (app) => {
           return
         }
 
-        await Create_or_update_message('SYSTEM', conversation_id, content, u, id)
+        const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
+        console.log(id,result)
       }
 
       // send success mesage
