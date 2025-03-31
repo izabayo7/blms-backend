@@ -64,6 +64,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Faculty
  *     description: Returns faculties in a specified college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: College's id
@@ -126,6 +128,8 @@ router.get('/college/:id', async (req, res) => {
  *     tags:
  *       - Faculty
  *     description: Returns faculties that are not in a college hence importable
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: College's id
