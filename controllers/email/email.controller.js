@@ -74,7 +74,7 @@ exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
         const message = {
             from: process.env.EMAIL,
             to: process.env.COMMUNICATION_TEAM_EMAIL,
-            subject: names + ' Contacted by ' + user_name,
+            subject: 'Contacted by ' + user_name,
             html: mail,
         };
 
@@ -107,5 +107,44 @@ exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
     }
 };
 
+exports.sendRequestCallback = async ({ user_name, institution_name, role_at_institution, phone_number }) => {
+    try {
 
+        const mail = requestCallback({ user_name, institution_name, role_at_institution, phone_number })
+
+        const message = {
+            from: process.env.EMAIL,
+            to: process.env.COMMUNICATION_TEAM_EMAIL,
+            subject: user_name + ' requested a callback.',
+            html: mail,
+        };
+
+        /*
+            {
+                "college": "5f8f38ad558d86f96186daf0",
+                "category": "STUDENT",
+                "emails": [
+                    "nadibire08@gmail.com"
+                ]
+            }
+        */
+
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
+
+        return {
+            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    }
+    catch (err) {
+        console.log(err)
+        return {
+            err: err
+        }
+    }
+};
 
