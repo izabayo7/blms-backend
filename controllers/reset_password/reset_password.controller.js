@@ -23,7 +23,7 @@ exports.getPasswordResetbyToken = async (req, res) => {
 
     result = await injectUser(result, 'user')
 
-    res.send(formatResult(200, u, result))
+    res.send(formatResult(200, u, result[0]))
   } catch
   (e) {
     return res.send(formatResult(500, e))
