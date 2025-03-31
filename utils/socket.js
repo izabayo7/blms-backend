@@ -84,6 +84,31 @@ module.exports.listen = (app) => {
 
     })
 
+    // check if conversation_id is valid
+    socket.on('message/conversation_id', async ({
+      conversation_id
+    }) => {
+
+      let conversation_found = false
+
+      if (parseInt(conversation_id)) {
+        const group = await findDocument(Chat_group, {
+          code: conversation_id
+        })
+        if (group && group.code == conversation_id) {
+          conversation_found = true
+        }
+      } else {
+        const user = await findDocument(User, {
+          user_name: conversation_id
+        })
+        if (user) {
+          conversation_found = true
+        }
+      }
+      socket.emit('res/message/conversation_id', conversation_found);
+    })
+
 
     // save and deriver new messages
     socket.on('message/create', async ({
@@ -128,9 +153,9 @@ module.exports.listen = (app) => {
       inviter,
       group_code
     }) => {
-// handle errors
+      // handle errors
       const group = await findDocument(Chat_group, { code: group_code })
-      const message = await findDocument(Message, {group: group._id}, {receivers: 0, _id: 0})
+      const message = await findDocument(Message, { group: group._id }, { receivers: 0, _id: 0 })
 
       group.members.forEach(m => {
         // send the message
