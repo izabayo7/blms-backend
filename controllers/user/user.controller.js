@@ -140,6 +140,36 @@ router.get('/', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /user/statistics:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics', auth, async (req, res) => {
+  try {
+    console.log(req.user)
+    let users = req.user.college ? await findDocuments(User, { college: user.college }) : await findDocuments(User)
+
+    users = await add_user_details(users)
+
+    return res.send(formatResult(u, u, users))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /user/college/{id}/{category}:
  *   get:
  *     tags:
