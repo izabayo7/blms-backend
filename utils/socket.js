@@ -578,6 +578,58 @@ module.exports.listen = (app) => {
 
         });
 
+        // tell instructor that student submitted
+        socket.on('student-submitted', async ({
+                                                userId,
+                                                route,
+                                                content
+                                            }) => {
+
+            let newDocument = new Notification({
+                user: id,
+                content: content,
+                link: route,
+            })
+            const saveDocument = await newDocument.save()
+            if (saveDocument) {
+
+                newDocument = simplifyObject(newDocument)
+
+                newDocument = await injectUser([newDocument], 'user')
+                newDocument = newDocument[0]
+
+                // create notification for user
+                let userNotification = await User_notification.findOne({
+                    user: userId
+                })
+                if (!userNotification) {
+                    userNotification = new User_notification({
+                        user: userId,
+                        notifications: [{
+                            id: newDocument._id
+                        }]
+                    })
+
+                } else {
+                    userNotification.notifications.push({
+                        id: newDocument._id
+                    })
+                }
+
+                let _newDocument = await userNotification.save()
+
+                if (_newDocument) {
+                    let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                    notification.id = undefined
+                    notification.notification = newDocument
+                    // send the notification
+                    socket.broadcast.to(userId).emit('new-notification', {
+                        notification: notification
+                    })
+                }
+            }
+
+        });
 
     });
 
