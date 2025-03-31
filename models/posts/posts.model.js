@@ -1,6 +1,6 @@
 // import dependencies
 const { Schema } = require('mongoose')
-const { paginate } = require('mongoose-paginate-v2')
+const paginate = require('mongoose-paginate-v2')
 const {
     mongoose,
     Joi,
