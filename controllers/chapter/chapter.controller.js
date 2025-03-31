@@ -558,7 +558,7 @@ router.put('/:id/document', async (req, res) => {
       _id: faculty_college_year.faculty_college
     })
 
-    const dir = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`
+    const dir = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`)
 
     fs.createFile(`${dir}/index.html`, (error) => {
       if (error)
