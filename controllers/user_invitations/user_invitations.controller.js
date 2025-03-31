@@ -39,3 +39,44 @@ exports.getAllInvitations = async (req, res) => {
   }
 }
 
+/***
+ * Get current invitations invitations
+ * @param req
+ * @param res
+ */
+exports.getMyInvitations = async (req, res) => {
+  try {
+    const { limit, page } = req.query;
+
+    if (!page)
+      return res.send(formatResult(400, 'Page query is required'))
+
+    if (!limit)
+      return res.send(formatResult(400, 'Limit query is required'))
+
+    if (page < 1)
+      return res.send(formatResult(400, 'Page query must be greater than 0'))
+
+    if (limit < 1)
+      return res.send(formatResult(400, 'Limit query must be greater than 0'))
+
+    const options = {
+      page: page,
+      limit: limit,
+      populate: 'category'
+    };
+
+    const user = await User.findOne({
+      user_name: req.user.user_name
+    })
+    if (!user)
+      return res.send(formatResult(400, `user not found`))
+
+    const invitations = await User_invitation.paginate({ user: user._id }, options)
+
+    res.send(formatResult(200, u, invitations))
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
