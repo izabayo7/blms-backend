@@ -198,7 +198,6 @@ router.get('/user', auth, async (req, res) => {
                         })
                         quizes = quizes.concat(live_quizes)
                     }
-
                     let foundSubmissions = []
                     quizes = await addQuizTarget(quizes)
                     for (const i in quizes) {
@@ -245,13 +244,11 @@ router.get('/user', auth, async (req, res) => {
                         }
                         courses[j].marking_status += '%'
                         courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
-                        coursesWithSubmissions.push(courses[j])
                     }
 
                 }
-
+                coursesWithSubmissions.push(courses[j])
             }
-
             result = coursesWithSubmissions
         } else {
             // check if there are quizes made by the user
