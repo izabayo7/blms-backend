@@ -29,7 +29,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/faculty-college:
+ * /faculty-college:
  *   get:
  *     tags:
  *       - FacultyCollege
@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/faculty-college:
+ * /faculty-college:
  *   post:
  *     tags:
  *       - FacultyCollege
@@ -122,7 +122,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/faculty-college/{id}:
+ * /faculty-college/{id}:
  *   delete:
  *     tags:
  *       - FacultyCollege

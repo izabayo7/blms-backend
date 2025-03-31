@@ -70,7 +70,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/student:
+ * /student:
  *   get:
  *     tags:
  *       - Student
@@ -101,7 +101,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/student/college/{id}:
+ * /student/college/{id}:
  *   get:
  *     tags:
  *       - Student
@@ -148,7 +148,7 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/student/{id}:
+ * /student/{id}:
  *   get:
  *     tags:
  *       - Student
@@ -189,7 +189,7 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/student:
+ * /student:
  *   post:
  *     tags:
  *       - Student
@@ -244,7 +244,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/student/login:
+ * /student/login:
  *   post:
  *     tags:
  *       - Student
@@ -296,7 +296,7 @@ router.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/student/{id}:
+ * /student/{id}:
  *   put:
  *     tags:
  *       - Student
@@ -358,7 +358,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/student/{id}:
+ * /student/{id}:
  *   delete:
  *     tags:
  *       - Student

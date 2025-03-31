@@ -57,7 +57,7 @@ const upload = multer({
 
 /**
  * @swagger
- * /kurious/message:
+ * /message:
  *   get:
  *     tags:
  *       - Message
@@ -83,7 +83,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/message/user/{id}:
+ * /message/user/{id}:
  *   get:
  *     tags:
  *       - Message
@@ -117,7 +117,7 @@ router.get('/user/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/message:
+ * /message:
  *   post:
  *     tags:
  *       - Message
@@ -169,7 +169,7 @@ router.post('/', upload.single('attachments'), async (req, res) => {
 
 /**
  * @swagger
- * /kurious/message/{id}:
+ * /message/{id}:
  *   put:
  *     tags:
  *       - Message
@@ -218,7 +218,7 @@ router.put('/:id', upload.single('attachments'), async (req, res) => {
 
 /**
  * @swagger
- * /kurious/message/{id}:
+ * /message/{id}:
  *   delete:
  *     tags:
  *       - Message

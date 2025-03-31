@@ -58,7 +58,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/chat_group:
+ * /chat_group:
  *   get:
  *     tags:
  *       - ChatGroup
@@ -88,7 +88,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chat_group/college/{id}:
+ * /chat_group/college/{id}:
  *   get:
  *     tags:
  *       - ChatGroup
@@ -126,7 +126,7 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chat_group/user/{id}:
+ * /chat_group/user/{id}:
  *   get:
  *     tags:
  *       - ChatGroup
@@ -167,7 +167,7 @@ router.get('/user/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chat_group:
+ * /chat_group:
  *   post:
  *     tags:
  *       - ChatGroup
@@ -230,7 +230,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chat_group/{id}:
+ * /chat_group/{id}:
  *   put:
  *     tags:
  *       - ChatGroup
@@ -287,7 +287,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chat_group/{id}:
+ * /chat_group/{id}:
  *   delete:
  *     tags:
  *       - ChatGroup

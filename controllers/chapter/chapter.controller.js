@@ -31,7 +31,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/chapter:
+ * /chapter:
  *   post:
  *     tags:
  *       - Chapter
@@ -87,7 +87,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chapter/{id}:
+ * /chapter/{id}:
  *   put:
  *     tags:
  *       - Chapter
@@ -137,7 +137,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/chapter/{id}:
+ * /chapter/{id}:
  *   delete:
  *     tags:
  *       - Course

@@ -59,7 +59,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/quiz:
+ * /quiz:
  *   get:
  *     tags:
  *       - Quiz

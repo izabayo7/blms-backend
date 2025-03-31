@@ -27,7 +27,7 @@ const swaggerOptions = {
         },
         schemes: ['http'],
         host: host,
-        basePath: '/',
+        basePath: '/kurious',
         securityDefinitions: {
             bearerAuth: {
                 type: 'apiKey',

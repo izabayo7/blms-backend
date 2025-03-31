@@ -27,7 +27,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/notification:
+ * /notification:
  *   get:
  *     tags:
  *       - Notification
@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/notification/user/{id}:
+ * /notification/user/{id}:
  *   get:
  *     tags:
  *       - Notification
@@ -86,7 +86,7 @@ router.get('/user/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/notification:
+ * /notification:
  *   post:
  *     tags:
  *       - Notification
@@ -136,7 +136,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/notification/{id}:
+ * /notification/{id}:
  *   put:
  *     tags:
  *       - Notification
@@ -184,7 +184,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/notification/{id}:
+ * /notification/{id}:
  *   delete:
  *     tags:
  *       - Notification

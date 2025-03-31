@@ -1,4 +1,4 @@
-function paginatedResults(model, query) {
+function search(model, query) {
     return async (req, res, next) => {
       const page = parseInt(req.query.page)
       const limit = parseInt(req.query.limit)
@@ -30,3 +30,4 @@ function paginatedResults(model, query) {
       }
     }
   }
+  module.exports.search = search

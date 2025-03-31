@@ -54,7 +54,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/course:
+ * /course:
  *   get:
  *     tags:
  *       - Course
@@ -84,7 +84,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/college/{id}:
+ * /course/college/{id}:
  *   get:
  *     tags:
  *       - Course
@@ -146,7 +146,7 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/instructor/{id}:
+ * /course/instructor/{id}:
  *   get:
  *     tags:
  *       - Course
@@ -196,7 +196,7 @@ router.get('/instructor/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/instructor/{instructorId}/{courseName}:
+ * /course/instructor/{instructorId}/{courseName}:
  *   get:
  *     tags:
  *       - Course
@@ -254,7 +254,7 @@ router.get('/instructor/:instructorId/:courseName', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/student/{id}:
+ * /course/student/{id}:
  *   get:
  *     tags:
  *       - Course
@@ -310,7 +310,7 @@ router.get('/student/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/student/{studentId}/{courseName}:
+ * /course/student/{studentId}/{courseName}:
  *   get:
  *     tags:
  *       - Course
@@ -376,7 +376,7 @@ router.get('/student/:studentId/:courseName', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/{id}:
+ * /course/{id}:
  *   get:
  *     tags:
  *       - Course
@@ -417,7 +417,7 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course:
+ * /course:
  *   post:
  *     tags:
  *       - Course
@@ -476,7 +476,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/tooglePublishment/{id}:
+ * /course/tooglePublishment/{id}:
  *   put:
  *     tags:
  *       - Course
@@ -534,7 +534,7 @@ router.put('/tooglePublishment/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/{id}:
+ * /course/{id}:
  *   put:
  *     tags:
  *       - Course
@@ -592,7 +592,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/course/{id}:
+ * /course/{id}:
  *   delete:
  *     tags:
  *       - Course
