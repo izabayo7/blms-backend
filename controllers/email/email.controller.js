@@ -26,7 +26,7 @@ exports.sendInvitationMail = async ({ email, token, names }) => {
             body: {
                 name: names,
                 email,
-                intro: 'You was invited on Kurious.<br>',
+                intro: 'invited on Kurious.<br>',
                 action: {
                     instructions: 'Click to complete the process',
                     button: {
@@ -44,7 +44,7 @@ exports.sendInvitationMail = async ({ email, token, names }) => {
         const message = {
             from: process.env.EMAIL,
             to: email,
-            subject: 'You was Invited on Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
+            subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
             html: mail,
         };
 
