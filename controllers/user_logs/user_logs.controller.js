@@ -11,6 +11,7 @@ const {
     findDocument,
     Course,
     Live_session,
+    u,
     formatResult
 } = require('../../utils/imports')
 
@@ -75,7 +76,7 @@ router.get('/statistics/online', async (req, res) => {
         const users = await User.find({college: req.user.college}, {_id: 1})
 
         const result = await User_logs.aggregate([
-            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {"logs.createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
             {"$match": {user: {$in: users.map(x => x._id.toString())}}},
             {"$match": {"logs.online": true}},
             {
@@ -91,7 +92,7 @@ router.get('/statistics/online', async (req, res) => {
                             }
                         ]
                     },
-                    "total_submissions": {"$sum": 1}
+                    "total_users": {"$sum": 1}
                 }
             },
             {"$sort": {"_id": 1}}
