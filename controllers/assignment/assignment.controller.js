@@ -61,16 +61,17 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
                 status: {$ne: "DELETED"}
             }, u, u, u, u, u, {_id: -1})
         } else {
-            const instructor_category = await User_category.findOne({name: "INSTRUCTOR"})
             const user_user_groups = await User_user_group.find({user: req.user._id})
-            const _instructors = await User.find({college: req.user.college, category: instructor_category._id})
-            const instructors = await User_user_group.find({
-                user_group: {$in: user_user_groups.map(x => x.user_group)},
-                user: {$in: _instructors.map(x => x._id.toString())}
+            const courses = await User_user_group.find({
+                user_group: {$in: user_user_groups.map(x => x.user_group)}
             })
-
+            const ids = courses.map(x=>x._id.toString())
+            const chapters = await Chapter.find({course: {$in: ids}},{_id: 1})
+            chapters.map(x=>{
+                ids.push(x._id.toString())
+            })
             assignments = await findDocuments(Assignment, {
-                user: {$in: instructors.map(x => x.user)},
+                "target.id": {$in: ids},
                 status: {$in: ["PUBLISHED", "RELEASED"]}
             }, u, u, u, u, u, {_id: -1})
             for (const i in assignments) {
