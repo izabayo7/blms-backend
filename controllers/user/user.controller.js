@@ -712,6 +712,9 @@ router.put('/:id/password', auth, async (req, res) => {
     if (!user)
       return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 
+    if (req.user.user_name !== user.user_name)
+      return res.send(formatResult(403, 'YOU ARE NOT AUTHORIZED'))
+
     const validPassword = await compare(req.body.current_password, user.password);
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
