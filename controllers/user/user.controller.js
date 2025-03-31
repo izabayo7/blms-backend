@@ -994,13 +994,13 @@ router.post('/', async (req, res) => {
                 return res.send(formatResult(404, `College ${req.body.college} Not Found`))
 
             if (user_category.name === 'ADMIN') {
-                const find_admin = await findDocument(User, {
+                const find_admin = await findDocuments(User, {
                     category: user_category._id,
                     college: college._id
                 })
 
-                if (find_admin)
-                    return res.send(formatResult(404, `College ${college.name} can't have more than one admin`))
+                if (find_admin.length > 2)
+                    return res.send(formatResult(404, `College ${college.name} can't have more than three admin`))
             } else {
                 let user_count = await countDocuments(User, {college: college._id})
                 if (user_count >= college.maximum_users) {
