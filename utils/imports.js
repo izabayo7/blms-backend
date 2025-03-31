@@ -1930,8 +1930,8 @@ exports.addQuizTarget = async (quizes) => {
                 course = await this.Course.findOne({
                     _id: chapter ? chapter.course : quizes[i].target.id
                 }).populate('user_group')
-                quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group'])
-                quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt','_id']) : '-'
+                quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group','_id'])
+                quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
 
             }
     }
