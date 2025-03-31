@@ -1,4 +1,5 @@
 // import dependencies
+const {validate_assignment} = require("../../models/assignments/assignments.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {Assignment} = require("../../models/assignments/assignments.model");
 const {sendReleaseMarskEmail} = require("../email/email.controller");
@@ -462,7 +463,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         let {
             error
@@ -470,98 +471,46 @@ router.put('/:id', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        error = validate_quiz(req.body)
+        error = validate_assignment(req.body)
         error = error.error
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
-        })
-
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create quiz'))
-
         // check if quiz exist
-        let quiz = await findDocument(Quiz, {
+        let assignment = await findDocument(Assignment, {
             _id: req.params.id,
-            user: user._id
+            user: req.user._id
         }, u, false)
-        if (!quiz)
-            return res.send(formatResult(404, 'quiz not found'))
+        if (!assignment)
+            return res.send(formatResult(404, 'assignment not found'))
 
-        let quiz_copy = quiz
+        let _copy = assignment
 
         // check if quizname exist
-        quiz = await findDocument(Quiz, {
+        assignment = await findDocument(Quiz, {
             _id: {
                 $ne: req.params.id
             },
-            name: req.body.name
+            title: req.body.title
         })
-        if (quiz)
+        if (assignment)
             return res.send(formatResult(400, 'name was taken'))
 
-        quiz = quiz_copy
-        quiz_copy = simplifyObject(quiz)
+        assignment = _copy
+        // _copy = simplifyObject(assignment)
 
-        const validQuestions = validateQuestions(req.body.questions)
-        if (validQuestions.status !== true)
-            return res.send(formatResult(400, validQuestions.error))
+        assignment.title = req.body.name
+        assignment.passMarks = req.body.passMarks
+        assignment.dueDate = req.body.dueDate
+        assignment.total_marks = req.body.total_marks
+        assignment.user = req.user._id
 
-        req.body.total_marks = validQuestions.total_marks
+        await assignment.save()
 
-        quiz.name = req.body.name
-        quiz.instructions = req.body.instructions
-        quiz.duration = req.body.duration
-        quiz.questions = req.body.questions
-        quiz.total_marks = req.body.total_marks
-        quiz.user = user._id
-        quiz.published = req.body.published
-        quiz.passMarks = req.body.passMarks
-
-        await quiz.save()
-
-
-        // delete removed files
-        for (const i in quiz_copy.questions) {
-            if (
-                quiz_copy.questions[i].type.includes("image_select")
-            ) {
-                let current_question = quiz.questions.filter(q => q._id == quiz_copy.questions[i]._id)
-                current_question = current_question[0]
-                for (const j in quiz_copy.questions[i].options.choices) {
-                    let deletePicture = true
-                    if (current_question) {
-                        if (current_question.type.includes('image_select')) {
-                            for (const k in current_question.options.choices) {
-                                if (quiz_copy.questions[i].options.choices[j].src === current_question.options.choices[k].src) {
-                                    deletePicture = false
-                                }
-                            }
-                        }
-                    }
-                    if (deletePicture) {
-                        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`)
-                        fs.exists(path, (exists) => {
-                            if (exists) {
-                                fs.unlink(path)
-                            }
-                        })
-                    }
-                }
-            }
-        }
-        quiz = await addQuizUsages([quiz])
-        quiz = await addAttachedCourse(quiz)
-        quiz = quiz[0]
-        return res.send(formatResult(200, 'UPDATED', quiz))
+        assignment = await addQuizUsages([assignment])
+        assignment = await addAttachedCourse(assignment)
+        assignment = assignment[0]
+        return res.send(formatResult(200, 'UPDATED', assignment))
     } catch (error) {
         return res.send(formatResult(500, error))
     }

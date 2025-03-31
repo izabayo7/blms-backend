@@ -93,7 +93,7 @@ function validate_assignment(body, target = false) {
             id: Joi.ObjectId().required()
         }),
         dueDate: Joi.date().required(),
-        total_marks: Joi.number()
+        total_marks: Joi.number().required()
     }
     return Joi.validate(body, schema)
 }
