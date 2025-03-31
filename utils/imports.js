@@ -480,6 +480,7 @@ function removeIds(message) {
 
 // remove messages in the same discussion
 function removeDuplicateDiscussions(sentMessages, receivedMessages) {
+  console.log('ibyambere\n',sentMessages, receivedMessages)
   let messagesToDelete = [
     // indices to remove in sentMessages
     [],
@@ -488,15 +489,19 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
   ]
   for (const i in sentMessages) {
     for (const k in receivedMessages) {
+      console.log('_________________________\n',receivedMessages[k],sentMessages[i])
       if (
         (sentMessages[i].sender == receivedMessages[k].receivers[0].id && receivedMessages[k].sender == sentMessages[i].receivers[0].id) ||
         (receivedMessages[k].sender == 'SYSTEM' && receiversMatch(sentMessages[i].receivers, receivedMessages[k].receivers))) {
         if (sentMessages[i].realId > receivedMessages[k].realId) {
-          messagesToDelete[1].push(k)
+          receivedMessages.splice(k, 1)
+          // messagesToDelete[1].push(parseInt(k))
         } else {
-          messagesToDelete[0].push(i)
+          sentMessages.splice(i, 1)
+          // messagesToDelete[0].push(parseInt(i))
         }
       }
+      console.log(messagesToDelete, '_________________________\n')
     }
   }
 
@@ -507,9 +512,11 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
   }
   if (messagesToDelete[1].length > 0) {
     for (const index of messagesToDelete[1]) {
+      console.log(index)
       receivedMessages.splice(index, 1)
     }
   }
+  console.log('ibyanyuma\n',sentMessages, receivedMessages)
   return {
     sent: sentMessages,
     received: receivedMessages
@@ -748,10 +755,8 @@ module.exports.getLatestMessages = async (user_id) => {
     }
   }
   ])
-
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
-
   const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
 
   for (const message of receivedMessages) {
@@ -759,15 +764,15 @@ module.exports.getLatestMessages = async (user_id) => {
       latestMessages.push(message)
     else {
       if (!latestMessages.includes(message)) {
-          for (const k in receivedMessages) {
-            if (receivedMessages[k]._id !== message._id) {
-              const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
-              const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
-              if (await receiversMatch(minorMessage.receivers, majorMessage.receivers)) {
-                latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
-              }
+        for (const k in receivedMessages) {
+          if (receivedMessages[k]._id !== message._id) {
+            const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
+            const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
+            if (await receiversMatch(minorMessage.receivers, majorMessage.receivers)) {
+              latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
             }
           }
+        }
       }
     }
   }

@@ -535,7 +535,7 @@ router.post('/login', async (req, res) => {
 
     if (!user)
       return res.send(formatResult(400, erroMessage))
-
+console.log('user found')
     // check if passed password is valid
     const validPassword = await bcrypt.compare(req.body.password, user.password)
 

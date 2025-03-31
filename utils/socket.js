@@ -133,7 +133,7 @@ module.exports.listen = (app) => {
 
       // avoid dupplicate initialisation
       const conversation_found = await getConversationMessages({ user_id: id, conversation_id: conversation_id, limit: 1 })
-
+console.log('ahaaaaaaaaaaaaaaiiii',conversation_found)
       if (!conversation_found.length) {
 
         const user = await findDocument(User, { user_name: conversation_id })

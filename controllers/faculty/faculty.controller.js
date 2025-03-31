@@ -248,12 +248,12 @@ router.post('/', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    // check if faculty exist
+    // check name is available
     let faculty = await findDocument(Faculty, {
       name: req.body.name
     })
     if (faculty)
-      return res.send(formatResult(400, `Faculty with code ${req.body.name} arleady exist`))
+      return res.send(formatResult(403, 'name was taken'))
 
     let result = await createDocument(Faculty, {
       name: req.body.name,
@@ -306,9 +306,19 @@ router.put('/:id', async (req, res) => {
       _id: req.params.id
     })
     if (!faculty)
-      return res.send(formatResult(404, `Faculty with code ${req.params.id} doens't exist`))
+      return res.send(formatResult(404, 'faculty not found'))
 
-    const result = await updateDocument(Faculty, req.params.id, req.body)
+    // check if faculty exist
+    let _faculty = await findDocument(Faculty, {
+      _id: {
+        $ne: faculty._id
+      },
+      name: req.body.name
+    })
+    if (_faculty)
+      return res.send(formatResult(403, 'name was taken'))
+
+    const result = await updateDocument(Faculty, faculty._id, req.body)
 
     return res.send(result)
   } catch (error) {
