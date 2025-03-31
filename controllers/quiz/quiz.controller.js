@@ -531,7 +531,6 @@ router.delete('/:id', async (req, res) => {
     const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}`
     fs.exists(path, (exists) => {
       if (exists) {
-        // error kbx
         fs.rmdir(path, { recursive: true }, (err) => {
           if (err) {
             err = err

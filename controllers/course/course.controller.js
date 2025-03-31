@@ -633,7 +633,7 @@ router.delete('/:id', async (req, res) => {
   fs.exists(dir, (err) => {
     if (err)
       return res.status(500).send(err)
-    fs.remove(dir, (err) => {
+    fs.remove(dir, { recursive: true }, (err) => {
       if (err)
         return res.status(500).send(err)
     })
