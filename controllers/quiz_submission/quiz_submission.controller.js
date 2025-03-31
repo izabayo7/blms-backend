@@ -343,6 +343,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
               }
             }
             courses[j].marking_status += '%'
+            courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
             coursesWithSubmissions.push(courses[j])
           }
 
