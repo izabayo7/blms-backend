@@ -395,6 +395,7 @@ router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req,
 
         let user_groups = await findDocuments(User_group, {
             faculty: faculty._id,
+            status: "ACTIVE"
         })
         for (const k in user_groups) {
             let user_user_groups = await User_user_group.find({
