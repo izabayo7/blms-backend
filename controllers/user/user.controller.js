@@ -661,7 +661,7 @@ router.put('/:id', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user/{id}/password:
+ * /user/{user_name}/password:
  *   put:
  *     tags:
  *       - User
@@ -669,10 +669,10 @@ router.put('/:id', auth, async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *        - name: id
+ *        - name: user_name
  *          in: path
  *          type: string
- *          description: User's Id
+ *          description: User's user name
  *        - name: body
  *          description: Fields for a User
  *          in: body
@@ -693,24 +693,20 @@ router.put('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/password', auth, async (req, res) => {
+router.put('/:user_name/password', auth, async (req, res) => {
   try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
 
-    error = validateUserPasswordUpdate(req.body)
-    error = error.error
+    const {
+      error
+    } = validateUserPasswordUpdate(req.body)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
     let user = await User.findOne({
-      _id: req.params.id
+      user_name: req.params.user_name
     }).populate('category')
     if (!user)
-      return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
+      return res.send(formatResult(400, `user not found`))
 
     if (req.user.user_name !== user.user_name)
       return res.send(formatResult(403, 'YOU ARE NOT AUTHORIZED'))
