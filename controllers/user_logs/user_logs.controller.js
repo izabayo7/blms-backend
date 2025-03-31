@@ -77,9 +77,9 @@ router.get('/statistics/online', async (req, res) => {
         const users = await User.find({college: req.user.college}, {_id: 1})
 
         const result = await User_logs.aggregate([
-            {"$match": {"logs.createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {"createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
             {"$match": {user: {$in: users.map(x => x._id.toString())}}},
-            {"$match": {"logs.online": true}},
+            {"$match": {"online": true}},
             {
                 "$group": {
                     "_id": {
