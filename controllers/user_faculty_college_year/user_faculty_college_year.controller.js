@@ -225,7 +225,7 @@ router.delete('/:id', async (req, res) => {
             _id: req.params.id
         })
         if (!user_faculty_college_year)
-            return res.send(formatResult(404, `user_faculty_college_year of Code ${req.params.id} Not Found`))
+            return res.send(formatResult(404, 'user_faculty_college_year not found'))
 
         let result = await deleteDocument(User_faculty_college_year, req.params.id)
         return res.send(result)
