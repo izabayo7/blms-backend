@@ -871,7 +871,7 @@ async function injectUserFeedback(submissions) {
     for (const k in submissions[i].answers) {
       let feedback = await Comment.find({ "target.type": 'quiz_submission_answer', "target.id": submissions[i].answers[k]._id })
       feedback = await injectUser(simplifyObject(feedback), 'sender')
-      submissions[i].answers[k].feedback = feedback
+      submissions[i].answers[k].feedback = feedback[0]
     }
   }
   return submissions
