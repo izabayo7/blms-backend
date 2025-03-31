@@ -69,13 +69,12 @@ router.get('/user/:user_name', filterUsers(['INSTRUCTOR']), async (req, res) => 
         if (req.user.user_name !== req.params.user_name)
             return res.send(formatResult(403, 'You don\'t have access'))
 
-        let exam = await findDocuments(Exam, {
+        let exam = await Exam.find({
             user: req.user._id
-        }, u, u, u, u, u, {_id: -1})
+        }).sort({_id: -1}).populate('course').lean()
 
         exam = await addAttachmentMediaPaths(exam)
         exam = await addExamUsages(exam)
-        exam = await addAttachedCourse(exam)
 
         return res.send(formatResult(u, u, exam))
     } catch (error) {
@@ -125,52 +124,22 @@ router.get('/user/:user_name/:exam_name', async (req, res) => {
 
         const isInstructor = user.category == user_category._id
 
-        let exam = await findDocument(Exam, isInstructor ? {
+        let exam = await Exam.findOne(isInstructor ? {
             name: req.params.exam_name,
             user: user._id
-        } : {name: req.params.exam_name})
+        } : {name: req.params.exam_name}).populate('course')
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
-        let faculty_college_year
-        let chapter
-        let course
 
-        if (exam.target) {
-            if (exam.target.type === 'chapter') {
-                chapter = await findDocument(Chapter, {
-                    _id: exam.target.id
-                })
-                course = await findDocument(Course, {
-                    _id: chapter.course
-                })
-                faculty_college_year = course.faculty_college_year
-            } else if (exam.target.type === 'course') {
-                course = await findDocument(Course, {
-                    _id: exam.target.id
-                })
-                faculty_college_year = course.faculty_college_year
-            } else if (exam.target.type === 'faculty_college_year') {
-                faculty_college_year = exam.target.id
-            }
-            const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-                user: user._id,
-                faculty_college_year: faculty_college_year
-            })
-            if (!user_faculty_college_year)
-                return res.send(formatResult(404, 'exam not found'))
-        } else {
-            if (req.params.user_name != req.user.user_name)
-                return res.send(formatResult(404, 'exam not found'))
-        }
+        if (exam.status === 'DRAFT' && req.params.user_name !== req.user.user_name)
+            return res.send(formatResult(404, 'exam not found'))
 
         if (isInstructor) {
             exam = await addExamUsages(exam)
         }
 
         exam = await addAttachmentMediaPaths([exam])
-        exam = await addAttachedCourse(exam)
-        exam = await addExamTarget(exam)
         exam = exam[0]
         return res.send(formatResult(u, u, exam))
     } catch (error) {

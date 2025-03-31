@@ -121,7 +121,7 @@ const exam_submission_schema = new mongoose.Schema({
 
 exam_submission_schema.plugin(timestamps)
 
-// validate exam_submision
+// validate exam_submission
 function validate_exam_submission(credentials) {
     const schema = {
         exam: Joi.ObjectId().required(),
@@ -147,9 +147,9 @@ function validate_exam_submission(credentials) {
     return Joi.validate(credentials, schema)
 }
 
-// create exam_submisions model
-const exam_submision = mongoose.model('exam_submision', exam_submission_schema)
+// create exam_submissions model
+const exam_submission = mongoose.model('exam_submission', exam_submission_schema)
 
 // export the model and the validation function
-module.exports.exam_submision = exam_submision
+module.exports.Exam_submission = exam_submission
 module.exports.validate_exam_submission = validate_exam_submission

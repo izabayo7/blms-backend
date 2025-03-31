@@ -1165,6 +1165,16 @@ exports.addQuizUsages = async (quizes) => {
     return quizes
 }
 
+// add the number of students who did the quiz
+exports.addExamUsages = async (exams) => {
+    for (const i in exams) {
+        exams[i].usage = await this.countDocuments(Exam_submission, {
+            quiz: exams[i]._id
+        })
+    }
+    return quizes
+}
+
 // add the course to which the quiz is attached
 exports.addAttachedCourse = async (quizes) => {
     for (const i in quizes) {
@@ -1646,6 +1656,7 @@ const {
 } = require('../middlewares/auth.middleware');
 const {Announcement} = require('../models/announcements/announcements.model');
 const https = require("http");
+const {Exam_submission} = require("../models/exam_submission/exam_submission.model");
 
 exports.auth = auth
 
