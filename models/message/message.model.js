@@ -42,8 +42,8 @@ function validate_message(credentials) {
     const schema = {
         sender: Joi.string().required(),
         receiver: Joi.string().required(),
-        content: Joi.string().max(9000).required(),
-        attachments: Joi.array().min(1).items({ src: Joi.string().required() }),
+        content: credentials.attachments && credentials.attachments.length ? Joi.string().max(9000) : Joi.string().max(9000).required(),
+        attachments: Joi.array().min(1).items({src: Joi.string().required()}),
         read: Joi.boolean(),
     }
     return Joi.validate(credentials, schema)
