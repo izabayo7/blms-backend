@@ -155,7 +155,67 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
                         your account.
                     </div>
                     <div class="text-center">
-                        <a href="https://learn.kurious.rw/signup?token=${token}" target="_blank"
+                        <a href="https://kurious.rw/auth/register?token=${token}" target="_blank"
+                            rel="noopener noreferrer">
+                            <button class="confirm">
+                                CONFIRM
+                            </button>
+                        </a>
+                    </div>
+                    <div class="thanks">
+                        Thanks,
+                        Kurious learn team
+                    </div>
+                </div>
+                <div class="footer">
+                    <a href="https://twitter.com/kuriouslearnRw" target="_blank" rel="noopener noreferrer">
+                        <img class="ig_icon" src="https://apis.kurious.rw/assets/images/ig.svg" alt="">
+                        </a>
+                    <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
+                        <img class="fb_icon" src="https://apis.kurious.rw/assets/images/fb.svg" alt="">
+                    </a>
+                    <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
+                        <img class="twitter_icon" src="https://apis.kurious.rw/assets/images/twitter.svg" alt="">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+    
+    </html>
+    `
+
+    return result
+
+}
+
+exports.invitationssssToSystem = ({ inviter, institution, token }) => {
+
+    const result = `
+    <!DOCTYPE html>
+    <html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="https://apis.kurious.rw/assets/css/invitation_email.css">
+    </head>
+    
+    <body>
+        <div class="logo">
+            <img src="https://apis.kurious.rw/assets/images/image%204.png" alt="">
+        </div>
+        <div class="flex">
+            <div class="">
+                <div class="content">
+                    <div class="message">
+                        ${inviter} invited you in ${institution.name},<br>
+                        on Kurious learn!
+                        Please click the button below to finish setting up
+                        your account.
+                    </div>
+                    <div class="text-center">
+                        <a href="https://kurious.rw/auth/register?token=${token}" target="_blank"
                             rel="noopener noreferrer">
                             <button class="confirm">
                                 CONFIRM
