@@ -59,11 +59,13 @@ exports.getInvitationbyToken = async (req, res) => {
             return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
         const invitation = await User_invitation.findOne({
-            token: token,
-            status: "PENDING"
+            token: token
         }).populate(['college', 'category', 'user_group']);
         if (!invitation)
             return res.send(formatResult(400, 'User invitation was not found'))
+
+        if (invitation.status == "ACCEPTED")
+            return res.send(formatResult(400, 'User invitation already accepted'))
 
         res.send(formatResult(200, u, invitation))
     } catch
