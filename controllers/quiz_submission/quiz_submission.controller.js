@@ -1,4 +1,5 @@
 // import dependencies
+const { quiz } = require('../../models/quiz/quiz.model')
 const {
   express,
   Quiz_submission,
@@ -87,6 +88,8 @@ const router = express.Router()
  *     tags:
  *       - Quiz_submission
  *     description: Get all quiz_submissions
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
@@ -283,7 +286,7 @@ router.get('/user/:user_name', async (req, res) => {
             quiz_submission[k].quiz = quiz_submission[k].quiz[0]
           }
           quizes[i].submissions = quiz_submission
-          foundSubmissions.push(quiz_submission[k])
+          foundSubmissions.push(quizes[i])
         }
       }
 
