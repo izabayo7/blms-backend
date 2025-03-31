@@ -791,16 +791,12 @@ router.post('/', async (req, res) => {
         } = validate_course(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
-            let user_group = await findDocument(User_group, {
-                _id: req.body.user_group
-            })
-            if (!user_group)
-            return res.send(formatResult(404, 'User_group not found'))
-            console.log(user_group)
-
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
+        let user_group = await findDocument(User_group, {
+            _id: req.body.user_group
         })
+        if (!user_group)
+            return res.send(formatResult(404, 'User_group not found'))
+        console.log(user_group)
 
         if (req.user.category.name != "INSTRUCTOR")
             return res.send(formatResult(404, 'you can\'t create course'))
@@ -815,11 +811,12 @@ router.post('/', async (req, res) => {
             name: req.body.name,
             user: req.user._id,
             user_group: req.body.user_group,
-            description: req.body.description
+            description: req.body.description,
+            maximum_marks: req.body.maximum_marks
         })
 
         result = simplifyObject(result)
-        console.log(result.data)
+        console.log(result)
         result.data = await injectFaculty_college_year([result.data])
         result.data = result.data[0]
         return res.send(result)
