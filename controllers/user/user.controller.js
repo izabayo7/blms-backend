@@ -21,6 +21,7 @@ const {
   validateObjectId,
   validateUserLogin,
   generateAuthToken,
+  add_user_details,
   Search,
   Course,
   User_progress,
@@ -109,7 +110,7 @@ router.get('/', async (req, res) => {
     if (!users.length)
       return res.send(formatResult(404, 'User list is empty'))
 
-    users = await injectDetails(users)
+    users = await add_user_details(users)
 
     return res.send(formatResult(u, u, users))
   } catch (error) {
@@ -159,7 +160,7 @@ router.get('/college/:id', async (req, res) => {
     if (!users.length)
       return res.send(formatResult(404, `${college.name} user list is empty`))
 
-    users = await injectDetails(users)
+    users = await add_user_details(users)
 
     return res.send(formatResult(u, u, users))
   } catch (error) {
@@ -190,11 +191,6 @@ router.get('/college/:id', async (req, res) => {
  *         in: query
  *         required: true
  *         type: string
- *       - name: query
- *         description: the search query
- *         in: body
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -205,6 +201,7 @@ router.get('/college/:id', async (req, res) => {
  */
 router.get('/search', async (req, res) => {
   try {
+    // add college limit
     let {
       data,
       error
@@ -245,7 +242,7 @@ router.get('/search', async (req, res) => {
 
     data = simplifyObject(data)
 
-    data.results = await injectDetails(data.results)
+    data.results = await add_user_details(data.results)
 
     res.send(formatResult(u, u, data))
   } catch (error) {
@@ -289,7 +286,7 @@ router.get('/:id', async (req, res) => {
     if (!user)
       return res.send(formatResult(404, `User ${req.params.id} Not Found`))
 
-    user = await injectDetails([user])
+    user = await add_user_details([user])
     user = user[0]
 
     return res.send(formatResult(u, u, user))
@@ -473,7 +470,7 @@ router.post('/', async (req, res) => {
       date_of_birth: req.body.date_of_birth
     })
 
-    // result = await injectDetails([result])
+    // result = await add_user_details([result])
     // result = result[0]
     return res.status(201).send(result)
   } catch (error) {
@@ -645,7 +642,7 @@ router.put('/:id', async (req, res) => {
       req.body.password = await hashPassword(req.body.password)
     let result = await updateDocument(User, req.params.id, req.body)
 
-    // result = await injectDetails([result])
+    // result = await add_user_details([result])
     // result = result[0]
     return res.send(result)
   } catch (error) {
@@ -881,74 +878,6 @@ router.delete('/:id', async (req, res) => {
     return res.send(formatResult(500, error))
   }
 })
-
-// link the user with his/her current college
-async function injectDetails(users) {
-  for (const i in users) {
-    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: users[i]._id,
-      status: 1
-    }, {
-      _v: 0
-    })
-
-    if (user_faculty_college_year) {
-      const faculty_college_year = await findDocument(Faculty_college_year, {
-        _id: user_faculty_college_year.faculty_college_year
-      }, {
-        _v: 0
-      })
-
-      users[i].faculty_college_year = faculty_college_year
-
-      const collegeYear = await findDocument(College_year, {
-        _id: faculty_college_year.college_year
-      }, {
-        _v: 0
-      })
-      users[i].faculty_college_year.college_year = collegeYear
-
-      const faculty_college = await findDocument(Faculty_college, {
-        _id: faculty_college_year.faculty_college
-      }, {
-        _v: 0
-      })
-      users[i].faculty_college_year.faculty_college = faculty_college
-
-      const faculty = await findDocument(Faculty, {
-        _id: faculty_college.faculty
-      }, {
-        _v: 0
-      })
-      users[i].faculty_college_year.faculty_college.faculty = faculty
-    }
-    if (users[i].college) {
-      const college = await findDocument(College, {
-        _id: users[i].college
-      }, {
-        _v: 0
-      })
-
-      users[i].college = college
-      if (users[i].college.logo) {
-        users[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
-      }
-    }
-    // add user category
-    const category = await findDocument(User_category, {
-      _id: users[i].category
-    }, {
-      _v: 0
-    })
-    users[i].category = category
-
-    // add user profile media path
-    if (users[i].profile) {
-      users[i].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
-    }
-  }
-  return users
-}
 
 // export the router
 module.exports = router

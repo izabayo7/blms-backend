@@ -10,6 +10,7 @@ const {
   findDocument,
   createDocument,
   updateDocument,
+  add_user_details,
   Message,
   User,
   College,
@@ -19,11 +20,15 @@ const {
   upload_single_image,
   Compress_images,
   fs,
-  Create_or_update_message
+  Create_or_update_message,
+  Search,
+  simplifyObject
 } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
+
+// add college validations cz user is logged in
 
 /**
  * @swagger
@@ -228,7 +233,6 @@ router.get('/user/:id', async (req, res) => {
  */
 router.get('/:id/profile/:file_name', async (req, res) => {
   try {
-
     const {
       error
     } = validateObjectId(req.params.id)
@@ -241,12 +245,154 @@ router.get('/:id/profile/:file_name', async (req, res) => {
     })
     if (!group)
       return res.send(formatResult(404, 'group not found'))
-    
+
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
     path = `./uploads/colleges/${group.college}/chat/groups/${req.params.id}/${group.profile}`
     sendResizedImage(req, res, path)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chat_group/{id}/search_members:
+ *   post:
+ *     tags:
+ *       - Chat_group
+ *     description: Search users
+ *     parameters:
+ *       - name: id
+ *         description: Group's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: data
+ *         description: search value
+ *         in: query
+ *         type: string
+ *         required: true
+ *       - name: page
+ *         description: page number
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: limit
+ *         description: limit number
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/search_members', async (req, res) => {
+  try {
+
+    let _error = validateObjectId(req.params.id)
+    if (_error.error)
+      return res.send(formatResult(400, _error.error.details[0].message))
+
+    const group = await findDocument(Chat_group, {
+      _id: req.params.id
+    })
+    if (!group)
+      return res.send(formatResult(404, 'group not found'))
+
+    let member_ids = []
+
+    for (const i in group.members) {
+      member_ids.push(group.members[i].id)
+    }
+
+    let {
+      data,
+      error
+    } = await Search(User, {
+      _id: { $nin: member_ids },
+      college: req.user.college,
+      $or: [{
+        sur_name: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }, {
+        other_names: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }, {
+        user_name: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }, {
+        email: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }]
+    }, {
+      phone: 0,
+      national_id: 0,
+      _id: 0,
+      password: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      status: 0
+    }, req.query.page, req.query.limit)
+
+    if (error)
+      return res.send(formatResult(400, error))
+
+    data = simplifyObject(data)
+
+    data.results = await add_user_details(data.results)
+
+    res.send(formatResult(u, u, data))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chat_group/{id}:
+ *   get:
+ *     tags:
+ *       - Chat_group
+ *     description: Get all chat_groups
+ *     params:
+ *       - name: id
+ *         description: Chat_group's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    let result = await findDocument(Chat_group, { _id: req.params.id })
+
+    if (!result)
+      return res.send(formatResult(404, 'Chat_group not found'))
+
+    result = await injectDetails([result])
+    result = result[0]
+
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

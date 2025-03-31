@@ -58,7 +58,7 @@ function validate_chat_group(credentials, method = 'create') {
             isAdmin: Joi.boolean(),
             user_name: Joi.string().required()
         }).required(),
-        desctiption: Joi.string(),
+        description: Joi.string(),
         college: Joi.ObjectId().required(),
         status: Joi.number(),
     } : method == 'add_members' ? {

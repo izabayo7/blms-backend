@@ -3,7 +3,9 @@ const {
     express,
     cors,
     path,
-    auth
+    auth,
+    RTCMultiConnectionServer,
+    fs
 } = require('./utils/imports')
 
 const dotenv = require('dotenv');
@@ -82,8 +84,72 @@ app.use(express.urlencoded({
 }));
 
 // create an http server
-const http = require('http');
-const server = http.createServer(app);
+let httpServer = require('http');
+let server
+
+// ubuvumbuzi
+var isUseHTTPs = false;
+const jsonPath = {
+    config: 'config.json',
+    logs: 'logs.json'
+};
+
+const BASH_COLORS_HELPER = RTCMultiConnectionServer.BASH_COLORS_HELPER;
+const getValuesFromConfigJson = RTCMultiConnectionServer.getValuesFromConfigJson;
+const getBashParameters = RTCMultiConnectionServer.getBashParameters;
+const resolveURL = RTCMultiConnectionServer.resolveURL;
+
+var config = getValuesFromConfigJson(jsonPath);
+config = getBashParameters(config, BASH_COLORS_HELPER);
+
+//read value from "config.json"
+if(isUseHTTPs === false) {
+    isUseHTTPs = config.isUseHTTPs;
+}
+
+if (isUseHTTPs) {
+    httpServer = require('https');
+
+    var options = {
+        key: null,
+        cert: null,
+        ca: null
+    };
+
+    var pfx = false;
+
+    if (!fs.existsSync(config.sslKey)) {
+        console.log(BASH_COLORS_HELPER.getRedFG(), 'sslKey:\t ' + config.sslKey + ' does not exist.');
+    } else {
+        pfx = config.sslKey.indexOf('.pfx') !== -1;
+        options.key = fs.readFileSync(config.sslKey);
+    }
+
+    if (!fs.existsSync(config.sslCert)) {
+        console.log(BASH_COLORS_HELPER.getRedFG(), 'sslCert:\t ' + config.sslCert + ' does not exist.');
+    } else {
+        options.cert = fs.readFileSync(config.sslCert);
+    }
+
+    if (config.sslCabundle) {
+        if (!fs.existsSync(config.sslCabundle)) {
+            console.log(BASH_COLORS_HELPER.getRedFG(), 'sslCabundle:\t ' + config.sslCabundle + ' does not exist.');
+        }
+
+        options.ca = fs.readFileSync(config.sslCabundle);
+    }
+
+    if (pfx === true) {
+        options = {
+            pfx: sslKey
+        };
+    }
+
+    server = httpServer.createServer(options, app);
+} else {
+    server = httpServer.createServer(app);
+}
+
 
 // importing our socket
 const io = require('./utils/socket');
@@ -91,6 +157,9 @@ io.listen(server)
 
 // Serve the chatdemo
 app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
+
+// Serve the live
+app.use('/live', express.static(path.join(__dirname, 'views/live')));
 
 app.get("/", express.static(path.join(__dirname, 'views')))
 

@@ -18,6 +18,7 @@ module.exports.fs = require('fs-extra')
 module.exports.timestamps = require('mongoose-timestamp');
 module.exports._ = require('lodash')
 module.exports.path = require('path')
+module.exports.RTCMultiConnectionServer = require('rtcmulticonnection-server');
 
 
 /**
@@ -472,6 +473,7 @@ function removeIds(message) {
 
 // remove messages in the same discussion
 function removeDuplicateDiscussions(sentMessages, receivedMessages) {
+  console.log(sentMessages, receivedMessages)
   let messagesToDelete = [
     // indices to remove in sentMessages
     [],
@@ -488,6 +490,9 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
         } else {
           messagesToDelete[0].push(i)
         }
+      } else {
+        console.log(sentMessages[i].sender, sentMessages[i].receivers)
+        console.log(receivedMessages[k].sender, receivedMessages[k].sender)
       }
     }
   }
@@ -1251,6 +1256,73 @@ module.exports.decodeAuthToken = async ({
 // all regex expressions
 module.exports.Patterns = {
   promotionPattern: /\b[y][e][a][r][_][0-9]\b/ // work on these regex staff
+}
+
+module.exports.add_user_details = async (users) => {
+  for (const i in users) {
+    const user_faculty_college_year = await this.findDocument(this.User_faculty_college_year, {
+      user: users[i]._id,
+      status: 1
+    }, {
+      _v: 0
+    })
+
+    if (user_faculty_college_year) {
+      const faculty_college_year = await this.findDocument(this.Faculty_college_year, {
+        _id: user_faculty_college_year.faculty_college_year
+      }, {
+        _v: 0
+      })
+
+      users[i].faculty_college_year = faculty_college_year
+
+      const collegeYear = await this.findDocument(this.College_year, {
+        _id: faculty_college_year.college_year
+      }, {
+        _v: 0
+      })
+      users[i].faculty_college_year.college_year = collegeYear
+
+      const faculty_college = await this.findDocument(this.Faculty_college, {
+        _id: faculty_college_year.faculty_college
+      }, {
+        _v: 0
+      })
+      users[i].faculty_college_year.faculty_college = faculty_college
+
+      const faculty = await this.findDocument(this.Faculty, {
+        _id: faculty_college.faculty
+      }, {
+        _v: 0
+      })
+      users[i].faculty_college_year.faculty_college.faculty = faculty
+    }
+    if (users[i].college) {
+      const college = await this.findDocument(this.College, {
+        _id: users[i].college
+      }, {
+        _v: 0
+      })
+
+      users[i].college = college
+      if (users[i].college.logo) {
+        users[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+      }
+    }
+    // add user category
+    const category = await this.findDocument(this.User_category, {
+      _id: users[i].category
+    }, {
+      _v: 0
+    })
+    users[i].category = category
+
+    // add user profile media path
+    if (users[i].profile) {
+      users[i].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
+    }
+  }
+  return users
 }
 
 // authentication middlewares
