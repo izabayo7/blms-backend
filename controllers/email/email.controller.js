@@ -52,7 +52,7 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
             from: process.env.EMAIL,
             to: email,
             subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
-            body: mail,
+            html: mail,
         };
 
         /*
@@ -69,7 +69,7 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
         //     username: process.env.EMAIL,
         //     password: process.env.PASSWORD
         // })
-
+console.log(message)
         return {
             sent: await transporter.sendMail(message)
             // sent: await transporter.sendEmail(message)
