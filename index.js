@@ -3,7 +3,8 @@ const {
     express,
     cors,
     path,
-    auth
+    auth,
+    bodyparser
 } = require('./utils/imports')
 
 const dotenv = require('dotenv');
@@ -74,13 +75,16 @@ const live_session_controller = require('./controllers/live_session/live_session
 
 // use middlewares
 app.use(cors())
-app.use(express.json({
-    limit: '50mb'
-}));
-app.use(express.urlencoded({
-    limit: '50mb',
-    extended: true
-}));
+
+app.use(bodyparser.urlencoded({ extended: true }));
+
+// app.use(express.json({
+//     limit: '50mb'
+// }));
+// app.use(express.urlencoded({
+//     limit: '50mb',
+//     extended: true
+// }));
 
 // create an http server
 let httpServer = require('http');
