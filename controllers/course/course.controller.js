@@ -404,7 +404,61 @@ router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
     }
 })
 
-//
+/**
+ * @swagger
+ * /course/user_group/{id}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses in a specified user_group in your college
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: User_group id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/user_group/:id', filterUsers(["ADMIN"]), async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        let foundCourses = []
+
+        let user_group = await findDocument(User_group, {_id: req.params.id, status: "ACTIVE"})
+        if(!user_group)
+            return res.send(formatResult(404, 'user_group not found'))
+
+        let courses = await findDocuments(Course, {
+            user_group: user_group._id
+        })
+
+        for (const course of courses) {
+            foundCourses.push(course)
+        }
+
+        foundCourses = await injectUser(foundCourses, 'user')
+        foundCourses = await injectChapters(foundCourses)
+        foundCourses = await injectFaculty_college_year(foundCourses)
+
+        return res.send(formatResult(u, u, foundCourses))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 
 /**
  * @swagger
