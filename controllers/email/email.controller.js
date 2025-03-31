@@ -14,13 +14,13 @@ const transporter = nodemailer.createTransport({
 const mailGenerator = new Mailgen({
     theme: 'salted',
     product: {
-        name: 'Organiser',
+        name: 'Kurious',
         link: 'https://kurious.rw/',
         logo: 'https://learn.kurious.rw/online-assets/logo.svg'
     }
 });
 
-exports.sendInvitationMail = async ({email, token, names}) => {
+exports.sendInvitationMail = async ({ email, token, names }) => {
     try {
         const response = {
             body: {
@@ -31,8 +31,8 @@ exports.sendInvitationMail = async ({email, token, names}) => {
                     instructions: 'Click to complete the process',
                     button: {
                         color: '#1a0c2f',
-                        text: 'Reset Your Password',
-                        link: 'https://lean.kurious.rw/signup?email=' + email + '&' + 'token=' + token
+                        text: 'View invitation',
+                        link: 'https://learn.kurious.rw/signup?email=' + email + '&' + 'token=' + token
                     }
                 },
                 outro: 'This code expires after 1 Week !'
