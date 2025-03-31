@@ -788,7 +788,15 @@ router.post('/:id/uploaded_content', async (req, res) => {
         upload_single(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
+            if(chapter.uploaded_content) {
+                const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${chapter.uploaded_content}`)
 
+
+                fs.unlink(file_path, async (err) => {
+                    if (err)
+                        return res.send(formatResult(500, err))
+                })
+            }
             const result = await updateDocument(Chapter, req.params.id, {
                 uploaded_content: req.file.filename
             })
