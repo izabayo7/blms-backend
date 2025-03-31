@@ -13,7 +13,7 @@ const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOStri
  * @param req
  * @param res
  */
-exports.getAllPosts= async (req, res) => {
+exports.getAllPosts = async (req, res) => {
   try {
     let { limit, page } = req.query;
 
@@ -81,71 +81,24 @@ exports.getMyPosts = async (req, res) => {
 }
 
 /***
- *  Create's a new user_invitation
+ *  Create's a new post
  * @param req
  * @param res
  */
-exports.createUserInvitation = async (req, res) => {
+exports.createUserAPost = async (req, res) => {
   try {
-    const { error } = validate_user_invitation(req.body);
+    const { error } = validate_post(req.body);
     if (error) return res.send(formatResult(400, error.details[0].message));
 
-    const { emails, category, college } = req.body
+    const newDocument = new User_invitation({
+      creator: req.user._id,
+      title: req.body.title,
+      content: req.body.content
+    });
 
-    let _college = await College.findOne({
-      _id: college
-    })
-    if (!_college)
-      return res.send(formatResult(404, 'UserCategory not found'))
+    const result = await newDocument.save();
 
-    let user_category = await User_category.findOne({
-      _id: category
-    })
-    if (!user_category)
-      return res.send(formatResult(404, 'UserCategory not found'))
-
-    const savedInvitations = []
-
-    for (const email of emails) {
-      const user = await User.findOne({
-        email: email
-      })
-      if (user) {
-        return res.send(formatResult(400, `User with email (${email}) arleady exist`))
-      }
-
-      const user_invitation = await User_invitation.findOne({
-        email: email,
-        status: "PENDING"
-      })
-      if (user_invitation) {
-        return res.send(formatResult(400, `User with email (${email}) have a pending invitation`))
-      }
-
-      const token = uuid()
-
-
-      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: token, institution: { name: _college.name } });
-      if (err)
-        return res.send(formatResult(500, err));
-
-      const newDocument = new User_invitation({
-        user: req.user._id,
-        email: email,
-        category: category,
-        college: college,
-        token: token,
-        expiration_date: expiration_date,
-      });
-
-      const result = await newDocument.save();
-
-      if (sent) {
-        savedInvitations.push(result)
-      }
-    }
-
-    return res.send(formatResult(201, 'CREATED', savedInvitations));
+    return res.send(formatResult(201, 'CREATED', result));
   } catch
   (e) {
     return res.send(formatResult(500, e))
