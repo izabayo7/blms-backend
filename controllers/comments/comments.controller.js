@@ -255,7 +255,6 @@ router.put('/:id', async (req, res) => {
       return res.send(formatResult(400, error.details[0].comment))
 
     const comment = await findDocument(Comment, { _id: req.params.id })
-
     if (!comment)
       return res.send(formatResult(404, 'comment not found'))
 
@@ -297,7 +296,7 @@ router.delete('/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].comment))
 
-    let comment = await findDocument(Comment, {
+    const comment = await findDocument(Comment, {
       _id: req.params.id
     })
     if (!comment)
