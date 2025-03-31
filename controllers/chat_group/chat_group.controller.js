@@ -287,7 +287,7 @@ router.get('/:code/profile/:file_name', async (req, res) => {
  */
 router.get('/:code/search_members', async (req, res) => {
   try {
-
+    req.params.code = parseInt(req.params.code)
     let _error = validateChat_group_code(req.params.code)
     if (_error.error)
       return res.send(formatResult(400, _error.error.details[0].message))
@@ -381,6 +381,7 @@ router.get('/:code', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -540,6 +541,7 @@ router.put('/:code', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -603,6 +605,7 @@ router.put('/:code/profile', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
       
@@ -690,6 +693,7 @@ router.put('/:code/add_members', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -767,6 +771,7 @@ router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -838,6 +843,7 @@ router.put('/:code/remove_member/:member_user_name', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -900,6 +906,7 @@ router.delete('/:code', async (req, res) => {
     let {
       error
     } = validateChat_group_code(req.params.code)
+    req.params.code = parseInt(req.params.code)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
