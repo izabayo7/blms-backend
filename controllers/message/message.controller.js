@@ -181,8 +181,8 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /message/{receiver}/forward{message_id}:
- *   put:
+ * /message/{receiver}/forward/{message_id}:
+ *   post:
  *     tags:
  *       - Message
  *     description: Update a message
@@ -192,10 +192,12 @@ router.post('/', async (req, res) => {
  *       - name: receiver
  *         in: path
  *         type: string
+ *         required: true
  *         description: Message receiver
  *       - name: message_id
  *         in: path
  *         type: string
+ *         required: true
  *         description: Id of the message you want to forward
  *     responses:
  *       201:
@@ -209,6 +211,12 @@ router.post('/', async (req, res) => {
  */
 router.post('/:receiver/forward/:message_id', async (req, res) => {
     try {
+        const {
+            error
+        } = validateObjectId(req.params.message_id)
+        if (error)
+            return res.send(formatResult(400, "invalid message id"))
+
         const id = req.user._id
         let message = await findDocument(Message, {
             _id: req.params.message_id,
@@ -222,12 +230,17 @@ router.post('/:receiver/forward/:message_id', async (req, res) => {
 
         const {attachments, content} = message
         const {receiver} = req.params
+        const isGroup = /^[0-9]{7}$/.test(receiver)
 
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
+        if (!isGroup) {
+            const Receiver = await findDocument(User, {user_name: receiver})
+            const _content = `This is the begining of conversation between __user__${req.user._id} and __user__${Receiver._id}`
+            const conversation_found = await Message.findOne({content: content})
+            if (!conversation_found)
+                await Create_or_update_message('SYSTEM', receiver, content, u, req.user._id)
+        }
 
-
-        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, undefined, true)
+        let result = await Create_or_update_message(req.user.user_name, isGroup ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, undefined, true)
 
         result = simplifyObject(result)
 
