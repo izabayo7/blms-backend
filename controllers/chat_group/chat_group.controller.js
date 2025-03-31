@@ -908,7 +908,7 @@ router.delete('/:code', async (req, res) => {
 
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
-      _id: req.params.code
+      code: req.params.code
     })
     if (!chat_group)
       return res.send(formatResult(404, 'Chat_group not found'))
