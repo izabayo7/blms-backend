@@ -1,4 +1,5 @@
 // import dependencies
+const { compare } = require('bcryptjs')
 const {
   express,
   User,
@@ -690,7 +691,7 @@ router.put('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id/password', async (req, res) => {
   try {
     let {
       error
@@ -698,62 +699,24 @@ router.put('/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    error = validate_user(req.body, 'update')
+    error = validateUserPasswordUpdate(req.body)
     error = error.error
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    // check if user exist
     let user = await findDocument(User, {
       _id: req.params.id
-    })
+    }, u, false)
     if (!user)
       return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 
-    // check if the name or email were not used
-    user = await findDocument(User, {
-      _id: {
-        $ne: req.params.id
-      },
-      $or: [{
-        email: req.body.email
-      }, {
-        national_id: req.body.national_id
-      }, {
-        user_name: req.body.user_name
-      }, {
-        phone: req.body.phone
-      }],
-    })
+    const validPassword = await compare(req.body.current_password, user.password);
+    if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
-    if (user) {
-      const phoneFound = req.body.phone == user.phone
-      const national_idFound = req.body.national_id == user.national_id
-      const emailFound = req.body.email == user.email
-      const user_nameFound = req.body.user_name == user.user_name
-      return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
-    }
-
-    // avoid user_name === group name
-    let chat_group = await findDocument(Chat_group, {
-      name: req.body.user_name
-    })
-    if (chat_group)
-      return res.send(formatResult(403, 'user_name was taken'))
-
-    let user_category = await findDocument(User_category, {
-      _id: req.body.category
-    })
-    if (!user_category)
-      return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
-
-    if (req.body.password)
-      req.body.password = await hashPassword(req.body.password)
-    let result = await updateDocument(User, req.params.id, req.body)
-
-    // result = await add_user_details([result])
-    // result = result[0]
-    return res.send(result)
+    const hashedPassword = await hashPassword(req.body.new_password);
+    user.password = hashedPassword
+    const updated = await user.save();
+    return res.send(formatResult(201, "UPDATED", updated))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

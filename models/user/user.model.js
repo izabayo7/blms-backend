@@ -72,7 +72,7 @@ const userSchema = new mongoose.Schema({
 userSchema.plugin(timestamps)
 
 // validate user
-function validate_user(credentials, method = 'create') {
+exports.validate_user = (credentials, method = 'create') => {
     const schema = method = 'create' ? {
         sur_name: Joi.string().min(3).max(100).required(),
         other_names: Joi.string().min(3).max(100).required(),
@@ -105,9 +105,7 @@ function validate_user(credentials, method = 'create') {
     return Joi.validate(credentials, schema)
 }
 
-// create users model
-const user = mongoose.model('user', userSchema)
 
-// export the model and the validation function
-module.exports.user = user
-module.exports.validate_user = validate_user
+
+// create users model
+exports.user = mongoose.model('user', userSchema)
