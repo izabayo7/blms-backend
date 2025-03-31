@@ -172,14 +172,14 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/user/{id}:
+ * /quiz/user/{user}:
  *   get:
  *     tags:
  *       - Quiz
  *     description: Returns quizes of a specified user
  *     parameters:
- *       - name: id
- *         description: User id
+ *       - name: user
+ *         description: User's user_name
  *         in: path
  *         required: true
  *         type: string
@@ -193,14 +193,8 @@ router.get('/:id', async (req, res) => {
  */
 router.get('/user/:user', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     let user = await findDocument(User, {
-      user_name: req.params.user_name
+      user_name: req.params.user
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
@@ -208,9 +202,6 @@ router.get('/user/:user', async (req, res) => {
     let quiz = await findDocuments(Quiz, {
       user: user._id
     })
-
-    if (!quiz.length)
-      return res.send(formatResult(404, 'quizes not found'))
 
     // quiz = await addAttachmentMediaPaths(quiz)
     // quiz = await addQuizUsages(quiz)
@@ -465,7 +456,7 @@ router.post('/', async (req, res) => {
       name: req.body.name,
       duration: req.body.duration,
       instructions: req.body.instructions,
-      user: req.body.user,
+      user: user._id,
       questions: req.body.questions,
       total_marks: validQuestions.total_marks
     })
