@@ -1,7 +1,7 @@
 const { User_invitation, validate_user_invitation } = require('../../models/user_invitations/user_invitations.model');
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 const {
-  formatResult, u, User_category, College, ONE_DAY
+  formatResult, u, User_category, College, ONE_DAY, updateDocument
 } = require('../../utils/imports')
 
 /***
@@ -131,3 +131,35 @@ exports.createUserInvitation = async (req, res) => {
     return res.send(formatResult(500, e))
   }
 }
+
+/**
+ * Accept invitation
+ * @param req
+ * @param res
+ */
+exports.acceptInvitation = async (req, res) => {
+  try {
+
+    if (!(uuidValidate(req.body.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
+
+    const invitation = await User_invitation.findOne({ token: req.body.token, status: { $ne: 'PENDING' } });
+    if (invitation)
+      return res.send(formatResult(403, 'invitation token has already been closed'));
+
+    const _invitation = await User_invitation.findOne({ token: req.body.token, status: 'PENDING' });
+    if (!_invitation)
+      return res.send(formatResult(403, 'invitation not found'));
+
+    if (_invitation.expiration_date < Date.now())
+      return res.send(formatResult(400, 'invitation has expired'))
+
+    _invitation.status = "ACCEPTED"
+
+    const result = await _invitation.save()
+
+    return res.send(formatResult(200, "UPDATED", result));
+
+  } catch (err) {
+    return res.send(formatResult(500, err));
+  }
+};
