@@ -424,6 +424,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Chapter
  *     description: Update chapter
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
