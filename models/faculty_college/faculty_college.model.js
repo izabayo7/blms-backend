@@ -32,6 +32,10 @@ const faculty_college_schema = new mongoose.Schema({
         type: String,
         required: true
     },
+    description: {
+        type: String,
+        min: 20
+    },
     leaders: [leader_schema],
     status: {
         type: Number,
@@ -46,6 +50,7 @@ function validate_faculty_college(credentials) {
     const schema = {
         faculty: Joi.string().required(),
         college: Joi.string().required(),
+        description: Joi.string(),
         leader: Joi.object({
             id: Joi.ObjectId().required(),
             start_date: Joi.date().required(),
