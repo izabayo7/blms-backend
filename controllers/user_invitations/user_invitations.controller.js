@@ -67,13 +67,7 @@ exports.getMyInvitations = async (req, res) => {
       populate: 'category'
     };
 
-    const user = await User.findOne({
-      user_name: req.user.user_name
-    })
-    if (!user)
-      return res.send(formatResult(400, `user not found`))
-
-    const invitations = await User_invitation.paginate({ user: user._id }, options)
+    const invitations = await User_invitation.paginate({ user: req.user._id }, options)
 
     res.send(formatResult(200, u, invitations))
   } catch
