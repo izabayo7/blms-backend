@@ -29,7 +29,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /college/checkNameExistance/{college_name}:
+ * /college_payment_plans:
  *   get:
  *     tags:
  *       - College_payment_plans
@@ -47,20 +47,19 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkNameExistance/:college_name', getCollegePaymentPlans)
+router.get('/', getCollegePaymentPlans)
 
 /**
  * @swagger
- * /college/checkNameExistance/{college_name}:
+ * /college_payment_plans/current:
  *   get:
  *     tags:
- *       - College
- *     description: tells if the given name is taken or available
+ *       - College_payment_plans
+ *     description: returns college current payment plan
  *     parameters:
- *       - name: college_name
- *         description: College name
- *         in: path
- *         required: true
+ *       - name: college
+ *         description: College id (not required)
+ *         in: query
  *         type: string
  *     responses:
  *       200:
@@ -70,21 +69,34 @@ router.get('/checkNameExistance/:college_name', getCollegePaymentPlans)
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
+router.get('/current', getCollegeCurrentPaymentPlan)
 
 /**
  * @swagger
- * /college/checkNameExistance/{college_name}:
- *   get:
+ * /college_payment_plans/current:
+ *   post:
  *     tags:
- *       - College
- *     description: tells if the given name is taken or available
+ *       - College_payment_plans
+ *     description: creates a college payment plan
  *     parameters:
- *       - name: college_name
- *         description: College name
- *         in: path
- *         required: true
+ *       - name: college
+ *         description: College id (not required)
+ *         in: query
  *         type: string
+ *       - name: body
+ *         description: Fields for a college_payment_plan
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             plan:
+ *               type: string
+ *               enum: ['TRIAL', 'HUGUKA', 'JIJUKA', 'MINUZA']
+ *               required: true
+ *             discount:
+ *               type: number
+ *               default: 20
  *     responses:
  *       200:
  *         description: OK
@@ -93,7 +105,7 @@ router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
+router.post('/', createCollegePaymentPlan)
 
 /**
  * returns colleges payment plans
@@ -113,30 +125,50 @@ async function getCollegePaymentPlans(req, res) {
 }
 
 /**
- * Check Email Existence
+ * returns colleges current payment plan
  * @param req
  * @param res
  */
-async function checkCollegeNameExistance(req, res) {
+async function getCollegeCurrentPaymentPlan(req, res) {
     try {
-        const college = await College.findOne({name: req.params.college_name, status: 1});
-        if (college) return res.send(formatResult(200, 'Name Already Taken', {exists: true}));
-        return res.send(formatResult(200, 'Name Available', {exists: false}));
+        const college_id = req.user.college || req.query.college
+        const college = await College.findOne({_id: college_id, status: 1});
+        if (!college) return res.send(formatResult(404, 'College not found'));
+        const result = await College_payment_plans.findOne({college: college_id, status: 'ACTIVE'})
+        return res.send(formatResult(u, u, result));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
 }
 
 /**
- * Check Email Existence
+ * Creates college payment plan
  * @param req
  * @param res
  */
-async function checkCollegeNameExistance(req, res) {
+async function createCollegePaymentPlan(req, res) {
     try {
-        const college = await College.findOne({name: req.params.college_name, status: 1});
-        if (college) return res.send(formatResult(200, 'Name Already Taken', {exists: true}));
-        return res.send(formatResult(200, 'Name Available', {exists: false}));
+
+        const college_id = req.user.college || req.query.college
+        const college = await College.findOne({_id: college_id, status: 1});
+        if (!college) return res.send(formatResult(404, 'College not found'));
+
+        const {error} = validate_college_payment_plans(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        if (req.body.plan === 'TRIAL') {
+            const planFound = await College_payment_plans.findOne({college: college_id})
+            if (planFound)
+                return res.send(formatResult(404, 'Trial not allowed'));
+        }
+
+        await College_payment_plans.updateOne({college: college_id, status: 'ACTIVE'}, {status: 'INACTIVE'})
+
+        req.body.college = college_id
+        const result = await createDocument(College_payment_plans, req.body)
+
+        return res.send(result);
     } catch (err) {
         return res.send(formatResult(500, err));
     }
