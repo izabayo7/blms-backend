@@ -39,6 +39,9 @@ exports.getFacultyStatistics = async (req, res) => {
 }
 
 // handle all users down here
+// super admin
+// admin
+// instructor
 
 /***
  * Get faculties
@@ -50,13 +53,24 @@ exports.getFaculties = async (req, res) => {
 
     let foundFaculties = []
     const fetch_all_faculties = req.params.faculty === "ALL"
-    const faculty_colleges = await findDocuments(Faculty_college, fetch_all_faculties ? {
-      college: req.user.college
-    } : {
-        college: req.user.college,
-        faculty: req.params.faculty
+    let faculties;
+
+    if (req.user.category.name == "SUPERADMIN") {
+      faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
+        _id: req.params.faculty
       }
-    );
+      )
+    } else if (req.user.category.name == "ADMIN") {
+      faculties = await findDocuments(Faculty, fetch_all_faculties ? {
+        college: req.user.college
+      } : {
+          _id: req.params.faculty,
+          college: req.user.college
+        }
+      )
+    }
+
+
     if (!fetch_all_faculties) {
       const {
         error
