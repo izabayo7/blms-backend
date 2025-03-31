@@ -1,3 +1,4 @@
+const {MyEmitter} = require("../../utils/imports");
 const {
   express,
   Chat_group,
@@ -511,6 +512,10 @@ router.post('/', auth, async (req, res) => {
 
     // ndanareba uko nahita menyesha abantu thinking about exporting socket for global usage
     const m = await Create_or_update_message('SYSTEM', Number(result.data.code), `This group was created by __user__${creator._id} at __time__${new Date().toISOString()}`, u, creator._id)
+
+    for (const mKey in m.data.receivers) {
+      MyEmitter.emit(`join_group_${m.data.receivers[mKey].id}`,m.data);
+    }
 
     return res.send(result)
   } catch (error) {

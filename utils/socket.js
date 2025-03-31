@@ -148,6 +148,12 @@ module.exports.listen = (app) => {
 
             });
         }
+
+        MyEmitter.on(`join_group_${id}`, async(message) => {
+            const contacts = await formatContacts([message])
+            socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: message.content.includes(id)})
+        });
+
         socket.on('message/contacts', async () => {
             // get the latest conversations
             const latestMessages = await getLatestMessages(id)
@@ -248,20 +254,20 @@ module.exports.listen = (app) => {
 
         })
 
-        // notify members after group creation
-        socket.on('message/create', async ({
-                                               inviter,
-                                               group_code
-                                           }) => {
-            // handle errors
-            const group = await findDocument(Chat_group, {code: group_code})
-            const message = await findDocument(Message, {group: group._id}, {receivers: 0, _id: 0})
-
-            group.members.forEach(m => {
-                // send the message
-                socket.broadcast.to(m.id).emit('res/message/new', message)
-            })
-        })
+        // // notify members after group creation
+        // socket.on('message/create', async ({
+        //                                        inviter,
+        //                                        group_code
+        //                                    }) => {
+        //     // handle errors
+        //     const group = await findDocument(Chat_group, {code: group_code})
+        //     const message = await findDocument(Message, {group: group._id}, {receivers: 0, _id: 0})
+        //
+        //     group.members.forEach(m => {
+        //         // send the message
+        //         socket.broadcast.to(m.id).emit('res/message/new', message)
+        //     })
+        // })
 
         // start a new conversation
         socket.on('message/start_conversation', async ({
@@ -360,7 +366,6 @@ module.exports.listen = (app) => {
         socket.on('message/typing', async ({
                                                conversation_id
                                            }) => {
-            console.log("tapa shn ", conversation_id)
             let receivers = [], chat_group
             if (typeof conversation_id !== 'string') {
                 chat_group = await findDocument(Chat_group, {code: conversation_id})
