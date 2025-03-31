@@ -270,15 +270,14 @@ router.post('/:receiver/forward/:message_id', async (req, res) => {
         msg = await addMessageDetails(msg, msg.sender)
 
         MyEmitter.emit('socket_event', {
+            name: `send_message_${msg.receivers[0].id}`,
+            data: msg
+        });
+        msg.receiver = receiver
+        MyEmitter.emit('socket_event', {
             name: `send_message_${req.user._id}`,
             data: msg
         });
-        for (const i in msg.receivers) {
-            MyEmitter.emit('socket_event', {
-                name: `send_message_${msg.receivers[i].id}`,
-                data: msg
-            });
-        }
         return res.send(formatResult(u, 'Message forwarded'))
     } catch (error) {
         return res.send(formatResult(500, error))
