@@ -940,7 +940,7 @@ router.post('/admin', async (req, res) => {
  * /user/login:
  *   post:
  *     tags:
- *       - User
+ *       - Auth
  *     description: User login
  *     parameters:
  *       - name: body

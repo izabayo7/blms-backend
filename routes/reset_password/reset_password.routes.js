@@ -8,7 +8,7 @@ router.route('/')
      * /reset_password:
      *   post:
      *     tags:
-     *       - User
+     *       - Auth
      *     description: Creates a password reset
      *     parameters:
      *       - name: body
@@ -34,7 +34,7 @@ router.route('/')
      * /reset_password:
      *   put:
      *     tags:
-     *       - User
+     *       - Auth
      *     description: Updates a password reset
      *     parameters:
      *       - name: body
@@ -65,7 +65,7 @@ router.route('/:token')
      * /reset_password/{token}:
      *   get:
      *     tags:
-     *       - User
+     *       - Auth
      *     description: Returns a specific password reset
      *     parameters:
      *       - name: token
