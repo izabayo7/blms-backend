@@ -342,7 +342,7 @@ router.put('/:id', async (req, res) => {
     const latesTargetedQuiz = await Quiz.findOne({ target: req.body.target })
     if (latesTargetedQuiz) {
       latesTargetedQuiz.target = undefined
-      latesTargetedQuiz.save()
+      await latesTargetedQuiz.save()
     }
   }
   const validQuestions = validateQuestions(req.body.questions)
@@ -350,11 +350,17 @@ router.put('/:id', async (req, res) => {
     return res.status(400).send(validQuestions.error)
 
   req.body.totalMarks = validQuestions.totalMarks
-  const updateDocument = await Quiz.findOneAndUpdate({
-    _id: req.params.id
-  }, req.body, {
-    new: true
-  })
+
+  quiz.name = req.body.name
+  quiz.instructions = req.body.instructions
+  quiz.target = req.body.target
+  quiz.duration = req.body.duration
+  quiz.questions = req.body.questions
+  quiz.totalMarks = req.body.totalMarks
+  quiz.instructor = req.body.instructor
+  quiz.published = req.body.published
+
+  const updateDocument = await quiz.save()
   if (!updateDocument)
     return res.status(500).send("Error ocurred")
 

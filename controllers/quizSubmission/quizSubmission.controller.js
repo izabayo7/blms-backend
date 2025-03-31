@@ -106,8 +106,10 @@ router.get('/student/:id', async (req, res) => {
       return res.status(404).send(`Ther are no submissions for ${student.surName} ${student.otherNames}`)
     quizSubmissions = await injectQuiz(quizSubmissions)
     for (const i in quizSubmissions) {
-      quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
-      quizSubmissions[i].quiz = quizSubmissions[i].quiz[0]
+      if (quizSubmissions[i].quiz) {
+        quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
+        quizSubmissions[i].quiz = quizSubmissions[i].quiz[0]
+      }
     }
     quizSubmissions = await injectUser(quizSubmissions, 'student')
     return res.status(200).send(quizSubmissions)
@@ -185,7 +187,7 @@ router.get('/instructor/:id', async (req, res) => {
         quiz: quiz._id
       }).lean()
       if (quizSubmissions.length > 0) {
-        quizSubmissions = await injectUser(quizSubmissions,'student')
+        quizSubmissions = await injectUser(quizSubmissions, 'student')
         quizSubmissions = await injectQuiz(quizSubmissions)
         for (const i in quizSubmissions) {
           quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
