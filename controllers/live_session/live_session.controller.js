@@ -12,7 +12,8 @@ const {
   Create_or_update_live_session,
   deleteDocument,
   Chapter,
-  updateDocument
+  updateDocument,
+  createDocument
 } = require('../../utils/imports')
 
 // create router
@@ -99,7 +100,7 @@ router.get('/:type/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(formatResult(400, error.details[0].live_session))
+      return res.send(formatResult(400, error.details[0].message))
 
     req.params.type = req.params.type.toLocaleLowerCase()
 
@@ -166,7 +167,7 @@ router.post('/', async (req, res) => {
       error
     } = validate_live_session(req.body)
     if (error)
-      return res.send(formatResult(400, error.details[0].live_session))
+      return res.send(formatResult(400, error.details[0].message))
 
     req.body.target.type = req.body.target.type.toLocaleLowerCase()
 
@@ -232,7 +233,7 @@ router.put('/:id', async (req, res) => {
       error
     } = validate_live_session(req.body)
     if (error)
-      return res.send(formatResult(400, error.details[0].live_session))
+      return res.send(formatResult(400, error.details[0].message))
 
 
     let live_session = await findDocument(Live_session, {
@@ -300,7 +301,7 @@ router.delete('/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(formatResult(400, error.details[0].live_session))
+      return res.send(formatResult(400, error.details[0].message))
 
     let live_session = await findDocument(Live_session, {
       _id: req.params.id

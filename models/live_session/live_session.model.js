@@ -34,7 +34,7 @@ function validate_live_session(credentials) {
         target: Joi.object({
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
-        }),
+        }).required(),
         starting_time: Joi.date().required(),
         quiz: Joi.ObjectId()
     }
