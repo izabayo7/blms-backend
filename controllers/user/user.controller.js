@@ -534,7 +534,7 @@ router.get('/current', auth, async (req, res) => {
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: user_name
- *         description: User's id
+ *         description: User name
  *         in: path
  *         required: true
  *         type: string
@@ -550,6 +550,54 @@ router.get('/:user_name', auth, async (req, res) => {
   try {
     let user = await findDocument(User, {
       user_name: req.params.user_name
+    })
+
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    user = await add_user_details([user])
+    user = user[0]
+
+    return res.send(formatResult(u, u, user))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/byId/{id}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: Returns a specified user
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: User's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/byId/:id', auth, async (req, res) => {
+  try {
+
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, "invalid id"))
+
+    let user = await findDocument(User, {
+      _id: req.params.id
     })
 
     if (!user)
