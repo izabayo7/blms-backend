@@ -5,10 +5,24 @@ const {
     timestamps
 } = require('../../utils/imports')
 
+const role_schema = new mongoose.Schema({
+    id: {
+        type: String,
+        unique: true,
+        required: true
+    },
+    // role status 1(active) 0(inactive)
+    status: {
+        type: Number,
+        default: 1
+    },
+})
+role_schema.plugin(timestamps)
+
 const user_category_schema = new mongoose.Schema({
     name: {
         type: String,
-        unique: String,
+        unique: true,
         required: true
     },
     description: {
@@ -18,7 +32,8 @@ const user_category_schema = new mongoose.Schema({
     status: {
         type: Number,
         default: 1
-    }
+    },
+    user_roles: [role_schema]
 })
 
 user_category_schema.plugin(timestamps)
@@ -29,6 +44,10 @@ function validate_user_category(credentials) {
     const schema = {
         name: Joi.string().min(5).required(),
         description: Joi.string().min(10),
+        user_roles: Joi.array().min(1).items({
+            id: Joi.ObjectId().required(),
+            status: Joi.number().min(0).max(1)
+        })
     }
     return Joi.validate(credentials, schema)
 }

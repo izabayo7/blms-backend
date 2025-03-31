@@ -11,7 +11,8 @@ const {
   findDocument,
   findDocuments,
   User,
-  u
+  u,
+  User_role
 } = require('../../utils/imports')
 
 // create router
@@ -133,11 +134,21 @@ router.post('/', async (req, res) => {
       name: req.body.name
     })
     if (user_category.data)
-      return res.send(formatResult(404, `User_category ${req.body.name} arleady exist`))
+      return res.send(formatResult(400, `User_category ${req.body.name} arleady exist`))
+
+    for (const i in req.body.user_roles) {
+      // check if user_role exist
+      let user_role = await findDocument(User_role, {
+        _id: req.body.user_roles[i].id
+      })
+      if (!user_role.data)
+        return res.send(formatResult(404, `Use_role ${req.body.user_roles[i].id} doesn't exist`))
+    }
 
     let result = await createDocument(User_category, {
       name: req.body.name,
-      description: req.body.description
+      description: req.body.description,
+      user_roles: req.body.user_roles
     })
     return res.send(result)
   } catch (error) {
@@ -189,6 +200,23 @@ router.put('/:id', async (req, res) => {
     if (!user_category.data)
       return res.send(formatResult(404, `User_category with code ${req.params.id} doens't exist`))
 
+    // check if user_category name is available
+    user_category = await findDocument(User_category, {
+      _id: { $ne: req.params.id },
+      name: req.body.name
+    })
+    if (user_category.data)
+      return res.send(formatResult(400, `User_category ${req.body.name} arleady exist`))
+
+    for (const i in req.body.user_roles) {
+      // check if user_role exist
+      let user_role = await findDocument(User_role, {
+        _id: req.body.user_roles[i].id
+      })
+      if (!user_role.data)
+        return res.send(formatResult(404, `Use_role ${req.body.user_roles[i].id} doesn't exist`))
+    }
+
     const result = await updateDocument(User_category, req.params.id, req.body)
     return res.send(result)
   } catch (error) {
@@ -226,10 +254,10 @@ router.delete('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    let user_category = await User_category.findOne({
+    let user_category = await findDocument(User_category, {
       _id: req.params.id
     })
-    if (!user_category)
+    if (!user_category.data)
       return res.send(formatResult(404, `User_category of Code ${req.params.id} Not Found`))
 
     // check if the user_category is never used

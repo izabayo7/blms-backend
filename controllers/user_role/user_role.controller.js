@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
       name: req.body.name
     })
     if (user_role.data)
-      return res.send(formatResult(404, `User_role ${req.body.name} arleady exist`))
+      return res.send(formatResult(400, `User_role ${req.body.name} arleady exist`))
 
     let result = await createDocument(User_role, {
       name: req.body.name,
@@ -189,6 +189,14 @@ router.put('/:id', async (req, res) => {
     if (!user_role.data)
       return res.send(formatResult(404, `User_role with code ${req.params.id} doens't exist`))
 
+    // check if user_role name is available
+    user_role = await findDocument(User_role, {
+      _id: { $ne: req.params.id },
+      name: req.body.name
+    })
+    if (user_role.data)
+      return res.send(formatResult(400, `User_role ${req.body.name} arleady exist`))
+
     const result = await updateDocument(User_role, req.params.id, req.body)
     return res.send(result)
   } catch (error) {
@@ -226,7 +234,7 @@ router.delete('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    let user_role = await User_role.findOne({
+    let user_role = await findDocument(User_role, {
       _id: req.params.id
     })
     if (!user_role)

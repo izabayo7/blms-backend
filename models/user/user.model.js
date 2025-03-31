@@ -5,19 +5,6 @@ const {
     timestamps
 } = require('../../utils/imports')
 
-const role_schema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true
-    },
-    // role status 1(active) 0(inactive)
-    status: {
-        type: Number,
-        default: 1
-    },
-})
-role_schema.plugin(timestamps)
-
 const userSchema = new mongoose.Schema({
     sur_name: {
         type: String,
@@ -67,7 +54,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    roles: [role_schema],
     status: {
         stillMember: {
             type: Boolean,
@@ -99,10 +85,6 @@ function validate_user(credentials) {
         date_of_birth: Joi.date().required(),
         college: Joi.ObjectId().required(),
         category: Joi.ObjectId().required(),
-        roles: Joi.array().items({
-            id: Joi.ObjectId().required(),
-            status: Joi.number().min(0).max(1)
-        })
     }
     return Joi.validate(credentials, schema)
 }

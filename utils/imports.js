@@ -40,20 +40,20 @@ module.exports.User_category = user_category
 module.exports.validate_user_category = validate_user_category
 
 const {
-    user_faculty_college_year,
-    validate_user_faculty_college_year
-} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
-
-module.exports.User_faculty_college_year = user_faculty_college_year
-module.exports.validate_user_faculty_college_year = validate_user_faculty_college_year
-
-const {
     user_role,
     validate_user_role
 } = require('../models/user_role/user_role.model')
 
 module.exports.User_role = user_role
 module.exports.validate_user_role = validate_user_role
+
+const {
+    user_faculty_college_year,
+    validate_user_faculty_college_year
+} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
+
+module.exports.User_faculty_college_year = user_faculty_college_year
+module.exports.validate_user_faculty_college_year = validate_user_faculty_college_year
 
 const {
     user_progress,
