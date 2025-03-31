@@ -1,12 +1,11 @@
-
 exports.confirm_email = ({
-  user_name,
-  institution_name,
-  institution_address,
-  subscription,
-  token
-}) => {
-  const result = `
+                             user_name,
+                             institution_name,
+                             institution_address,
+                             subscription,
+                             token
+                         }) => {
+    const result = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -259,16 +258,16 @@ exports.confirm_email = ({
     </html>
   `;
 
-  return result;
+    return result;
 };
 
 exports.reset_password = ({
-  user_name,
-  institution_name,
-  token,
-  // expiration_time,
-}) => {
-  const result = `
+                              user_name,
+                              institution_name,
+                              token,
+                              // expiration_time,
+                          }) => {
+    const result = `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -438,16 +437,16 @@ exports.reset_password = ({
   </html>
   `;
 
-  return result;
+    return result;
 };
 
 exports.requestCallback = ({
-  user_name,
-  institution_name,
-  role_at_institution,
-  phone_number,
-}) => {
-  const result = `
+                               user_name,
+                               institution_name,
+                               role_at_institution,
+                               phone_number,
+                           }) => {
+    const result = `
     <!DOCTYPE html>
     <html lang="en">
     
@@ -501,9 +500,11 @@ exports.requestCallback = ({
                       background: #193074;
                       color: white;
                       border: none;
-                      text-align: center;
-                      margin: 4px auto;
-                      cursor: pointer;
+                    display: flex;
+                    justify-content: center;
+                    margin: auto;
+                    cursor: pointer;
+                    align-items: center;
                     " onfocus="this.style.outline='none'">
                   ${phone_number}
                 </div>
@@ -567,15 +568,15 @@ exports.requestCallback = ({
     </html>
   `;
 
-  return result;
+    return result;
 };
 
 exports.contactUs = ({
-  user_name,
-  user_email,
-  message,
-}) => {
-  const result = `
+                         user_name,
+                         user_email,
+                         message,
+                     }) => {
+    const result = `
     <!DOCTYPE html>
     <html lang="en">
     
@@ -712,16 +713,16 @@ exports.contactUs = ({
     </html>
   `;
 
-  return result;
+    return result;
 };
 
 exports.invitationToSystem = ({
-  inviter,
-  institution,
-  token,
-  user_group
-}) => {
-  const result = `
+                                  inviter,
+                                  institution,
+                                  token,
+                                  user_group
+                              }) => {
+    const result = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -891,5 +892,5 @@ exports.invitationToSystem = ({
     
     `;
 
-  return result;
+    return result;
 };
