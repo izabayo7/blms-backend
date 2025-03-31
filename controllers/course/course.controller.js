@@ -1,5 +1,6 @@
 // import dependencies
 const { User_group } = require('../../models/user_group/user_group.model')
+const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     fs,
@@ -514,19 +515,13 @@ router.get('/faculty/:id', async (req, res) => {
 
 /**
  * @swagger
- * /course/user/{user_name}:
+ * /course/user:
  *   get:
  *     tags:
  *       - Course
  *     description: Returns courses of a specified user
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: user_name
- *         description: User name
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -535,29 +530,20 @@ router.get('/faculty/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name', async (req, res) => {
+router.get('/user', async (req, res) => {
     try {
-        let user = await findDocument(User, {
-            user_name: req.params.user_name
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
         let result
 
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-        if (user_category.name == 'STUDENT') {
-            const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-                user: user._id,
-                status: 1
+        if (req.user.category.name == 'STUDENT') {
+            const user_user_group = await findDocument(User_user_group, {
+                user: req.user._id,
+                status: "ACTIVE"
             })
-            if (!user_faculty_college_year)
+            if (!user_user_group)
                 return res.send(formatResult(200, undefined, []))
 
             result = await findDocuments(Course, {
-                faculty_college_year: user_faculty_college_year.faculty_college_year,
+                faculty_college_year: user_user_group.user_group,
                 published: true
             })
             result = simplifyObject(result)
