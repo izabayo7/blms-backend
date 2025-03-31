@@ -1,4 +1,5 @@
 // import dependencies
+const {countDocuments} = require("../../utils/imports");
 const {getStudentAssignments} = require("../../utils/imports");
 const {Assignment_submission} = require("../../models/assignment_submission/assignment_submission.model");
 const {addAssignmentTarget} = require("../../utils/imports");
@@ -472,10 +473,19 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
 
         // check if course exist
         let assignment = await findDocument(Assignment, {
-            _id: req.params.id
+            _id: req.params.id,
+            user: req.user._id,
         })
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
+
+        let unmarked = await countDocuments(Assignment_submission, {
+            assignment: req.params.id,
+            marked: false
+        })
+
+        if (req.params.status === "RELEASED" && unmarked)
+            return res.send(formatResult(403, `Please mark the remaining ${unmarked} submission${unmarked > 1 ? 's' : ''} before releasing marks`))
 
 
         let result = await updateDocument(Assignment, req.params.id,
