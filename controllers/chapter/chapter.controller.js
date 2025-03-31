@@ -500,6 +500,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - Chapter
  *     description: Update chapter content
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
