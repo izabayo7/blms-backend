@@ -139,36 +139,7 @@ exports.createFaculty = async (req, res) => {
   }
 }
 
-/**
- * @swagger
- * /faculty/{id}:
- *   put:
- *     tags:
- *       - Faculty
- *     description: Update Faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         in: path
- *         type: string
- *         description: Faculty's Id
- *       - name: body
- *         description: Fields for a Faculty
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/Faculty'
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
+
 router.put('/:id', async (req, res) => {
   try {
     let {
