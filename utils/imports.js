@@ -1775,7 +1775,7 @@ exports.add_user_details = async (users) => {
     for (const i in users) {
         const category = await this.findDocument(this.User_category, {_id: users[i].category})
         users[i].category = category.name
-        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email"])
+        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email","registration_number"])
         if (users[i].profile) {
             users[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
         }
