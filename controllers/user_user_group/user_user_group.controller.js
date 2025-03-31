@@ -105,7 +105,7 @@ router.get('/user/:id', async (req, res) => {
         // result = await injectDetails([result])
         // result = result[0]
 
-        return res.send(formatResult(u,u,result))
+        return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
