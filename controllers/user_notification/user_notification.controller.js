@@ -80,6 +80,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - User_notification
  *     description: Returns user_notifications for a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Users's id
