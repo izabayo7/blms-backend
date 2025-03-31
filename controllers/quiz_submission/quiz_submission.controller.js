@@ -494,7 +494,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
- *         enum: ['view','donwload']
+ *         enum: ['view','download']
  *     responses:
  *       200:
  *         description: OK
@@ -512,7 +512,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let allowed_actions = ['view', 'donwload']
+        let allowed_actions = ['view', 'download']
         if (!allowed_actions.includes(req.params.actions))
             return res.send(formatResult(400, 'invalid action'))
 
