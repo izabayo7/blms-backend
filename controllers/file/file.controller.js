@@ -481,7 +481,7 @@ router.get('/studentProfile/:id/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/courseCoverPicture/:id', async (req, res) => {
+router.get('/courseCoverPicture/:id/:file_name', async (req, res) => {
     try {
 
         const {
@@ -641,7 +641,7 @@ router.get('/chapterMainVideo/:id/:file_name', async (req, res) => {
 
         if (chapter.mainVideo !== req.params.file_name)
             return res.status(404).send(`${req.params.file_name} was not found`)
-            
+
         const course = await Course.findOne({
             _id: chapter.course
         })

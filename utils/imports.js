@@ -410,7 +410,7 @@ module.exports.formatContacts = async (messages, userId) => {
             const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
             id = user._id
             name = `${user.surName} ${user.otherNames}`
-            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}` : ''
+            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}` : ''
             unreadMessagesLength = await Message.find({
                 sender: user._id,
                 receivers: {

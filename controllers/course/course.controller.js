@@ -17,10 +17,10 @@ const {
   _,
   validateObjectId,
   StudentProgress,
-  removeDocumentVersion
+  removeDocumentVersion,
+  Chapter,
+  Quiz
 } = require('../../utils/imports')
-const { Chapter } = require('../../models/chapter/chapter.model')
-const { Quiz } = require('../../models/quiz/quiz.model')
 
 // create router
 const router = express.Router()
@@ -654,7 +654,7 @@ async function injectInstructor(courses) {
 }
 
 // add chapters in their parent courses
-async function injectChapters(courses) {
+async function  injectChapters(courses) {
   for (const i in courses) {
     courses[i].assignmentsLength = 0
     // add course cover picture media path
@@ -674,7 +674,7 @@ async function injectChapters(courses) {
       courses[i].chapters[k].mainDocument = `http://${process.env.HOST}/kurious/file/chapterDocument/${courses[i].chapters[k]._id}`
       // add media path of the video
       if (courses[i].chapters[k].mainVideo) {
-        courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}`
+        courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}/${courses[i].chapters[k].mainVideo}`
       }
       // add attachments
       const attachments = await Attachment.find({
