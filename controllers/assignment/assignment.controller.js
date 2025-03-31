@@ -1,4 +1,5 @@
 // import dependencies
+const {upload_multiple} = require("../../utils/imports");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
 const {validate_assignment} = require("../../models/assignments/assignments.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
@@ -196,7 +197,7 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/attachment/:file_name', async (req, res) => {
+router.get('/:id/attachment/:file_name', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
 
         const {
@@ -213,14 +214,10 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
 
         let file_found = false
 
-        for (const i in assignment.questions) {
-            if (assignment.questions[i].type.includes('image_select')) {
-                for (const k in assignment.questions[i].options.choices) {
-                    if (assignment.questions[i].options.choices[k].src == req.params.file_name) {
-                        file_found = true
-                        break
-                    }
-                }
+        for (const i in assignment.attachments) {
+            if (assignment.attachments[i].src === req.params.file_name) {
+                file_found = true
+                break
             }
             if (file_found)
                 break
@@ -235,15 +232,17 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
         const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assignment._id}/${req.params.file_name}`)
 
         const file_type = await findFileType(req.params.file_name)
-
-        if (file_type === 'image') {
-            sendResizedImage(req, res, file_path)
-        } else if (file_type == 'video') {
-            streamVideo(req, res, file_path)
+        if (req.query.download === 'true') {
+            return res.download(file_path)
         } else {
-            return res.sendFile(file_path)
+            if (file_type === 'image') {
+                sendResizedImage(req, res, file_path)
+            } else if (file_type === 'video') {
+                streamVideo(req, res, file_path)
+            } else {
+                return res.sendFile(file_path)
+            }
         }
-
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -412,11 +411,11 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
 /**
  * @swagger
- * /assignments/release_marks/{id}/{status}:
+ * /assignments/changeStatus/{id}/{status}:
  *   put:
  *     tags:
  *       - Assignment
- *     description: Publish assignment marks
+ *     description: Update assignment status
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -452,10 +451,10 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
         if (!["DRAFT", "PUBLISHED", "RELEASED"].includes(req.params.status))
             return res.send(formatResult(400, "Invalid status"))
 
-            // check if course exist
-            let assignment = await findDocument(Assignment, {
-                _id: req.params.id
-            })
+        // check if course exist
+        let assignment = await findDocument(Assignment, {
+            _id: req.params.id
+        })
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
 
@@ -511,7 +510,7 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
  *       500:
  *         description: Internal Server error
  */
-router.post('/:id/attachment', async (req, res) => {
+router.post('/:id/attachment', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         const {
             error
@@ -525,11 +524,7 @@ router.post('/:id/attachment', async (req, res) => {
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
 
-        const user = await findDocument(User, {
-            _id: assignment.user
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${req.params.id}`)
 
         req.kuriousStorageData = {
             dir: path,
@@ -537,20 +532,16 @@ router.post('/:id/attachment', async (req, res) => {
 
         let file_missing = false
 
-        for (const i in assignment.questions) {
-            if (assignment.questions[i].type.includes('image_select')) {
-                for (const k in assignment.questions[i].options.choices) {
-                    const file_found = await fs.exists(`${path}/${assignment.questions[i].options.choices[k].src}`)
-                    if (!file_found) {
-                        file_missing = true
-                    }
-                }
+        for (const i in assignment.attachments) {
+            const file_found = await fs.exists(`${path}/${assignment.attachments[i].src}`)
+            if (!file_found) {
+                file_missing = true
             }
         }
         if (!file_missing)
             return res.send(formatResult(400, 'all attachments for this assignment were already uploaded'))
 
-        upload_multiple_images(req, res, async (err) => {
+        upload_multiple(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
