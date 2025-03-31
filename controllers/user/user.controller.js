@@ -257,13 +257,13 @@ router.get('/search', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user/{id}:
+ * /user/{user_name}:
  *   get:
  *     tags:
  *       - User
  *     description: Returns a specified user
  *     parameters:
- *       - name: id
+ *       - name: user_name
  *         description: User's id
  *         in: path
  *         required: true
@@ -276,20 +276,14 @@ router.get('/search', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', async (req, res) => {
+router.get('/:user_name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     let user = await findDocument(User, {
-      _id: req.params.id
+      user_name: req.params.user_name
     })
 
     if (!user)
-      return res.send(formatResult(404, `User ${req.params.id} Not Found`))
+      return res.send(formatResult(404, 'user not found'))
 
     user = await add_user_details([user])
     user = user[0]
@@ -535,7 +529,7 @@ router.post('/login', async (req, res) => {
 
     if (!user)
       return res.send(formatResult(400, erroMessage))
-console.log('user found')
+
     // check if passed password is valid
     const validPassword = await bcrypt.compare(req.body.password, user.password)
 
