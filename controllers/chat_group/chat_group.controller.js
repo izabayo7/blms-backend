@@ -25,7 +25,8 @@ const {
   simplifyObject,
   generateGroupCode,
   validateChat_group_code,
-  savedecodedBase64Image
+  savedecodedBase64Image,
+  validate_chat_group_profile_udpate
 } = require('../../utils/imports')
 
 // create router
@@ -608,14 +609,14 @@ router.put('/:code', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
- *        - name: body
- *          description: Fields for chatgroup profile upload (profile takes base64 encoded string)
- *          in: body
- *          required: true
- *          schema:
- *            properties:
- *              profile:
- *                type: string
+ *       - name: body
+ *         description: Fields for chatgroup profile upload (profile takes base64 encoded string)
+ *         in: body
+ *         required: true
+ *         schema:
+ *           properties:
+ *             profile:
+ *               type: string
  *     responses:
  *       201:
  *         description: Created
@@ -633,6 +634,12 @@ router.put('/:code/profile', async (req, res) => {
       error
     } = validateChat_group_code(req.params.code)
     req.params.code = parseInt(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+
+    error = validate_chat_group_profile_udpate(req.body)
+    error = error.error
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 

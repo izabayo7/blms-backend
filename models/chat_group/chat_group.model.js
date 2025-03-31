@@ -83,8 +83,8 @@ function validate_chat_group(credentials, method = 'create') {
 }
 
 function validate_chat_group_profile_udpate(credentials) {
-    const schema = method == {
-        profile: Joi.string().regex(base64EncodedImage).required()
+    const schema = {
+        profile: Joi.string().regex(/^data:([A-Za-z-+\/]+);base64,(.+)$/).required()
     }
     return Joi.validate(credentials, schema)
 }
@@ -95,3 +95,4 @@ const chat_group = mongoose.model('chat_group', chat_group_schema)
 // export the model and the validation function
 module.exports.chat_group = chat_group
 module.exports.validate_chat_group = validate_chat_group
+exports.validate_chat_group_profile_udpate = validate_chat_group_profile_udpate

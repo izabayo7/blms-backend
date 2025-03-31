@@ -163,11 +163,13 @@ exports.validate_quiz_submission = validate_quiz_submission
 const {
   chat_group,
   validate_chat_group,
-  validate_group_members
+  validate_group_members,
+  validate_chat_group_profile_udpate
 } = require('../models/chat_group/chat_group.model')
 
 exports.Chat_group = chat_group
 exports.validate_chat_group = validate_chat_group
+exports.validate_chat_group_profile_udpate = validate_chat_group_profile_udpate
 
 const {
   notification,
@@ -1454,16 +1456,31 @@ exports.savedecodedBase64Image = (dataString, dir) => {
     if (!exist) {
       return fs.mkdir(dir, {
         recursive: true
-      }, error => cb(error, dir))
+      })
     }
   })
 
   response.type = matches[1];
   response.data = new Buffer(matches[2], 'base64');
 
-  const filename = `profile_${new Date().getTime()}`
+  let extension = '';
 
-  fs.writeFile(`${dir}/${filename}`, imageBuffer.data, function (err) { if (err) return err });
+  if ("jpeg" == dataString.split(";")[0].split("/")[1]) {
+    extension = '.jpg';
+  }
+  if ("gif" == dataString.split(";")[0].split("/")[1]) {
+    extension = '.gif';
+  }
+  if ("x-icon" == dataString.split(";")[0].split("/")[1]) {
+    extension = '.ico';
+  }
+  if ("png" == dataString.split(";")[0].split("/")[1]) {
+    extension = '.png';
+  }
+
+  const filename = `profile_${new Date().getTime()}${extension}`
+
+  fs.writeFile(`${dir}/${filename}`, response.data, function (err) { if (err) return err });
   return {
     filename: filename
   }
