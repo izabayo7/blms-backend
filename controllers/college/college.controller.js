@@ -196,11 +196,11 @@ router.get('/:id', auth, async (req, res) => {
 
 /**
  * @swagger
- * /college/checkNamExistance/{college_name}:
+ * /college/checkNameExistance/{college_name}:
  *   get:
  *     tags:
  *       - College
- *     description: Returns the logo of a specified college
+ *     description: tells if the given name is taken or available
  *     parameters:
  *       - name: college_name
  *         description: College name
@@ -215,7 +215,7 @@ router.get('/:id', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkNamExistance/:college_name', this.checkCollegeNameExistance)
+router.get('/checkNameExistance/:college_name', this.checkCollegeNameExistance)
 
 /**
  * @swagger
@@ -625,7 +625,7 @@ router.delete('/:id', auth, async (req, res) => {
  */
 exports.checkCollegeNameExistance = async (req, res) => {
     try {
-        const college = await College.findOne({name: req.params.name, status: 1});
+        const college = await College.findOne({name: req.params.college_name, status: 1});
         if (college) return res.send(formatResult(200, 'Name Already Taken', {exists: true}));
         return res.send(formatResult(200, 'Name Available', {exists: false}));
     } catch (err) {
