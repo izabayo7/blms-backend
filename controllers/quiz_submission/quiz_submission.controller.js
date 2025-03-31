@@ -354,7 +354,6 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     result[0].quiz = result[0].quiz[0]
     result = await injectUserFeedback(result)
     result = result[0]
-    console.log('ahhhhhhhhhhhh')
     return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -872,7 +871,6 @@ async function injectUserFeedback(submissions) {
     for (const k in submissions[i].answers) {
       let feedback = await Comment.find({ "target.type": 'quiz_submission_answer', "target.id": submissions[i].answers[k]._id })
       feedback = await injectUser(simplifyObject(feedback), 'sender')
-      console.log(feedback)
       submissions[i].answers[k].feedback = feedback
     }
   }

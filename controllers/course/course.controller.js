@@ -239,7 +239,6 @@ router.get('/user/:user_name', async (req, res) => {
             result = await findDocuments(Course, {
                 faculty_college_year: user_faculty_college_year.faculty_college_year
             })
-            console.log(result)
             result = simplifyObject(result)
             result = await injectUserProgress(result, user._id + '')
             result = await injectUser(result, 'user')
