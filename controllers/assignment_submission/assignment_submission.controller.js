@@ -547,6 +547,9 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
         if (req.user.category.name === 'INSTRUCTOR')
             req.body.marked = true
 
+        if (!assignment_submission.assignment.allowMultipleFilesSubmission && req.body.attachments.length > 1)
+            return res.send(formatResult(400, 'You can only upload one file'))
+
         // delete removed files
         for (const i in assignment_submission.attachments) {
             let deleteFile = true
