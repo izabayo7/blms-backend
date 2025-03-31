@@ -690,7 +690,7 @@ module.exports.addAttachedCourse = async (quizes) => {
             }
             let courseId = quizes[i].target.id
             if (quizes[i].target.type == 'chapter') {
-                const chapter = await this.Chapter.findOneAndDelete({ _id: quizes[i].target.id })
+                const chapter = await this.Chapter.findOne({ _id: quizes[i].target.id })
                 courseId = chapter.course
             }
             const course = await this.Course.findOne({ _id: courseId })
