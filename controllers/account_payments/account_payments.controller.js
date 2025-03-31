@@ -185,11 +185,7 @@ async function createPayment(req, res) {
             total_users = 1
         }
 
-        let balance = req.body.amount_paid
-
-        let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, total_users)
-
-        balance -= amount
+        let balance = await calculateAmount(college, req.body.periodType, req.body.periodValue, total_users)
 
         const payment = await Account_payments.findOneAndUpdate({
             user: req.user._id,
@@ -198,6 +194,8 @@ async function createPayment(req, res) {
 
         if (payment)
             balance -= payment.balance
+
+        balance = req.body.amount_paid - balance
 
 
         const startingDate = payment ? payment.endingDate : new Date().toISOString()

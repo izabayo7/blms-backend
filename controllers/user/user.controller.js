@@ -1671,7 +1671,8 @@ async function addUserBill(collegeId, userCategory) {
     collegeId = collegeId.toString()
 
     const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
-    if (college && ['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
+    console.log(college)
+    if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
         const payment = await Account_payments.findOne({
             college: collegeId,
             status: 'ACTIVE'
@@ -1683,7 +1684,7 @@ async function addUserBill(collegeId, userCategory) {
         today.setDate(today.getDate() + 1)
 
         // all payments that this user will be valid to
-        const payments = await Account_payments.findOne({
+        const payments = await Account_payments.find({
             college: collegeId,
             endingDate: {$gt: new Date(today).toISOString()}
         })
