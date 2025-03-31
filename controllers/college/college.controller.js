@@ -53,6 +53,8 @@ const router = express.Router()
  *     tags:
  *       - College
  *     description: Get all Colleges
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
