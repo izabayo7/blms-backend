@@ -5,20 +5,20 @@ const Joi = require('joi')
 const compress_images = require('compress-images')
 const bcrypt = require('bcryptjs')
 Joi.ObjectId = require('joi-objectid')(Joi)
-module.exports.express = require('express')
-module.exports.cors = require('cors')
-module.exports.bodyparser = require('body-parser')
-module.exports.mongoose = require('mongoose')
-module.exports.Joi = Joi
-module.exports.jwt = require('jsonwebtoken')
-module.exports.config = require('config')
-module.exports.bcrypt = bcrypt
-module.exports.multer = require('multer')
-module.exports.fs = require('fs-extra')
-module.exports.timestamps = require('mongoose-timestamp');
-module.exports._ = require('lodash')
-module.exports.path = require('path')
-module.exports.RTCMultiConnectionServer = require('rtcmulticonnection-server');
+exports.express = require('express')
+exports.cors = require('cors')
+exports.bodyparser = require('body-parser')
+exports.mongoose = require('mongoose')
+exports.Joi = Joi
+exports.jwt = require('jsonwebtoken')
+exports.config = require('config')
+exports.bcrypt = bcrypt
+exports.multer = require('multer')
+exports.fs = require('fs-extra')
+exports.timestamps = require('mongoose-timestamp');
+exports._ = require('lodash')
+exports.path = require('path')
+exports.RTCMultiConnectionServer = require('rtcmulticonnection-server');
 
 
 /**
@@ -30,135 +30,135 @@ const {
   validate_user
 } = require('../models/user/user.model')
 
-module.exports.User = user
-module.exports.validate_user = validate_user
+exports.User = user
+exports.validate_user = validate_user
 
 const {
   user_category,
   validate_user_category
 } = require('../models/user_category/user_category.model')
 
-module.exports.User_category = user_category
-module.exports.validate_user_category = validate_user_category
+exports.User_category = user_category
+exports.validate_user_category = validate_user_category
 
 const {
   user_role,
   validate_user_role
 } = require('../models/user_role/user_role.model')
 
-module.exports.User_role = user_role
-module.exports.validate_user_role = validate_user_role
+exports.User_role = user_role
+exports.validate_user_role = validate_user_role
 
 const {
   college,
   validate_college
 } = require('../models/college/college.model')
 
-module.exports.College = college
-module.exports.validate_college = validate_college
+exports.College = college
+exports.validate_college = validate_college
 
 const {
   user_faculty_college_year,
   validate_user_faculty_college_year
 } = require('../models/user_faculty_college_year/user_faculty_college_year.model')
 
-module.exports.User_faculty_college_year = user_faculty_college_year
-module.exports.validate_user_faculty_college_year = validate_user_faculty_college_year
+exports.User_faculty_college_year = user_faculty_college_year
+exports.validate_user_faculty_college_year = validate_user_faculty_college_year
 
 const {
   user_progress,
   validate_user_progress
 } = require('../models/user_progress/user_progress.model')
 
-module.exports.User_progress = user_progress
-module.exports.validate_user_progress = validate_user_progress
+exports.User_progress = user_progress
+exports.validate_user_progress = validate_user_progress
 
 const {
   faculty,
   validate_faculty
 } = require('../models/faculty/faculty.model')
 
-module.exports.Faculty = faculty
-module.exports.validate_faculty = validate_faculty
+exports.Faculty = faculty
+exports.validate_faculty = validate_faculty
 
 const {
   faculty_college,
   validate_faculty_college
 } = require('../models/faculty_college/faculty_college.model')
 
-module.exports.Faculty_college = faculty_college
-module.exports.validate_faculty_college = validate_faculty_college
+exports.Faculty_college = faculty_college
+exports.validate_faculty_college = validate_faculty_college
 
 const {
   faculty_college_year,
   validate_faculty_college_year
 } = require('../models/faculty_college_year/faculty_college_year.model')
 
-module.exports.Faculty_college_year = faculty_college_year
-module.exports.validate_faculty_college_year = validate_faculty_college_year
+exports.Faculty_college_year = faculty_college_year
+exports.validate_faculty_college_year = validate_faculty_college_year
 
 const {
   college_year,
   validate_college_year
 } = require('../models/college_year/college_year.model')
 
-module.exports.College_year = college_year
-module.exports.validate_college_year = validate_college_year
+exports.College_year = college_year
+exports.validate_college_year = validate_college_year
 
 const {
   course,
   validate_course
 } = require('../models/course/course.model')
 
-module.exports.Course = course
-module.exports.validate_course = validate_course
+exports.Course = course
+exports.validate_course = validate_course
 
 const {
   chapter,
   validate_chapter
 } = require('../models/chapter/chapter.model')
 
-module.exports.Chapter = chapter
-module.exports.validate_chapter = validate_chapter
+exports.Chapter = chapter
+exports.validate_chapter = validate_chapter
 
 const {
   message,
   validate_message
 } = require('../models/message/message.model')
 
-module.exports.Message = message
-module.exports.validate_message = validate_message
+exports.Message = message
+exports.validate_message = validate_message
 
 const {
   comment,
   validate_comment
 } = require('../models/comments/comments.model')
 
-module.exports.Comment = comment
-module.exports.validate_comment = validate_comment
+exports.Comment = comment
+exports.validate_comment = validate_comment
 
 const {
   quiz,
   validate_quiz
 } = require('../models/quiz/quiz.model')
 
-module.exports.Quiz = quiz
-module.exports.validate_quiz = validate_quiz
+exports.Quiz = quiz
+exports.validate_quiz = validate_quiz
 
 const {
   quiz_submision,
   validate_quiz_submission
 } = require('../models/quiz_submission/quiz_submission.model')
 
-module.exports.Quiz_submission = quiz_submision
-module.exports.validate_quiz_submission = validate_quiz_submission
+exports.Quiz_submission = quiz_submision
+exports.validate_quiz_submission = validate_quiz_submission
 
 
 // const {
 //     fileFilter
 // } = require('./multer/fileFilter')
 
-// module.exports.fileFilter = fileFilter
+// exports.fileFilter = fileFilter
 
 const {
   chat_group,
@@ -166,36 +166,36 @@ const {
   validate_group_members
 } = require('../models/chat_group/chat_group.model')
 
-module.exports.Chat_group = chat_group
-module.exports.validate_chat_group = validate_chat_group
+exports.Chat_group = chat_group
+exports.validate_chat_group = validate_chat_group
 
 const {
   notification,
   validate_notification
 } = require('../models/notification/notification.model')
 
-module.exports.Notification = notification
-module.exports.validate_notification = validate_notification
+exports.Notification = notification
+exports.validate_notification = validate_notification
 
 const {
   user_notification,
   validate_user_notification
 } = require('../models/user_notification/user_notification.model')
 
-module.exports.User_notification = user_notification
-module.exports.validate_user_notification = validate_user_notification
+exports.User_notification = user_notification
+exports.validate_user_notification = validate_user_notification
 
 const {
   live_session,
   validate_live_session
 } = require('../models/live_session/live_session.model')
 
-module.exports.Live_session = live_session
-module.exports.validate_live_session = validate_live_session
+exports.Live_session = live_session
+exports.validate_live_session = validate_live_session
 
 
 
-module.exports.u = undefined
+exports.u = undefined
 
 /**
  * other functions
@@ -207,7 +207,7 @@ module.exports.u = undefined
  * @param {String} message Message
  * @param {Object} data Data
  */
-module.exports.formatResult = (status = 200, message = 'OK', data = undefined) => {
+exports.formatResult = (status = 200, message = 'OK', data = undefined) => {
   return {
     status: status,
     message: message.toString(),
@@ -219,20 +219,20 @@ module.exports.formatResult = (status = 200, message = 'OK', data = undefined) =
  *  checks if the given id is a mongoose objectId
  * @param {String} id  DocumentId
  */
-module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
+exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
 
 /**
  *  checks if the given id is a mongoose objectId
  * @param {Number} code  groupCOde
  */
-module.exports.validateChat_group_code = (code) => Joi.validate(code, Joi.number().required())
+exports.validateChat_group_code = (code) => Joi.validate(code, Joi.number().required())
 
 /**
  *  encrypts the given password
  * @param {String} password  password string
  * @returns {String} hashed_password
  */
-module.exports.hashPassword = async (password) => {
+exports.hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(10)
   const hashed = await bcrypt.hash(password, salt)
   return hashed
@@ -242,7 +242,7 @@ module.exports.hashPassword = async (password) => {
  *  validates the login credentials
  * @param {{email: String, password: String}} credentials  password string
  */
-module.exports.validateUserLogin = (credentials) => {
+exports.validateUserLogin = (credentials) => {
   const schema = {
     email_user_name_or_phone: Joi.string().required(),
     password: Joi.string().min(3).max(255).required()
@@ -256,7 +256,7 @@ module.exports.validateUserLogin = (credentials) => {
  * @param {Object} properties Model
  * @returns formattedResult 
  */
-module.exports.createDocument = async (model, properties) => {
+exports.createDocument = async (model, properties) => {
   try {
     let newDocument = new model(properties)
     const savedDocument = await newDocument.save()
@@ -273,7 +273,7 @@ module.exports.createDocument = async (model, properties) => {
  * @param {Object} properties Model
  * @returns formattedResult
  */
-module.exports.updateDocument = async (model, id, properties, simplified = true) => {
+exports.updateDocument = async (model, id, properties, simplified = true) => {
   try {
     const updatedDocument = await model.findOneAndUpdate({
       _id: id
@@ -292,7 +292,7 @@ module.exports.updateDocument = async (model, id, properties, simplified = true)
  * @param {Object} id MongoId of the document
  * @returns formattedResult
  */
-module.exports.deleteDocument = async (model, id) => {
+exports.deleteDocument = async (model, id) => {
   try {
     const deletedDocument = await model.findOneAndDelete({
       _id: id
@@ -312,7 +312,7 @@ module.exports.deleteDocument = async (model, id) => {
  * @param {Number} startIndex Specifies the startingIndex
  * @returns formattedResult
  */
-module.exports.findDocuments = async (model, query, fields, limit, startIndex, lean = true, formatted = false, sort) => {
+exports.findDocuments = async (model, query, fields, limit, startIndex, lean = true, formatted = false, sort) => {
   try {
     const documents = await model.find(query, fields).sort(sort).lean(lean).limit(limit).skip(startIndex).exec()
     return formatted ? this.formatResult(200, 'OK', documents) : documents
@@ -329,7 +329,7 @@ module.exports.findDocuments = async (model, query, fields, limit, startIndex, l
  * @param {Object} fields Specifies the needed fields
  * @returns formattedResult
  */
-module.exports.findDocument = async (model, query, fields, lean = true, formatted = false) => {
+exports.findDocument = async (model, query, fields, lean = true, formatted = false) => {
   try {
     const document = await model.findOne(query, fields).lean(lean).exec()
     return formatted ? this.formatResult(200, 'OK', document) : document
@@ -344,7 +344,7 @@ module.exports.findDocument = async (model, query, fields, lean = true, formatte
  * @param {Object} query Query object
  * @returns Number
  */
-module.exports.countDocuments = async (model, query) => {
+exports.countDocuments = async (model, query) => {
   return await model.find(query).countDocuments().exec()
 }
 
@@ -353,7 +353,7 @@ module.exports.countDocuments = async (model, query) => {
  * @param {String} model File_name
  * @returns File_type
  */
-module.exports.findFileType = async (file_name) => {
+exports.findFileType = async (file_name) => {
   const file_types = [{
     name: 'image',
     extensions: ['jpeg', 'jpg', 'png', 'webp']
@@ -368,18 +368,18 @@ module.exports.findFileType = async (file_name) => {
   return file_type.length ? file_type[0].name : null
 }
 
-module.exports.getCourse = async (id) => {
+exports.getCourse = async (id) => {
   let chapter = await Chapter.findOne({
     _id: id
   })
   return chapter.course
 }
-module.exports.removeDocumentVersion = (obj) => {
+exports.removeDocumentVersion = (obj) => {
   return this._.omit(obj, '__v')
 }
 
 // get histroy conversations between a user and his contact
-module.exports.getConversationMessages = async ({
+exports.getConversationMessages = async ({
   user_id,
   conversation_id,
   lastMessage,
@@ -476,7 +476,7 @@ function removeIds(message) {
 
 // remove messages in the same discussion
 function removeDuplicateDiscussions(sentMessages, receivedMessages) {
-  let _sentMessagesCopy = module.exports.simplifyObject(sentMessages), _receivedMessagesCopy = module.exports.simplifyObject(receivedMessages)
+  let _sentMessagesCopy = exports.simplifyObject(sentMessages), _receivedMessagesCopy = exports.simplifyObject(receivedMessages)
   let messagesToDelete = [
     // indices to remove in sentMessages
     [],
@@ -504,7 +504,7 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
 }
 
 // format contacts
-module.exports.formatContacts = async (messages, user_id) => {
+exports.formatContacts = async (messages, user_id) => {
 
   let formatedContacts = []
   for (const message of messages) {
@@ -591,7 +591,7 @@ module.exports.formatContacts = async (messages, user_id) => {
 }
 
 // format messages
-module.exports.formatMessages = async (messages, user_id) => {
+exports.formatMessages = async (messages, user_id) => {
   let messagesCopy = this.simplifyObject(messages)
   let formatedMessages = []
   for (const message of messages) {
@@ -640,7 +640,7 @@ module.exports.formatMessages = async (messages, user_id) => {
 }
 
 // get latest conversations
-module.exports.getLatestMessages = async (user_id) => {
+exports.getLatestMessages = async (user_id) => {
   const u = this.u
 
   let latestMessages = []
@@ -777,7 +777,7 @@ module.exports.getLatestMessages = async (user_id) => {
  * @param {Object} action creat of update
  * @returns FormatedResult
  */
-module.exports.Create_or_update_message = async (sender, receiver, content, _id, user_id) => {
+exports.Create_or_update_message = async (sender, receiver, content, _id, user_id) => {
   if (_id) {
     const message = await this.findDocument(this.Message, {
       _id: _id
@@ -847,7 +847,7 @@ module.exports.Create_or_update_message = async (sender, receiver, content, _id,
 const fs = require('fs')
 const sharp = require('sharp')
 
-module.exports.resizeImage = function resize(path, format, width, height) {
+exports.resizeImage = function resize(path, format, width, height) {
   const readStream = fs.createReadStream(path)
   let transform = sharp()
 
@@ -863,7 +863,7 @@ module.exports.resizeImage = function resize(path, format, width, height) {
 }
 
 // add mediapaths to quiz attachments
-module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => {
+exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => {
   for (const i in quizes) {
     for (const k in quizes[i].questions) {
       if (quizes[i].questions[k].options) {
@@ -884,7 +884,7 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
 }
 
 // add the number of students who did the quiz
-module.exports.addQuizUsages = async (quizes) => {
+exports.addQuizUsages = async (quizes) => {
   for (const i in quizes) {
     const usages = await this.countDocuments(this.Quiz_submission, {
       quiz: quizes[i]._id
@@ -895,7 +895,7 @@ module.exports.addQuizUsages = async (quizes) => {
 }
 
 // add the course to which the quiz is attached
-module.exports.addAttachedCourse = async (quizes) => {
+exports.addAttachedCourse = async (quizes) => {
   for (const i in quizes) {
     if (quizes[i].target) {
       if (quizes[i].target.type == 'facultyCollegeYear') {
@@ -920,7 +920,7 @@ module.exports.addAttachedCourse = async (quizes) => {
 }
 
 // add chapters in their parent courses
-module.exports.injectChapters = async (courses) => {
+exports.injectChapters = async (courses) => {
   for (const i in courses) {
     courses[i].assignmentsLength = 0
     // add course cover picture media path
@@ -977,7 +977,7 @@ module.exports.injectChapters = async (courses) => {
 }
 
 // replace user id by the user information
-module.exports.injectUser = async (array, property, newProperty) => {
+exports.injectUser = async (array, property, newProperty) => {
   let name = newProperty ? newProperty : property
   for (const i in array) {
     const user = await this.findDocument(this.User, {
@@ -993,12 +993,12 @@ module.exports.injectUser = async (array, property, newProperty) => {
 }
 
 // remove restrictions in objects
-module.exports.simplifyObject = (obj) => {
+exports.simplifyObject = (obj) => {
   return JSON.parse(JSON.stringify(obj))
 }
 
 // inject notification
-module.exports.injectNotification = async (array) => {
+exports.injectNotification = async (array) => {
   for (const i in array) {
     for (const k in array[i].notifications) {
       let notification = await this.findDocument(this.Notification, {
@@ -1013,7 +1013,7 @@ module.exports.injectNotification = async (array) => {
 }
 
 // add student progress
-module.exports.injectUserProgress = async (courses, user_id) => {
+exports.injectUserProgress = async (courses, user_id) => {
   for (const i in courses) {
     const result = await this.findDocument(this.User_progress, {
       course: courses[i]._id,
@@ -1030,7 +1030,7 @@ module.exports.injectUserProgress = async (courses, user_id) => {
   return courses
 }
 
-module.exports.Search = async (model, search_query, projected_fields, _page, _limit) => {
+exports.Search = async (model, search_query, projected_fields, _page, _limit) => {
   const page = parseInt(_page)
   const limit = parseInt(_limit)
 
@@ -1065,7 +1065,7 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
 }
 
 // configure multer dynamic storage
-module.exports.dynamic_storage = this.multer.diskStorage({
+exports.dynamic_storage = this.multer.diskStorage({
   destination: (req, file, cb) => {
     const {
       dir
@@ -1097,7 +1097,7 @@ const imageFilter = function (req, file, cb) {
 };
 
 // upload sing file
-module.exports.upload_single = this.multer({
+exports.upload_single = this.multer({
   storage: this.dynamic_storage,
   // limits: {
   //     fileSize: 1024 * 1024 * 5
@@ -1106,7 +1106,7 @@ module.exports.upload_single = this.multer({
 }).single('file')
 
 // upload single image
-module.exports.upload_single_image = this.multer({
+exports.upload_single_image = this.multer({
   storage: this.dynamic_storage,
   // limits: {
   //     fileSize: 1024 * 1024 * 5
@@ -1115,18 +1115,18 @@ module.exports.upload_single_image = this.multer({
 }).single('file')
 
 // upload multiple filies
-module.exports.upload_multiple = this.multer({
+exports.upload_multiple = this.multer({
   storage: this.dynamic_storage
 }).any()
 
 // upload multiple filies
-module.exports.upload_multiple_images = this.multer({
+exports.upload_multiple_images = this.multer({
   storage: this.dynamic_storage,
   fileFilter: imageFilter
 }).any()
 
 // send resized Image
-module.exports.sendResizedImage = async (req, res, path) => {
+exports.sendResizedImage = async (req, res, path) => {
   this.fs.exists(path, (exists) => {
     if (!exists) {
       return res.send(this.formatResult(404, 'file not found'))
@@ -1152,7 +1152,7 @@ module.exports.sendResizedImage = async (req, res, path) => {
   })
 }
 // compress images
-module.exports.Compress_images = async (input_path, output_path, formatResult = this.formatResult) => compress_images(input_path + '/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}', output_path + '/', {
+exports.Compress_images = async (input_path, output_path, formatResult = this.formatResult) => compress_images(input_path + '/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}', output_path + '/', {
   compress_force: false,
   statistic: true,
   autoupdate: true
@@ -1185,7 +1185,7 @@ module.exports.Compress_images = async (input_path, output_path, formatResult = 
 
 
 // send video
-module.exports.streamVideo = async (req, res, path) => {
+exports.streamVideo = async (req, res, path) => {
   this.fs.stat(path, (err, stat) => {
 
     // Handle file not found
@@ -1229,7 +1229,7 @@ module.exports.streamVideo = async (req, res, path) => {
 }
 
 // generateAuthToken on user login
-module.exports.generateAuthToken = async (user) => {
+exports.generateAuthToken = async (user) => {
   const ONE_DAY = 60 * 60 * 24
   return this.jwt.sign({
     // _id: user._id,
@@ -1252,18 +1252,18 @@ module.exports.generateAuthToken = async (user) => {
 }
 
 // decodeAuthToken
-module.exports.decodeAuthToken = async ({
+exports.decodeAuthToken = async ({
   token
 }) => {
   return this.jwt.verify(token, this.config.get('auth_key'))
 }
 
 // all regex expressions
-module.exports.Patterns = {
+exports.Patterns = {
   promotionPattern: /\b[y][e][a][r][_][0-9]\b/ // work on these regex staff
 }
 
-module.exports.add_user_details = async (users) => {
+exports.add_user_details = async (users) => {
   for (const i in users) {
     const user_faculty_college_year = await this.findDocument(this.User_faculty_college_year, {
       user: users[i]._id,
@@ -1349,15 +1349,15 @@ const {
 } = require('../middlewares/superAdmin.middleware')
 
 
-module.exports.auth = auth
-module.exports._admin = admin
-module.exports._superAdmin = superAdmin
-module.exports._student = student
-module.exports._instructor = instructor
+exports.auth = auth
+exports._admin = admin
+exports._superAdmin = superAdmin
+exports._student = student
+exports._instructor = instructor
 
 // constant lobal variables
-module.exports.default_password = `Kurious@${new Date().getFullYear()}`
-module.exports.random_user_name = async () => {
+exports.default_password = `Kurious@${new Date().getFullYear()}`
+exports.random_user_name = async () => {
   let user_name_available = false, user_name
   while (!user_name_available) {
     user_name = `user_${Math.round(Math.random() * 1000000)}`
@@ -1367,7 +1367,7 @@ module.exports.random_user_name = async () => {
   return user_name
 }
 // make a new group identifier so that names can be re used in colleges
-module.exports.generateGroupCode = async () => {
+exports.generateGroupCode = async () => {
   let groupCodeAvailable = false, code
   while (!groupCodeAvailable) {
     code = Math.round(Math.random() * 1000000000)
@@ -1376,6 +1376,8 @@ module.exports.generateGroupCode = async () => {
   }
   return code
 }
+
+// exports.injectCommentsReplys = 
 
 // proper way to define user roles
 // proper way to use jwt

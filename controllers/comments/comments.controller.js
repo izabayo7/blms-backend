@@ -64,6 +64,7 @@ router.get('/', async (req, res) => {
   try {
     let results = await findDocuments(Comment)
     results = await injectUser(results, 'sender')
+    
     return res.send(formatResult(u, u, results))
   } catch (error) {
     return res.send(formatResult(500, error))
