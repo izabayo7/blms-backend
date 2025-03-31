@@ -1,0 +1,23 @@
+GET http://localhost:7070/kurious/college
+###
+GET http://localhost:7070/kurious/college/5efdd646752e750798e84888
+###
+POST http://localhost:7070/kurious/college
+Content-Type: application/json
+
+{
+    "name": "Kigali Institute blabla",
+    "email": "kist@gmail.com"
+}
+
+###
+PUT http://localhost:7070/kurious/college/5efdd646752e750798e84888
+Content-Type: application/json
+
+{
+    "name": "Kigali Institute blabla",
+    "email": "kisto@gmail.com"
+}
+
+###
+DELETE http://localhost:7070/kurious/college/5efdd646752e750798e84888

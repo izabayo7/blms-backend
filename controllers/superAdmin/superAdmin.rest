@@ -1,0 +1,38 @@
+GET http://localhost:7070/kurious/superAdmin
+###
+POST http://localhost:7070/kurious/superAdmin
+Content-Type: application/json
+
+{
+    "surName": "Nadine",
+    "otherNames": "Umukura",
+    "nationalId": "1103473948628496",
+    "gender": "FeMale",
+    "phone": "9999000000",
+    "email": "umukura@gmail.com"
+}
+
+###
+PUT http://localhost:7070/kurious/superAdmin/5efdc7c119b3151e38939c02
+Content-Type: application/json
+
+{
+    "surName": "Nadine",
+    "otherNames": "Ingabire",
+    "nationalId": "1103473948628496",
+    "gender": "Male",
+    "phone": "9999000000",
+    "email": "umukura@gmail.com"
+}
+###
+POST http://localhost:7070/kurious/superAdmin/login
+Content-Type: application/json
+
+{
+    "password": "Kurious@2020",
+    "email": "umukura@gmail.com"
+}
+
+###
+
+DELETE http://localhost:7070/kurious/superAdmin/5efdc7c119b3151e38939c02

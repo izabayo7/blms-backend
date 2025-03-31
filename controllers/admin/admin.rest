@@ -1,0 +1,42 @@
+GET http://localhost:7070/kurious/admin
+###
+GET http://localhost:7070/kurious/admin/5efef83996be9712245e7423
+###
+POST http://localhost:7070/kurious/admin
+Content-Type: application/json
+
+{
+    "surName": "Nadine",
+    "otherNames": "Umukura",
+    "nationalId": "1103473948628496",
+    "gender": "FeMale",
+    "phone": "9999000000",
+    "email": "umukura@gmail.com",
+    "college": "5efdd646752e750798e84888"
+}
+
+###
+PUT http://localhost:7070/kurious/admin/5efe7931096c721f84e19f8d
+Content-Type: application/json
+
+{
+    "surName": "Nadina",
+    "otherNames": "Umukura",
+    "nationalId": "1103473948628496",
+    "gender": "FeMale",
+    "phone": "9999000000",
+    "email": "umukura@gmail.com",
+    "college": "5efdd646752e750798e84888"
+}
+
+###
+POST http://localhost:7070/kurious/admin/login
+Content-Type: application/json
+
+{
+    "password": "Kurious@2020",
+    "email": "umukura@gmail.com"
+}
+
+###
+DELETE http://localhost:7070/kurious/admin/5efe7931096c721f84e19f8d
