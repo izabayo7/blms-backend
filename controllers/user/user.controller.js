@@ -539,6 +539,52 @@ router.get('/current', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /college/checkUserNameExistance/{user_name}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: tells whether the username is available or taken
+ *     parameters:
+ *       - name: user_name
+ *         description: User name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/checkUserNameExistance/:user_name', this.checkUsernameExistence)
+
+/**
+ * @swagger
+ * /college/checkEmailExistance/{email}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: tells whether the email is available or taken
+ *     parameters:
+ *       - name: email
+ *         description: User name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/checkEmailExistance/:email', this.checkEmailExistance)
+
+/**
+ * @swagger
  * /user/{user_name}:
  *   get:
  *     tags:
@@ -1565,6 +1611,37 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * Check Email Existence
+ * @param req
+ * @param res
+ */
+exports.checkEmailExistance = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email, "status.deleted": {$ne: 1} });
+        if (user) return res.send(formatResult(200, 'Email Already Taken', { exists: true }));
+        return res.send(formatResult(200, 'Email Available', { exists: false }));
+    } catch (err) {
+        return res.send(formatResult(500, err));
+    }
+};
+
+
+/**
+ * Check Username Existence
+ * @param req
+ * @param res
+ */
+exports.checkUsernameExistence = async (req, res) => {
+    try {
+        const user = await User.findOne({ user_name: req.params.user_name, "status.deleted": {$ne: 1} });
+        if (user) return res.send(formatResult(200, 'Username Already Taken', { exists: true }));
+        return res.send(formatResult(200, 'Username Available', { exists: false }));
+    } catch (err) {
+        return res.send(formatResult(500, err));
+    }
+};
 
 // export the router
 module.exports = router
