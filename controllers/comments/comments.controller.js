@@ -61,9 +61,6 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(Comment)
-    if (!result.length)
-      return res.send(formatResult(404, 'Comment list is empty'))
-
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
