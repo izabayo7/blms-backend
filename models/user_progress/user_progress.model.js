@@ -16,6 +16,7 @@ finished_chapter_schema.plugin(timestamps)
 const user_progress_schema = new mongoose.Schema({
     user: {
         type: String,
+        ref: "user",
         required: true
     },
     course: {

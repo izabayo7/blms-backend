@@ -1,6 +1,6 @@
 // import dependencies
-const { User_group } = require('../../models/user_group/user_group.model')
-const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
+const {User_group} = require('../../models/user_group/user_group.model')
+const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     fs,
@@ -126,9 +126,9 @@ router.get('/statistics', async (req, res) => {
             total_courses = await countDocuments(Course)
         } else {
 
-            let faculties = await findDocuments(Faculty, { college: req.user.college })
+            let faculties = await findDocuments(Faculty, {college: req.user.college})
             for (const i in faculties) {
-                let user_groups = await findDocuments(User_group, { faculty: faculties[i]._id })
+                let user_groups = await findDocuments(User_group, {faculty: faculties[i]._id})
                 if (!user_groups.length)
                     continue
 
@@ -141,7 +141,7 @@ router.get('/statistics', async (req, res) => {
 
             }
         }
-        return res.send(formatResult(u, u, { total_courses }))
+        return res.send(formatResult(u, u, {total_courses}))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -178,10 +178,10 @@ router.get('/statistics', async (req, res) => {
  */
 router.get('/statistics/user_access', async (req, res) => {
     try {
-        const { start_date, end_date } = req.query
+        const {start_date, end_date} = req.query
         const result = await User.aggregate([
-            { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
-            { "$match": { college: req.user.college } },
+            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {college: req.user.college}},
             {
                 "$group": {
                     "_id": {
@@ -189,16 +189,16 @@ router.get('/statistics/user_access', async (req, res) => {
                             "$createdAt",
                             {
                                 "$mod": [
-                                    { "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")] },
+                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
                                     1000 * 60 * 60 * 24
                                 ]
                             }
                         ]
                     },
-                    "total_users": { "$sum": 1 }
+                    "total_users": {"$sum": 1}
                 }
             },
-            { "$sort": { "_id": 1 } }
+            {"$sort": {"_id": 1}}
         ])
         return res.send(formatResult(u, u, result))
     } catch (error) {
@@ -236,16 +236,16 @@ router.get('/statistics/user_access', async (req, res) => {
  */
 router.get('/statistics/creations', async (req, res) => {
     try {
-        const { start_date, end_date } = req.query
+        const {start_date, end_date} = req.query
 
         const faculty_college_years = []
 
-        let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+        let faculty_college = await findDocuments(Faculty_college, {college: req.user.college})
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
 
         for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+            let faculty_college_year = await findDocuments(Faculty_college_year, {faculty_college: faculty_college[i]._id})
             if (!faculty_college_year.length)
                 continue
 
@@ -256,8 +256,8 @@ router.get('/statistics/creations', async (req, res) => {
         }
 
         const result = await Course.aggregate([
-            { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
-            { "$match": { faculty_college_year: { $in: faculty_college_years } } },
+            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {faculty_college_year: {$in: faculty_college_years}}},
             {
                 "$group": {
                     "_id": {
@@ -265,16 +265,16 @@ router.get('/statistics/creations', async (req, res) => {
                             "$createdAt",
                             {
                                 "$mod": [
-                                    { "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")] },
+                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
                                     1000 * 60 * 60 * 24
                                 ]
                             }
                         ]
                     },
-                    "total_courses": { "$sum": 1 }
+                    "total_courses": {"$sum": 1}
                 }
             },
-            { "$sort": { "_id": 1 } }
+            {"$sort": {"_id": 1}}
         ])
         return res.send(formatResult(u, u, result))
     } catch (error) {
@@ -312,16 +312,16 @@ router.get('/statistics/creations', async (req, res) => {
  */
 router.get('/statistics/user_access', async (req, res) => {
     try {
-        const { start_date, end_date } = req.query
+        const {start_date, end_date} = req.query
 
         const faculty_college_years = []
 
-        let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+        let faculty_college = await findDocuments(Faculty_college, {college: req.user.college})
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
 
         for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+            let faculty_college_year = await findDocuments(Faculty_college_year, {faculty_college: faculty_college[i]._id})
             if (!faculty_college_year.length)
                 continue
 
@@ -332,8 +332,8 @@ router.get('/statistics/user_access', async (req, res) => {
         }
 
         const result = await Course.aggregate([
-            { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
-            { "$match": { faculty_college_year: { $in: faculty_college_years } } },
+            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {faculty_college_year: {$in: faculty_college_years}}},
             {
                 "$group": {
                     "_id": {
@@ -341,16 +341,16 @@ router.get('/statistics/user_access', async (req, res) => {
                             "$createdAt",
                             {
                                 "$mod": [
-                                    { "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")] },
+                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
                                     1000 * 60 * 60 * 24
                                 ]
                             }
                         ]
                     },
-                    "total_courses": { "$sum": 1 }
+                    "total_courses": {"$sum": 1}
                 }
             },
-            { "$sort": { "_id": 1 } }
+            {"$sort": {"_id": 1}}
         ])
         return res.send(formatResult(u, u, result))
     } catch (error) {
@@ -405,12 +405,12 @@ router.get('/college', async (req, res) => {
 
         let foundCourses = []
 
-        let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+        let faculty_college = await findDocuments(Faculty_college, {college: req.user.college})
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
 
         for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+            let faculty_college_year = await findDocuments(Faculty_college_year, {faculty_college: faculty_college[i]._id})
             if (!faculty_college_year.length)
                 continue
 
@@ -422,10 +422,10 @@ router.get('/college', async (req, res) => {
                     continue
 
                 for (const i in courses) {
-                    let total_students = await countDocuments(User_progress, { course: courses[i]._id })
+                    let total_students = await countDocuments(User_progress, {course: courses[i]._id})
                     courses[i].total_students = total_students
 
-                    let total_chapters = await countDocuments(Chapter, { course: courses[i]._id })
+                    let total_chapters = await countDocuments(Chapter, {course: courses[i]._id})
                     courses[i].total_topics = total_chapters
 
                     if (!courses[i].total_marks)
@@ -485,7 +485,7 @@ router.get('/faculty/:id', async (req, res) => {
 
         let foundCourses = []
 
-        let user_groups = await findDocuments(User_group, { faculty: faculty._id })
+        let user_groups = await findDocuments(User_group, {faculty: faculty._id})
 
         for (const k in user_groups) {
             let courses = await findDocuments(Course, {
@@ -512,6 +512,62 @@ router.get('/faculty/:id', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+//
+
+/**
+ * @swagger
+ * /course/{id}/attendants:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns students who studies the given course
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/attendants', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        let course = await findDocument(Course, {
+            _id: req.params.id
+        })
+        if (!course)
+            return res.send(formatResult(404, 'course not found'))
+
+        const attendants = await User_progress.find({course: req.params.id}, {
+            user: 1,
+            progress: 1,
+            createdAt: 1
+        }).populate({
+            path: 'user',
+            select: {'sur_name': 1, 'other_names': 1, 'gender': 1}
+        })
+
+        return res.send(formatResult(u, u, attendants))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+//
 
 /**
  * @swagger
@@ -1158,7 +1214,7 @@ router.delete('/:id', async (req, res) => {
 
         if (!course_used) {
 
-            const chapters = await findDocuments(Chapter, { course: req.params.id })
+            const chapters = await findDocuments(Chapter, {course: req.params.id})
 
             if (chapters.length) {
                 for (const i in chapters) {
