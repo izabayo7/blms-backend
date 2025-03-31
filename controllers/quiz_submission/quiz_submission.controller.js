@@ -737,6 +737,8 @@ router.post('/:id/attachment', async (req, res) => {
  *     tags:
  *       - Quiz_submission
  *     description: Delete a quiz_submission
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz_submission id
