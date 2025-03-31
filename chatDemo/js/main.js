@@ -14,7 +14,7 @@ let allMessages = []
 let allGroups = []
 // Get username and room from URL
 const {
-  user
+  user  
 } = Qs.parse(location.search, {
   ignoreQueryPrefix: true
 });
@@ -43,10 +43,10 @@ socket.on('recieve_user_contacts', ({
   console.log(contacts)
 });
 
-// get contacts new style
-socket.emit('request_conversation',{ groupId: '5f5da8f9e8eb0e3a6c61fdfa', lastMessage: '5f5e294b0106831e48a7a31e'});
+// get messages new style
+socket.emit('request_conversation',{ contactId: '5f46c21651be84339c17455f', lastMessage: '5f5f1a34313e3634d4a258f2'});
 
-// Get contacts new style
+// Get messages new style
 socket.on('recieve_conversation', ({
   conversation,
 }) => {

@@ -441,10 +441,30 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
             _id: facilityCollegeYear.facilityCollege
         })
 
-        filepath = `./uploads/colleges/${facilityCollege.college}/courses/${req.params.id}/${course.coverPicture}`
-        const pic = fs.readFileSync(filepath)
-        res.contentType('image/jpeg')
-        return res.status(200).send(pic)
+        path = `./uploads/colleges/${facilityCollege.college}/courses/${req.params.id}/${course.coverPicture}`
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.picture} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
     } catch (error) {
         return res.status(500).send(error)
     }

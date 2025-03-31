@@ -435,11 +435,11 @@ async function injectDetails(students) {
     }).lean()
     students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
     if (students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo) {
-      students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+      students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
     // add student profile media path
     if (students[i].profile) {
-      students[i] = `${process.env.HOST}/kurious/file/studentProfile/${students[i]._id}`
+      students[i] = `http://${process.env.HOST}/kurious/file/studentProfile/${students[i]._id}`
     }
   }
   return students

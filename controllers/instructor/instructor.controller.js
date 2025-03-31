@@ -399,7 +399,7 @@ async function injectDetails(instructors) {
         }).lean()
         instructors[i].college = removeDocumentVersion(college)
         if (instructors[i].college.logo) {
-            instructors[i].college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+            instructors[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
         }
     }
     return instructors

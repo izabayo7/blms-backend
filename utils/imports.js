@@ -381,12 +381,14 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
 module.exports.formatContacts = async (messages, userId) => {
     let formatedContacts = []
     for (const message of messages) {
+        let id = ''
         let name = ""
         let image = ''
         let last_message = { time: message.createdAt, content: message.content }
         let unreadMessagesLength = 0
         if (message.group) {
             const group = await chatGroup.findOne({ _id: message.group })
+            id = message.group
             name = group.name
             image = group.profile ? group.profile : ''
             unreadMessagesLength = await Message.find({
@@ -400,8 +402,9 @@ module.exports.formatContacts = async (messages, userId) => {
             }).countDocuments()
         } else {
             const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
+            id = user._id
             name = `${user.surName} ${user.otherNames}`
-            image = user.profile ? user.profile : ''
+            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin'? 'superAdmin' : user.category.toLowerCase() }Profile/${students[i]._id}` : ''
             unreadMessagesLength = await Message.find({
                 sender: user._id,
                 receivers: {
@@ -413,6 +416,7 @@ module.exports.formatContacts = async (messages, userId) => {
             }).countDocuments()
         }
         formatedContacts.push({
+            id: id,
             name: name,
             image: image,
             last_message: last_message,
@@ -458,111 +462,119 @@ module.exports.formatMessages = async (messages, userId) => {
 
 // get latest conversations
 module.exports.getLatestMessages = async (userId) => {
-    let latestMessages = []
-    /** 1 get all latest messages in groups */
-    const groups = await module.exports.getUserChatGroups(userId)
-    for (const i in groups) {
-        const message = await Message.findOne({
-            group: groups[i]._id
-        }).sort({
-            _id: -1
-        }).limit(1)
-        latestMessages.push(message)
-    }
-    /** 2 get all latest messages sent to us */
-    // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
-    let receivedMessages = await Message.aggregate([{
-        $sort: {
-            _id: -1
+    try {
+
+
+        let latestMessages = []
+        /** 1 get all latest messages in groups */
+        const groups = await module.exports.getUserChatGroups(userId)
+        for (const i in groups) {
+            const message = await Message.findOne({
+                group: groups[i]._id
+            }).sort({
+                _id: -1
+            }).limit(1)
+            if (message) {
+                latestMessages.push(message)
+            }
+
         }
-    },
-    {
-        $match: {
-            receivers: {
-                $elemMatch: {
-                    id: userId
+        /** 2 get all latest messages sent to us */
+        // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
+        let receivedMessages = await Message.aggregate([{
+            $sort: {
+                _id: -1
+            }
+        },
+        {
+            $match: {
+                receivers: {
+                    $elemMatch: {
+                        id: userId
+                    }
+                },
+                group: undefined
+            }
+        }, {
+            $group: {
+                _id: "$sender",
+                realId: {
+                    $first: "$_id"
+                },
+                receivers: {
+                    $first: "$receivers"
+                },
+                sender: {
+                    $first: "$sender"
+                },
+                content: {
+                    $first: "$content"
+                },
+                createdAt: {
+                    $first: "$createdAt"
+                },
+                read: {
+                    $first: "$read"
                 }
-            },
-            group: undefined
-        }
-    }, {
-        $group: {
-            _id: "$sender",
-            realId: {
-                $first: "$_id"
-            },
-            receivers: {
-                $first: "$receivers"
-            },
-            sender: {
-                $first: "$sender"
-            },
-            content: {
-                $first: "$content"
-            },
-            createdAt: {
-                $first: "$createdAt"
-            },
-            read: {
-                $first: "$read"
             }
         }
-    }
-    ])
-    /** 3 get all latest messages we sent */
-    // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
-    let sentMessages = await Message.aggregate([{
-        $sort: {
-            _id: -1
-        }
-    },
-    {
-        $match: {
-            sender: userId,
-            group: undefined
-        }
-    }, {
-        $group: {
-            _id: "$receivers.id",
-            receivers: {
-                $first: "$receivers"
-            },
-            realId: {
-                $first: "$_id"
-            },
-            sender: {
-                $first: "$sender"
-            },
-            content: {
-                $first: "$content"
-            },
-            createdAt: {
-                $first: "$createdAt"
-            },
-            read: {
-                $first: "$read"
+        ])
+        /** 3 get all latest messages we sent */
+        // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
+        let sentMessages = await Message.aggregate([{
+            $sort: {
+                _id: -1
+            }
+        },
+        {
+            $match: {
+                sender: userId,
+                group: undefined
+            }
+        }, {
+            $group: {
+                _id: "$receivers.id",
+                receivers: {
+                    $first: "$receivers"
+                },
+                realId: {
+                    $first: "$_id"
+                },
+                sender: {
+                    $first: "$sender"
+                },
+                content: {
+                    $first: "$content"
+                },
+                createdAt: {
+                    $first: "$createdAt"
+                },
+                read: {
+                    $first: "$read"
+                }
             }
         }
-    }
-    ])
-    let soltedMessages
-    if (sentMessages.length > 0 && receivedMessages.length > 0) {
-        soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
-    }
+        ])
+        if (sentMessages.length > 0 && receivedMessages.length > 0) {
+            soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
+        }
 
-    for (const message of receivedMessages) {
-        latestMessages.push(message)
-    }
+        for (const message of receivedMessages) {
+            latestMessages.push(message)
+        }
 
-    for (const message of sentMessages) {
-        latestMessages.push(message)
-    }
+        for (const message of sentMessages) {
+            latestMessages.push(message)
+        }
 
-    return latestMessages.sort((a, b) => {
-        if (a.createdAt > b.createdAt) return -1;
-        if (a.createdAt < a.createdAt) return 1;
-        return 0;
-    })
+        return latestMessages.sort((a, b) => {
+            if (a.createdAt > b.createdAt) return -1;
+            if (a.createdAt < b.createdAt) return 1;
+            return 0;
+        })
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 // find a specific user

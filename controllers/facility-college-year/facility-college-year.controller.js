@@ -259,7 +259,7 @@ async function injectDetails(facilityCollegeYears) {
     }).lean()
     facilityCollegeYears[i].facilityCollege.college = removeDocumentVersion(college)
     if (facilityCollegeYears[i].facilityCollege.college.logo) {
-      facilityCollegeYears[i].facilityCollege.college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+      facilityCollegeYears[i].facilityCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
 
     const collegeYear = await CollegeYear.findOne({

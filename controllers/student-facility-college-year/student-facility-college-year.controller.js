@@ -254,7 +254,7 @@ async function injectDetails(studentsFacilityCollegeYears) {
     }).lean()
     studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
     if (studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college.logo) {
-      studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college.logo = `${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+      studentsFacilityCollegeYears[i].facilityCollegeYear.facilityCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
     let student = await Student.findOne({
       _id: studentsFacilityCollegeYears[i].student
@@ -262,7 +262,7 @@ async function injectDetails(studentsFacilityCollegeYears) {
     studentsFacilityCollegeYears[i].student = _.pick(student, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
     // add student profile media path
     if (student.profile) {
-      studentsFacilityCollegeYears[i].student.profile = `${process.env.HOST}/kurious/file/studentProfile/${student._id}`
+      studentsFacilityCollegeYears[i].student.profile = `http://${process.env.HOST}/kurious/file/studentProfile/${student._id}`
     }
   }
   return studentsFacilityCollegeYears
