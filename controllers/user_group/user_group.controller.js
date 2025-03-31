@@ -395,11 +395,11 @@ router.delete('/:id', filterUsers(["ADMIN"]), async (req, res) => {
             _id: req.params.id
         })
         if (!user_groups)
-            return res.send(formatResult(404, `user_groups of Code ${req.params.id} Not Found`))
+            return res.send(formatResult(404, `user_group not found`))
 
         // check if the user_groups is never used
-        const user_groups_found = await findDocument(User_faculty_college_year, {
-            user_groups: req.params.id
+        const user_groups_found = await findDocument(User_user_group, {
+            user_group: req.params.id
         })
         if (!user_groups_found) {
             let result = await deleteDocument(User_group, req.params.id)
@@ -407,9 +407,9 @@ router.delete('/:id', filterUsers(["ADMIN"]), async (req, res) => {
         }
 
         const update_user_groups = await updateDocument(User_group, req.params.id, {
-            status: 0
+            status: "INACTIVE"
         })
-        return res.send(formatResult(200, `User ${update_user_groups._id} couldn't be deleted because it was used, instead it was disabled`, update_user_groups.data))
+        return res.send(formatResult(200, `Usergroup couldn't be deleted because it was used, instead it was disabled`, update_user_groups.data))
 
     } catch (error) {
         return res.send(formatResult(500, error))
