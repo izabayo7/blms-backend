@@ -466,7 +466,7 @@ router.post('/', async (req, res) => {
     }
 
     let result = await createDocument(User, {
-      user_name: req.body.user_name || await random_user_name(),
+      user_name: req.body.user_name,
       sur_name: req.body.sur_name,
       other_names: req.body.other_names,
       national_id: req.body.national_id,
