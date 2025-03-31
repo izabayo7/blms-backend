@@ -65,7 +65,7 @@ router.get('/', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user_category:
+ * /user_category/open:
  *   get:
  *     tags:
  *       - User_category
@@ -103,7 +103,7 @@ router.get('/open', async (req, res) => {
 
 /**
  * @swagger
- * /user_category/{id}:
+ * /user_category/id/{id}:
  *   get:
  *     tags:
  *       - User_category
@@ -124,7 +124,7 @@ router.get('/open', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/id/:id', auth, async (req, res) => {
   try {
     const {
       error
