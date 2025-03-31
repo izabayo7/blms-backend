@@ -64,11 +64,13 @@ const schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-},{timestamps: true})
+}, {timestamps: true})
 
 // validate assignment_submision
-function validate_assignment_submission(credentials,category) {
-    const schema = {
+function validate_assignment_submission(credentials, category) {
+    const schema = category === 'INSTRUCTOR' ? {
+        total_marks: Joi.number().required()
+    } : {
         assignment: Joi.ObjectId().required(),
         details: Joi.string(),
         attachments: Joi.array().items(Joi.object({
@@ -78,8 +80,6 @@ function validate_assignment_submission(credentials,category) {
             src: Joi.string().required()
         })),
     }
-    if(category === 'INSTRUCTOR')
-        schema.total_marks = Joi.number().required()
 
     return Joi.validate(credentials, schema)
 }

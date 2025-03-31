@@ -533,6 +533,7 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
         if (assignment_submission.assignment.status !== "PUBLISHED")
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
+        if(req.user.category.name === 'INSTRUCTOR')
         req.body.user = req.user._id
 
         const user_group = await get_faculty_college_year(assignment_submission.assignment)
@@ -546,29 +547,29 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
 
         if (req.user.category.name === 'INSTRUCTOR')
             req.body.marked = true
+        else {
+            if (!assignment_submission.assignment.allowMultipleFilesSubmission && req.body.attachments.length > 1)
+                return res.send(formatResult(400, 'You can only upload one file'))
 
-        if (!assignment_submission.assignment.allowMultipleFilesSubmission && req.body.attachments.length > 1)
-            return res.send(formatResult(400, 'You can only upload one file'))
-
-        // delete removed files
-        for (const i in assignment_submission.attachments) {
-            let deleteFile = true
-            for (const j in req.body.attachments) {
-                if (assignment_submission.attachments[i].src === req.body.attachments[j].src) {
-                    deleteFile = false
-                    break
+            // delete removed files
+            for (const i in assignment_submission.attachments) {
+                let deleteFile = true
+                for (const j in req.body.attachments) {
+                    if (assignment_submission.attachments[i].src === req.body.attachments[j].src) {
+                        deleteFile = false
+                        break
+                    }
+                }
+                if (deleteFile) {
+                    const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment._id}/submissions/${req.params.id}/${assignment_submission.attachments[i].src}`)
+                    fs.exists(path, (exists) => {
+                        if (exists) {
+                            fs.unlink(path)
+                        }
+                    })
                 }
             }
-            if (deleteFile) {
-                const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment._id}/submissions/${req.params.id}/${assignment_submission.attachments[i].src}`)
-                fs.exists(path, (exists) => {
-                    if (exists) {
-                        fs.unlink(path)
-                    }
-                })
-            }
         }
-
         const result = await updateDocument(Assignment_submission, req.params.id, req.body)
 
         return res.send(result)
