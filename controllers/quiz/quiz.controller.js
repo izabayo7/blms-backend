@@ -711,8 +711,11 @@ router.put('/:id/target', async (req, res) => {
 
     // remove the previously attached quiz
     const last_targeted_quiz = await findDocument(Quiz, {
+      _id: {
+        $ne: req.params.id
+      }
       "target.id": req.body.id
-    })
+    }, u, false)
     if (last_targeted_quiz) {
       last_targeted_quiz.target = undefined
       await last_targeted_quiz.save()
