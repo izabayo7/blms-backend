@@ -83,12 +83,49 @@ router.get('/user', async (req, res) => {
         }).populate('viewers', ['sur_name', 'other_names','user_name']).populate('specific_receivers', ['sur_name', 'other_names','user_name']).sort({_id: -1}).lean()
 
         announcements = await injectUser(announcements, 'sender')
+        announcements = await injectTarget(announcements)
 
         return res.send(formatResult(u, u, announcements))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
+
+async function injectTarget(announcements){
+    for (const announcementsKey in announcements) {
+        let target
+        switch (announcements[announcementsKey].target.type) {
+            case 'course':
+                target = await findDocument(Course, {
+                    _id: announcements[announcementsKey].target.id
+                },{name: 1})
+                break;
+
+            case 'student_group':
+                target = await findDocument(User_group, {
+                    _id: announcements[announcementsKey].target.id
+                },{name: 1})
+                break;
+
+            case 'faculty':
+                target = await findDocument(Faculty_college, {
+                    _id: announcements[announcementsKey].target.id
+                },{name: 1})
+                break;
+
+            case 'college':
+                target = await findDocument(College, {
+                    _id: announcements[announcementsKey].target.id
+                },{name: 1})
+                break;
+
+            default:
+                break;
+        }
+        announcements[announcementsKey].target.name = target.name
+    }
+    return announcements
+}
 
 /**
  * @swagger
