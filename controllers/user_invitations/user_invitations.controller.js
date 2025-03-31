@@ -4,6 +4,8 @@ const {
   formatResult, u, User_category, College, ONE_DAY, updateDocument
 } = require('../../utils/imports')
 
+const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
+
 /***
  * Get all invitations
  * @param req
@@ -102,8 +104,6 @@ exports.createUserInvitation = async (req, res) => {
 
     const savedInvitations = []
 
-    const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
-
     for (const email of emails) {
       const user = await User.findOne({
         email: email
@@ -133,7 +133,7 @@ exports.createUserInvitation = async (req, res) => {
 }
 
 /**
- * Accept invitation
+ * Accept or Deny invitation
  * @param req
  * @param res
  */
@@ -152,6 +152,38 @@ exports.acceptOrDenyInvitation = async (req, res) => {
 
     if (_invitation.expiration_date < Date.now())
       return res.send(formatResult(400, 'invitation has expired'))
+
+    _invitation.status = req.params.action == 'accept' ? "ACCEPTED" : "DENIED"
+
+    const result = await _invitation.save()
+
+    return res.send(formatResult(200, "UPDATED", result));
+
+  } catch (err) {
+    return res.send(formatResult(500, err));
+  }
+};
+
+/**
+ * Renew invitation
+ * @param req
+ * @param res
+ */
+exports.renewInvitation = async (req, res) => {
+  try {
+
+    if (!(uuidValidate(req.body.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
+
+    const invitation = await User_invitation.findOne({ token: req.body.token, status: { $ne: 'PENDING' } });
+    if (invitation)
+      return res.send(formatResult(403, 'invitation token has already been closed'));
+
+    const _invitation = await User_invitation.findOne({ token: req.body.token, status: 'PENDING' });
+    if (!_invitation)
+      return res.send(formatResult(403, 'invitation not found'));
+
+    if (_invitation.expiration_date > Date.now())
+      return res.send(formatResult(400, 'invitation has not yet expired'))
 
     _invitation.status = req.params.action == 'accept' ? "ACCEPTED" : "DENIED"
 
