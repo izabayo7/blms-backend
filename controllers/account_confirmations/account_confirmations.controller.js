@@ -108,7 +108,8 @@ exports.confirmAccount = async (req, res) => {
         confirmation.status = "CONFIRMED"
 
         await confirmation.save()
-        await User.findOneAndUpdate({_id: confirmation.user._id()}, {email: confirmation.email})
+        if (confirmation.email)
+            await User.findOneAndUpdate({_id: confirmation.user._id.toString()}, {email: confirmation.email})
 
         return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}`)
 
