@@ -79,6 +79,8 @@ const router = express.Router()
  *     tags:
  *       - Chat_group
  *     description: Get all chat_groups
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
