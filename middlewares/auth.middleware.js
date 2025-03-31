@@ -10,7 +10,7 @@ async function auth(req, res, next) {
         const decoded = jwt.verify(token, config.get('auth_key'))
         const user = await User.findOne({
             user_name: decoded.user_name
-        })
+        }).populate('category')
         if (!user)
             return res.send(formatResult(401, 'Invalid Token'))
         req.user = user

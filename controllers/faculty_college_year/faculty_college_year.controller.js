@@ -19,7 +19,9 @@ const {
     removeDocumentVersion,
     countDocuments,
     simplifyObject,
-    User
+    User,
+    Course,
+    User_category
 } = require('../../utils/imports')
 // create router
 const router = express.Router()
@@ -37,6 +39,42 @@ const router = express.Router()
  *       - faculty_college
  *       - college_year
  */
+
+/**
+ * @swagger
+ * /faculty_college_year/statistics:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get faculty_college_year statistics
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics', async (req, res) => {
+    try {
+        let total_student_groups = 0
+        if (req.user.category.name == "SUPERADMIN") {
+            total_student_groups = await countDocuments(Faculty_college_year)
+        } else {
+
+            let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+            for (const i in faculty_college) {
+                let faculty_college_year = await countDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+                total_student_groups += faculty_college_year
+            }
+        }
+        return res.send(formatResult(u, u, { total_student_groups }))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
 
 /**
  * @swagger
@@ -72,19 +110,13 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /faculty_college_year/college/{id}:
+ * /faculty_college_year/college:
  *   get:
  *     tags:
  *       - Faculty_college_year
  *     description: Returns faculty_college_years in a specified college
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: College's id
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -93,20 +125,12 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id', async (req, res) => {
+router.get('/college', async (req, res) => {
     try {
-        // check if college exist
-        let college = await findDocument(College, {
-            _id: req.params.id
-        })
-        if (!college)
-            return res.send(formatResult(404, `College with code ${req.params.id} doens't exist`))
 
         let faculty_college_years = await findDocuments(Faculty_college, {
-            college: req.params.id
+            college: req.user.college
         })
-        if (faculty_college_years.length < 1)
-            return res.send(formatResult(404, `faculty_college in ${college.name} Not Found`))
 
         let foundFaculty_college_years = []
 
@@ -348,6 +372,9 @@ router.delete('/:id', async (req, res) => {
 
 // link the student with his/her current college
 async function injectDetails(faculty_college_years) {
+    const student_category = await findDocument(User_category, { name: "STUDENT" })
+    const instructor_category = await findDocument(User_category, { name: "INSTRUCTOR" })
+
     for (const i in faculty_college_years) {
 
         const faculty_college = await findDocument(Faculty_college, {
@@ -373,11 +400,29 @@ async function injectDetails(faculty_college_years) {
         })
         faculty_college_years[i].college_year = removeDocumentVersion(college_year)
 
-        // add the number of students
-        const attendants = await countDocuments(User_faculty_college_year, {
+        const total_courses = await countDocuments(Course, {
             faculty_college_year: faculty_college_years[i]._id
         })
-        faculty_college_years[i].attendants = attendants
+        // add courses
+        faculty_college_years[i].total_courses = total_courses
+
+        // add the number of students
+        const attendants = await User_faculty_college_year.find({
+            faculty_college_year: faculty_college_years[i]._id
+        }).populate('user')
+
+        let total_students = 0, total_instructors = 0
+
+        for (const j in attendants) {
+            if (attendants[j].user.category == student_category._id) {
+                total_students++
+            }
+            if (attendants[j].user.category == instructor_category._id) {
+                total_instructors++
+            }
+        }
+        faculty_college_years[i].total_students = total_students
+        faculty_college_years[i].total_instructors = total_instructors
     }
     return faculty_college_years
 }

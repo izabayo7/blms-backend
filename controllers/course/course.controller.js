@@ -30,7 +30,8 @@ const {
     upload_single_image,
     injectFaculty_college_year,
     addStorageDirectoryToPath,
-    Faculty
+    Faculty,
+    countDocuments
 } = require('../../utils/imports')
 
 // create router
@@ -51,6 +52,8 @@ const router = express.Router()
  *         type: string
  *       coverPicture:
  *         type: string
+ *       maximum_marks:
+ *         type: number
  *       published:
  *         type: boolean
  *     required:
@@ -58,6 +61,7 @@ const router = express.Router()
  *       - user
  *       - faculty_college_year
  *       - description
+ *       - maximum_marks
  */
 
 /**
@@ -97,19 +101,13 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /course/college/{id}:
+ * /course/statistics:
  *   get:
  *     tags:
- *       - Course
- *     description: Returns courses in a specified college
+ *       - Statistics
+ *     description: Get Courses statistics
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: College id
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -118,19 +116,53 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id', async (req, res) => {
+router.get('/statistics', async (req, res) => {
     try {
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
+        let total_courses = 0
+        if (req.user.category.name == "SUPERADMIN") {
+            total_courses = await countDocuments(Course)
+        } else {
 
-        let college = await findDocument(College, {
-            _id: req.params.id
-        })
-        if (!college)
-            return res.send(formatResult(404, 'college not found'))
+            let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+            for (const i in faculty_college) {
+                let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+                if (!faculty_college_year.length)
+                    continue
+
+                for (const k in faculty_college_year) {
+                    let courses = await countDocuments(Course, {
+                        faculty_college_year: faculty_college_year[k]._id
+                    })
+                    total_courses += courses
+                }
+
+            }
+        }
+        return res.send(formatResult(u, u, { total_courses }))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /course/college:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses in a specified college
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/college', async (req, res) => {
+    try {
         /*
             let user_category = await findDocument(User_category, {
               name: 'INSTRUCTOR'
@@ -159,7 +191,7 @@ router.get('/college/:id', async (req, res) => {
 
         let foundCourses = []
 
-        let faculty_college = await findDocuments(Faculty_college, { college: req.params.id })
+        let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
 
@@ -170,20 +202,26 @@ router.get('/college/:id', async (req, res) => {
 
             for (const k in faculty_college_year) {
                 let courses = await findDocuments(Course, {
-                    faculty_college_year: faculty_college_year[i]._id
+                    faculty_college_year: faculty_college_year[k]._id
                 })
                 if (!courses.length)
                     continue
 
-                for (const course of courses) {
-                    foundCourses.push(course)
+                for (const i in courses) {
+                    let total_students = await countDocuments(User_progress, { course: courses[i]._id })
+                    courses[i].total_students = total_students
+
+                    let total_chapters = await countDocuments(Chapter, { course: courses[i]._id })
+                    courses[i].total_topics = total_chapters
+
+                    if (!courses[i].total_marks)
+                        courses[i].total_marks = 0
+
+                    foundCourses.push(courses[i])
                 }
             }
 
         }
-
-        if (foundCourses.length === 0)
-            return res.send(formatResult(404, `${college.name} course list is empty`))
 
         // foundCourses = await injectUser(foundCourses, 'user')
         // foundCourses = await injectChapters(foundCourses)
