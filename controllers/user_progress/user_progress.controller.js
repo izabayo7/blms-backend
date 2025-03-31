@@ -289,14 +289,14 @@ router.put('/:id', async (req, res) => {
 
     // check if user_progress exist
     let user_progress = await findDocument(User_progress, {
-      user_name: req.params.id
+      _id: req.params.id
     })
     if (!user_progress)
       return res.send(formatResult(404, 'User_progress not found'))
 
     // check if user exist
     let user = await findDocument(User, {
-      _id: req.body.user
+      user_name: req.body.user
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
