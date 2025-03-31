@@ -143,19 +143,13 @@ router.get('/statistics', async (req, res) => {
 
 /**
  * @swagger
- * /course/college/{id}:
+ * /course/college:
  *   get:
  *     tags:
  *       - Course
  *     description: Returns courses in a specified college
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: College id
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -164,19 +158,8 @@ router.get('/statistics', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id', async (req, res) => {
+router.get('/college', async (req, res) => {
     try {
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        let college = await findDocument(College, {
-            _id: req.params.id
-        })
-        if (!college)
-            return res.send(formatResult(404, 'college not found'))
         /*
             let user_category = await findDocument(User_category, {
               name: 'INSTRUCTOR'
@@ -205,7 +188,7 @@ router.get('/college/:id', async (req, res) => {
 
         let foundCourses = []
 
-        let faculty_college = await findDocuments(Faculty_college, { college: req.params.id })
+        let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
 
