@@ -18,7 +18,7 @@ const {
     QuizSubmission,
     College,
     Quiz,
-    resizeImage,
+    sendResizedImage,
     ChatGroup,
     addAttachmentMediaPaths
 } = require('../../utils/imports')
@@ -120,29 +120,7 @@ router.get('/collegeLogo/:id/:file_name', async (req, res) => {
 
         path = `./uploads/colleges/${req.params.id}/${college.logo}`
 
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -197,29 +175,7 @@ router.get('/superAdminProfile/:id/:file_name', async (req, res) => {
             return res.status(404).send(`${req.params.file_name} was not found`)
 
         path = `./uploads/system/superAdmin/${superAdmin.profile}`
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -273,29 +229,7 @@ router.get('/adminProfile/:id/:file_name', async (req, res) => {
             return res.status(404).send(`${req.params.file_name} was not found`)
 
         path = `./uploads/colleges/${admin.college}/users/admin/${admin.profile}`
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -350,29 +284,7 @@ router.get('/instructorProfile/:id/:file_name', async (req, res) => {
             return res.status(404).send(`${req.params.file_name} was not found`)
 
         path = `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}/${instructor.profile}`
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -426,29 +338,7 @@ router.get('/studentProfile/:id/:file_name', async (req, res) => {
             return res.status(404).send(`${req.params.file_name} was not found`)
 
         path = `./uploads/colleges/${student.college}/users/students/${student.profile}`
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -510,29 +400,7 @@ router.get('/courseCoverPicture/:id/:file_name', async (req, res) => {
         })
 
         path = `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}/${course.coverPicture}`
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -587,29 +455,7 @@ router.get('/groupProfilePicture/:id/:file_name', async (req, res) => {
             return res.status(404).send(`${req.params.file_name} was not found`)
 
         path = `./uploads/colleges/${group.college}/chat/${req.params.id}/${group.profile}`
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -823,29 +669,7 @@ router.get('/quizAttachedFiles/:quiz/:file_name', async (req, res) => {
 
         path = `./uploads/colleges/${instructor.college}/assignments/${req.params.quiz}/${req.params.file_name}`
 
-        fs.exists(path, (exists) => {
-            if (!exists) {
-                return res.status(404).send(`${req.params.file_name} was not found`)
-            } else {
-                const widthString = req.query.width
-                const heightString = req.query.height
-                const format = req.query.format
-
-                // Parse to integer if possible
-                let width, height
-                if (widthString) {
-                    width = parseInt(widthString)
-                }
-                if (heightString) {
-                    height = parseInt(heightString)
-                }
-                // Set the content-type of the response
-                res.type(`image/${format || 'png'}`)
-
-                // Get the resized image
-                resizeImage(path, format, width, height).pipe(res)
-            }
-        })
+        sendResizedImage(req, res, path)
 
     } catch (error) {
         return res.status(500).send(error)

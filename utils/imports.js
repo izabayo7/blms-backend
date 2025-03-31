@@ -832,11 +832,38 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
         }
     }
     try {
-        results.results = await model.find(search_query,projected_fields).limit(limit).skip(startIndex).exec()
+        results.results = await model.find(search_query, projected_fields).limit(limit).skip(startIndex).exec()
         return { data: results }
     } catch (e) {
         return { error: e.message }
     }
+}
+
+// return resized Image
+module.exports.sendResizedImage = async (req, res, path) => {
+    this.fs.exists(path, (exists) => {
+        if (!exists) {
+            return res.status(404).send(`${req.params.file_name} was not found`)
+        } else {
+            const widthString = req.query.width
+            const heightString = req.query.height
+            const format = req.query.format
+
+            // Parse to integer if possible
+            let width, height
+            if (widthString) {
+                width = parseInt(widthString)
+            }
+            if (heightString) {
+                height = parseInt(heightString)
+            }
+            // Set the content-type of the response
+            res.type(`image/${format || 'png'}`)
+
+            // Get the resized image and send it
+            this.resizeImage(path, format, width, height).pipe(res)
+        }
+    })
 }
 
 // authentication middlewares
