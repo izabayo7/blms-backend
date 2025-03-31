@@ -44,6 +44,8 @@ const router = express.Router()
  *     tags:
  *       - User_progress
  *     description: Get all user_progresses
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
