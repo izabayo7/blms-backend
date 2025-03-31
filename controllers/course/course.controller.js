@@ -209,14 +209,15 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
         let students_progress = await User_progress.find({course: req.params.id})
 
         let students = await User.find({_id: {$in: students_progress.map(x => x.user.toString())}}).lean()
+
+        students = await add_user_details(students)
+
         const college = await College.findOne({_id: req.user.college})
         if (college.users_verification_link)
             students = await checkCollegePayment({
                 users: students,
                 link: college.users_verification_link
             })
-        students = await add_user_details(students)
-
 
         let chapters = await Chapter.find({course: req.params.id}, {_id: 1, name: 1})
 
