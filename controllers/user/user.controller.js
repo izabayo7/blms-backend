@@ -1079,6 +1079,70 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
+ * /user/testing:
+ *   post:
+ *     tags:
+ *       - User
+ *     description: Create User
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/testing', async (req, res) => {
+    try {
+        let result = []
+
+        const schema = {
+            'EMAIL': {
+                prop: 'email',
+                type: (value) => {
+                    const regex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                    if (!regex.test(value)) {
+                        throw new Error('invalid email')
+                    }
+                    return value
+                },
+                required: true
+            },
+            'USER GROUP': {
+                prop: 'user_group',
+                type: String,
+                required: true
+            },
+            'REGISTRATION NUMBER': {
+                prop: 'user_name',
+                type: String
+            },
+        }
+
+        const readXlsxFile = require('read-excel-file/node')
+
+        readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema}).then(({rows, errors}) => {
+            // `errors` list items have shape: `{ row, column, error, value }`.
+            if (errors.length)
+                return res.send(formatResult(400, "", errors[0]))
+
+            // `rows` is an array of rows
+            // each row being an array of cells.
+            result = rows
+            console.table(rows)
+            return res.status(201).send(result)
+        })
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /user/admin:
  *   post:
  *     tags:

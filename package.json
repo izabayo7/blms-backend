@@ -38,6 +38,7 @@
     "nodemon": "^2.0.4",
     "paymentwall": "^1.2.5",
     "pm2": "^4.4.1",
+    "read-excel-file": "^5.2.9",
     "sharp": "^0.26.0",
     "socket.io": "^2.3.0",
     "swagger-jsdoc": "^5.0.1",

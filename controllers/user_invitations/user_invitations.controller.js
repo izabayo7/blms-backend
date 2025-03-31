@@ -220,6 +220,157 @@ exports.createUserInvitation = async (req, res) => {
     }
 }
 
+/***
+ *  Create's a multiple user_invitations from a file
+ * @param req
+ * @param res
+ */
+exports.createMultipleUserInvitations = async (req, res) => {
+    try {
+
+        let result = []
+
+        const schema = {
+            'EMAIL': {
+                prop: 'email',
+                type: (value) => {
+                    const regex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                    if (!regex.test(value)) {
+                        throw new Error('invalid email')
+                    }
+                    return value
+                },
+                required: true
+            },
+            'USER GROUP': {
+                prop: 'user_group',
+                type: String,
+                required: true
+            },
+            'REGISTRATION NUMBER': {
+                prop: 'user_name',
+                type: String
+            },
+        }
+
+        const readXlsxFile = require('read-excel-file/node')
+
+        readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema}).then(({rows, errors}) => {
+            // `errors` list items have shape: `{ row, column, error, value }`.
+            if (errors.length)
+                return res.send(formatResult(400, "", errors[0]))
+
+            // `rows` is an array of rows
+            // each row being an array of cells.
+            result = rows
+            console.table(rows)
+            return res.status(201).send(result)
+        })
+
+        const {error} = validate_user_invitation(req.body);
+        if (error) return res.send(formatResult(400, error.details[0].message));
+
+        if (req.body.category !== "ADMIN" && !req.body.user_group)
+            return res.send(formatResult(404, 'UserGroup is required'))
+
+        const {emails, category} = req.body
+
+        let _college = await College.findOne({
+            _id: req.user.college
+        })
+        if (!_college)
+            return res.send(formatResult(404, 'UserCategory not found'))
+
+        let user_category = await User_category.findOne({
+            name: category
+        })
+        if (!user_category)
+            return res.send(formatResult(404, 'UserCategory not found'))
+
+        let user_group
+
+        if (req.body.user_group) {
+            user_group = await User_group.findOne({
+                name: req.body.user_group
+            })
+            if (!user_group)
+                return res.send(formatResult(404, 'User_group not found'))
+        }
+
+        const savedInvitations = []
+
+        for (const email of emails) {
+            const user = await User.findOne({
+                email: email,
+                "status.deleted": {$ne: 1}
+            })
+            if (user) {
+                return res.send(formatResult(400, `User with email (${email}) arleady exist`))
+            }
+
+            // const user_invitation = await User_invitation.findOne({
+            //   email: email,
+            //   status: "PENDING"
+            // })
+            // if (user_invitation) {
+            //   return res.send(formatResult(400, `User with email (${email}) have a pending invitation`))
+            // }
+
+            let result = await User_invitation.findOne({
+                user: req.user._id,
+                email: email,
+                category: user_category._id,
+                college: req.user.college,
+            })
+            let token
+
+            if (result) {
+                result.expiration_date = expiration_date
+                result = await result.save()
+                token = result.token
+            } else {
+                token = uuid()
+            }
+
+
+            const {sent, err} = await sendInvitationMail({
+                email,
+                names: req.user.sur_name + ' ' + req.user.other_names,
+                token: token,
+                institution: {name: _college.name},
+                user_group: req.body.user_group
+            });
+            if (err)
+                return res.send(formatResult(500, err));
+
+
+            if (!result) {
+                const newDocument = new User_invitation({
+                    user: req.user._id,
+                    email: email,
+                    category: user_category._id,
+                    college: req.user.college,
+                    token: token,
+                    user_group: user_group ? user_group._id : undefined,
+                    expiration_date: expiration_date,
+                });
+
+                result = await newDocument.save();
+            }
+
+            if (sent) {
+                savedInvitations.push(result)
+            }
+        }
+
+        return res.send(formatResult(201, 'CREATED', savedInvitations));
+    } catch
+        (e) {
+        return res.send(formatResult(500, e))
+    }
+}
+
+
 /**
  * Accept or Deny invitation
  * @param req
