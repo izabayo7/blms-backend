@@ -234,7 +234,7 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(400, 'User_progress arleady exist'))
 
     let result = await createDocument(User_progress, {
-      user: req.body.user,
+      user: user._id,
       course: req.body.course,
       progress: 0,
     })
