@@ -279,6 +279,8 @@ router.get('/user/:user_name', async (req, res) => {
 
       let foundSubmissions = []
 
+      quizes = await addAttachmentMediaPaths(quizes)
+
       for (const i in quizes) {
 
         if (quizes[i].target.type !== 'faculty_college_year') {
@@ -324,9 +326,6 @@ router.get('/user/:user_name', async (req, res) => {
             if (quiz_submissions[k].marked) {
               quizes[i].marking_status += percentage_of_one_submission
             }
-
-            quiz_submissions[k].quiz = await addAttachmentMediaPaths([quiz_submissions[k].quiz])
-            quiz_submissions[k].quiz = quiz_submissions[k].quiz[0]
           }
           quizes[i].submissions = quiz_submissions
           foundSubmissions.push(quizes[i])
