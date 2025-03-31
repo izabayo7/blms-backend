@@ -908,6 +908,25 @@ exports.replaceWithLatestMessages = async (messages, user_id) => {
     return messages
 }
 
+exports.getContactIds = async (user_id) => {
+    const obj = {
+        sender: "SYSTEM",
+        receivers: {
+            $elemMatch: {
+                id: user_id
+            }
+        },
+        group: undefined
+    }
+
+    const messages = await this.Message.find(
+        obj
+        , {
+            receivers: 1
+        }).sort({_id: -1})
+    return messages.map(x => x.receivers[x.receivers[0].id === user_id ? 1 : 0].id)
+}
+
 // get latest conversations
 exports.getLatestMessages = async (user_id) => {
     const u = this.u

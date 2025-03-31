@@ -1,4 +1,5 @@
 const socket_io = require('socket.io')
+const {getContactIds} = require("./imports");
 const {sendLiveScheduledEmail} = require("../controllers/email/email.controller");
 const {sendReleaseMarskEmail} = require("../controllers/email/email.controller");
 const {addMessageDetails} = require("./imports");
@@ -68,6 +69,22 @@ module.exports.listen = (app) => {
         // const id = 'any'
 
         socket.join(id)
+
+        const contactIds = await getContactIds(id)
+
+        for (const contactId of contactIds) {
+            socket.broadcast.to(contactId).emit('user/online', {id: user.user_name})
+        }
+
+        socket.on('disconnect', function () {
+
+            socket.emit('disconnected');
+
+            for (const contactId of contactIds) {
+                socket.broadcast.to(contactId).emit('user/offline', {id: user.user_name})
+            }
+
+        });
 
         /**
          * messsage events
