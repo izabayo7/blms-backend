@@ -27,7 +27,8 @@ const {
   streamVideo,
   u,
   upload_multiple_images,
-  addQuizTarget
+  addQuizTarget,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {
   parseInt
@@ -392,7 +393,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
       _id: quiz.user
     })
 
-    const file_path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`)
     console.log(file_path)
     const file_type = await findFileType(req.params.file_name)
 
