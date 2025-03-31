@@ -153,7 +153,7 @@ exports.acceptInvitation = async (req, res) => {
     if (_invitation.expiration_date < Date.now())
       return res.send(formatResult(400, 'invitation has expired'))
 
-    _invitation.status = "ACCEPTED"
+    _invitation.status = req.params.action == 'accept' ? "ACCEPTED" : "DENIED"
 
     const result = await _invitation.save()
 
