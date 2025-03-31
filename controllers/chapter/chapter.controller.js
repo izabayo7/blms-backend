@@ -375,11 +375,16 @@ router.post('/', async (req, res) => {
             course: req.body.course
         }) + 1
 
+        if (req.body.status && req.body.status === 0) {
+            await Chapter.updateOne({course: req.body.course, status: 0}, {status: 1});
+        }
+
         let result = await createDocument(Chapter, {
             name: req.body.name,
             description: req.body.description,
             number: number,
-            course: req.body.course
+            course: req.body.course,
+            status: req.body.status
         })
 
         return res.send(result)
@@ -457,6 +462,10 @@ router.put('/:id', async (req, res) => {
         })
         if (chapter)
             return res.send(formatResult(403, 'name was taken'))
+
+        if (req.body.status && req.body.status === 0) {
+            await Chapter.updateOne({course: req.body.course, status: 0}, {status: 1});
+        }
 
         const result = await updateDocument(Chapter, req.params.id, req.body)
         return res.send(result)
