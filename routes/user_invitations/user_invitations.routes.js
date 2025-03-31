@@ -93,7 +93,7 @@ router.route('/all')
 router.route('/:token')
     /**
      * @swagger
-     * /user_invitations:
+     * /user_invitations/{token}:
      *   get:
      *     tags:
      *       - User_invitation
@@ -101,7 +101,7 @@ router.route('/:token')
      *     parameters:
      *       - name: token
      *         description: User invitation token
-     *         in: params
+     *         in: path
      *         type: string
      *         required: true
      *     responses:
