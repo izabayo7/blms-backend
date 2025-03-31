@@ -560,8 +560,6 @@ router.get('/current', auth, async (req, res) => {
  *   get:
  *     tags:
  *       - User
- *     security:
- *       - bearerAuth: -[]
  *     description: tells whether the username is available or taken
  *     parameters:
  *       - name: user_name
@@ -577,7 +575,7 @@ router.get('/current', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkUserNameExistance/:user_name', auth, checkUsernameExistence)
+router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
 
 /**
  * @swagger
@@ -585,6 +583,8 @@ router.get('/checkUserNameExistance/:user_name', auth, checkUsernameExistence)
  *   get:
  *     tags:
  *       - User
+ *     security:
+ *       - bearerAuth: -[]
  *     description: returns the latest pending email update request
  *     responses:
  *       200:
@@ -594,7 +594,7 @@ router.get('/checkUserNameExistance/:user_name', auth, checkUsernameExistence)
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkEmailUpdateRequest', getEmailConfirmation)
+router.get('/checkEmailUpdateRequest', auth, getEmailConfirmation)
 
 /**
  * @swagger
