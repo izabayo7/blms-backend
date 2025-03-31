@@ -513,7 +513,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         let allowed_actions = ['view', 'download']
-        if (!allowed_actions.includes(req.params.actions))
+        if (!allowed_actions.includes(req.params.action))
             return res.send(formatResult(400, 'invalid action'))
 
 
