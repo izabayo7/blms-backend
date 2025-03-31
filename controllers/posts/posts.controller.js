@@ -105,6 +105,35 @@ exports.createUserAPost = async (req, res) => {
 }
 
 /***
+ *  change post status
+ * @param req
+ * @param res
+ */
+exports.updatePostStatus = async (req, res) => {
+  try {
+    if (!(validateObjectId(req.params.id)))
+      return res.status(400).send(formatResult(400, 'Invalid id'));
+    const { action } = req.params
+    const allowedActions = ['publish', 'unpublish', 'delete']
+    if (!allowedActions.includes(action))
+      return res.status(400).send(formatResult(400, 'Invalid action'));
+
+    let result = await Post.findOne({ _id: req.params.id, creator: req.user._id });
+    if (!result)
+      return res.send(formatResult(404, 'post not found'));
+
+    result.status = action == 'publish' ? 'PUBLISHED' : action == 'unpublish' ? 'DRAFT' : 'DELTED';
+
+    result = await result.save()
+
+    return res.send(formatResult(200, 'UPDATED', result));
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
+
+/***
  *  delete post
  * @param req
  * @param res
