@@ -329,8 +329,7 @@ exports.confirmation_email = ({
                                   user_name,
                                   institution_name,
                                   institution_email,
-                                  subscription,
-                                  token
+                                  subscription
                               }) => {
     const result = `
         <!DOCTYPE html>

@@ -1,4 +1,5 @@
 // import dependencies
+const {sendSubmissionEmail} = require("../email/email.controller");
 const {calculateAmount} = require("../../utils/imports");
 const {Account_payments} = require("../../models/account_payments/account_payments.model");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
@@ -1156,7 +1157,7 @@ router.post('/admin', async (req, res) => {
         }
 
         const {sent, err} = await sendConfirmEmail({
-            email: req.body.email,
+            institution_email: req.body.college_email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
             institution_name: req.body.college,
             subscription: "TRIAL"
@@ -1187,6 +1188,18 @@ router.post('/admin', async (req, res) => {
                 college: saved_college.data._id,
                 plan: 'TRIAL'
             })
+
+        await sendSubmissionEmail({
+            user_email: req.body.email,
+            user_phone: req.body.phone,
+            max_users: req.body.maximum_users,
+            user_name: req.body.sur_name + ' ' + req.body.other_names,
+            institution_name: req.body.college,
+            institution_email: req.body.college_email,
+            subscription: "TRIAL",
+            token: "",
+
+        });
 
         return res.send(formatResult(201, 'Account was successfully created, check your email to confirm your email.'));
     } catch (error) {
