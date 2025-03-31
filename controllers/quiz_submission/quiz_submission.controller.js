@@ -967,7 +967,7 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
         }
 
 
-        const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].feedback_src}`)
+        const file_found = await fs.exists(`${path}/${answer[0].feedback_src}`)
         if (file_found)
             return res.send(formatResult(400, 'feedback for this answer was already uploaded'))
 
