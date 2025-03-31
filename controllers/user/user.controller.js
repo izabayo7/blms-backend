@@ -89,6 +89,17 @@ const router = express.Router()
  *       - category
  */
 
+ /**
+ * @swagger
+ * definitions:
+ *   UserLogin:
+ *     properties:
+ *       email_user_name_or_phone:
+ *         type: string
+ *       password:
+ *         type: string
+ */
+
 /**
  * @swagger
  * /user:
@@ -383,7 +394,7 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {  
+router.post('/', async (req, res) => {
   try {
     const {
       error
@@ -486,16 +497,11 @@ router.post('/', async (req, res) => {
  *     description: User login
  *     parameters:
  *       - name: body
- *         description: Login credentials
+ *         description: Fields for an User
  *         in: body
  *         required: true
  *         schema:
- *           email:
- *             type: email
- *             required: true
- *           password:
- *             type: string
- *             required: true
+ *           $ref: '#/definitions/UserLogin'
  *     responses:
  *       200:
  *         description: OK
