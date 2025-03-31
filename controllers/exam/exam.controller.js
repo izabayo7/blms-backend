@@ -331,6 +331,60 @@ router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
 
 /**
  * @swagger
+ * /exam/duplicate/{id}:
+ *   post:
+ *     tags:
+ *       - Exam
+ *     description: Duplicate exam
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Id of the exam you want to dupplicate
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/duplicate/:id',filterUsers(['INSTRUCTOR']), async (req, res) => {
+    try {
+
+        let exam = await findDocument(Exam, {
+            _id: req.params.id,
+            user: req.user._id
+        })
+        if (quiz)
+            return res.send(formatResult(404, 'Exam not found'))
+
+        let result = await createDocument(Quiz, {
+            name: `${exam.name} copy(${Math.floor(1000 + Math.random() * 9000)})`,
+            duration: exam.duration,
+            instructions: exam.instructions,
+            course: exam.course,
+            type: exam.type,
+            user: req.user._id,
+            questions: exam.questions,
+            total_marks: exam.total_marks,
+            starting_time: exam.starting_time,
+            passMarks: exam.passMarks
+        })
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
  * /exams/{id}:
  *   put:
  *     tags:
