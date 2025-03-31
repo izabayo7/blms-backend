@@ -494,7 +494,7 @@ exports.getConversationMessages = async ({
                 user_name: conversation_id
             })
             conversation_id = user._id
-            messages = await this.findDocuments(this.Message, {
+            const obj = {
                 $or: [{
                     $and: [
                         {sender: user_id},
@@ -537,12 +537,17 @@ exports.getConversationMessages = async ({
                     ]
                 }],
                 group: undefined
-            }, {
-                receivers: 0
-            }, limit)
+            }
+            if (lastMessage)
+                obj._id = {$lt: lastMessage}
+            messages = await this.Message.find(
+                obj
+                , {
+                    receivers: 0
+                }).limit(limit).sort({_id: -1})
         }
 
-        return await this.replaceUserIds(messages, user_id)
+        return await this.replaceUserIds(messages.reverse(), user_id)
     } else {
         const announcements = await this.getUserAnnouncements(user, false, true)
         return announcements

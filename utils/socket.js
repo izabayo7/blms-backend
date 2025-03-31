@@ -195,7 +195,8 @@ module.exports.listen = (app) => {
                 user_id: id,
                 user,
                 conversation_id: conversation_id,
-                lastMessage: lastMessage
+                lastMessage: lastMessage,
+                limit: 10
             })
 
             if (conversation_id === 'announcements') {
@@ -209,7 +210,8 @@ module.exports.listen = (app) => {
 
             // send the messages
             socket.emit('res/message/conversation', {
-                conversation: formatedMessages
+                conversation: formatedMessages,
+                lastMessage
             });
 
         })
