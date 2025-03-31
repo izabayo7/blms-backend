@@ -325,7 +325,7 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
 
         return res.send(formatResult(u, u, {
             students: students,
-            total_perfomance: (total_got_marks / total_required_marks) * 100,
+            total_perfomance: total_required_marks ? (total_got_marks / total_required_marks) * 100 : 0,
             total_attendance:  attendance_count ? total_attendance / attendance_count : 0
         }))
     } catch
