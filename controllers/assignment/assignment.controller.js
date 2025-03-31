@@ -11,7 +11,6 @@ const {
     fs,
     Chapter,
     Course,
-    validate_assignment,
     path,
     Faculty_college_year,
     validateObjectId,
@@ -289,7 +288,7 @@ router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
         let target
 
-        switch (req.body.type) {
+        switch (req.body.target.type) {
             case 'chapter':
                 target = await findDocument(Chapter, {
                     _id: req.body.target.id
@@ -392,7 +391,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         assignment = _copy
         // _copy = simplifyObject(assignment)
 
-        assignment.title = req.body.name
+        assignment.title = req.body.title
         assignment.passMarks = req.body.passMarks
         assignment.dueDate = req.body.dueDate
         assignment.total_marks = req.body.total_marks
@@ -400,9 +399,6 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
         await assignment.save()
 
-        assignment = await addAssignmentUsages([assignment])
-        assignment = await addAttachedCourse(assignment)
-        assignment = assignment[0]
         return res.send(formatResult(200, 'UPDATED', assignment))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -597,11 +593,11 @@ router.delete('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         // check if the assignment is never used
         let used = false
 
-        const submission = await findDocument(Assignment_submission, {
-            assignment: req.params.id
-        })
-        if (submission)
-            used = true
+        // const submission = await findDocument(Assignment_submission, {
+        //     assignment: req.params.id
+        // })
+        // if (submission)
+        //     used = true
 
         if (!used) {
 

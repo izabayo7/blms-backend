@@ -87,6 +87,7 @@ function validate_assignment(body, target = false) {
         id: Joi.ObjectId().required()
     } : {
         title: Joi.string().min(3).required(),
+        details: Joi.string().required(),
         passMarks: Joi.number().min(1).required(),
         target: Joi.object({
             type: Joi.string().required(),
