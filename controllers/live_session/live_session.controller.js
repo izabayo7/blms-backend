@@ -323,7 +323,6 @@ router.put('/:id/status/:status', async (req, res) => {
     if (!live_session)
       return res.send(formatResult(404, 'live_session not found'))
 
-
     const result = await updateDocument(Live_session, req.params.id, {status: req.params.status})
 
     return res.send(result)
