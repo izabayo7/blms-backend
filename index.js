@@ -69,6 +69,7 @@ const quizSubmissionController = require('./controllers/quizSubmission/quizSubmi
 const notificationController = require('./controllers/notification/notification.controller')
 const userNotificationController = require('./controllers/user_notification/user_notification.controller')
 const chatGroupController = require('./controllers/chat-group/chat-group.controller')
+const userController = require('./controllers/user/user.controller')
 
 // use middlewares
 app.use(cors())
@@ -113,6 +114,7 @@ app.use('/kurious/quiz-submission', quizSubmissionController)
 app.use('/kurious/notification', notificationController)
 app.use('/kurious/user_notification', userNotificationController)
 app.use('/kurious/chat_group', chatGroupController)
+app.use('/kurious/user', userController)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

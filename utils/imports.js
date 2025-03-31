@@ -809,6 +809,36 @@ module.exports.injectStudentProgress = async (courses, studentId) => {
     return courses
 }
 
+module.exports.Search = async (model, search_query, projected_fields, _page, _limit) => {
+    const page = parseInt(_page)
+    const limit = parseInt(_limit)
+
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    const results = {}
+
+    if (endIndex < await model.countDocuments().exec()) {
+        results.next = {
+            page: page + 1,
+            limit: limit
+        }
+    }
+
+    if (startIndex > 0) {
+        results.previous = {
+            page: page - 1,
+            limit: limit
+        }
+    }
+    try {
+        results.results = await model.find(search_query,projected_fields).limit(limit).skip(startIndex).exec()
+        return { data: results }
+    } catch (e) {
+        return { error: e.message }
+    }
+}
+
 // authentication middlewares
 const {
     auth
