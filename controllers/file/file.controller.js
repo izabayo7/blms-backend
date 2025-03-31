@@ -744,7 +744,7 @@ router.get('/quizAttachedFiles/:quiz/:file_name', async (req, res) => {
             _id: quiz.instructor
         })
 
-        path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.quiz}/${req.params.file_name}`
+        path = `./uploads/colleges/${instructor.college}/assignments/${req.params.quiz}/${req.params.file_name}`
 
         fs.exists(path, (exists) => {
             if (!exists) {
@@ -826,7 +826,7 @@ router.get('/submissionAttachedFiles/:quiz/:file', async (req, res) => {
             _id: quiz.instructor
         })
 
-        path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${submission.quiz}/submissions/${req.params.submission}/${req.params.file}`
+        path = `./uploads/colleges/${instructor.college}/assignments/${submission.quiz}/submissions/${req.params.submission}/${req.params.file}`
 
         fs.exists(path, (exists) => {
             if (!exists) {
@@ -1177,7 +1177,7 @@ router.post('/quizAttachedFiles/:quiz', async (req, res) => {
         })
 
         req.kuriousStorageData = {
-            dir: `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.quiz}`,
+            dir: `./uploads/colleges/${instructor.college}/assignments/${req.params.quiz}`,
             model: 'quizAttachment'
         }
 
@@ -1187,7 +1187,7 @@ router.post('/quizAttachedFiles/:quiz', async (req, res) => {
             const questions = []
             for (const question of quiz.questions) {
                 if (
-                    question.type.includes("file") &&
+                    question.type.includes("file-select") &&
                     question.options.choices.length > 0
                 ) {
                     for (const index in question.options.choices) {
@@ -1245,7 +1245,7 @@ router.post('/submissionAttachedFiles/:submission', async (req, res) => {
         })
 
         req.kuriousStorageData = {
-            dir: `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${submission.quiz}/submissions/${req.params.submission}`,
+            dir: `./uploads/colleges/${instructor.college}/assignments/${submission.quiz}/submissions/${req.params.submission}`,
             model: 'submissionAttachment'
         }
 
@@ -1371,7 +1371,7 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
             }, {
                 new: true
             })
-            if (updateDocument){
+            if (updateDocument) {
                 updateDocument.coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${req.params.id}/${updateDocument.coverPicture}`
                 return res.status(201).send(updateDocument)
             }
@@ -1470,7 +1470,7 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
                 new: true
             })
             if (updateDocument)
-                return res.status(201).send({message: 'Chapter Main Video was successfully uploaded', filepath: `http://${process.env.HOST}/kurious/file/chapterMainVideo/${req.params.chapter}/${updateDocument.mainVideo}`})
+                return res.status(201).send({ message: 'Chapter Main Video was successfully uploaded', filepath: `http://${process.env.HOST}/kurious/file/chapterMainVideo/${req.params.chapter}/${updateDocument.mainVideo}` })
             return res.status(500).send("Error ocurred")
         })
 

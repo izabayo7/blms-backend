@@ -66,7 +66,7 @@ function validateQuiz(body) {
             details: Joi.string().min(5).required(),
             options: {
                 list_style_type: Joi.string(),
-                choices: Joi.array().min(1).items(Joi.object({ text: Joi.string(), src: Joi.string() })).required(),
+                choices: Joi.array().min(1).items(Joi.object({ _id: Joi.ObjectId(), text: Joi.string(), src: Joi.string() })).required(),
             },
         })).required(),
         totalMarks: Joi.number(),

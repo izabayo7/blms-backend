@@ -203,12 +203,12 @@ router.get('/student/:id/:quiz_name', async (req, res) => {
     if (quiz.target.type === 'facultycollegeyear') {
       facultycollegeyear = quiz.target.id
     }
-    
-    const studentFacultyCollegeYear = await StudentFacultyCollegeYear({student: req.params.student, facultycollegeyear: facultycollegeyear})
+
+    const studentFacultyCollegeYear = await StudentFacultyCollegeYear({ student: req.params.student, facultycollegeyear: facultycollegeyear })
 
     if (!studentFacultyCollegeYear)
       return res.status(404).send(`Student is not allowed to do this quiz`)
-    
+
     quiz = await addAttachmentMediaPaths([quiz])
 
     return res.status(200).send(quiz[0])
@@ -378,9 +378,45 @@ router.put('/:id', async (req, res) => {
   }, req.body, {
     new: true
   })
-  if (updateDocument)
-    return res.status(201).send(updateDocument)
-  return res.status(500).send("Error ocurred")
+  if (!updateDocument)
+    return res.status(500).send("Error ocurred")
+
+  // delete removed files
+  for (const i in quiz.questions) {
+    if (
+      quiz.questions[i].type.includes("file-select") &&
+      quiz.questions[i].options.choices.length > 0
+    ) {
+      let deleteAll = false
+      if (!req.body.questions[i].type.includes('file-select')) {
+        deleteAll = true
+      }
+      for (const j in quiz.questions[i].options.choices) {
+        let deletePicture = true
+        if (req.body.questions[i].type.includes('file-select')) {
+          for (const k in req.body.questions[i].options.choices) {
+            if (quiz.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
+              deletePicture = false
+            }
+          }
+        }
+        if (deleteAll || deletePicture) {
+          const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
+          fs.exists(path, (exists) => {
+            if (exists) {
+              fs.unlink(path, (err) => {
+                if (err) {
+                  return res.status(500).send(err)
+                }
+              })
+            }
+          })
+        }
+      }
+    }
+  }
+
+  return res.status(201).send(updateDocument)
 
 })
 
@@ -398,7 +434,7 @@ router.delete('/:id', async (req, res) => {
     })
     if (!quiz)
       return res.status(404).send(`Quiz of Code ${req.params.id} Not Found`)
-    console.log('ajaja')
+
     let instructor = await Instructor.findOne({
       _id: quiz.instructor
     })
@@ -411,16 +447,22 @@ router.delete('/:id', async (req, res) => {
     if (!deletedQuiz)
       return res.status(500).send('Quiz Not Deleted')
 
-    const path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.id}`
+    let err = undefined
+
+    const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}`
     fs.exists(path, (exists) => {
       if (exists) {
-        fs.rmdir(path, (err) => {
+        fs.rmdir(path, { recursive: true }, (err) => {
           if (err) {
-            return res.status(500).send(err)
+            err = err
           }
         })
       }
     })
+
+
+    if (err)
+      return res.status(500).send(err)
 
     return res.status(200).send(`Quiz ${deletedQuiz._id} Successfully deleted`)
   } catch (error) {
