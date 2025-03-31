@@ -56,6 +56,10 @@ const college_payment_plan = new mongoose.Schema(
     },
     {timestamps: true}
 )
+
+// payment logs
+// ifata payment id na conditions zose yakozwe zihari
+
 const userPaymentsSchema = new mongoose.Schema({
     method_used: {
         type: String,
@@ -68,6 +72,10 @@ const userPaymentsSchema = new mongoose.Schema({
     },
     amount_paid: {
         type: Number
+    },
+    balance: {
+        type: Number,
+        default: 0
     },
     periodType: {
         type: String,
