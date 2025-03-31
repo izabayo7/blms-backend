@@ -662,15 +662,21 @@ router.put('/:id', async (req, res) => {
  *   put:
  *     tags:
  *       - User
- *     description: Upload user profile (file upload using swagger is still under construction)
+ *     description: Upload user profile
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: User id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: User Profile to upload.
  *     responses:
  *       201:
  *         description: Created

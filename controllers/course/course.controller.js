@@ -688,7 +688,7 @@ router.put('/:id', async (req, res) => {
  *       - in: formData
  *         name: file
  *         type: file
- *         description: User Profile to upload.
+ *         description: course coverpicture to upload.
  *     responses:
  *       201:
  *         description: Created
