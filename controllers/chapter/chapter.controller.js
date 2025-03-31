@@ -800,7 +800,7 @@ router.delete('/:id/attachment/:file_name', async (req, res) => {
       _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
 
 
     fs.unlink(file_path, async (err) => {
