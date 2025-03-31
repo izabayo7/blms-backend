@@ -713,13 +713,14 @@ exports.injectAnnouncementContact = async (contacts, user) => {
 }
 
 // format contacts
-exports.formatContacts = async (messages, user_id, user) => {
+exports.formatContacts = async (messages, user_id, user, connected) => {
 
     let formatedContacts = []
     for (const message of messages) {
         let id = '',
             name = "",
             image = '',
+            online = false,
             is_group = undefined,
             unreadMessagesLength = 0,
             members = undefined,
@@ -739,11 +740,13 @@ exports.formatContacts = async (messages, user_id, user) => {
             last_message.sender = {
                 sur_name: 'You'
             }
+            online = connected[message.receivers[0].id] !== undefined
         } else if (last_message.sender) {
             let sender = await this.injectUser([{
                 id: message.sender
             }], 'id', 'data')
             sender = sender[0].data
+            online = connected[message.sender] !== undefined
             last_message.sender = {
                 sur_name: sender.sur_name
             }
@@ -787,13 +790,14 @@ exports.formatContacts = async (messages, user_id, user) => {
             })
         }
         formatedContacts.push({
-            id: id,
-            name: name,
-            image: image,
-            last_message: last_message,
-            unreadMessagesLength: unreadMessagesLength,
-            is_group: is_group,
-            members: members
+            id,
+            name,
+            online,
+            image,
+            last_message,
+            unreadMessagesLength,
+            is_group,
+            members
         })
     }
 

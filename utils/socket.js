@@ -73,7 +73,7 @@ module.exports.listen = (app) => {
         const contactIds = await getContactIds(id)
 
         for (const contactId of contactIds) {
-            socket.broadcast.to(contactId).emit('user/online', {id: user.user_name})
+            socket.broadcast.to(contactId).emit('users/online', {id: user.user_name})
         }
 
         socket.on('disconnect', function () {
@@ -81,7 +81,7 @@ module.exports.listen = (app) => {
             socket.emit('disconnected');
 
             for (const contactId of contactIds) {
-                socket.broadcast.to(contactId).emit('user/offline', {id: user.user_name})
+                socket.broadcast.to(contactId).emit('users/offline', {id: user.user_name})
             }
 
         });
@@ -184,7 +184,7 @@ module.exports.listen = (app) => {
             // get the latest conversations
             const latestMessages = await getLatestMessages(id)
             // format the contacts
-            const contacts = await formatContacts(latestMessages, id, user)
+            const contacts = await formatContacts(latestMessages, id, user,io.clients().adapter.rooms)
             // send the contacts
             socket.emit('res/message/contacts', {
                 contacts: contacts
@@ -354,7 +354,6 @@ module.exports.listen = (app) => {
         socket.on('message/all_messages_read', async ({
                                                           conversation_id
                                                       }) => {
-            console.log("ahooooooo, ", conversation_id)
             if (!conversation_id) return
 
             if (conversation_id === 'announcements') {
