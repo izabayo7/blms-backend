@@ -173,15 +173,15 @@ router.post('/', async (req, res) => {
         if (user_category.name !== 'STUDENT' && user_category.name !== 'INSTRUCTOR')
             return res.send(formatResult(400, 'Only students and instructors can have a connection with the user_group'))
 
-        let last_active_u_f_c_y = await findDocument(User_user_group, {
-            user: user._id,
-            status: 'ACTIVE'
-        })
-        if (last_active_u_f_c_y) {
-            await updateDocument(User_user_group, last_active_u_f_c_y._id, {
-                status: 'INACTIVE'
-            })
-        }
+        // let last_active_u_f_c_y = await findDocument(User_user_group, {
+        //     user: user._id,
+        //     status: 'ACTIVE'
+        // })
+        // if (last_active_u_f_c_y) {
+        //     await updateDocument(User_user_group, last_active_u_f_c_y._id, {
+        //         status: 'INACTIVE'
+        //     })
+        // }
 
         let user_user_group = await findDocument(User_user_group, {
             user_group: req.body.user_group,
