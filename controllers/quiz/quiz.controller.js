@@ -711,8 +711,11 @@ router.put('/:id/target', async (req, res) => {
 
     // remove the previously attached quiz
     const last_targeted_quiz = await findDocument(Quiz, {
+      _id: {
+        $ne: req.params.id
+      }
       "target.id": req.body.id
-    })
+    }, u, false)
     if (last_targeted_quiz) {
       last_targeted_quiz.target = undefined
       await last_targeted_quiz.save()
@@ -731,6 +734,57 @@ router.put('/:id/target', async (req, res) => {
   }
 })
 
+
+/**
+ * @swagger
+ * /quiz/{id}/target:
+ *   delete:
+ *     tags:
+ *       - Quiz
+ *     description: Remove quiz target
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id/target', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if quiz exist
+    let quiz = await findDocument(Quiz, {
+      _id: req.params.id,
+      user: req.user._id
+    }, u, false)
+    if (!quiz)
+      return res.send(formatResult(404, 'quiz not found'))
+
+    quiz.target = undefined
+
+    await quiz.save()
+
+    return res.send(formatResult(200, 'UPDATED', quiz))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
 
 /**
  * @swagger
