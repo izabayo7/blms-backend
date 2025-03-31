@@ -189,14 +189,17 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
                 ]
             })
         } else {
-            total_users = await countDocuments(User, {college: req.user.college})
-            total_students = await countDocuments(User, {college: req.user.college, category: student_category._id})
+            total_users = await countDocuments(User, {college: req.user.college,"status.deleted": {$ne: 1}})
+            total_students = await countDocuments(User, {college: req.user.college, category: student_category._id, "status.deleted": {$ne: 1}})
             total_instructors = await countDocuments(User, {
                 college: req.user.college,
-                category: instructor_category._id
+                category: instructor_category._id,
+                "status.deleted": {$ne: 1}
             })
             total_staff = await countDocuments(User, {
-                college: req.user.college, $and: [
+                college: req.user.college,
+                "status.deleted": {$ne: 1},
+                $and: [
                     {
                         category: {
                             $ne: student_category._id
@@ -790,8 +793,9 @@ router.post('/', async (req, res) => {
         })
 
         // notify the admin that a new user joined
-        MyEmitter.emit('socket_event',{name:`new_user_in_${college._id}`, data: result.data
-    });
+        MyEmitter.emit('socket_event', {
+            name: `new_user_in_${college._id}`, data: result.data
+        });
 
         await User_invitation.findOneAndUpdate({
             email: req.body.email,
@@ -1366,65 +1370,24 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         // check if user exist
-        let user = await findDocument(User, {
+        let user = await User.findOneAndUpdate({
             _id: req.params.id,
-            college: req.user.college
-        })
+            college: req.user.college,
+        }, {"status.deleted": 1})
         if (!user)
-            return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
+            return res.send(formatResult(400, `User not found`))
 
-        // check if the user is never used
-        let user_used = false
 
-        const user_user_group = await findDocument(User_user_group, {
-            user: req.params.id
-        })
-        if (user_user_group)
-            user_used = true
-
-        const course = await findDocument(Course, {
-            user: req.params.id
-        })
-        if (course)
-            user_used = true
-
-        const quiz = await findDocument(Quiz, {
-            user: req.params.id
-        })
-        if (quiz)
-            user_used = true
-
-        const progress = await findDocument(User_progress, {
-            user: req.params.id
-        })
-        if (progress)
-            user_used = true
-
-        const submission = await findDocument(Quiz_submission, {
-            user: req.params.id
-        })
-        if (submission)
-            user_used = true
-
-        if (!user_used) {
-
-            const result = await deleteDocument(User, req.params.id)
-
-            if (!user.profile) {
-                // delete the profile
-                const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/users/${user.profile}`)
-                fs.exists(path, (exists) => {
-                    if (exists)
-                        fs.unlink(path)
-                })
-            }
-            return res.send(result)
+        if (user.profile) {
+            // delete the profile
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/users/${user.profile}`)
+            fs.exists(path, (exists) => {
+                if (exists)
+                    fs.unlink(path)
+            })
         }
 
-        const update_user = await updateDocument(User, req.params.id, {
-            "status.disabled": 1
-        })
-        return res.send(formatResult(200, 'User couldn\'t be deleted because it was used, instead it was disabled', update_user.data))
+        return res.send(formatResult(200, 'Deleted'))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
