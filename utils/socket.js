@@ -132,7 +132,7 @@ module.exports.listen = (app) => {
       // inject sender Info
       let _user = await injectUser([{ id: id }], 'id', 'data')
       result.data.sender = _user[0].data
-
+      console.log(result.data)
       if (result.data.group) {
         const group = await findDocument(Chat_group, { _id: result.data.group })
         result.data.group = group.code

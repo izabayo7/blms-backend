@@ -1454,7 +1454,7 @@ exports.savedecodedBase64Image = (dataString, dir) => {
 
   fs.exists(dir, exist => {
     if (!exist) {
-      return fs.mkdir(dir, {
+      return fs.mkdirSync(dir, {
         recursive: true
       })
     }

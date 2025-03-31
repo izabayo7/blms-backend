@@ -26,7 +26,8 @@ const {
   generateGroupCode,
   validateChat_group_code,
   savedecodedBase64Image,
-  validate_chat_group_profile_udpate
+  validate_chat_group_profile_udpate,
+  auth
 } = require('../../utils/imports')
 
 // create router
