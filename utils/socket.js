@@ -64,6 +64,10 @@ module.exports.listen = (app) => {
                 });
             });
 
+            MyEmitter.on(`user_limit_reached_${user.college}`, () => {
+                socket.emit('user_limit_reached');
+            });
+
         } else if (user.category.name == "INSTRUCTOR") {
 
             // tell users that live session is near
