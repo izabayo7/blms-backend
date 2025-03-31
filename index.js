@@ -75,6 +75,7 @@ const comment_controller = require('./controllers/comments/comments.controller')
 const live_session_controller = require('./controllers/live_session/live_session.controller')
 const {User_invitation_routes} = require('./routes/user_invitations/user_invitations.routes');
 const {Post_routes} = require('./routes/posts/posts.route');
+const announcement_controller = require('./controllers/announcements/announcements.controller');
 
 // use middlewares
 app.use(cors())
@@ -127,6 +128,7 @@ app.use(`${basePath}/user_invitations`, User_invitation_routes)
 app.use(`${basePath}/posts`, Post_routes)
 app.use(`${basePath}/feedback`, User_feedback_routes)
 app.use(`${basePath}/reset_password`, Reset_password_routes)
+app.use(`${basePath}/announcement`, auth, announcement_controller)
 
 // change faculty to faculty college
 
