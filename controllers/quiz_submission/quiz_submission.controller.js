@@ -975,7 +975,10 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
                 return res.send(formatResult(500, err.message))
 
             quiz_submission.answers[quiz_submission.answers.indexOf(answer[0])].feedback_src = req.file.filename
-            await quiz_submission.save()
+
+            await updateDocument(Quiz_submission, req.params.id, {
+                answers: quiz_submission.answers
+            })
 
             return res.send(formatResult(u, 'Feedback attachment was successfuly uploaded'))
         })
