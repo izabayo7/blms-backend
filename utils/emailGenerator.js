@@ -50,8 +50,8 @@ exports.submission_email = ({
                                   margin-bottom: 10px;
                                 "
                     >
-                       <div>User ${user_name}.</div>
-                       <div>Registered a new college</div>
+                        User ${user_name}. <br/>
+                        Registered a new college
                     </div>
                     <div
                             style="
@@ -377,8 +377,8 @@ exports.confirmation_email = ({
                           margin-bottom: 10px;
                         "
                     >
-                        <div>Dear ${user_name}. </div>
-                        <div>Thank you for your interest in trying out kurious learn</div>
+                        Dear ${user_name}. <br/>
+                        Thank you for your interest in trying out kurious learn
                     </div>
                     <div
                             style="
@@ -510,8 +510,9 @@ exports.confirmation_email = ({
                           top: 328px;
                         "
                     >
-                        <div>Thanks,</div>
-                        </div>Kurious learn team</div>
+                        Thanks,
+                        <br/>
+                        Kurious learn team
                     </div>
                     <div
                             style="
@@ -649,9 +650,9 @@ exports.confirm_account = ({
                           margin-bottom: 10px;
                         "
                     >
-                        <div>Dear ${user_name}. </div>
-                        <div>Your submission was accepted. </div>
-                        <div>Click the button below to complete your registration</div>
+                        Dear ${user_name}. <br />
+                        Your submission was accepted. <br>
+                        Click the button below to complete your registration
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
@@ -676,7 +677,7 @@ exports.confirm_account = ({
                             "
                                     onfocus="this.style.outline='none'"
                             >
-                                CONFIRM
+                                CONFIRM EMAIL
                             </button>
                         </a>
                     </div>
@@ -697,8 +698,9 @@ exports.confirm_account = ({
                           top: 328px;
                         "
                     >
-                        <div>Thanks,</div>
-                        </div>Kurious learn team</div>
+                        Thanks,
+                        <br />
+                        Kurious learn team
                     </div>
                     <div
                             style="
@@ -889,8 +891,9 @@ exports.reset_password = ({
                 top: 328px;
               "
             >
-                        <div>Thanks,</div>
-                        </div>Kurious learn team</div>
+              Thanks,
+              <br />
+              Kurious learn team
             </div>
           </div>
           <div
@@ -1012,7 +1015,7 @@ exports.requestCallback = ({
                   left: 39px;
                   top: 99px;
                 ">
-              <div>${user_name} who is ${role_at_institution} at ${institution_name} Requested a callback us,</div>
+              ${user_name} who is ${role_at_institution} at ${institution_name} Requested a callback us,<br />
               through <a href="https://kurious.rw">Kurious home page</a>.
             </div>
             <div class="text-center" style="text-align: center">
@@ -1048,8 +1051,8 @@ exports.requestCallback = ({
                   left: 39px;
                   top: 328px;
                 ">
-                        <div>Thanks,</div>
-                        </div>Kurious learn team</div>
+              Thanks,
+              <br> Kurious learn team
             </div>
           </div>
           <div class="footer" style="
@@ -1143,7 +1146,7 @@ exports.contactUs = ({
                           left: 39px;
                           top: 99px;
                         ">
-                        <div>${user_name} Contacted us,</div>
+                        ${user_name} Contacted us,<br />
                         through <a href="https://kurious.rw">Kurious home page</a>.
                     </div>
                     <div class="message" style="
@@ -1194,8 +1197,8 @@ exports.contactUs = ({
                           left: 39px;
                           top: 328px;
                         ">
-                        <div>Thanks,</div>
-                        </div>Kurious learn team</div>
+                        Thanks,
+                        <br> Kurious learn team
                     </div>
                 </div>
                 <div
@@ -1298,35 +1301,35 @@ exports.invitationToSystem = ({
                 <div
                         class="content"
                         style="
-                        background-color: white;
-                        padding: 49px 39px 0;
-                        border-top: 3px solid #193074;
-                        margin: auto;
-                        min-height: 340px;
-                        max-width: 522px;
-                        border-radius: 0px;
-                        align-self: center;
-                      "
+                                background-color: white;
+                                padding: 49px 39px 0;
+                                border-top: 3px solid #193074;
+                                margin: auto;
+                                min-height: 340px;
+                                max-width: 522px;
+                                border-radius: 0px;
+                                align-self: center;
+                              "
                 >
                     <div
                             class="message"
                             style="
-                          font-family: 'Inter', sans-serif;
-                          font-size: 15px;
-                          font-style: normal;
-                          font-weight: 400;
-                          line-height: 24px;
-                          letter-spacing: 0em;
-                          text-align: left;
-                          min-height: 96px;
-                          width: 379px;
-                          left: 39px;
-                          top: 99px;
-                        "
+                                  font-family: 'Inter', sans-serif;
+                                  font-size: 15px;
+                                  font-style: normal;
+                                  font-weight: 400;
+                                  line-height: 24px;
+                                  letter-spacing: 0em;
+                                  text-align: left;
+                                  min-height: 96px;
+                                  width: 379px;
+                                  left: 39px;
+                                  top: 99px;
+                                "
                     >
-                        <div>${inviter} invited you in ${institution.name} ${user_group ? '- ' + user_group : ''},</div>
-                        <div>on Kurious learn! Please click the button below to finish setting up</div>
-                        <div>your account.</div>
+                        ${inviter} invited you in ${institution.name} ${user_group ? '- ' + user_group : ''},<br />
+                        on Kurious learn! Please click the button below to finish setting up
+                        your account.
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
@@ -1337,18 +1340,18 @@ exports.invitationToSystem = ({
                             <button
                                     class="confirm"
                                     style="
-                              height: 54px;
-                              width: 172px;
-                              left: 0px;
-                              top: 0px;
-                              border-radius: 10px;
-                              background: #193074;
-                              color: white;
-                              border: none;
-                              text-align: center;
-                              margin: 20px auto 0px;
-                              cursor: pointer;
-                            "
+                                      height: 54px;
+                                      width: 172px;
+                                      left: 0px;
+                                      top: 0px;
+                                      border-radius: 10px;
+                                      background: #193074;
+                                      color: white;
+                                      border: none;
+                                      text-align: center;
+                                      margin: 20px auto 0px;
+                                      cursor: pointer;
+                                    "
                                     onfocus="this.style.outline='none'"
                             >
                                 CONFIRM
@@ -1358,35 +1361,35 @@ exports.invitationToSystem = ({
                     <div
                             class="thanks"
                             style="
-                          font-family: 'Inter', sans-serif;
-                          font-size: 15px;
-                          font-style: normal;
-                          font-weight: 400;
-                          line-height: 24px;
-                          letter-spacing: 0em;
-                          text-align: left;
-                          margin: 50px 0;
-                          height: 60px;
-                          width: 126px;
-                          left: 39px;
-                          top: 328px;
-                        "
+                                  font-family: 'Inter', sans-serif;
+                                  font-size: 15px;
+                                  font-style: normal;
+                                  font-weight: 400;
+                                  line-height: 24px;
+                                  letter-spacing: 0em;
+                                  text-align: left;
+                                  margin: 50px 0;
+                                  height: 60px;
+                                  width: 126px;
+                                  left: 39px;
+                                  top: 328px;
+                                "
                     >
-                        <div>Thanks,</div>
-                        </div>Kurious learn team</div>
+                        Thanks,
+                        <br> Kurious learn team
                     </div>
                 </div>
                 <div
                         class="footer"
                         style="
-                        height: 66px;
-                        left: 0px;
-                        top: 476px;
-                        max-width: 600px;
-                        margin: auto;
-                        border-radius: 0px;
-                        background: #193074;
-                      "
+                                height: 66px;
+                                left: 0px;
+                                top: 476px;
+                                max-width: 600px;
+                                margin: auto;
+                                border-radius: 0px;
+                                background: #193074;
+                              "
                 >
                     <a
                             href="https://twitter.com/kuriouslearnRw"
@@ -1396,13 +1399,13 @@ exports.invitationToSystem = ({
                         <img
                                 class="ig_icon"
                                 style="
-                            height: 20px;
-                            width: 20px;
-                            left: 41px;
-                            top: 499px;
-                            border-radius: 0px;
-                            margin: 24px 12px;
-                          "
+                                    height: 20px;
+                                    width: 20px;
+                                    left: 41px;
+                                    top: 499px;
+                                    border-radius: 0px;
+                                    margin: 24px 12px;
+                                  "
                                 src="https://apis.kurious.rw/assets/images/ig.png"
                                 alt=""
                         />
@@ -1415,13 +1418,13 @@ exports.invitationToSystem = ({
                         <img
                                 class="fb_icon"
                                 style="
-                            height: 20px;
-                            width: 11px;
-                            left: 87px;
-                            top: 499px;
-                            border-radius: 0px;
-                            margin: 24px 12px;
-                          "
+                                    height: 20px;
+                                    width: 11px;
+                                    left: 87px;
+                                    top: 499px;
+                                    border-radius: 0px;
+                                    margin: 24px 12px;
+                                  "
                                 src="https://apis.kurious.rw/assets/images/fb.png"
                                 alt=""
                         />
@@ -1442,7 +1445,7 @@ exports.invitationToSystem = ({
             </div>
         </div>
         </body>
-        </html>  
+        </html>
     `;
 
     return result;
