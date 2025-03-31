@@ -1,4 +1,9 @@
 // import dependencies
+const {Account_confirmation} = require("../../models/account_confirmations/account_confirmations.model");
+const {AcceptCollege} = require("../account_confirmations/account_confirmations.controller");
+const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
+const {createAccountConfirmation} = require("../account_confirmations/account_confirmations.controller");
+const {sendSubmissionEmail} = require("../email/email.controller");
 const {calculateAmount} = require("../../utils/imports");
 const {Account_payments} = require("../../models/account_payments/account_payments.model");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
@@ -1046,6 +1051,8 @@ router.post('/', async (req, res) => {
  *               type: string
  *             user_name:
  *               type: string
+ *             phone:
+ *               type: string
  *             gender:
  *               type: string
  *               enum: ['male', 'female']
@@ -1054,6 +1061,10 @@ router.post('/', async (req, res) => {
  *             password:
  *               type: string
  *             college:
+ *               type: string
+ *             college_phone:
+ *               type: string
+ *             college_email:
  *               type: string
  *             position:
  *               type: string
@@ -1089,18 +1100,31 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let user = await findDocument(User, {
-            $or: [{
-                email: req.body.email,
-                "status.deleted": {$ne: 1}
-            }, {
-                user_name: req.body.user_name
-            }],
+            $or: [
+                {
+                    email: req.body.email,
+                },
+                {
+                    email: req.body.college_email,
+                },
+                {
+                    phone: req.body.phone,
+                },
+                {
+                    phone: req.body.college_phone,
+                },
+                {
+                    user_name: req.body.user_name
+                }],
+            "status.deleted": {$ne: 1}
         })
 
         if (user) {
-            const emailFound = req.body.email == user.email
-            const user_nameFound = req.body.user_name == user.user_name
-            return res.send(formatResult(403, `User with ${emailFound ? 'same email ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+            const emailFound = [req.body.email, req.body.college_email].includes(user.email)
+            const phoneFound = [req.body.phone, req.body.college_phone].includes(user.phone)
+            const user_nameFound = req.body.user_name === user.user_name
+            return res.send(formatResult(403,
+                `User ${emailFound ? 'email' : user_nameFound ? 'user_name ' : phoneFound ? 'phone' : ''} was arleady used`))
         }
 
 
@@ -1119,14 +1143,43 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let college = await findDocument(College, {
-            name: req.body.college
+            $or: [
+                {name: req.body.college},
+                {
+                    email: req.body.email,
+                },
+                {
+                    email: req.body.college_email,
+                },
+                {
+                    phone: req.body.phone,
+                },
+                {
+                    phone: req.body.college_phone,
+                },
+            ]
         })
-        if (college)
-            return res.send(formatResult(403, `College with same name is arleady registered`))
+        if (college) {
+            const emailFound = [req.body.email, req.body.college_email].includes(college.email)
+            const phoneFound = [req.body.phone, req.body.college_phone].includes(college.phone)
+            return res.send(formatResult(403,
+                `Institution ${emailFound ? 'email' : phoneFound ? 'phone' : ''} was arleady used`))
+        }
 
+        const {sent, err} = await sendConfirmEmail({
+            email: req.body.email,
+            institution_email: req.body.college_email,
+            user_name: req.body.sur_name + ' ' + req.body.other_names,
+            institution_name: req.body.college,
+            subscription: "TRIAL"
+        })
+        if (err)
+            return res.send(formatResult(500, err));
 
         let saved_college = await createDocument(College, {
             name: req.body.college,
+            email: req.body.college,
+            phone: req.body.college_phone,
             maximum_users: req.body.maximum_users
         })
 
@@ -1136,25 +1189,60 @@ router.post('/admin', async (req, res) => {
             other_names: req.body.other_names,
             gender: req.body.gender,
             email: req.body.email,
+            position: req.body.position,
             password: await hashPassword(req.body.password),
             college: saved_college.data._id,
             category: user_category._id
         })
 
-        const {sent, err} = await sendConfirmEmail({
-            email: result.data.email,
+        // create college plan
+        await createDocument(College_payment_plans, {
+            college: saved_college.data._id,
+            plan: 'TRIAL'
+        })
+
+        // create user account confirmation
+        const confirmation = await createAccountConfirmation({user_id: result.data._id})
+
+        await sendSubmissionEmail({
+            user_email: req.body.email,
+            user_phone: req.body.phone,
+            max_users: req.body.maximum_users,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
             institution_name: req.body.college,
-            subscription: "trial"
+            institution_email: req.body.college_email,
+            subscription: "TRIAL",
+            token: confirmation._id.toString(),
         });
-        if (err)
-            return res.send(formatResult(500, err));
 
-        return res.send(formatResult(201, 'Account was successfully created, check your email to confirm your email.'));
+        return res.send(formatResult(201, 'Account was successfully created, check your email.'));
     } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /user/confirm/{token}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: confirm user account
+ *     parameters:
+ *       - name: token
+ *         description: confirmation token
+ *         in: path
+ *         type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/confirm/:token', confirmAccount)
+
+router.get('/accept/:token', AcceptCollege)
 
 /**
  * @swagger
@@ -1210,6 +1298,14 @@ router.post('/login', async (req, res) => {
 
         if (!validPassword)
             return res.send(formatResult(400, erroMessage))
+
+        const confirmation = await Account_confirmation.findOne({user: user._id.toString()})
+        if (confirmation) {
+            if (confirmation.status === "PENDING")
+                return res.send(formatResult(403, "Your request has not yet been approved."))
+            else if (confirmation.status === "ACCEPTED")
+                return res.send(formatResult(403, "Your have not yet confirmed your account."))
+        }
 
         if (user.status.disabled)
             return res.send(formatResult(403, "Your account was blocked, please contact your administration."))

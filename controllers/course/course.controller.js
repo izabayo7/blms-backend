@@ -175,11 +175,11 @@ router.get('/statistics/user', async (req, res) => {
         let total_courses = 0
         if (req.user.category.name == "INSTRUCTOR") {
 
-            let courses = await Course.find({user: req.user._id}, {_id: 1})
+            let courses = await Course.find({user: req.user._id}, {_id: 1, name: 1})
             const course_ids = courses.map(x => x._id.toString())
             let students = await User_progress.distinct('user', {course: {$in: course_ids}})
 
-            let chapters = await Chapter.find({course: {$in: course_ids}}, {_id: 1, name: 1})
+            let chapters = await Chapter.find({course: {$in: course_ids}}, {_id: 1, name: 1, course: 1})
 
             let comments = await Comment.find({
                 "target.type": 'chapter',
@@ -194,6 +194,7 @@ router.get('/statistics/user', async (req, res) => {
                 for (const iKey in chapters) {
                     if (chapters[iKey]._id.toString() === comments[i].target.id) {
                         comments[i].chapter = chapters[iKey].name
+                        comments[i].course = courses.filter(x => x._id.toString() === chapters[iKey].course)[0]
                         break
                     }
                 }
@@ -405,7 +406,7 @@ router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
 
         let foundCourses = []
 
-        let user_groups = await findDocuments(User_group, {faculty: faculty._id, status:"ACTIVE"})
+        let user_groups = await findDocuments(User_group, {faculty: faculty._id, status: "ACTIVE"})
 
         for (const k in user_groups) {
             let courses = await findDocuments(Course, {

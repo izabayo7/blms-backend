@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    position: {
+        type: String
+    },
     national_id: {
         type: String,
         // unique: true,
@@ -77,6 +80,7 @@ userSchema.plugin(timestamps)
 
 // exports.PasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/
 exports.PasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})/
+exports.PhoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/
 
 // validate user
 exports.validate_user = (credentials, method = 'create') => {
@@ -90,14 +94,17 @@ exports.validate_user = (credentials, method = 'create') => {
         date_of_birth: Joi.date(),
         college: Joi.string(),
         category: Joi.string().required(),
-        status: Joi.object({ disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required() })
+        status: Joi.object({
+            disabled: Joi.number().min(0).max(1).required(),
+            active: Joi.number().min(0).max(2).required()
+        })
     } : {
         sur_name: Joi.string().min(3).max(100),
         other_names: Joi.string().min(3).max(100),
         user_name: Joi.string().min(3).max(100), // regex needed
         national_id: Joi.string().min(16).max(16), // regex needed
         gender: Joi.string().min(4).max(6).valid('male', 'female'),
-        phone: Joi.string().max(10).min(10), // regex needed
+        phone: Joi.string().regex(this.PhoneRegex),
         email: Joi.string().email(),
         date_of_birth: Joi.date()
     }
@@ -113,8 +120,11 @@ exports.validate_admin = (credentials, method = 'create') => {
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         email: Joi.string().email().required(),
-        maximum_users: Joi.number().required(),
-        college: Joi.string().min(3).max(200),
+        phone: Joi.string().regex(this.PhoneRegex).required(),
+        maximum_users: Joi.number().required().required(),
+        college: Joi.string().min(3).max(200).required(),
+        college_email: Joi.string().email().required(),
+        college_phone: Joi.string().regex(this.PhoneRegex).required(),
         position: Joi.string().min(3).max(50).required()
     }
     return Joi.validate(credentials, schema)
