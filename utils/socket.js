@@ -305,7 +305,7 @@ module.exports.listen = (app) => {
                         return
                     }
 
-                    const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
+                    const result = await Create_or_update_message('SYSTEM', conversation_id, content, u, id)
                     result.data = await replaceUserIds([result.data], Receiver._id.toString())
                     result.data = await formatContacts(result.data, Receiver._id.toString(), user)
                     socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', {contact: result.data[0]})
