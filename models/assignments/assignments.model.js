@@ -43,8 +43,7 @@ const schema = new mongoose.Schema({
         required: true
     },
     details: {
-        type: String,
-        required: true
+        type: String
     },
     // percentage which students will be graded on
     passMarks: {
@@ -100,7 +99,7 @@ const schema = new mongoose.Schema({
 function validate_assignment(body) {
     const schema = {
         title: Joi.string().min(3).required(),
-        details: Joi.string().required(),
+        details: Joi.string(),
         passMarks: Joi.number().min(1).required(),
         target: Joi.object({
             type: Joi.string().required(),
@@ -111,6 +110,9 @@ function validate_assignment(body) {
         allowMultipleFilesSubmission: Joi.boolean(),
         submissionMode: Joi.string().valid(["textInput", "fileUpload"]).required(),
         allowed_files: Joi.array(),
+        attachments: Joi.array().items(Joi.object({
+            src: Joi.string().required()
+        })),
     }
     return Joi.validate(body, schema)
 }
