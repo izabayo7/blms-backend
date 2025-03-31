@@ -245,9 +245,9 @@ exports.calculateAmount = async (collegePlan, periodType, periodValue, total_use
     switch (collegePlan.plan) {
         case 'HUGUKA': {
             if (periodType === 'MONTH')
-                return 4000 * periodValue
+                return collegePlan.pricePerUser * periodValue
             else if (periodType === 'YEAR')
-                return ((4000 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
+                return ((collegePlan.pricePerUser * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
         }
             break;
         case 'JIJUKA': {
