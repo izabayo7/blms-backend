@@ -1,4 +1,5 @@
 // import dependencies
+const { User_group } = require('../../models/user_group/user_group.model')
 const {
     express,
     fs,
@@ -124,15 +125,15 @@ router.get('/statistics', async (req, res) => {
             total_courses = await countDocuments(Course)
         } else {
 
-            let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
-            for (const i in faculty_college) {
-                let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
-                if (!faculty_college_year.length)
+            let faculties = await findDocuments(Faculty, { college: req.user.college })
+            for (const i in faculties) {
+                let user_groups = await findDocuments(User_group, { faculty: faculties[i]._id })
+                if (!user_groups.length)
                     continue
 
-                for (const k in faculty_college_year) {
+                for (const k in user_groups) {
                     let courses = await countDocuments(Course, {
-                        faculty_college_year: faculty_college_year[k]._id
+                        user_group: user_groups[k]._id
                     })
                     total_courses += courses
                 }
