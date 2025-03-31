@@ -49,7 +49,7 @@ router.route('/:faculty_id')
      *     security:
      *       - bearerAuth: -[]
      *     parameters:
-     *       - name: faculty
+     *       - name: faculty_id
      *         description: Faculty Id *use ALL in case you need to see for all faculties
      *         in: path
      *         required: true
@@ -65,7 +65,7 @@ router.route('/:faculty_id')
     .get(getFaculties)
     /**
      * @swagger
-     * /faculty/{id}:
+     * /faculty/{faculty_id}:
      *   put:
      *     tags:
      *       - Faculty
@@ -73,7 +73,7 @@ router.route('/:faculty_id')
      *     security:
      *       - bearerAuth: -[]
      *     parameters:
-     *       - name: id
+     *       - name: faculty_id
      *         in: path
      *         type: string
      *         description: Faculty's Id
@@ -103,7 +103,7 @@ router.route('/:faculty_id')
     .put(updateFaculty)
     /**
      * @swagger
-     * /faculty/{id}:
+     * /faculty/{faculty_id}:
      *   delete:
      *     tags:
      *       - Faculty
@@ -111,7 +111,7 @@ router.route('/:faculty_id')
      *     security:
      *       - bearerAuth: -[]
      *     parameters:
-     *       - name: id
+     *       - name: faculty_id
      *         description: Faculty's id
      *         in: path
      *         required: true

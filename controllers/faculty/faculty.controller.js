@@ -52,71 +52,78 @@ exports.getFaculties = async (req, res) => {
   try {
 
     let foundFaculties = []
-    const fetch_all_faculties = req.params.faculty === "ALL"
+    const fetch_all_faculties = req.params.faculty_id === "ALL"
+    console.log(req.params.faculty_id)
     let faculties;
 
-    if (req.user.category.name == "SUPERADMIN") {
-      faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
-        _id: req.params.faculty
-      }
-      )
-    } else if (req.user.category.name == "ADMIN") {
-      faculties = await findDocuments(Faculty, fetch_all_faculties ? {
-        college: req.user.college
-      } : {
-        _id: req.params.faculty,
-        college: req.user.college
-      }
-      )
-    } else if (req.user.category.name == "INSTRUCTOR") {
-      const user_groups = await findDocuments(User_faculty_college_year, {
-        user: req.user._id
-      })
-      // stack here
-      for (const i in user_groups) {
-        const res = await findDocuments(Faculty, fetch_all_faculties ? {
-          college: req.user.college,
-          _id: user_groups[i].faculty_college
-        } : {
-          _id: req.params.faculty,
-          college: req.user.college
-        }
-        )
-      }
+    // if (req.user.category.name == "SUPERADMIN") {
+    //   faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
+    //     _id: req.params.faculty_id
+    //   }
+    //   )
+    // } else if (req.user.category.name == "ADMIN") {
+    //   faculties = await findDocuments(Faculty, fetch_all_faculties ? {
+    //     college: req.user.college
+    //   } : {
+    //     _id: req.params.faculty_id,
+    //     college: req.user.college
+    //   }
+    //   )
+    // } else if (req.user.category.name == "INSTRUCTOR") {
+    //   const user_groups = await findDocuments(User_faculty_college_year, {
+    //     user: req.user._id
+    //   })
+    //   // stack here
+    //   for (const i in user_groups) {
+    //     const res = await findDocuments(Faculty, fetch_all_faculties ? {
+    //       college: req.user.college,
+    //       _id: user_groups[i].faculty_college
+    //     } : {
+    //       _id: req.params.faculty_id,
+    //       college: req.user.college
+    //     }
+    //     )
+    //   }
 
-    }
+    // }
 
 
     if (!fetch_all_faculties) {
       const {
         error
-      } = validateObjectId(req.params.faculty)
+      } = validateObjectId(req.params.faculty_id)
       if (error)
         return res.send(formatResult(400, error.details[0].message))
 
       const faculty = await findDocument(Faculty, {
-        _id: req.params.faculty
+        _id: req.params.faculty_id
       })
       if (!faculty)
         return res.send(formatResult(404, 'faculty not found'))
       foundFaculties.push(faculty)
     }
     else {
-      if (!faculty_colleges.length)
-        return res.send(formatResult(404, `College ${college.name} has no faculties`))
+      // if (!faculty_colleges.length)
+      //   return res.send(formatResult(404, `College ${college.name} has no faculties`))
 
-      for (const faculty_college of faculty_colleges) {
-        const faculty = await findDocument(Faculty, {
-          _id: faculty_college.faculty
-        })
-        if (!faculty)
-          return res.send(formatResult(404, `Faculty ${faculty_college.faculty} Not Found`)) // recheck use case
-        foundFaculties.push(faculty)
+      // for (const faculty_college of faculty_colleges) {
+      //   const faculty = await findDocument(Faculty, {
+      //     _id: faculty_college.faculty
+      //   })
+      //   if (!faculty)
+      //     return res.send(formatResult(404, `Faculty ${faculty_college.faculty} Not Found`)) // recheck use case
+      //   foundFaculties.push(faculty)
+      // }
+      console.log('aaaaaaaooooooo')
+      faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
+        _id: req.params.faculty_id
       }
+      )
 
     }
 
-    foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
+    // foundFaculties = await injectDetails(faculties, faculty_colleges)
+    foundFaculties = faculties
     return res.send(formatResult(u, u, foundFaculties.length ? fetch_all_faculties ? foundFaculties : foundFaculties[0] : []))
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -167,15 +174,16 @@ exports.createFaculty = async (req, res) => {
  */
 exports.updateFaculty = async (req, res) => {
   try {
+    console.log(req.params.faculty_id)
     let {
       error
-    } = validateObjectId(req.params.id)
+    } = validateObjectId(req.params.faculty_id)
     if (error)
       return res.send(formatResult(400, 'invalid id'))
 
     // check if faculty exist
     let faculty = await findDocument(Faculty, {
-      _id: req.params.id
+      _id: req.params.faculty_id
     })
     if (!faculty)
       return res.send(formatResult(404, 'faculty not found'))
@@ -208,24 +216,24 @@ exports.updateFaculty = async (req, res) => {
 exports.deleteFaculty = async (req, res) => {
   const {
     error
-  } = validateObjectId(req.params.id)
+  } = validateObjectId(req.params.faculty_id)
   if (error)
     return res.send(formatResult(400, "invalid id"))
 
   let faculty = await findDocument(Faculty, {
-    _id: req.params.id
+    _id: req.params.faculty_id
   })
   if (!faculty)
-    return res.send(formatResult(404, `Faculty of Code ${req.params.id} Not Found`))
+    return res.send(formatResult(404, `Faculty of Code ${req.params.faculty_id} Not Found`))
 
 
 
   // check if the faculty is never used
   const faculty_college_found = await findDocument(Faculty_college_year, {
-    faculty: req.params.id
+    faculty: req.params.faculty_id
   })
   if (!faculty_college_found) {
-    let result = await deleteDocument(Faculty, req.params.id)
+    let result = await deleteDocument(Faculty, req.params.faculty_id)
     return res.send(result)
   }
 
