@@ -1,4 +1,5 @@
 // import dependencies
+const { result } = require('lodash')
 const {
   express,
   User_category,
@@ -60,6 +61,44 @@ router.get('/', async (req, res) => {
   }
 })
 
+
+/**
+ * @swagger
+ * /user_category:
+ *   get:
+ *     tags:
+ *       - User_category
+ *     description: Get all user_categories names
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/open', async (req, res) => {
+  try {
+    const user_categories = await findDocuments(User_category, {
+      name: {
+        $ne: 'ADMIN'
+      },
+      name: {
+        $ne: 'SUPER_ADMIN'
+      }
+    })
+
+    const result = []
+
+    for (const i in user_categories) {
+      result.push(user_categories[i].name)
+    }
+
+    return res.send(formatResult(u, u, user_categories))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
 
 /**
  * @swagger
