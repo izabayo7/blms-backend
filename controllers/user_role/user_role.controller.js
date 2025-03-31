@@ -112,6 +112,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - User_role
  *     description: Create User_role
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a User_role
