@@ -370,12 +370,12 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
                 })
                 if (user) {
                     creationErrors.push(`User with email (${rows[i].email}) arleady exist`)
-                    break
+                    continue
                 }
 
                 if (rows[i].category !== "ADMIN" && !rows[i].user_group) {
                     creationErrors.push(`User with email (${rows[i].email}) must have a student group`)
-                    break
+                    continue
                 }
 
 
@@ -420,7 +420,7 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
                 });
                 if (err) {
                     creationErrors.push(err)
-                    break
+                    continue
                 }
 
 
@@ -607,13 +607,13 @@ exports.createMultipleUsers = async (req, res, next) => {
                     })
                     if (user) {
                         creationErrors.push(`User with email (${rows[i].email}) arleady exist`)
-                        break
+                        continue
                     }
                 }
 
                 if (rows[i].category !== "ADMIN" && !rows[i].user_group) {
                     creationErrors.push(`User (${rows[i].sur_name} ${rows[i].other_names}) must have a student group`)
-                    break
+                    continue
                 }
 
 
