@@ -129,15 +129,37 @@ const router = express.Router()
 
 router.get('/reg_number/:regnumber', async (req, res) => {
     try {
-        console.log(req.params.regnumber)
 
-        // check from db if the given reg_number exists
-        let exists = true, paid = true
-        if (!exists)
+        const test_users = [
+            {
+                regnumber: "ULK-2021-100",
+                paid: false
+            }, {
+                regnumber: "ULK-2021-105",
+                paid: true
+            }, {
+                regnumber: "ULK-2021-110",
+                paid: false
+            }, {
+                regnumber: "ULK-2021-115",
+                paid: true
+            }, {
+                regnumber: "ULK-2021-120",
+                paid: false
+            }, {
+                regnumber: "ULK-2021-125",
+                paid: true
+            },
+        ]
+
+
+        let found = test_users.filter(x => x.regnumber === req.params.regnumber)
+
+        if (!found.length)
             return res.status(404).send("Reg number is invalid")
 
         return res.send({
-            paid
+            paid: found[0].paid
         })
     } catch (error) {
         return res.send(formatResult(500, error))
