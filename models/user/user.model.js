@@ -75,7 +75,7 @@ userSchema.plugin(timestamps)
 
 // validate user
 exports.validate_user = (credentials, method = 'create') => {
-    const schema = method = 'create' ? {
+    const schema = method == 'create' ? {
         sur_name: Joi.string().min(3).max(100).required(),
         other_names: Joi.string().min(3).max(100).required(),
         user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100).required(), // regex needed
@@ -92,8 +92,8 @@ exports.validate_user = (credentials, method = 'create') => {
     } : {
             sur_name: Joi.string().min(3).max(100),
             other_names: Joi.string().min(3).max(100),
-            user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100), // regex needed
-            national_id: Joi.string().length(16), // regex needed
+            user_name: method == Joi.string().min(3).max(100), // regex needed
+            national_id: Joi.string().min(16).max(16), // regex needed
             gender: Joi.string().min(4).max(6).valid('male', 'female'),
             phone: Joi.string().max(10).min(10), // regex needed
             email: Joi.string().email(),

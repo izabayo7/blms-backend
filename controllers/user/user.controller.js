@@ -611,13 +611,11 @@ router.post('/login', async (req, res) => {
  */
 router.put('/:user_name', auth, async (req, res) => {
   try {
-
     const {
       error
     } = validate_user(req.body, 'update')
-    error = error.error
     if (error)
-      return res.send(formatResult(400, error.details[0].message))
+      return res.send(formatResult(400, error.details[0].message + 'jjjjjjjjjjjjjj'))
 
     let user = await User.findOne({
       user_name: req.params.user_name
