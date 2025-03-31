@@ -86,6 +86,28 @@ exports.getFaculties = async (req, res) => {
     }
 }
 
+/***
+ * Get faculties for user
+ * @param req
+ * @param res
+ */
+exports.getUserFaculties = async (req, res) => {
+    try {
+
+        const user_groups = await User_user_group.find({
+            user: req.user._id,
+            status: "ACTIVE"
+        }, {user_group: 1});
+
+        let faculties = await User_group.distinct('faculty', {_id: {$in: user_groups.map(x => x.user_group.toString())}}).populate('faculty')
+
+        faculties = await Faculty.find({_id: {$in: faculties}})
+        return res.send(formatResult(u, u, faculties))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+}
+
 
 /***
  * Create faculty

@@ -1,4 +1,6 @@
 const express = require('express')
+const {filterUsers} = require("../../middlewares/auth.middleware");
+const {getUserFaculties} = require("../../controllers/faculty/faculty.controller");
 const { getFacultyStatistics, createFaculty, updateFaculty, deleteFaculty, getFaculties } = require('../../controllers/faculty/faculty.controller')
 const router = express.Router()
 
@@ -56,7 +58,27 @@ router.route('/statistics')
      *       500:
      *         description: Internal Server error
      */
-    .get(getFacultyStatistics)
+    .get(filterUsers('ADMIN'),getFacultyStatistics)
+
+router.route('/user')
+    /**
+     * @swagger
+     * /faculty/user:
+     *   get:
+     *     tags:
+     *       - Faculty
+     *     description: Returns faculties that the calling user belongs in
+     *     security:
+     *       - bearerAuth: -[]
+     *     responses:
+     *       200:
+     *         description: OK
+     *       404:
+     *         description: Not found
+     *       500:
+     *         description: Internal Server error
+     */
+    .get(filterUsers('ADMIN','STUDENT'),getUserFaculties)
 
 router.route('/:faculty_id')
     /**
@@ -82,7 +104,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .get(getFaculties)
+    .get(filterUsers('ADMIN','SUPERADMIN'),getFaculties)
     /**
      * @swagger
      * /faculty/{faculty_id}:
@@ -120,7 +142,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .put(updateFaculty)
+    .put(filterUsers('ADMIN'),updateFaculty)
     /**
      * @swagger
      * /faculty/{faculty_id}:
@@ -146,5 +168,5 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .delete(deleteFaculty)
+    .delete(filterUsers('ADMIN'),deleteFaculty)
 exports.Faculty_Routes = router
