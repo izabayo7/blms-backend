@@ -1,7 +1,7 @@
 exports.requestCallback = ({
   user_name,
   institution_name,
-  role_at_institurion,
+  role_at_institution,
   phone_number,
 }) => {
   const result = `
@@ -43,7 +43,7 @@ exports.requestCallback = ({
                   left: 39px;
                   top: 99px;
                 ">
-              ${user_name} who is ${role_at_institurion} at ${institution_name} Requested a callback us,<br />
+              ${user_name} who is ${role_at_institution} at ${institution_name} Requested a callback us,<br />
               through <a href="https://kurious.rw">Kurious home page</a>.
             </div>
             <div class="text-center" style="text-align: center">

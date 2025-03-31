@@ -1,7 +1,7 @@
 const {
   formatResult, u, Joi
 } = require('../../utils/imports');
-const { sendInvitationMail } = require('../email/email.controller');
+const { sendContactUsEmail, sendRequestCallback } = require('../email/email.controller');
 
 /***
  *  Sends contactUs email
@@ -38,7 +38,7 @@ exports.requestCallback = async (req, res) => {
     if (err)
       return res.send(formatResult(500, err));
 
-    return res.send(formatResult(200, 'Email was successfully sent', result));
+    return res.send(formatResult(200, 'Email was successfully sent'));
   } catch
   (e) {
     return res.send(formatResult(500, e))
@@ -52,7 +52,7 @@ function validate_user_feedback(body, type) {
     message: Joi.string().min(15).max(500).required()
   } : {
       user_name: Joi.string().min(3).max(300).required(),
-      role_at_institurion: Joi.string().required(),
+      role_at_institution: Joi.string().required(),
       institution_name: Joi.string().min(5).max(50).required(),
       phone_number: Joi.string().min(10).max(15).required()
     }

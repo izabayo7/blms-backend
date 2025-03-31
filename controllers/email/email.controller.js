@@ -71,7 +71,7 @@ exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
 
         const mail = contactUs({ user_name, user_email, message })
 
-        const message = {
+        const _message = {
             from: process.env.EMAIL,
             to: process.env.COMMUNICATION_TEAM_EMAIL,
             subject: 'Contacted by ' + user_name,
@@ -94,7 +94,7 @@ exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
         // })
 
         return {
-            sent: await transporter.sendMail(message)
+            sent: await transporter.sendMail(_message)
             // sent: await transporter.sendEmail(message)
         }
 
