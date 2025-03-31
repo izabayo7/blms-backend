@@ -318,7 +318,8 @@ router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         req.body.user = req.user._id
 
         let result = await createDocument(Assignment, req.body)
-
+        result.data = await addAssignmentTarget([result.data])
+        result.data = result.data[0]
         return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
