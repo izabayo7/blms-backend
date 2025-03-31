@@ -13,6 +13,10 @@ const {
   deleteDocument,
   validate_faculty,
   College,
+  Faculty_college_year,
+  User_faculty_college_year,
+  countDocuments,
+  Course,
 } = require('../../utils/imports')
 
 // create router
@@ -114,7 +118,7 @@ router.get('/college/:id', async (req, res) => {
     if (!foundFaculties.length)
       return res.send(formatResult(404, `College ${college.name} has no faculties`))
 
-    // foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
+    foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
     return res.send(formatResult(u, u, foundFaculties))
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -393,19 +397,21 @@ router.delete('/:id', async (req, res) => {
 async function injectDetails(faculties, faculty_colleges) {
   // add head teacher
   for (const i in faculties) {
-    let all_attendants = 0
-    const faculty_collegeYears = await Faculty_collegeYear.find({
+    let all_attendants = 0, total_courses = 0;
+    const faculty_collegeYears = await Faculty_college_year.find({
       faculty_college: faculty_colleges[i]._id
     })
     for (const k in faculty_collegeYears) {
-      const attendants = await StudentFaculty_collegeYear.find({
+      const attendants = await User_faculty_college_year.find({
         faculty_collegeYear: faculty_collegeYears[k]._id
       }).countDocuments()
+      total_courses += await countDocuments(Course, {faculty_college_year: faculty_collegeYears[k]._id})
       all_attendants += attendants
     }
+    faculties[i].total_student_groups = faculty_collegeYears.length
+    faculties[i].total_students = all_attendants
+    faculties[i].total_courses = total_courses
     faculties[i].attendants = all_attendants
-    faculties[i].teacher = 'under development'
-    faculties[i].faculty_collegeId = faculty_colleges[i]._id
   }
   return faculties
 }
