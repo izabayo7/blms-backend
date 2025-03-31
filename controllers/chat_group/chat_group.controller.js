@@ -662,7 +662,7 @@ router.put('/:code/profile', auth, async (req, res) => {
     const result = await updateDocument(Chat_group, chat_group._id, {
       profile: filename
     })
-    result.data.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${chat_group.code}/profile/${result.data.profile}`
+    result.data.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${req.params.code}/profile/${result.data.profile}`
     return res.send(result)
 
   } catch (error) {
