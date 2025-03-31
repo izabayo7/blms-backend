@@ -791,6 +791,11 @@ router.post('/', async (req, res) => {
         // notify the admin that a new user joined
         MyEmitter.emit(`new_user_in_${college._id}`, result.data);
 
+        await User_invitation.findOneAndUpdate({
+            email: req.body.email,
+            college: college._id,
+        },{status: "ACCEPTED"})
+
         const new_user = result.data
         result.data = {
             user: new_user,
