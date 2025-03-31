@@ -1178,7 +1178,7 @@ router.post('/admin', async (req, res) => {
 
         let saved_college = await createDocument(College, {
             name: req.body.college,
-            email: req.body.college,
+            email: req.body.college_email,
             phone: req.body.college_phone,
             maximum_users: req.body.maximum_users
         })
