@@ -1,13 +1,14 @@
 // import dependencies
-const { User, getUserAnnouncements, injectTarget, Faculty } = require("../../utils/imports");
-const { Announcement } = require("../../models/announcements/announcements.model");
-const { validate_announcement } = require("../../models/announcements/announcements.model");
-const { User_user_group } = require("../../models/user_user_group/user_user_group.model");
-const { College } = require("../../utils/imports");
-const { Faculty_college } = require("../../utils/imports");
-const { Course } = require("../../utils/imports");
-const { User_group } = require("../../models/user_group/user_group.model");
-const { filterUsers } = require("../../middlewares/auth.middleware");
+const {findDocuments} = require("../../utils/imports");
+const {User, getUserAnnouncements, injectTarget, Faculty} = require("../../utils/imports");
+const {Announcement} = require("../../models/announcements/announcements.model");
+const {validate_announcement} = require("../../models/announcements/announcements.model");
+const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
+const {College} = require("../../utils/imports");
+const {Faculty_college} = require("../../utils/imports");
+const {Course} = require("../../utils/imports");
+const {User_group} = require("../../models/user_group/user_group.model");
+const {filterUsers} = require("../../middlewares/auth.middleware");
 const {
     express,
     validateObjectId,
@@ -169,7 +170,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
 
         } else {
             for (const i in req.body.specific_receivers) {
-                const user = await User.findOne({ user_name: req.body.specific_receivers[i] })
+                const user = await User.findOne({user_name: req.body.specific_receivers[i]})
                 if (!user)
                     return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
                 req.body.specific_receivers[i] = user._id
@@ -188,8 +189,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                     data: result.data
                 });
             }
-        }
-        else {
+        } else {
             let user_groups = []
             switch (req.body.target.type) {
                 case 'course':
@@ -206,21 +206,23 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                     })
                     break;
 
-                case 'college':
-                    {
-                        const faculties = await findDocument(Faculty, {
-                            college: req.body.target.id
-                        })
-                        user_groups = await User_group.distinct("_id", {
-                            faculty: { $in: faculties.map(x => x._id.toString()) }
-                        })
-                    }
+                case 'college': {
+                    const faculties = await findDocuments(Faculty, {
+                        college: req.body.target.id
+                    })
+                    user_groups = await User_group.distinct("_id", {
+                        faculty: {$in: faculties.map(x => x._id.toString())}
+                    })
+                }
                     break;
 
                 default:
                     break;
             }
-            const users = await User_user_group.distinct('user', { user_group: { $in: user_groups.map(x => x.toString()) }, user: { $ne: req.user._id.toString() } })
+            const users = await User_user_group.distinct('user', {
+                user_group: {$in: user_groups.map(x => x.toString())},
+                user: {$ne: req.user._id.toString()}
+            })
             for (const i in users) {
                 MyEmitter.emit('socket_event', {
                     name: `send_message_${users[i]}`,
@@ -285,7 +287,7 @@ router.put('/:id', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const announcement = await findDocument(Announcement, { _id: req.params.id })
+        const announcement = await findDocument(Announcement, {_id: req.params.id})
         if (!announcement)
             return res.send(formatResult(404, 'announcement not found'))
 
