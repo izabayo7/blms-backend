@@ -223,6 +223,15 @@ module.exports.listen = (app) => {
             socket.emit('res/message/conversation_id', conversation_found);
         })
 
+        // save and deriver new messages
+        socket.on('message/notify-users', async ({
+                                                     message
+                                                 }) => {
+            message.receivers.forEach(reciever => {
+                // send the message
+                socket.broadcast.to(reciever.id).emit('res/message/new', message)
+            })
+        })
 
         // save and deriver new messages
         socket.on('message/create', async ({
@@ -256,10 +265,11 @@ module.exports.listen = (app) => {
             }
             // remove receivers
 
-            result.data.receivers.forEach(reciever => {
-                // send the message
-                socket.broadcast.to(reciever.id).emit('res/message/new', result.data)
-            })
+            if (!result.data.attachments.length)
+                result.data.receivers.forEach(reciever => {
+                    // send the message
+                    socket.broadcast.to(reciever.id).emit('res/message/new', result.data)
+                })
 
             // send success mesage
             socket.emit('res/message/sent', result.data)
