@@ -175,7 +175,8 @@ router.get('/user', auth, async (req, res) => {
         for (const l in chapters) {
 
           let quizes = await findDocuments(Quiz, {
-            "target.id": chapters[l]._id
+            "target.id": chapters[l]._id,
+            status: 2 // only released marks
           }, u, u, u, u, u, {
             _id: -1
           })
