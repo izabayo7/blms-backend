@@ -363,7 +363,6 @@ module.exports.listen = (app) => {
 
         // notify instructor that you are still following
         socket.on('res/live/checkAttendance', async ({receivers}) => {
-
             receivers.forEach(receiver => {
                 socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', {id})
             })
