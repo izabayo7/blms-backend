@@ -110,11 +110,17 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /faculty_college_year/college:
+ * /faculty_college_year/college/{faculty}:
  *   get:
  *     tags:
  *       - Faculty_college_year
  *     description: Returns faculty_college_years in a specified college
+ *     parameters:
+ *       - name: faculty
+ *         description: Faculty Id *use ALL in case you need to see for all faculties
+ *         in: path
+ *         required: true
+ *         type: string
  *     security:
  *       - bearerAuth: -[]
  *     responses:
@@ -125,12 +131,21 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college', async (req, res) => {
+router.get('/college/:faculty', async (req, res) => {
     try {
-
-        let faculty_college_years = await findDocuments(Faculty_college, {
+        const fetch_all_faculties = req.params.faculty === "ALL"
+        if (!fetch_all_faculties) {
+            const faculty = await findDocument(Faculty, {
+                _id: req.params.faculty
+            })
+            if (!faculty)
+                return res.send(formatResult(404, 'faculty not found'))
+        }
+        let faculty_college_years = await findDocuments(Faculty_college, fetch_all_faculties ? {
             college: req.user.college
-        })
+        } : {
+                college: req.user.college, faculty: req.params.faculty
+            })
 
         let foundFaculty_college_years = []
 
@@ -158,8 +173,6 @@ router.get('/college', async (req, res) => {
                 })
             }
         }
-        if (foundFaculty_college_years.length < 1)
-            return res.send(formatResult(404, `There are no Faculty College Years in ${college.name}`))
 
         foundFaculty_acollege_years = await injectDetails(foundFaculty_college_years)
 
@@ -168,6 +181,7 @@ router.get('/college', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
 
 /**
  * @swagger
