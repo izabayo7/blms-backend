@@ -737,6 +737,8 @@ router.put('/:id/target', async (req, res) => {
  *     tags:
  *       - Quiz
  *     description: Upload quiz attacments (file upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz id
