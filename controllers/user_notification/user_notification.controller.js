@@ -131,6 +131,8 @@ router.get('/user/:id', async (req, res) => {
  *     tags:
  *       - User_notification
  *     description: save a user_notification
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a user_notification
