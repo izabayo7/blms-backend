@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
+const { invitationToSystem } = require('../../utils/emailGenerator');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -20,7 +21,7 @@ const mailGenerator = new Mailgen({
     }
 });
 
-exports.sendInvitationMail = async ({ email, token, names }) => {
+exports.sendInvitationMail = async ({ email, token, names, institution }) => {
     try {
         const response = {
             body: {
@@ -39,7 +40,9 @@ exports.sendInvitationMail = async ({ email, token, names }) => {
             },
         };
 
-        const mail = mailGenerator.generate(response);
+        // const mail = mailGenerator.generate(response);
+
+        const mail = invitationToSystem({ inviter: names, institution, token })
 
         const message = {
             from: process.env.EMAIL,

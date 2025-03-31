@@ -132,7 +132,7 @@ exports.createUserInvitation = async (req, res) => {
 
       const result = await newDocument.save();
 
-      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token });
+      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token, institutionn: { name: _college.name } });
       if (err)
         return res.send(formatResult(500, err));
 
