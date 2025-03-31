@@ -215,7 +215,7 @@ router.get('/user/:user', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/user/{userId}/{quizName}:
+ * /quiz/user/{user_name}/{quiz_name}:
  *   get:
  *     tags:
  *       - Quiz
@@ -226,7 +226,7 @@ router.get('/user/:user', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
- *       - name: quizName
+ *       - name: quiz_name
  *         description: Quiz name
  *         in: path
  *         required: false
@@ -248,9 +248,9 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
       return res.send(formatResult(404, 'user not found'))
 
     let quiz = await findDocument(Quiz, {
-      name: req.params.quiz_name
+      name: req.params.quiz_name,
+      user: user._id
     })
-
     if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
@@ -258,7 +258,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     let chapter
     let course
 
-    if (quiz.target.id) {
+    if (quiz.target) {
       if (quiz.target.type === 'chapter') {
         chapter = await findDocument(Chapter, {
           _id: quiz.target.id
@@ -275,15 +275,15 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
       } else if (quiz.target.type === 'faculty_college_year') {
         faculty_college_year = quiz.target.id
       }
-
+      console.log(user._id, faculty_college_year)
       const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-        user: req.params.id,
+        user: user._id,
         faculty_college_year: faculty_college_year
       })
       if (!user_faculty_college_year)
         return res.send(formatResult(404, 'quiz not found'))
     } else {
-      if (quiz.user !== req.params.id)
+      if (req.params.user_name != req.user.user_name)
         return res.send(formatResult(404, 'quiz not found'))
     }
 
@@ -438,7 +438,7 @@ router.post('/', async (req, res) => {
     // check if quizname exist
     let quiz = await findDocument(Quiz, {
       name: req.body.name,
-      user: req.body.user
+      user: user._id
     })
     if (quiz)
       return res.send(formatResult(400, 'name was taken'))
