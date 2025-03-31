@@ -43,7 +43,7 @@ chapter_schema.plugin(timestamps)
 
 // validate chapter
 function validate_chapter(credentials, document = false) {
-    const schema = document ?{
+    const schema = document ? {
         content: Joi.string().required()
     } : {
         name: Joi.string().min(3).max(100).required(),

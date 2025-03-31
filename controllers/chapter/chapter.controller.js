@@ -637,7 +637,7 @@ router.put('/:id/video', async (req, res) => {
 
 /**
  * @swagger
- * /chapter/{id}/attachment:
+ * /chapter/{id}/attachments:
  *   post:
  *     tags:
  *       - Chapter
@@ -658,7 +658,7 @@ router.put('/:id/video', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/:id/attachment', async (req, res) => {
+router.post('/:id/attachments', async (req, res) => {
   try {
     const {
       error
