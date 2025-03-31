@@ -1,4 +1,5 @@
 // import dependencies
+const {Account_confirmation} = require("../../models/account_confirmations/account_confirmations.model");
 const {AcceptCollege} = require("../account_confirmations/account_confirmations.controller");
 const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
 const {createAccountConfirmation} = require("../account_confirmations/account_confirmations.controller");
@@ -1050,6 +1051,8 @@ router.post('/', async (req, res) => {
  *               type: string
  *             user_name:
  *               type: string
+ *             phone:
+ *               type: string
  *             gender:
  *               type: string
  *               enum: ['male', 'female']
@@ -1058,6 +1061,10 @@ router.post('/', async (req, res) => {
  *             password:
  *               type: string
  *             college:
+ *               type: string
+ *             college_phone:
+ *               type: string
+ *             college_email:
  *               type: string
  *             position:
  *               type: string
@@ -1289,6 +1296,14 @@ router.post('/login', async (req, res) => {
 
         if (!validPassword)
             return res.send(formatResult(400, erroMessage))
+
+        const confirmation = await Account_confirmation.findOne({user: user._id.toString()})
+        if (confirmation) {
+            if (confirmation.status === "PENDING")
+                return res.send(formatResult(403, "Your request has not yet been approved."))
+            else if (confirmation.status === "ACCEPTED")
+                return res.send(formatResult(403, "Your have not yet confirmed your account."))
+        }
 
         if (user.status.disabled)
             return res.send(formatResult(403, "Your account was blocked, please contact your administration."))
