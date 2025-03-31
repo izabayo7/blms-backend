@@ -287,6 +287,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - Live_session
  *     description: Delete a live_session
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Live_session's id
