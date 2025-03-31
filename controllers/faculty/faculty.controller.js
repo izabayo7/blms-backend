@@ -188,6 +188,8 @@ router.get('/import/college/:id', async (req, res) => {
  *     tags:
  *       - Faculty
  *     description: Returns a specified faculty
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Faculty's id
