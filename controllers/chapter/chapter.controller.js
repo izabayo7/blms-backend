@@ -375,7 +375,7 @@ router.post('/', async (req, res) => {
             course: req.body.course
         }) + 1
 
-        if (req.body.status && req.body.status === 0) {
+        if (req.body.status === 0) {
             await Chapter.updateOne({course: req.body.course, status: 0}, {status: 1});
         }
 
@@ -463,7 +463,7 @@ router.put('/:id', async (req, res) => {
         if (chapter)
             return res.send(formatResult(403, 'name was taken'))
 
-        if (req.body.status && req.body.status === 0) {
+        if (req.body.status === 0) {
             await Chapter.updateOne({course: req.body.course, status: 0}, {status: 1});
         }
 
