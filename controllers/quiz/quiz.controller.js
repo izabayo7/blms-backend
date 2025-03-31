@@ -239,16 +239,10 @@ router.get('/user/:user', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:id/:quiz_name', async (req, res) => {
+router.get('/user/:user_name/:quiz_name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     let user = await findDocument(User, {
-      _id: req.params.id
+      user_name: req.params.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
@@ -443,7 +437,8 @@ router.post('/', async (req, res) => {
 
     // check if quizname exist
     let quiz = await findDocument(Quiz, {
-      name: req.body.name
+      name: req.body.name,
+      user: req.body.user
     })
     if (quiz)
       return res.send(formatResult(400, 'name was taken'))
