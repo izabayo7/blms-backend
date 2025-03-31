@@ -267,7 +267,7 @@ exports.submission_email = ({
                               "
                 >
                     <a
-                            href="https://twitter.com/kuriouslearnRw"
+                            href="#"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -305,7 +305,7 @@ exports.submission_email = ({
                         />
                     </a>
                     <a
-                            href="https://kurious.rw"
+                            href="https://twitter.com/kuriouslearnRw"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -542,7 +542,7 @@ exports.confirmation_email = ({
                       "
                 >
                     <a
-                            href="https://twitter.com/kuriouslearnRw"
+                            href="#"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -580,7 +580,7 @@ exports.confirmation_email = ({
                         />
                     </a>
                     <a
-                            href="https://kurious.rw"
+                            href="https://twitter.com/kuriouslearnRw"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -729,7 +729,7 @@ exports.confirm_email = ({
                       "
         >
             <a
-                    href="https://twitter.com/kuriouslearnRw"
+                    href="#"
                     target="_blank"
                     rel="noopener noreferrer"
             >
@@ -767,7 +767,7 @@ exports.confirm_email = ({
                 />
             </a>
             <a
-                    href="https://kurious.rw"
+                    href="https://twitter.com/kuriouslearnRw"
                     target="_blank"
                     rel="noopener noreferrer"
             >
@@ -917,7 +917,7 @@ exports.confirm_account = ({
                       "
                 >
                     <a
-                            href="https://twitter.com/kuriouslearnRw"
+                            href="#"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -955,7 +955,7 @@ exports.confirm_account = ({
                         />
                     </a>
                     <a
-                            href="https://kurious.rw"
+                            href="https://twitter.com/kuriouslearnRw"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -1096,7 +1096,7 @@ exports.reset_password = ({
             "
           >
             <a
-              href="https://twitter.com/kuriouslearnRw"
+              href="#"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -1134,7 +1134,7 @@ exports.reset_password = ({
               />
             </a>
             <a
-              href="https://kurious.rw"
+              href="https://twitter.com/kuriouslearnRw"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -1251,7 +1251,7 @@ exports.requestCallback = ({
                 margin: auto;
                 background: #193074;
               ">
-            <a href="https://twitter.com/kuriouslearnRw" target="_blank" rel="noopener noreferrer">
+            <a href="#" target="_blank" rel="noopener noreferrer">
               <img class="ig_icon" style="
                     height: 20px;
                     width: 20px;
@@ -1271,7 +1271,7 @@ exports.requestCallback = ({
                     margin: 24px 12px;
                   " src="https://apis.kurious.rw/assets/images/fb.png" alt="" />
             </a>
-            <a href="https://kurious.rw" target="_blank" rel="noopener noreferrer">
+            <a href="https://twitter.com/kuriouslearnRw" target="_blank" rel="noopener noreferrer">
               <img class="twitter_icon" style="left: 87px; margin: 24px 12px"
                 src="https://apis.kurious.rw/assets/images/twitter.png" alt="" />
             </a>
@@ -1401,7 +1401,7 @@ exports.contactUs = ({
                               "
                 >
                     <a
-                            href="https://twitter.com/kuriouslearnRw"
+                            href="#"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -1439,7 +1439,7 @@ exports.contactUs = ({
                         />
                     </a>
                     <a
-                            href="https://kurious.rw"
+                            href="https://twitter.com/kuriouslearnRw"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -1579,7 +1579,7 @@ exports.invitationToSystem = ({
                               "
                 >
                     <a
-                            href="https://twitter.com/kuriouslearnRw"
+                            href="#"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
@@ -1617,7 +1617,7 @@ exports.invitationToSystem = ({
                         />
                     </a>
                     <a
-                            href="https://kurious.rw"
+                            href="https://twitter.com/kuriouslearnRw"
                             target="_blank"
                             rel="noopener noreferrer"
                     >
