@@ -447,6 +447,8 @@ router.put('/:id/logo', async (req, res) => {
  *     tags:
  *       - College
  *     description: remove College logo
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
