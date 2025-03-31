@@ -267,7 +267,6 @@ router.get('/user', auth, async (req, res) => {
                 quizes[i].total_submissions = quiz_submissions.length
 
                 if (quiz_submissions.length) {
-
                     quiz_submissions = await injectUser(quiz_submissions, 'user')
                     quiz_submissions = await injectUserFeedback(quiz_submissions)
 
@@ -839,38 +838,19 @@ router.put('/:id', auth, async (req, res) => {
         if (!quiz_submission)
             return res.send(formatResult(404, 'quiz_submission not found'))
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        req.body.user = user._id
-
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-
-        if (user_category.name != 'STUDENT')
-            return res.send(formatResult(403, 'user is not allowed to do this quiz'))
-
         let quiz = await findDocument(Quiz, {
             _id: req.body.quiz
         })
         if (!quiz)
             return res.send(formatResult(404, 'quiz not found'))
 
+        req.body.user = quiz_submission.user
+
         if (!quiz.target.id)
             return res.send(formatResult(404, 'quiz is not available'))
 
         const faculty_college_year = await get_faculty_college_year(req.body.quiz)
 
-        let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
-            faculty_college_year: faculty_college_year._id
-        })
-        if (!user_faculty_college_year)
-            return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
         const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'marking')
         if (valid_submision.status !== true)
