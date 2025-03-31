@@ -1401,6 +1401,41 @@ exports.injectCommentsReplys = async (comments) => {
   return comments
 }
 
+exports.injectFaculty_college_year = async (courses) => {
+  for (const i in courses) {
+    const faculty_college_year = await this.findDocument(Faculty_college_year, {
+      _id: courses[i].faculty_college_year
+    }, { _v: 0 }, true, false)
+
+    courses[i].faculty_college_year = faculty_college_year
+
+    const collegeYear = await this.findDocument(College_year, {
+      _id: faculty_college_year.college_year
+    }, { _v: 0 }, true, false)
+    courses[i].faculty_college_year.college_year = collegeYear
+
+    const faculty_college = await this.findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    }, { _v: 0 }, true, false)
+    courses[i].faculty_college_year.faculty_college = faculty_college
+
+    const faculty = await this.findDocument(Faculty, {
+      _id: faculty_college.faculty
+    }, { _v: 0 }, true, false)
+    courses[i].faculty_college_year.faculty_college.faculty = faculty
+
+    const college = await this.findDocument(College, {
+      _id: faculty_college.college
+    }, { _v: 0 }, true, false)
+
+    courses[i].faculty_college_year.faculty_college.college = college
+    if (courses[i].faculty_college_year.faculty_college.college.logo) {
+      courses[i].faculty_college_year.faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+    }
+  }
+  return courses
+}
+
 // proper way to define user roles
 // proper way to use jwt
 // proper way to use config
