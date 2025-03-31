@@ -163,3 +163,5 @@ router.route('/:token/delete')
      *         description: Internal Server Error
      */
     .get([auth, deleteInvitation])
+
+exports.User_invitation_routes = router
