@@ -531,7 +531,7 @@ router.delete('/:id', async (req, res) => {
       const result = await deleteDocument(College, req.params.id)
 
       // delete files if available
-      const path = `./uploads/colleges/${req.params.id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)
