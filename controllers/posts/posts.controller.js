@@ -105,6 +105,35 @@ exports.createUserAPost = async (req, res) => {
 }
 
 /***
+ * update a post
+ * @param req
+ * @param res
+ */
+exports.updatePost = async (req, res) => {
+  try {
+    if (!(validateObjectId(req.params.id)))
+      return res.status(400).send(formatResult(400, 'Invalid id'));
+
+    const { error } = validate_post(req.body);
+    if (error) return res.send(formatResult(400, error.details[0].message));
+
+    let result = await Post.findOne({ _id: req.params.id, creator: req.user._id });
+    if (!result)
+      return res.send(formatResult(404, 'post not found'));
+
+    result.title = req.body.title
+    result.content = req.body.content
+
+    result = await result.save()
+
+    return res.send(formatResult(200, 'UPDATED', result));
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
+
+/***
  *  change post status
  * @param req
  * @param res
