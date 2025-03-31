@@ -1,4 +1,6 @@
 const socket_io = require('socket.io')
+const {injectAttachementsMediaPath} = require("./imports");
+const {addAttachmentMediaPaths} = require("./imports");
 const {countDocuments} = require("./imports");
 const {User_attendance} = require("../models/user_attendance/user_attendance.model");
 const {autoMarkSelectionQuestions} = require("./imports");
@@ -276,6 +278,8 @@ module.exports.listen = (app) => {
                     // send the message
                     socket.broadcast.to(reciever.id).emit('res/message/new', result.data)
                 })
+            else
+                result.data = injectAttachementsMediaPath(result.data)
 
             // send success mesage
             socket.emit('res/message/sent', result.data)
