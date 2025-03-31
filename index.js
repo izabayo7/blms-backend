@@ -114,8 +114,8 @@ app.use(`${basePath}/faculty_college`, auth, faculty_college_controller)
 app.use(`${basePath}/faculty_college_year`, auth, faculty_college_year_controller)
 app.use(`${basePath}/user_faculty_college_year`, auth, user_faculty_college_year_controller)
 app.use(`${basePath}/course`, auth, course_controller)
-// ejo hera aha wlh
 app.use(`${basePath}/chapter`, auth, chapter_controller)
+// ejo hera aha wlh
 app.use(`${basePath}/quiz`, auth, quiz_controller)
 app.use(`${basePath}/quiz_submission`, auth, quiz_submission_controller)
 app.use(`${basePath}/user_progress`, auth, user_progress_contoller)

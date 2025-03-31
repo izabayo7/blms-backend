@@ -101,6 +101,8 @@ const router = express.Router()
  *     tags:
  *       - Quiz
  *     description: Get all quizes
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
