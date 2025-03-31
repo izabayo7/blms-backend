@@ -683,7 +683,10 @@ exports.getLatestMessages = async (user_id) => {
     }
   }, {
     $group: {
-      _id: "$sender",
+      _id: {
+        sender: "$sender",
+        receivers: "$receivers"
+      },
       realId: {
         $first: "$_id"
       },
