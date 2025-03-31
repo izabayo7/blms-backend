@@ -4,6 +4,7 @@ const {
   formatResult, u, User_category, College, ONE_DAY, updateDocument, User
 } = require('../../utils/imports');
 const { sendInvitationMail } = require('../email/email.controller');
+const { User_group } = require('../../models/user_group/user_group.model');
 
 const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
 
@@ -57,7 +58,7 @@ exports.getInvitationbyToken = async (req, res) => {
     if (!(uuidValidate(token)))
       return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const invitation = await User_invitation.findOne({ token: token }).populate(['college', 'category']);
+    const invitation = await User_invitation.findOne({ token: token }).populate(['college', 'category', 'user_group']);
     if (!invitation)
       return res.send(formatResult(400, 'User invitation was not found'))
 
@@ -114,10 +115,10 @@ exports.createUserInvitation = async (req, res) => {
     const { error } = validate_user_invitation(req.body);
     if (error) return res.send(formatResult(400, error.details[0].message));
 
-    const { emails, category, college } = req.body
+    const { emails, category } = req.body
 
     let _college = await College.findOne({
-      _id: college
+      _id: req.user.college
     })
     if (!_college)
       return res.send(formatResult(404, 'UserCategory not found'))
@@ -127,6 +128,12 @@ exports.createUserInvitation = async (req, res) => {
     })
     if (!user_category)
       return res.send(formatResult(404, 'UserCategory not found'))
+
+    let user_group = await User_group.findOne({
+      name: req.body.user_group
+    })
+    if (!user_group)
+      return res.send(formatResult(404, 'User_group not found'))
 
     const savedInvitations = []
 
@@ -149,7 +156,7 @@ exports.createUserInvitation = async (req, res) => {
       const token = uuid()
 
 
-      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: token, institution: { name: _college.name } });
+      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: token, institution: { name: _college.name }, user_group:  req.body.user_group});
       if (err)
         return res.send(formatResult(500, err));
 
@@ -157,8 +164,9 @@ exports.createUserInvitation = async (req, res) => {
         user: req.user._id,
         email: email,
         category: user_category._id,
-        college: college,
+        college: req.user.college,
         token: token,
+        user_group: user_group._id,
         expiration_date: expiration_date,
       });
 

@@ -746,7 +746,8 @@ exports.contactUs = ({
 exports.invitationToSystem = ({
   inviter,
   institution,
-  token
+  token,
+  user_group
 }) => {
   const result = `
     <!DOCTYPE html>
@@ -796,7 +797,7 @@ exports.invitationToSystem = ({
                   top: 99px;
                 "
               >
-                ${inviter} invited you in ${institution.name},<br />
+                ${inviter} invited you in ${institution.name} - ${user_group},<br />
                 on Kurious learn! Please click the button below to finish setting up
                 your account.
               </div>

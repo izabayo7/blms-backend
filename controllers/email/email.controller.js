@@ -25,10 +25,10 @@ const mailGenerator = new Mailgen({
     }
 });
 
-exports.sendInvitationMail = async ({ email, token, names, institution }) => {
+exports.sendInvitationMail = async ({ email, token, names, institution, user_group }) => {
     try {
 
-        const mail = invitationToSystem({ inviter: names, institution, token })
+        const mail = invitationToSystem({ inviter: names, institution, token, user_group })
 
         const message = {
             from: process.env.EMAIL,

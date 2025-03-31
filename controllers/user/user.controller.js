@@ -406,7 +406,7 @@ router.get('/faculty/:id/:category', auth, async (req, res) => {
 /**
  * @swagger
  * /user/search:
- *   post:
+ *   get:
  *     tags:
  *       - User
  *     description: Search users
@@ -489,6 +489,40 @@ router.get('/search', auth, async (req, res) => {
   }
 })
 
+
+/**
+ * @swagger
+ * /user/current:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: Returns a the logged in user info
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/current', auth, async (req, res) => {
+  try {
+    let user = req.user;
+
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    user = await add_user_details([user])
+    user = user[0]
+
+    return res.send(formatResult(u, u, user))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
 /**
  * @swagger
  * /user/{user_name}:
@@ -496,6 +530,8 @@ router.get('/search', auth, async (req, res) => {
  *     tags:
  *       - User
  *     description: Returns a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: user_name
  *         description: User's id
@@ -510,7 +546,7 @@ router.get('/search', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:user_name', async (req, res) => {
+router.get('/:user_name', auth, async (req, res) => {
   try {
     let user = await findDocument(User, {
       user_name: req.params.user_name
@@ -621,13 +657,18 @@ router.post('/', async (req, res) => {
 
     // check if the name or email were not used
     let user = await findDocument(User, {
-      email: req.body.email
+      $or: [{
+        email: req.body.email
+      }, {
+        user_name: req.body.user_name
+      }],
     })
 
     if (user) {
-      return res.send(formatResult(400, `User with same email is arleady registered`))
+      const emailFound = req.body.email == user.email
+      const user_nameFound = req.body.user_name == user.user_name
+      return res.send(formatResult(403, `User with ${emailFound ? 'same email ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
     }
-
     // avoid user_name === group name
     let chat_group = await findDocument(Chat_group, {
       name: req.body.user_name
@@ -761,11 +802,18 @@ router.post('/admin', async (req, res) => {
 
     // check if the name or email were not used
     let user = await findDocument(User, {
-      email: req.body.email
+      $or: [{
+        email: req.body.email
+      }, {
+        user_name: req.body.user_name
+      }],
     })
 
-    if (user)
-      return res.send(formatResult(400, `User with same email is arleady registered`))
+    if (user) {
+      const emailFound = req.body.email == user.email
+      const user_nameFound = req.body.user_name == user.user_name
+      return res.send(formatResult(403, `User with ${emailFound ? 'same email ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+    }
 
 
     // avoid user_name === group name
@@ -1195,10 +1243,10 @@ router.delete('/:id', auth, async (req, res) => {
     // check if the user is never used
     let user_used = false
 
-    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+    const user_user_group = await findDocument(User_user_group, {
       user: req.params.id
     })
-    if (user_faculty_college_year)
+    if (user_user_group)
       user_used = true
 
     const course = await findDocument(Course, {

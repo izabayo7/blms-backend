@@ -38,6 +38,26 @@ router.route('/')
      */
     .post(createFaculty)
 
+router.route('/statistics')
+    /**
+     * @swagger
+     * /faculty/statistics:
+     *   get:
+     *     tags:
+     *       - Statistics
+     *     description: Get Faculty statistics
+     *     security:
+     *       - bearerAuth: -[]
+     *     responses:
+     *       200:
+     *         description: OK
+     *       404:
+     *         description: Not found
+     *       500:
+     *         description: Internal Server error
+     */
+    .get(getFacultyStatistics)
+
 router.route('/:faculty_id')
     /**
      * @swagger
@@ -127,23 +147,4 @@ router.route('/:faculty_id')
      *         description: Internal Server error
      */
     .delete(deleteFaculty)
-router.route('/statistics')
-    /**
-     * @swagger
-     * /faculty/statistics:
-     *   get:
-     *     tags:
-     *       - Statistics
-     *     description: Get Faculty statistics
-     *     security:
-     *       - bearerAuth: -[]
-     *     responses:
-     *       200:
-     *         description: OK
-     *       404:
-     *         description: Not found
-     *       500:
-     *         description: Internal Server error
-     */
-    .get(getFacultyStatistics)
 exports.Faculty_Routes = router

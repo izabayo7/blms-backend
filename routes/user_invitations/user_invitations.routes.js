@@ -45,7 +45,7 @@ router.route('/')
      *         required: true
      *         schema:
      *           properties:
-     *             college:
+     *             user_group:
      *               type: string
      *             category:
      *               type: string
