@@ -38,7 +38,9 @@ const {
   upload_single_image,
   Chat_group,
   Quiz,
-  auth
+  auth,
+  validate_chat_group_profile_udpate,
+  savedecodedBase64Image
 } = require('../../utils/imports')
 
 // create router
@@ -732,13 +734,15 @@ router.put('/password', auth, async (req, res) => {
  *     description: Upload user profile
  *     security:
  *       - bearerAuth: -[]
- *     consumes:
- *        - multipart/form-data
  *     parameters:
- *       - in: formData
- *         name: file
- *         type: file
- *         description: User Profile to upload.
+ *       - name: body
+ *         description: Fields for user profile upload (profile takes base64 encoded string)
+ *         in: body
+ *         required: true
+ *         schema:
+ *           properties:
+ *             profile:
+ *               type: string
  *     responses:
  *       201:
  *         description: Created
@@ -752,6 +756,10 @@ router.put('/password', auth, async (req, res) => {
 router.put('/profile', auth, async (req, res) => {
   try {
 
+    const { error } = validate_chat_group_profile_udpate(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     // check if user exist
     const user = await findDocument(User, {
       user_name: req.user.user_name
@@ -760,30 +768,26 @@ router.put('/profile', auth, async (req, res) => {
       return res.send(formatResult(404, 'user not found'))
 
     const path = user.college ? `./uploads/colleges/${user.college}/user_profiles` : `./uploads/system/user_profiles`
-    req.kuriousStorageData = {
-      dir: path,
-    }
-    upload_single_image(req, res, async (err) => {
-      if (err)
-        return res.send(formatResult(500, err.message))
 
-      if (user.profile && user.profile != req.file.filename) {
-        fs.unlink(`${path}/${user.profile}`, (err) => {
-          if (err)
-            return res.send(formatResult(500, err))
-        })
-      }
-      let result = await User.findByIdAndUpdate(user._id, {
-        profile: req.file.filename
+    const { filename } = await savedecodedBase64Image(req.body.profile, path)
+
+    if (user.profile) {
+      fs.unlink(`${path}/${user.profile}`, (err) => {
+        if (err)
+          return res.send(formatResult(500, err))
       })
-      let user_category = await findDocument(User_category, {
-        _id: user.category
-      })
-      result = simplifyObject(result)
-      result.category = _.pick(user_category, 'name')
-      result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${req.file.filename}`
-      return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
+    }
+    let result = await User.findByIdAndUpdate(user._id, {
+      profile: filename
     })
+    let user_category = await findDocument(User_category, {
+      _id: user.category
+    })
+    result = simplifyObject(result)
+    result.category = _.pick(user_category, 'name')
+    result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${filename}`
+    return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
+
 
   } catch (error) {
     return res.send(formatResult(500, error))
