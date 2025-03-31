@@ -991,6 +991,7 @@ router.post('/login', async (req, res) => {
             }, {
                 phone: req.body.email_user_name_or_phone
             }],
+            "status.deleted": {$ne: 1}
         })
 
         const erroMessage = 'invalid credentials'
