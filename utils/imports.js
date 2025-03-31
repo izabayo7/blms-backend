@@ -1053,6 +1053,7 @@ exports.autoMarkSelectionQuestions = (questions, answers) => {
 // inject notification
 exports.injectNotification = async (array) => {
     for (const i in array) {
+        array[i].notifications = array[i].notifications.filter(x => x.status > 1)
         for (const k in array[i].notifications) {
             let notification = await this.findDocument(this.Notification, {
                 _id: array[i].notifications[k].id
