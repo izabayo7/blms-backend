@@ -822,7 +822,7 @@ router.put('/:id/results_seen', auth, async (req, res) => {
  *   post:
  *     tags:
  *       - Quiz_submission
- *     description: Upload quiz submission attacments (file upload using swagger is still under construction)
+ *     description: Upload quiz submission attacments
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -889,6 +889,96 @@ router.post('/:id/attachment', auth, async (req, res) => {
                 return res.send(formatResult(500, err.message))
 
             return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
+        })
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /quiz_submission/feedback/{id}/{question}:
+ *   post:
+ *     tags:
+ *       - Quiz_submission
+ *     description: Upload quiz submission feedback attacments
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz_submission id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: question
+ *         description: Question id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/feedback/:id/:question', auth, async (req, res) => {
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, "invalid quiz_submission id"))
+
+        error = validateObjectId(req.params.question)
+        error = error.error
+        if (error)
+            return res.send(formatResult(400, "invalid question id"))
+
+        const quiz_submission = await findDocument(Quiz_submission, {
+            _id: req.params.id
+        })
+        if (!quiz_submission)
+            return res.send(formatResult(404, 'quiz_submission not found'))
+
+        const quiz = await findDocument(Quiz, {
+            _id: quiz_submission.quiz
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
+
+        const user = await findDocument(User, {
+            _id: quiz.user
+        })
+
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
+
+        req.kuriousStorageData = {
+            dir: path,
+        }
+
+        let file_missing = false
+
+        for (const i in quiz_submission.answers) {
+            if (quiz_submission.answers[i].src) {
+                const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].feedback_src}`)
+                if (!file_found) {
+                    file_missing = true
+                }
+            }
+        }
+        if (!file_missing)
+            return res.send(formatResult(400, 'all feedbacks for this quiz_submission were already uploaded'))
+
+        upload_multiple(req, res, async (err) => {
+            if (err)
+                return res.send(formatResult(500, err.message))
+
+            return res.send(formatResult(u, 'All feedback attachments were successfuly uploaded'))
         })
 
     } catch (error) {

@@ -25,6 +25,9 @@ const quiz_submission_schema = new mongoose.Schema({
         marks: {
             type: Number
         },
+        feedback_src: {
+            type: String
+        },
         src: {
             type: String
         },
@@ -72,6 +75,7 @@ function validate_quiz_submission(credentials) {
             marks: Joi.number(),
             not_done: Joi.boolean(),
             src: Joi.string().min(0),
+            feedback_src: Joi.string(),
             choosed_options: Joi.array().items(Joi.object({
                 _id: Joi.ObjectId(),
                 text: Joi.string(),
