@@ -319,6 +319,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - Comment
  *     description: Delete a comment
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Comment's id
