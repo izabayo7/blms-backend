@@ -190,19 +190,13 @@ router.get('/college/:faculty', async (req, res) => {
 
 /**
  * @swagger
- * /user_groups/user/{user_name}:
+ * /user_groups/user:
  *   get:
  *     tags:
  *       - User_group
  *     description: Returns user_groups for a specified user
  *     security:
  *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: User's user_name
- *         in: path
- *         required: true
- *         type: string
  *     responses:
  *       200:
  *         description: OK
@@ -211,17 +205,11 @@ router.get('/college/:faculty', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name', async (req, res) => {
+router.get('/user', async (req, res) => {
     try {
-        // check if college exist
-        let user = await findDocument(User, {
-            user_name: req.params.user_name
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
 
         let user_user_groupss = await findDocuments(User_user_groups, {
-            user: user._id,
+            user: req.user._id,
             status: 1
         })
 
