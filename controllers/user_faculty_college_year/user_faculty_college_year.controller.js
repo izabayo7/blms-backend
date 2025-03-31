@@ -57,9 +57,6 @@ router.get('/', async (req, res) => {
   try {
     let result = await findDocuments(User_faculty_college_year)
 
-    if (result.length === 0)
-      return res.send(formatResult(404, 'user_faculty_college_year list is empty'))
-
     // result = await injectDetails(result)
 
     return res.send(result)
