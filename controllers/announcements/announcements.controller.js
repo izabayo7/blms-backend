@@ -77,6 +77,7 @@ router.get('/user', async (req, res) => {
             $or: [
                 {"target.id": {$in: ids}},
                 {sender: req.user._id},
+                {specific_receivers: {$elemMatch: req.user._id}},
             ]
         }).populate('viewers', ['sur_name', 'other_names']).sort({_id: -1})
 
@@ -142,7 +143,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        if(!['group','specific_users'].includes(req.params.receivers))
+        if (!['group', 'specific_users'].includes(req.params.receivers))
             return res.send(formatResult(400, "invalid receivers parameter value"))
 
         req.body.sender = req.user._id
@@ -196,11 +197,11 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
             if (req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
                 return res.send(formatResult(403, 'You are not allowed to send announcement in the whole college'))
 
-        } else{
+        } else {
             for (const i in req.body.specific_receivers) {
-               const user = await User.findOne({user_name: req.body.specific_receivers[i]})
-               if(!user)
-                   return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
+                const user = await User.findOne({user_name: req.body.specific_receivers[i]})
+                if (!user)
+                    return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
             }
         }
         let result = await createDocument(Announcement, req.body)
