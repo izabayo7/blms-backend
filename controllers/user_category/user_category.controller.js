@@ -172,6 +172,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - User_category
  *     description: Update User_category
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         in: path
