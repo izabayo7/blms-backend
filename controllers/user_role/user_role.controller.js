@@ -39,6 +39,8 @@ const router = express.Router()
  *     tags:
  *       - User_role
  *     description: Get all user_roles
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
