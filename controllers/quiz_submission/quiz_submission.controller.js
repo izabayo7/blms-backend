@@ -259,24 +259,77 @@ router.get('/user/:user_name', auth, async (req, res) => {
     })
 
     if (user_category.name == 'STUDENT') {
-      result = simplifyObject(await findDocuments(Quiz_submission, {
-        user: user._id
+
+      const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+        user: user._id,
+        status: 1
+      })
+      if (!user_faculty_college_year)
+        return res.send(formatResult(200, undefined, []))
+
+      let courses = await findDocuments(Course, {
+        faculty_college_year: user_faculty_college_year.faculty_college_year,
+        published: true
       }, u, u, u, u, u, {
         _id: -1
-      }))
-      if (!result.length)
-        return res.send(formatResult(404, 'quiz_submissions not found'))
+      })
+      if (!courses.length)
+        return res.send(formatResult(200, undefined, []))
 
-      result = simplifyObject(await injectQuiz(result))
-      result = await injectUserFeedback(result)
-      for (const i in result) {
-        if (result[i].quiz) {
-          result[i].quiz = await addAttachmentMediaPaths([result[i].quiz])
-          result[i].quiz = await injectUser(result[i].quiz, 'user')
-          result[i].quiz = await addQuizTarget(result[i].quiz)
-          result[i].quiz = result[i].quiz[0]
+      for (const j in courses) {
+        // check if there are quizes made by the user
+        let quizes = await findDocuments(Quiz, {
+          "target.id": courses[j]._id
+        }, u, u, u, u, u, {
+          _id: -1
+        })
+        if (!quizes.length)
+          return res.send(formatResult(404, 'quiz_submissions not found'))
+
+        let foundSubmissions = []
+
+        for (const i in quizes) {
+
+          let quiz_submissions = await findDocuments(Quiz_submission, {
+            quiz: quizes[i]._id
+          }, u, u, u, u, u, {
+            _id: -1
+          })
+
+          quizes[i].total_submissions = quiz_submissions.length
+
+          if (quiz_submissions.length) {
+
+            quiz_submissions = await injectUser(quiz_submissions, 'user')
+            quiz_submissions = await injectUserFeedback(quiz_submissions)
+
+            // courses[j].marking_status = 0
+            // const percentage_of_one_submission = 100 / quiz_submissions.length
+
+            for (const k in quiz_submissions) {
+
+              // if (quiz_submissions[k].marked) {
+              //     quizes[i].marking_status += percentage_of_one_submission
+              // }
+
+              quiz_submissions[k].total_feedbacks = 0
+
+              for (const l in quiz_submissions[k].answers) {
+                quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
+              }
+              foundSubmissions.push(quiz_submissions[k])
+            }
+            // quizes[i].marking_status += '%'
+          }
         }
+
+        if (!foundSubmissions.length)
+          return res.send(formatResult(404, 'quiz_submissions not found'))
+        courses[i].submissions = foundSubmissions
       }
+
+      result = courses
+
     } else {
       // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
