@@ -299,7 +299,7 @@ exports.deleteDocument = async (model, id) => {
     const deletedDocument = await model.findOneAndDelete({
       _id: id
     }).exec()
-    return this.formatResult(200, 'DELETED', deletedDocument)
+    return this.formatResult(200, 'DELETED')
   } catch (error) {
     return this.formatResult(500, error)
   }

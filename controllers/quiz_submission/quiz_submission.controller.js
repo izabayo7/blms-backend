@@ -573,19 +573,22 @@ router.post('/', async (req, res) => {
     if (quiz_submission)
       return res.send(formatResult(400, 'quiz_submission already exist'))
 
+    const { answers, total_marks, is_selection_only } = autoMarkSelectionQuestions(quiz.questions, req.body.answers)
+
     let result = await createDocument(Quiz_submission, {
       user: user._id,
       quiz: req.body.quiz,
-      answers: req.body.answers,
+      answers: answers,
       used_time: req.body.used_time,
-      auto_submitted: req.body.auto_submitted
+      auto_submitted: req.body.auto_submitted,
+      total_marks: total_marks
     })
 
     result = simplifyObject(result)
     result = await injectQuiz([result])
     result = result[0]
 
-    return res.send(result)
+    return res.send(formatResult(result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -965,7 +968,7 @@ function validateSubmittedAnswers(questions, answers, mode) {
 }
 // auto mark selection questions
 function autoMarkSelectionQuestions(questions, answers) {
-  let is_selection_only = true;
+  let is_selection_only = true, total_marks = 0;
   for (const i in questions) {
     if (questions[i].type.includes("select")) {
       if (answers[i].choosed_options.length) {
@@ -991,6 +994,7 @@ function autoMarkSelectionQuestions(questions, answers) {
             }
           }
         }
+        total_marks += answers[i].marks
       }
     }
     else {
@@ -999,6 +1003,7 @@ function autoMarkSelectionQuestions(questions, answers) {
   }
   return {
     answers: answers,
+    total_marks: total_marks,
     is_selection_only: is_selection_only
   }
 }
