@@ -1732,6 +1732,7 @@ router.post('/fromCourse', async (req, res) => {
             phone: req.body.phone,
             gender: req.body.gender,
             phone: req.body.phone,
+            email: req.body.email,
             password: await hashPassword(req.body.password),
             college: course.user_group.faculty.college._id,
             category: user_category._id,

@@ -103,6 +103,7 @@ exports.validate_user = (credentials, method = 'create') => {
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         phone: Joi.string().regex(this.PhoneRegex).required(),
+        email: Joi.string().email().required(),
         date_of_birth: Joi.date().required(),
         course_id: Joi.ObjectId().required()
     } : {
