@@ -457,11 +457,11 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/dupplicate/{id}:
+ * /quiz/duplicate/{id}:
  *   post:
  *     tags:
  *       - Quiz
- *     description: Dupllicate quiz
+ *     description: Duplicate quiz
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -480,7 +480,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/dupplicate/:id', async (req, res) => {
+router.post('/duplicate/:id', async (req, res) => {
     try {
 
         let quiz = await findDocument(Quiz, {
@@ -491,7 +491,7 @@ router.post('/dupplicate/:id', async (req, res) => {
             return res.send(formatResult(404, 'Quiz not found'))
 
         let result = await createDocument(Quiz, {
-            name: `${req.body.name} copy(${Math.floor(1000 + Math.random() * 9000)})`,
+            name: `${quiz.name} copy(${Math.floor(1000 + Math.random() * 9000)})`,
             duration: quiz.duration,
             instructions: quiz.instructions,
             user: req.user._id,
