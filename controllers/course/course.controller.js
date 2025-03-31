@@ -29,7 +29,8 @@ const {
     sendResizedImage,
     upload_single_image,
     injectFaculty_college_year,
-    addStorageDirectoryToPath
+    addStorageDirectoryToPath,
+    Faculty
 } = require('../../utils/imports')
 
 // create router
@@ -161,6 +162,78 @@ router.get('/college/:id', async (req, res) => {
         let faculty_college = await findDocuments(Faculty_college, { college: req.params.id })
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
+
+        for (const i in faculty_college) {
+            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+            if (!faculty_college_year.length)
+                continue
+
+            for (const k in faculty_college_year) {
+                let courses = await findDocuments(Course, {
+                    faculty_college_year: faculty_college_year[i]._id
+                })
+                if (!courses.length)
+                    continue
+
+                for (const course of courses) {
+                    foundCourses.push(course)
+                }
+            }
+
+        }
+
+        if (foundCourses.length === 0)
+            return res.send(formatResult(404, `${college.name} course list is empty`))
+
+        // foundCourses = await injectUser(foundCourses, 'user')
+        // foundCourses = await injectChapters(foundCourses)
+
+        return res.send(formatResult(u, u, foundCourses))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /course/faculty/{id}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns courses in a specified faculty in your college
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Faculty id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/faculty/:id', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        let faculty = await findDocument(Faculty, {
+            _id: req.params.id
+        })
+        if (!faculty)
+            return res.send(formatResult(404, 'faculty not found'))
+
+        let foundCourses = []
+
+        let faculty_college = await findDocuments(Faculty_college, { faculty: req.params.id })
 
         for (const i in faculty_college) {
             let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })

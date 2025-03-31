@@ -5,13 +5,15 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const user_faculty_college_year_schema= new mongoose.Schema({
+const user_faculty_college_year_schema = new mongoose.Schema({
     user: {
         type: String,
+        ref: 'user',
         required: true
     },
     faculty_college_year: {
         type: String,
+        ref: 'faculty_college_year',
         required: true
     },
     status: {

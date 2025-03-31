@@ -113,6 +113,8 @@ const router = express.Router()
  *     tags:
  *       - User
  *     description: Get all Users
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
@@ -121,7 +123,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     let users = await findDocuments(User)
 
@@ -138,7 +140,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /user/college/{id}:
+ * /user/college/{id}/{category}:
  *   get:
  *     tags:
  *       - User
@@ -149,6 +151,14 @@ router.get('/', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
+ *       - name: category
+ *         description: User category
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ['STUDENT','INSTRUCTOR', 'ALL']
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
@@ -157,7 +167,7 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id', async (req, res) => {
+router.get('/college/:id/:category', auth, async (req, res) => {
   try {
     const {
       error
@@ -165,20 +175,100 @@ router.get('/college/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let college = await findDocument(College, {
-      _id: req.params.id
-    })
-    if (!college)
-      return res.send(formatResult(404, `College ${req.params.id} Not Found`))
+    if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
+      return res.send(formatResult(400, "Invalid category"))
 
-    let users = await findDocuments(User, {
-      college: req.params.id
+    let user_category = await findDocument(User_category, {
+      name: req.params.category
     })
 
-    if (!users.length)
-      return res.send(formatResult(404, `${college.name} user list is empty`))
+    let users = await findDocuments(User, req.params.category == 'ALL' ? {
+      college: req.user.college
+    } : {
+        college: req.user.college,
+        category: user_category._id
+      })
 
     users = await add_user_details(users)
+
+    return res.send(formatResult(u, u, users))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/faculty/{id}/{category}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: Returns users in a specified faculty in your college depending on who you are
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Faculty's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: category
+ *         description: User category
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ['STUDENT','INSTRUCTOR']
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/faculty/:id/:category', auth, async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    if (!['STUDENT', 'INSTRUCTOR'].includes(req.params.category))
+      return res.send(formatResult(400, "Invalid category"))
+
+    let faculty = await findDocument(Faculty, {
+      _id: req.params.id
+    })
+    if (!faculty)
+      return res.send(formatResult(404, 'Faculty Not Found'))
+
+    let faculty_colleges = await findDocuments(Faculty_college, {
+      faculty: req.params.id,
+    })
+
+    let user_category = await findDocument(User_category, {
+      name: req.params.category
+    })
+
+    const result = []
+
+    for (const i in faculty_colleges) {
+      let faculty_college_years = await findDocuments(Faculty_college_year, {
+        faculty_college: faculty_colleges[i]._id,
+      })
+      for (const k in faculty_college_years) {
+        let user_faculty_college_years = await User_faculty_college_year.find({
+          faculty_college_year: faculty_college_years[k]._id,
+        }).populate('user')
+        for (const j in user_faculty_college_years) {
+          if (user_faculty_college_years[j].user.category == user_category._id)
+            result.push(user_faculty_college_years[j].user)
+        }
+      }
+    }
+
+    users = await add_user_details(result)
 
     return res.send(formatResult(u, u, users))
   } catch (error) {
