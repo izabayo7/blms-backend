@@ -205,7 +205,7 @@ router.get('/statistics/live_session_access', async (req, res) => {
         const result = await User_logs.aggregate([
             {"$match": {"createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
             {"$match": {user: {$in: users.map(x => x._id.toString())}}},
-            {"$project": {createdAt: 1, accessed_live_stream: { $size: "$accessed_live_stream" }}},
+            {"$project": {createdAt: 1, accessed_live_stream: { $size: {"$ifNull": [ "$accessed_live_stream", [] ]} }}},
             {
                 "$group": {
                     "_id": {
