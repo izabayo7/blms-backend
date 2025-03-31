@@ -37,6 +37,8 @@ const router = express.Router()
  *         type: date-time
  *       time:
  *         type: string
+ *       record_session:
+ *         type: boolean
  *       quiz:
  *         type: string
  *     required:

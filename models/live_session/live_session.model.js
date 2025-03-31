@@ -28,6 +28,10 @@ const live_session_schema = new mongoose.Schema({
     quiz: {
         type: Schema.Types.ObjectId
     },
+    record_session: {
+        type: Boolean,
+        default: false
+    },
     status: {
         type: String,
         enum: ["PENDING","LIVE","FINISHED"],
@@ -45,6 +49,7 @@ function validate_live_session(credentials) {
             id: Joi.ObjectId().required()
         }).required(),
         date: Joi.date().required(),
+        record_session: Joi.boolean(),
         time: Joi.string().regex(/^([0-9]{2})\:([0-9]{2})$/).required(),
         quiz: Joi.ObjectId()
     }
