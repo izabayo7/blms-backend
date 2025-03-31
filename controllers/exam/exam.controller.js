@@ -141,7 +141,11 @@ router.get('/:id',filterUsers(["INSTRUCTOR","STUDENT"]), async (req, res) => {
             if (exam.status === 'DRAFT' || !user_user_group)
                 return res.send(formatResult(404, 'exam not available'))
 
-            if (new Date() < new Date(exam.starting_time))
+            let date = new Date(exam.starting_time)
+            date.setHours(date.getUTCHours())
+            date.setMinutes(date.getUTCMinutes())
+
+            if (new Date() < new Date(date))
                 return res.send(formatResult(404, 'exam not available'))
 
             exam.submission = await Exam_submission.findOne({
