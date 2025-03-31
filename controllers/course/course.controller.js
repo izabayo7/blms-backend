@@ -157,12 +157,12 @@ router.get('/college/:id', async (req, res) => {
 
         let foundCourses = []
 
-        let faculty_college = await findDocuments(Faculty_college, {college: req.params.id})
+        let faculty_college = await findDocuments(Faculty_college, { college: req.params.id })
         if (!faculty_college.length)
             return res.send(formatResult(404, 'courses not found'))
 
         for (const i in faculty_college) {
-            let faculty_college_year = await findDocuments(Faculty_college_year, {faculty_college: faculty_college[i]._id})
+            let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
             if (!faculty_college_year.length)
                 continue
 
@@ -559,7 +559,7 @@ router.put('/toogle_publishment_status/:id', async (req, res) => {
 
         const updateObject = {
             published: !course.published,
-            publishedOn: !course.published ? now : undefined
+            published_on: !course.published ? now : undefined
         }
 
         let result = await updateDocument(Course, req.params.id, updateObject)
@@ -912,7 +912,7 @@ router.delete('/:id', async (req, res) => {
 
         if (!course_used) {
 
-            const chapters = await findDocuments(Chapter, {course: req.params.id})
+            const chapters = await findDocuments(Chapter, { course: req.params.id })
 
             if (chapters.length) {
                 for (const i in chapters) {
@@ -954,28 +954,28 @@ async function injectFaculty_college_year(courses) {
     for (const i in courses) {
         const faculty_college_year = await findDocument(Faculty_college_year, {
             _id: courses[i].faculty_college_year
-        }, {_v: 0}, true, false)
+        }, { _v: 0 }, true, false)
 
         courses[i].faculty_college_year = faculty_college_year
 
         const collegeYear = await findDocument(College_year, {
             _id: faculty_college_year.college_year
-        }, {_v: 0}, true, false)
+        }, { _v: 0 }, true, false)
         courses[i].faculty_college_year.college_year = collegeYear
 
         const faculty_college = await findDocument(Faculty_college, {
             _id: faculty_college_year.faculty_college
-        }, {_v: 0}, true, false)
+        }, { _v: 0 }, true, false)
         courses[i].faculty_college_year.faculty_college = faculty_college
 
         const faculty = await findDocument(Faculty, {
             _id: faculty_college.faculty
-        }, {_v: 0}, true, false)
+        }, { _v: 0 }, true, false)
         courses[i].faculty_college_year.faculty_college.faculty = faculty
 
         const college = await findDocument(College, {
             _id: faculty_college.college
-        }, {_v: 0}, true, false)
+        }, { _v: 0 }, true, false)
 
         courses[i].faculty_college_year.faculty_college.college = college
         if (courses[i].faculty_college_year.faculty_college.college.logo) {
