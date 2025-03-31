@@ -97,6 +97,16 @@ const {
     validatechatGroup
 } = require('../models/chat-group/chat-group.model')
 
+const {
+    Notification,
+    validateNotification
+} = require('../models/notfification/notification.model')
+
+const {
+    UserNotification,
+    validateUserNotification
+} = require('../models/user_notfification/user_notification.model')
+
 module.exports.Admin = Admin
 module.exports.validateAdmin = validateAdmin
 module.exports.SuperAdmin = SuperAdmin
@@ -136,9 +146,15 @@ module.exports.validateQuizSubmission = validateQuizSubmission
 module.exports.fileFilter = fileFilter
 module.exports.ChatGroup = chatGroup
 module.exports.validatechatGroup = validatechatGroup
+module.exports.Notification = Notification
+module.exports.validateNotification = validateNotification
+module.exports.UserNotification = UserNotification
+module.exports.validateUserNotification = validateUserNotification
 
+// validate mongoIds
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
 
+// hash password
 module.exports.hashPassword = async (password) => {
     const salt = await bcrypt.genSalt(10)
     const hashed = await bcrypt.hash(password, salt)

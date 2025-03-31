@@ -66,6 +66,8 @@ const messageController = require('./controllers/message/message.controller')
 const fileController = require('./controllers/file/file.controller')
 const quizController = require('./controllers/quiz/quiz.controller')
 const quizSubmissionController = require('./controllers/quizSubmission/quizSubmission.controller')
+const notificationController = require('./controllers/notification/notification.controller')
+const userNotificationController = require('./controllers/user_notification/user_notification.controller')
 
 // use middlewares
 app.use(cors())
@@ -107,6 +109,8 @@ app.use('/kurious/message', messageController)
 app.use('/kurious/file', fileController)
 app.use('/kurious/quiz', quizController)
 app.use('/kurious/quiz-submission', quizSubmissionController)
+app.use('/kurious/notification', notificationController)
+app.use('/kurious/user_notification', userNotificationController)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))
