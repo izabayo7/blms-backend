@@ -215,12 +215,6 @@ router.get('/college/:id', async (req, res) => {
  */
 router.get('/user/:user_name', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-
     let user = await findDocument(User, {
       user_name: req.params.user_name
     })
