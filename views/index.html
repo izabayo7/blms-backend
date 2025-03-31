@@ -6,33 +6,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kurious - Backend</title>
     <style>
-        .contatiner{
+        @font-face {
+            font-family: "Inter";
+            src: local("Inter"),
+                url(./assets/fonts/Inter/static/Inter-SemiBold.ttf) format("truetype");
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .container {
+            place-items: center;
+            height: 100vh;
+            display: flex;
+        }
+
+        .content {
+            width: 100%;
+            text-align: center;
 
         }
-        .title{
 
-        }
-        .actions{
 
+        .title {
+            font-family: Inter;
+            font-size: 40px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 48px;
+            letter-spacing: 0em;
+            color: #193074;
+            top: 267px;
         }
-        .button{
 
+        .button {
+            height: 64.00000000000024px;
+            width: 252.00000000000094px;
+            /* left: 809px; */
+            top: 416px;
+            /* border-radius: 0px; */
+            border: none;
+            display: block;
+            font-family: Inter;
+            font-size: 20px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 24px;
+            letter-spacing: 0em;
+            /* text-align: center; */
+            margin-bottom: 12px;
+            margin: auto auto 12px;
         }
-        .filled{
 
+        .filled {
+            background: #193074;
+            color: white;
         }
-        .outlined{
-            
+
+        .outlined {
+            background-color: white;
+            border: 3px solid #193074;
+            color: #193074
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="title">Welcome to Kurious Backend</div>
-        <div class="actions">
-            <button class="button filled"></button>
-            <button class="button outlined"></button>
+        <div class="content">
+            <h1 class="title">Welcome to Kurious Backend</h1>
+            <div class="actions">
+                <button class="button filled">Documentation</button>
+                <button class="button outlined">Front end</button>
+            </div>
         </div>
     </div>
 </body>
