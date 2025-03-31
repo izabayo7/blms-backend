@@ -910,7 +910,7 @@ exports.getStudentExams = async (user_id, undone = false) => {
     })
     const ids = courses.map(x => x._id.toString())
     return Exam.find({
-        "target.id": {$in: ids},
+        "course": {$in: ids},
         status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
     }).sort({_id: -1}).lean()
 }
