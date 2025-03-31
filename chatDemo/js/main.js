@@ -310,7 +310,7 @@ function outputMessage(message) {
   div.classList.add('message');
   const p = document.createElement('p');
   p.classList.add('meta');
-  p.innerText = user == message.sender ? 'Me' : findContactName(message.sender);
+  p.innerText = user == message.sender ? 'Me' : findContactName(message.sender) ? findContactName(message.sender) : findContactName(message.sender._id);
   let time = message.createdAt
   time = time.split('T')[1].split(':')
   time.splice(2, 1)
