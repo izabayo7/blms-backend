@@ -225,7 +225,8 @@ async function injectDetails(faculties) {
         })
         for (const k in user_groups) {
             const attendants = await User_user_group.find({
-                user_group: user_groups[k]._id
+                user_group: user_groups[k]._id,
+                status: "ACTIVE"
             }).countDocuments()
             total_courses += await countDocuments(Course, {user_group: user_groups[k]._id})
             all_attendants += attendants
