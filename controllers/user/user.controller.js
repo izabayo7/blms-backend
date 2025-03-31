@@ -1,6 +1,8 @@
 // import dependencies
 const { compare, hash } = require('bcryptjs')
 const { validateUserPasswordUpdate, validate_admin } = require('../../models/user/user.model')
+const { User_group } = require('../../models/user_group/user_group.model')
+const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
   express,
   User,
@@ -313,9 +315,9 @@ router.get('/college/:id/:category', auth, async (req, res) => {
     let users = await findDocuments(User, req.params.category == 'ALL' ? {
       college: req.user.college
     } : {
-        college: req.user.college,
-        category: user_category._id
-      })
+      college: req.user.college,
+      category: user_category._id
+    })
 
     users = await add_user_details(users)
 
@@ -371,30 +373,25 @@ router.get('/faculty/:id/:category', auth, async (req, res) => {
     if (!faculty)
       return res.send(formatResult(404, 'Faculty Not Found'))
 
-    let faculty_colleges = await findDocuments(Faculty_college, {
-      faculty: req.params.id,
-    })
-
     let user_category = await findDocument(User_category, {
       name: req.params.category
     })
 
     const result = []
 
-    for (const i in faculty_colleges) {
-      let faculty_college_years = await findDocuments(Faculty_college_year, {
-        faculty_college: faculty_colleges[i]._id,
-      })
-      for (const k in faculty_college_years) {
-        let user_faculty_college_years = await User_faculty_college_year.find({
-          faculty_college_year: faculty_college_years[k]._id,
-        }).populate('user')
-        for (const j in user_faculty_college_years) {
-          if (user_faculty_college_years[j].user.category == user_category._id)
-            result.push(user_faculty_college_years[j].user)
-        }
+    let user_groups = await findDocuments(User_group, {
+      faculty: faculty._id,
+    })
+    for (const k in user_groups) {
+      let user_user_groups = await User_user_group.find({
+        user_group: user_groups[k]._id,
+      }).populate('user')
+      for (const j in user_user_groups) {
+        if (user_user_groups[j].user.category == user_category._id)
+          result.push(user_user_groups[j].user)
       }
     }
+
 
     users = await add_user_details(result)
 
