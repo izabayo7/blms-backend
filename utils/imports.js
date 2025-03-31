@@ -546,7 +546,15 @@ exports.getConversationMessages = async ({
                 obj
                 , {
                     receivers: 0
-                }).limit(limit).sort({_id: -1})
+                }).limit(limit).sort({_id: -1}).populate({
+                path: 'reply',
+                model: 'message',
+                populate: {
+                    path: 'sender',
+                    model: 'user',
+                    select: ['sur_name', 'other_names']
+                }
+            })
         }
 
         return await this.replaceUserIds(messages.reverse(), user_id)
@@ -1075,7 +1083,7 @@ exports.getLatestMessages = async (user_id) => {
  * @param {Object} action creat of update
  * @returns FormatedResult
  */
-exports.Create_or_update_message = async (sender, receiver, content, _id, user_id, attachments,reply) => {
+exports.Create_or_update_message = async (sender, receiver, content, _id, user_id, attachments, reply) => {
     if (_id) {
         const message = await this.findDocument(this.Message, {
             _id: _id
@@ -1136,7 +1144,7 @@ exports.Create_or_update_message = async (sender, receiver, content, _id, user_i
     }) : await this.createDocument(this.Message, {
         sender: _sender._id,
         receivers: receivers,
-        content: content,,
+        content: content,
         reply,
         group: chat_group ? chat_group._id : this.u,
         attachments
@@ -1785,6 +1793,14 @@ exports.addMessageDetails = async (msg, id) => {
     // inject sender Info
     let _user = await this.injectUser([{id: id}], 'id', 'data')
     msg.sender = _user[0].data
+
+    if (msg.reply) {
+        msg.reply = await this.Message.findOne({_id: msg.reply}).populate({
+            path: 'sender',
+            model: 'user',
+            select: ['sur_name', 'other_names']
+        })
+    }
 
     if (msg.group) {
         const group = await this.findDocument(this.Chat_group, {_id: msg.group})
