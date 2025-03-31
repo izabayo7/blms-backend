@@ -36,10 +36,6 @@ const live_session_schema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    connected_users: {
-        type: Number,
-        default: 0
-    },
     started_at: {
         type: Date
     },
