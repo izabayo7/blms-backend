@@ -50,8 +50,8 @@ exports.submission_email = ({
                                   margin-bottom: 10px;
                                 "
                     >
-                        User ${user_name}. <br/>
-                        Registered a new college
+                       <div>User ${user_name}.</div>
+                       <div>Registered a new college</div>
                     </div>
                     <div
                             style="
@@ -377,8 +377,8 @@ exports.confirmation_email = ({
                           margin-bottom: 10px;
                         "
                     >
-                        Dear ${user_name}. <br/>
-                        Thank you for your interest in trying out kurious learn
+                        <div>Dear ${user_name}. </div>
+                        <div>Thank you for your interest in trying out kurious learn</div>
                     </div>
                     <div
                             style="
@@ -510,9 +510,8 @@ exports.confirmation_email = ({
                           top: 328px;
                         "
                     >
-                        Thanks,
-                        <br/>
-                        Kurious learn team
+                        <div>Thanks,</div>
+                        </div>Kurious learn team</div>
                     </div>
                     <div
                             style="
@@ -650,9 +649,9 @@ exports.confirm_account = ({
                           margin-bottom: 10px;
                         "
                     >
-                        Dear ${user_name}. <br />
-                        Your submission was accepted. <br>
-                        Click the button below to complete your registration
+                        <div>Dear ${user_name}. </div>
+                        <div>Your submission was accepted. </div>
+                        <div>Click the button below to complete your registration</div>
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
@@ -698,9 +697,8 @@ exports.confirm_account = ({
                           top: 328px;
                         "
                     >
-                        Thanks,
-                        <br />
-                        Kurious learn team
+                        <div>Thanks,</div>
+                        </div>Kurious learn team</div>
                     </div>
                     <div
                             style="
@@ -891,9 +889,8 @@ exports.reset_password = ({
                 top: 328px;
               "
             >
-              Thanks,
-              <br />
-              Kurious learn team
+                        <div>Thanks,</div>
+                        </div>Kurious learn team</div>
             </div>
           </div>
           <div
@@ -1015,7 +1012,7 @@ exports.requestCallback = ({
                   left: 39px;
                   top: 99px;
                 ">
-              ${user_name} who is ${role_at_institution} at ${institution_name} Requested a callback us,<br />
+              <div>${user_name} who is ${role_at_institution} at ${institution_name} Requested a callback us,</div>
               through <a href="https://kurious.rw">Kurious home page</a>.
             </div>
             <div class="text-center" style="text-align: center">
@@ -1051,8 +1048,8 @@ exports.requestCallback = ({
                   left: 39px;
                   top: 328px;
                 ">
-              Thanks,
-              <br> Kurious learn team
+                        <div>Thanks,</div>
+                        </div>Kurious learn team</div>
             </div>
           </div>
           <div class="footer" style="
@@ -1146,7 +1143,7 @@ exports.contactUs = ({
                           left: 39px;
                           top: 99px;
                         ">
-                        ${user_name} Contacted us,<br />
+                        <div>${user_name} Contacted us,</div>
                         through <a href="https://kurious.rw">Kurious home page</a>.
                     </div>
                     <div class="message" style="
@@ -1197,8 +1194,8 @@ exports.contactUs = ({
                           left: 39px;
                           top: 328px;
                         ">
-                        Thanks,
-                        <br> Kurious learn team
+                        <div>Thanks,</div>
+                        </div>Kurious learn team</div>
                     </div>
                 </div>
                 <div
@@ -1327,9 +1324,9 @@ exports.invitationToSystem = ({
                           top: 99px;
                         "
                     >
-                        ${inviter} invited you in ${institution.name} - ${user_group},<br />
-                        on Kurious learn! Please click the button below to finish setting up
-                        your account.
+                        <div>${inviter} invited you in ${institution.name} - ${user_group},</div>
+                        <div>on Kurious learn! Please click the button below to finish setting up</div>
+                        <div>your account.</div>
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
@@ -1375,8 +1372,8 @@ exports.invitationToSystem = ({
                           top: 328px;
                         "
                     >
-                        Thanks,
-                        <br> Kurious learn team
+                        <div>Thanks,</div>
+                        </div>Kurious learn team</div>
                     </div>
                 </div>
                 <div
