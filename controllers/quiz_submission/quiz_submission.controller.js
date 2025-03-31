@@ -463,6 +463,8 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *     tags:
  *       - Quiz_submission
  *     description: Create quiz_submission
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a quiz_submission
