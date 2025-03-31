@@ -273,7 +273,10 @@ router.get('/user/:user_name', async (req, res) => {
     } else {
       // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
-        user: user._id
+        user: user._id,
+        target: {
+          $ne: undefined
+        }
       })
       if (!quizes.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
