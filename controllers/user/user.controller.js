@@ -906,7 +906,7 @@ router.delete('/:id', auth, async (req, res) => {
 
       if (!user.profile) {
         // delete the profile
-        const path = `./uploads/colleges/${user.college}/users/${user.profile}`
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/users/${user.profile}`)
         fs.exists(path, (exists) => {
           if (exists)
             fs.unlink(path)
