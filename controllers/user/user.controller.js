@@ -1,5 +1,5 @@
 // import dependencies
-const { compare } = require('bcryptjs')
+const { compare, hash } = require('bcryptjs')
 const { validateUserPasswordUpdate } = require('../../models/user/user.model')
 const {
   express,
@@ -612,7 +612,7 @@ router.put('/', auth, async (req, res) => {
     } = validate_user(req.body, 'update')
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    console.log(req.user)
+
     const user = await User.findOne({
       user_name: req.user.user_name
     })
@@ -714,8 +714,9 @@ router.put('/password', auth, async (req, res) => {
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
     const hashedPassword = await hashPassword(req.body.new_password);
-    user.password = hashedPassword
-    const updated = await user.save();
+    await updateDocument(User, user._id, {
+      password: hashedPassword
+    });
     return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
   } catch (error) {
     return res.send(formatResult(500, error))
