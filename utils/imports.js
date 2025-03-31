@@ -558,7 +558,6 @@ exports.formatContacts = async (messages, user_id) => {
                 sur_name: 'You'
             }
         } else if (last_message.sender) {
-            console.log(last_message.sender)
             let sender = await this.injectUser([{
                 id: message.sender
             }], 'id', 'data')
@@ -744,6 +743,9 @@ exports.getLatestMessages = async (user_id) => {
                 },
                 sender: {
                     $first: "$sender"
+                },
+                group: {
+                    $first: "$group"
                 },
                 content: {
                     $first: "$content"
