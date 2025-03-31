@@ -276,7 +276,7 @@ async function getTotalBills(req, res) {
             startingDate = new Date(payment.endingDate).toISOString()
         }
 
-        return res.send(formatResult(u, u, {amount, startingDate}));
+        return res.send(formatResult(u, u, {amount: amount > 0 ? amount : 0, startingDate}));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
