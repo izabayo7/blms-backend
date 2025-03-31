@@ -593,6 +593,8 @@ router.put('/toogle_publishment_status/:id', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Update course
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Course id
