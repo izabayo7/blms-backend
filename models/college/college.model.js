@@ -40,10 +40,10 @@ function validate_college(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
         // email: Joi.string().email().required(), 
-        logo: Joi.string(),
-        phone: Joi.string().max(15).required(),
-        location: Joi.string().required(), // regex needed
-        status: Joi.number().min(0).max(1)
+        // logo: Joi.string(),
+        // phone: Joi.string().max(15).required(),
+        // location: Joi.string().required(), // regex needed
+        // status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

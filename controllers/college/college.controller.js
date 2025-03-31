@@ -258,9 +258,11 @@ router.post('/', async (req, res) => {
         // },
         {
           name: req.body.name
-        }, {
-          phone: req.body.phone
-        }]
+        }
+        // , {
+        //   phone: req.body.phone
+        // }
+      ]
     })
 
     if (college) {
@@ -273,8 +275,8 @@ router.post('/', async (req, res) => {
     let result = await createDocument(College, {
       name: req.body.name,
       // email: req.body.email,
-      location: req.body.location,
-      phone: req.body.phone
+      // location: req.body.location,
+      // phone: req.body.phone
     })
 
     result = await injectLogoMediaPaths([result])
