@@ -283,7 +283,9 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *   get:
  *     tags:
  *       - Chapter
- *     description: downloads the files attached to a specified chapter 
+ *     description: downloads the files attached to a specified chapter
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter's id
