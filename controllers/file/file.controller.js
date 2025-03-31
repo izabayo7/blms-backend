@@ -5,8 +5,8 @@ const {
     multer,
     fileFilter,
     validateObjectId,
-    FacilityCollegeYear,
-    FacilityCollege,
+    FacultyCollegeYear,
+    FacultyCollege,
     normaliseDate,
     Attachment,
     Chapter,
@@ -434,14 +434,14 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
         if (!course.coverPicture)
             return res.status(404).send(`Course ${req.params.id} does not have a cover picture`)
 
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
-        path = `./uploads/colleges/${facilityCollege.college}/courses/${req.params.id}/${course.coverPicture}`
+        path = `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}/${course.coverPicture}`
         fs.exists(path, (exists) => {
             if (!exists) {
                 return res.status(404).send(`${req.params.picture} was not found`)
@@ -510,14 +510,14 @@ router.get('/chapterDocument/:id', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
-        filepath = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/mainContent/index.html`
+        filepath = `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/mainContent/index.html`
         const content = fs.readFileSync(filepath)
         return res.status(200).send(content)
     } catch (error) {
@@ -568,14 +568,14 @@ router.get('/chapterMainVideo/:id', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
-        path = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/video/${chapter.mainVideo}`
+        path = `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/video/${chapter.mainVideo}`
 
         fs.stat(path, (err, stat) => {
 
@@ -841,14 +841,14 @@ router.get('/getAttachment/:id', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
-        filepath = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`
+        filepath = `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`
         const pic = fs.readFileSync(filepath)
         res.contentType('image/jpeg') // wp kbx
         return res.status(200).send(pic)
@@ -880,14 +880,14 @@ router.get('/downloadAttachment/:id', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
-        filepath = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`
+        filepath = `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`
         // res.setHeader('Content-Disposition', 'attachment')
         return res.download(filepath)
     } catch (error) {
@@ -1267,15 +1267,15 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
         })
         if (!course)
             return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
         req.kuriousStorageData = {
-            dir: `./uploads/colleges/${facilityCollege.college}/courses/${req.params.id}`,
+            dir: `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}`,
             model: 'course'
         }
         upload(req, res, async (err) => {
@@ -1322,14 +1322,14 @@ router.post('/updateChapterContent/:id', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
-        const dir = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/mainContent`
+        const dir = `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/mainContent`
 
         fs.createFile(`${dir}/index.html`, (error) => {
             if (error)
@@ -1361,15 +1361,15 @@ router.post('/addMainVideo/:chapter', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
         req.kuriousStorageData = {
-            dir: `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/video`,
+            dir: `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/video`,
             model: 'mainVideo'
         }
         upload(req, res, async (err) => {
@@ -1407,15 +1407,15 @@ router.post('/AddAttachments/:chapter', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
         req.kuriousStorageData = {
-            dir: `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/attachments`,
+            dir: `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/attachments`,
             model: 'attachment'
         }
         uploadPlus(req, res, async (err) => {
@@ -1465,15 +1465,15 @@ router.post('/removeAttachment/:id', async (req, res) => {
         const course = await Course.findOne({
             _id: chapter.course
         })
-        const facilityCollegeYear = await FacilityCollegeYear.findOne({
-            _id: course.facilityCollegeYear
+        const facultyCollegeYear = await FacultyCollegeYear.findOne({
+            _id: course.facultyCollegeYear
         })
-        const facilityCollege = await FacilityCollege.findOne({
-            _id: facilityCollegeYear.facilityCollege
+        const facultyCollege = await FacultyCollege.findOne({
+            _id: facultyCollegeYear.facultyCollege
         })
 
 
-        fs.unlink(`./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`, async (err) => {
+        fs.unlink(`./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${attachment.chapter}/attachments/${attachment.name}`, async (err) => {
             if (err)
                 return res.status(500).send(err)
 

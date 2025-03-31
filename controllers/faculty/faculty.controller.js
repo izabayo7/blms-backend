@@ -1,5 +1,5 @@
 // import dependencies
-const { express, facilityCollege, College, Facility, validateFacility, auth, _superAdmin, _admin, validateObjectId, _facility, FacilityCollege } = require('../../utils/imports')
+const { express, facultyCollege, College, Faculty, validateFaculty, auth, _superAdmin, _admin, validateObjectId, _faculty, FacultyCollege } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -7,7 +7,7 @@ const router = express.Router()
 /**
  * @swagger
  * definitions:
- *   Facility:
+ *   Faculty:
  *     properties:
  *       _id:
  *         type: string
@@ -19,11 +19,11 @@ const router = express.Router()
 
 /**
  * @swagger
- * /kurious/facility:
+ * /kurious/faculty:
  *   get:
  *     tags:
- *       - Facility
- *     description: Get all Facilities
+ *       - Faculty
+ *     description: Get all Faculties
  *     responses:
  *       200:
  *         description: OK
@@ -33,11 +33,11 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const facilities = await Facility.find()
+  const faculties = await Faculty.find()
   try {
-    if (facilities.length === 0)
-      return res.send('Facility list is empty').status(404)
-    return res.send(facilities).status(200)
+    if (faculties.length === 0)
+      return res.send('Faculty list is empty').status(404)
+    return res.send(faculties).status(200)
   } catch (error) {
     return res.send(error).status(500)
   }
@@ -45,11 +45,11 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/facility/college/{id}:
+ * /kurious/faculty/college/{id}:
  *   get:
  *     tags:
- *       - Facility
- *     description: Returns facilities in a specified college
+ *       - Faculty
+ *     description: Returns faculties in a specified college
  *     parameters:
  *       - name: id
  *         description: College's id
@@ -73,23 +73,23 @@ router.get('/college/:id', async (req, res) => {
     if (!college)
       return res.status(404).send(`College ${req.params.id} Not Found`)
 
-    const facilityColleges = await FacilityCollege.find({ college: req.params.id })
-    if (facilityColleges.length === 0)
+    const facultyColleges = await FacultyCollege.find({ college: req.params.id })
+    if (facultyColleges.length === 0)
       return res.send(`College ${college.name} has no faculties`).status(404)
 
-    let foundFacilities = []
+    let foundFaculties = []
 
-    for (const facilityCollege of facilityColleges) {
-      const facilities = await Facility.find({ _id: facilityCollege.facility })
-      if (facilities.length < 1)
-        return res.send(`Facility ${facilityCollege.facility} Not Found`) // recheck use case
-      for (const facility of facilities) {
-        foundFacilities.push(facility)
+    for (const facultyCollege of facultyColleges) {
+      const faculties = await Faculty.find({ _id: facultyCollege.faculty })
+      if (faculties.length < 1)
+        return res.send(`Faculty ${facultyCollege.faculty} Not Found`) // recheck use case
+      for (const faculty of faculties) {
+        foundFaculties.push(faculty)
       }
     }
-    if (foundFacilities.length < 1)
+    if (foundFaculties.length < 1)
       return res.status(404).send(`College ${college.name} has no faculties`)
-    return res.send(foundFacilities).status(200)
+    return res.send(foundFaculties).status(200)
 
   } catch (error) {
     return res.send(error).status(500)
@@ -98,14 +98,14 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/facility/{id}:
+ * /kurious/faculty/{id}:
  *   get:
  *     tags:
- *       - Facility
- *     description: Returns a specified facility
+ *       - Faculty
+ *     description: Returns a specified faculty
  *     parameters:
  *       - name: id
- *         description: Facility's id
+ *         description: Faculty's id
  *         in: path
  *         required: true
  *         type: string
@@ -122,10 +122,10 @@ router.get('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
       return res.send(error.details[0].message).status(400)
-    const facility = await Facility.findOne({ _id: req.params.id })
-    if (!facility)
-      return res.send(`Facility ${req.params.id} Not Found`).status(404)
-    return res.send(facility).status(200)
+    const faculty = await Faculty.findOne({ _id: req.params.id })
+    if (!faculty)
+      return res.send(`Faculty ${req.params.id} Not Found`).status(404)
+    return res.send(faculty).status(200)
   } catch (error) {
     return res.send(error).status(500)
   }
@@ -133,18 +133,18 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/facility:
+ * /kurious/faculty:
  *   post:
  *     tags:
- *       - Facility
- *     description: Create Facility
+ *       - Faculty
+ *     description: Create Faculty
  *     parameters:
  *       - name: body
- *         description: Fields for a Facility
+ *         description: Fields for a Faculty
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Facility'
+ *           $ref: '#/definitions/Faculty'
  *     responses:
  *       201:
  *         description: Created
@@ -157,22 +157,22 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { error } = validateFacility(req.body)
+    const { error } = validateFaculty(req.body)
     if (error)
       return res.send(error.details[0].message).status(400)
 
-    // check if facility exist
-    let facility = await Facility.findOne({ name: req.body.name })
-    if (facility)
-      return res.send(`Facility with code ${req.body.name} arleady exist`)
+    // check if faculty exist
+    let faculty = await Faculty.findOne({ name: req.body.name })
+    if (faculty)
+      return res.send(`Faculty with code ${req.body.name} arleady exist`)
 
-    let newDocument = new Facility({
+    let newDocument = new Faculty({
       name: req.body.name,
     })
     const saveDocument = await newDocument.save()
     if (saveDocument)
       return res.send(saveDocument).status(201)
-    return res.send('New Facility not Registered').status(500)
+    return res.send('New Faculty not Registered').status(500)
   } catch (error) {
     return res.send(error).status(500)
   }
@@ -180,22 +180,22 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/facility/{id}:
+ * /kurious/faculty/{id}:
  *   put:
  *     tags:
- *       - Facility
- *     description: Update Facility
+ *       - Faculty
+ *     description: Update Faculty
  *     parameters:
  *       - name: id
  *         in: path
  *         type: string
- *         description: Facility's Id
+ *         description: Faculty's Id
  *       - name: body
- *         description: Fields for a Facility
+ *         description: Fields for a Faculty
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Facility'
+ *           $ref: '#/definitions/Faculty'
  *     responses:
  *       201:
  *         description: Created
@@ -211,12 +211,12 @@ router.put('/:id', async (req, res) => {
   if (error)
     return res.send(error.details[0].message).status(400)
 
-  // check if facility exist
-  let facility = await Facility.findOne({ _id: req.params.id })
-  if (!facility)
-    return res.send(`Facility with code ${req.params.id} doens't exist`)
+  // check if faculty exist
+  let faculty = await Faculty.findOne({ _id: req.params.id })
+  if (!faculty)
+    return res.send(`Faculty with code ${req.params.id} doens't exist`)
 
-  const updateDocument = await Facility.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+  const updateDocument = await Faculty.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
     return res.send(updateDocument).status(201)
   return res.send("Error ocurred").status(500)
@@ -225,14 +225,14 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/facility/{id}:
+ * /kurious/faculty/{id}:
  *   delete:
  *     tags:
- *       - Facility
- *     description: Delete as Facility
+ *       - Faculty
+ *     description: Delete as Faculty
  *     parameters:
  *       - name: id
- *         description: Facility's id
+ *         description: Faculty's id
  *         in: path
  *         required: true
  *         type: string
@@ -250,13 +250,13 @@ router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
-  let facility = await Facility.findOne({ _id: req.params.id })
-  if (!facility)
-    return res.send(`Facility of Code ${req.params.id} Not Found`)
-  let deleteFacility = await Facility.findOneAndDelete({ _id: req.params.id })
-  if (!deleteFacility)
-    return res.send('Facility Not Deleted').status(500)
-  return res.send(`Facility ${deleteFacility._id} Successfully deleted`).status(200)
+  let faculty = await Faculty.findOne({ _id: req.params.id })
+  if (!faculty)
+    return res.send(`Faculty of Code ${req.params.id} Not Found`)
+  let deleteFaculty = await Faculty.findOneAndDelete({ _id: req.params.id })
+  if (!deleteFaculty)
+    return res.send('Faculty Not Deleted').status(500)
+  return res.send(`Faculty ${deleteFaculty._id} Successfully deleted`).status(200)
 })
 
 // export the router

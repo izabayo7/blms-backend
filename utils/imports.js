@@ -38,17 +38,17 @@ const {
     validateStudent
 } = require('../models/student/student.model')
 const {
-    Facility,
-    validateFacility
-} = require('../models/facility/facility.model')
+    Faculty,
+    validateFaculty
+} = require('../models/faculty/faculty.model')
 const {
-    facilityCollege,
-    validateFacilityCollege
-} = require('../models/facility-college/facility-college.model')
+    facultyCollege,
+    validateFacultyCollege
+} = require('../models/faculty-college/faculty-college.model')
 const {
-    facilityCollegeYear,
-    validateFacilityCollegeYear
-} = require('../models/facility-college-year/facility-college-year.model')
+    facultyCollegeYear,
+    validateFacultyCollegeYear
+} = require('../models/faculty-college-year/faculty-college-year.model')
 const {
     CollegeYear,
     validateCollegeYear
@@ -70,9 +70,13 @@ const {
     validateAttachment
 } = require('../models/attachments/attachments.model')
 const {
-    studentFacilityCollegeYear,
-    validateStudentFacilityCollegeYear
-} = require('../models/student-facility-college-year/student-facility-college-year.model')
+    studentFacultyCollegeYear,
+    validateStudentFacultyCollegeYear
+} = require('../models/student-faculty-college-year/student-faculty-college-year.model')
+const {
+    instructorFacultyCollegeYear,
+    validateInstructorFacultyCollegeYear
+} = require('../models/instructor-faculty-college-year/instructor-faculty-college-year.model')
 const {
     StudentProgress,
     validateStudentProgress
@@ -103,14 +107,14 @@ module.exports.Instructor = Instructor
 module.exports.validateInstructor = validateInstructor
 module.exports.Student = Student
 module.exports.validateStudent = validateStudent
-module.exports.Facility = Facility
-module.exports.validateFacility = validateFacility
-module.exports.FacilityCollege = facilityCollege
-module.exports.validateFacilityCollege = validateFacilityCollege
+module.exports.Faculty = Faculty
+module.exports.validateFaculty = validateFaculty
+module.exports.FacultyCollege = facultyCollege
+module.exports.validateFacultyCollege = validateFacultyCollege
 module.exports.CollegeYear = CollegeYear
 module.exports.validateCollegeYear = validateCollegeYear
-module.exports.FacilityCollegeYear = facilityCollegeYear
-module.exports.validateFacilityCollegeYear = validateFacilityCollegeYear
+module.exports.FacultyCollegeYear = facultyCollegeYear
+module.exports.validateFacultyCollegeYear = validateFacultyCollegeYear
 module.exports.Course = Course
 module.exports.validateCourse = validateCourse
 module.exports.Chapter = Chapter
@@ -119,8 +123,10 @@ module.exports.Message = Message
 module.exports.validateMessage = validateMessage
 module.exports.Attachment = Attachment
 module.exports.validateAttachment = validateAttachment
-module.exports.StudentFacilityCollegeYear = studentFacilityCollegeYear
-module.exports.validateStudentFacilityCollegeYear = validateStudentFacilityCollegeYear
+module.exports.StudentFacultyCollegeYear = studentFacultyCollegeYear
+module.exports.validateStudentFacultyCollegeYear = validateStudentFacultyCollegeYear
+module.exports.InstructorFacultyCollegeYear = instructorFacultyCollegeYear
+module.exports.validateInstructorFacultyCollegeYear = validateInstructorFacultyCollegeYear
 module.exports.StudentProgress = StudentProgress
 module.exports.validateStudentProgress = validateStudentProgress
 module.exports.Quiz = Quiz
@@ -204,15 +210,15 @@ module.exports.getCollege = async (id, type) => {
     let course = type === 'chapter' ? await Course.findOne({
         _id: id
     }) : undefined
-    let facilityCollegeYear = await module.exports.FacilityCollegeYear.findOne({
-        _id: type === 'chapter' ? course.facilityCollegeYear : id
+    let facultyCollegeYear = await module.exports.FacultyCollegeYear.findOne({
+        _id: type === 'chapter' ? course.facultyCollegeYear : id
     })
-    if (!facilityCollegeYear)
-        return `facilityCollegeYear ${id} Not Found`
-    let facilityCollege = await FacilityCollege.findOne({
-        _id: facilityCollegeYear.facilityCollege
+    if (!facultyCollegeYear)
+        return `facultyCollegeYear ${id} Not Found`
+    let facultyCollege = await FacultyCollege.findOne({
+        _id: facultyCollegeYear.facultyCollege
     })
-    return facilityCollege.college
+    return facultyCollege.college
 }
 
 module.exports.getCourse = async (id) => {
@@ -631,10 +637,7 @@ const {
 const {
     superAdmin
 } = require('../middlewares/superAdmin.middleware')
-const {
-    method,
-    result
-} = require('lodash')
+
 
 module.exports.auth = auth
 module.exports._admin = admin

@@ -8,10 +8,10 @@ const {
   College,
   Instructor,
   validateCourse,
-  StudentFacilityCollegeYear,
-  FacilityCollegeYear,
-  FacilityCollege,
-  Facility,
+  StudentFacultyCollegeYear,
+  FacultyCollegeYear,
+  FacultyCollege,
+  Faculty,
   Student,
   Attachment,
   _,
@@ -36,7 +36,7 @@ const router = express.Router()
  *         type: string
  *       instructor:
  *         type: string
- *       facilityCollegeYear:
+ *       facultyCollegeYear:
  *         type: string
  *       description:
  *         type: string
@@ -47,7 +47,7 @@ const router = express.Router()
  *     required:
  *       - name
  *       - instructor
- *       - facilityCollegeYear
+ *       - facultyCollegeYear
  *       - description
  */
 
@@ -184,7 +184,7 @@ router.get('/instructor/:id', async (req, res) => {
       return res.status(404).send(`${instructor.name} have No courses`)
 
     courses = await injectChapters(courses)
-    course = await injectFacilityCollegeYear(courses)
+    course = await injectFacultyCollegeYear(courses)
     courses = await injectChapters(courses)
 
     return res.status(200).send(courses)
@@ -246,7 +246,7 @@ router.get('/instructor/:instructorId/:courseName', async (req, res) => {
       return res.status(404).send(`The requested course was not found`)
     }
     course = await injectChapters(course)
-    course = await injectFacilityCollegeYear(course)
+    course = await injectFacultyCollegeYear(course)
 
     return res.status(200).send(course[0])
   } catch (error) {
@@ -290,13 +290,13 @@ router.get('/student/:id', async (req, res) => {
     if (!student)
       return res.status(404).send(`Sudent with code ${req.params.id} doens't exist`)
 
-    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({
+    const studentFacultyCollegeYear = await StudentFacultyCollegeYear.findOne({
       student: student._id,
       status: 1
     }).lean()
 
     let courses = await Course.find({
-      facilityCollegeYear: studentFacilityCollegeYear.facilityCollegeYear, published: false
+      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: false
     }).lean()
     if (courses.length === 0)
       return res.status(404).send(`There are no courses for student ${req.params.id}`)
@@ -353,13 +353,13 @@ router.get('/student/:studentId/:courseName', async (req, res) => {
     if (!student)
       return res.status(404).send(`Sudent with code ${req.params.studentId} doens't exist`)
 
-    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({
+    const studentFacultyCollegeYear = await StudentFacultyCollegeYear.findOne({
       student: student._id,
       status: 1
     }).lean()
 
     let courses = await Course.find({
-      facilityCollegeYear: studentFacilityCollegeYear.facilityCollegeYear, published: false
+      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: false
     }).lean()
     if (courses.length < 1)
       return res.status(404).send(`The requested course was not found`)
@@ -449,16 +449,16 @@ router.post('/', async (req, res) => {
   if (error)
     return res.status(400).send(error.details[0].message)
 
-  let facilityCollegeYear = await FacilityCollegeYear.findOne({
-    _id: req.body.facilityCollegeYear
+  let facultyCollegeYear = await FacultyCollegeYear.findOne({
+    _id: req.body.facultyCollegeYear
   })
-  if (!facilityCollegeYear)
-    return res.status(404).send(`facilityCollegeYear of Code ${req.body.facilityCollegeYear} Not Found`)
+  if (!facultyCollegeYear)
+    return res.status(404).send(`facultyCollegeYear of Code ${req.body.facultyCollegeYear} Not Found`)
 
   let newDocument = new Course({
     name: req.body.name,
     instructor: req.body.instructor,
-    facilityCollegeYear: req.body.facilityCollegeYear,
+    facultyCollegeYear: req.body.facultyCollegeYear,
     description: req.body.description,
     coverPicture: req.file === undefined ? undefined : req.file.filename
   })
@@ -621,7 +621,7 @@ router.delete('/:id', async (req, res) => {
   })
   if (!deletedCourse)
     return res.status(500).send('Course Not Deleted')
-  const college = getCollege(course.facilityCollegeYear)
+  const college = getCollege(course.facultyCollegeYear)
   const dir = `./uploads/schools/${college}/courses/${req.params.id}`
   fs.exists(dir, (err) => {
     if (err)
@@ -715,37 +715,37 @@ async function injectStudentProgress(courses, studentId) {
   return courses
 }
 
-// inject facility college Year
-async function injectFacilityCollegeYear(courses) {
+// inject faculty college Year
+async function injectFacultyCollegeYear(courses) {
   for (const i in courses) {
-    const facilityCollegeYear = await FacilityCollegeYear.findOne({
-      _id: courses[i].facilityCollegeYear
+    const facultyCollegeYear = await FacultyCollegeYear.findOne({
+      _id: courses[i].facultyCollegeYear
     }).lean()
 
-    courses[i].facilityCollegeYear = removeDocumentVersion(facilityCollegeYear)
+    courses[i].facultyCollegeYear = removeDocumentVersion(facultyCollegeYear)
 
     const collegeYear = await CollegeYear.findOne({
-      _id: facilityCollegeYear.collegeYear
+      _id: facultyCollegeYear.collegeYear
     }).lean()
-    courses[i].facilityCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+    courses[i].facultyCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
 
-    const facilityCollege = await FacilityCollege.findOne({
-      _id: facilityCollegeYear.facilityCollege
+    const facultyCollege = await FacultyCollege.findOne({
+      _id: facultyCollegeYear.facultyCollege
     }).lean()
-    courses[i].facilityCollegeYear.facilityCollege = removeDocumentVersion(facilityCollege)
+    courses[i].facultyCollegeYear.facultyCollege = removeDocumentVersion(facultyCollege)
 
-    const facility = await Facility.findOne({
-      _id: facilityCollege.facility
+    const faculty = await Faculty.findOne({
+      _id: facultyCollege.faculty
     }).lean()
-    courses[i].facilityCollegeYear.facilityCollege.facility = removeDocumentVersion(facility)
+    courses[i].facultyCollegeYear.facultyCollege.faculty = removeDocumentVersion(faculty)
 
     const college = await College.findOne({
-      _id: facilityCollege.college
+      _id: facultyCollege.college
     }).lean()
 
-    courses[i].facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
-    if (courses[i].facilityCollegeYear.facilityCollege.college.logo) {
-      courses[i].facilityCollegeYear.facilityCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    courses[i].facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
+    if (courses[i].facultyCollegeYear.facultyCollege.college.logo) {
+      courses[i].facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
   }
   return courses

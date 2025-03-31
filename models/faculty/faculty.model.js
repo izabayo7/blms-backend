@@ -5,26 +5,26 @@ const {
     timestamps
 } = require('../../utils/imports')
 
-const facilitySchema = new mongoose.Schema({
+const facultySchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
     },
 })
 
-facilitySchema.plugin(timestamps)
+facultySchema.plugin(timestamps)
 
-// validate facility
-function validateFacility(credentials) {
+// validate faculty
+function validateFaculty(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
     }
     return Joi.validate(credentials, schema)
 }
 
-// create facilities model
-const Facility = mongoose.model('Facility', facilitySchema)
+// create faculties model
+const Faculty = mongoose.model('Faculty', facultySchema)
 
 // export the model and the validation function
-module.exports.Facility = Facility
-module.exports.validateFacility = validateFacility
+module.exports.Faculty = Faculty
+module.exports.validateFaculty = validateFaculty

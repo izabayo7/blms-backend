@@ -97,7 +97,7 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/facility-college-year/{student}/{course}:
+ * /kurious/faculty-college-year/{student}/{course}:
  *   get:
  *     tags:
  *       - StudentProgress

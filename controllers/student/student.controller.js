@@ -11,15 +11,15 @@ const {
   defaulPassword,
   validateObjectId,
   checkRequirements,
-  StudentFacilityCollegeYear,
-  FacilityCollegeYear,
-  FacilityCollege,
+  StudentFacultyCollegeYear,
+  FacultyCollegeYear,
+  FacultyCollege,
   CollegeYear,
   removeDocumentVersion
 } = require('../../utils/imports')
 const {
-  Facility
-} = require('../../models/facility/facility.model')
+  Faculty
+} = require('../../models/faculty/faculty.model')
 
 // create router
 const router = express.Router()
@@ -404,38 +404,38 @@ router.delete('/:id', async (req, res) => {
 // link the student with his/her current college
 async function injectDetails(students) {
   for (const i in students) {
-    const studentFacilityCollegeYear = await StudentFacilityCollegeYear.findOne({
+    const studentFacultyCollegeYear = await StudentFacultyCollegeYear.findOne({
       student: students[i]._id,
       status: 1
     }).lean()
-    students[i].studentFacilityCollegeYear = removeDocumentVersion(studentFacilityCollegeYear)
+    students[i].studentFacultyCollegeYear = removeDocumentVersion(studentFacultyCollegeYear)
 
-    const facilityCollegeYear = await FacilityCollegeYear.findOne({
-      _id: studentFacilityCollegeYear.facilityCollegeYear
+    const facultyCollegeYear = await FacultyCollegeYear.findOne({
+      _id: studentFacultyCollegeYear.facultyCollegeYear
     }).lean()
-    students[i].studentFacilityCollegeYear.facilityCollegeYear = removeDocumentVersion(facilityCollegeYear)
+    students[i].studentFacultyCollegeYear.facultyCollegeYear = removeDocumentVersion(facultyCollegeYear)
 
     const collegeYear = await CollegeYear.findOne({
-      _id: facilityCollegeYear.collegeYear
+      _id: facultyCollegeYear.collegeYear
     }).lean()
-    students[i].studentFacilityCollegeYear.facilityCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+    students[i].studentFacultyCollegeYear.facultyCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
 
-    const facilityCollege = await FacilityCollege.findOne({
-      _id: facilityCollegeYear.facilityCollege
+    const facultyCollege = await FacultyCollege.findOne({
+      _id: facultyCollegeYear.facultyCollege
     }).lean()
-    students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege = removeDocumentVersion(facilityCollege)
+    students[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege = removeDocumentVersion(facultyCollege)
 
-    const facility = await Facility.findOne({
-      _id: facilityCollege.facility
+    const faculty = await Faculty.findOne({
+      _id: facultyCollege.faculty
     }).lean()
-    students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.facility = removeDocumentVersion(facility)
+    students[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.faculty = removeDocumentVersion(faculty)
 
     const college = await College.findOne({
-      _id: facilityCollege.college
+      _id: facultyCollege.college
     }).lean()
-    students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
-    if (students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo) {
-      students[i].studentFacilityCollegeYear.facilityCollegeYear.facilityCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    students[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
+    if (students[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo) {
+      students[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
     // add student profile media path
     if (students[i].profile) {

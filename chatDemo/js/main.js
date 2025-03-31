@@ -44,7 +44,7 @@ socket.on('receive_user_contacts', ({
 });
 
 // get messages new style
-socket.emit('request_conversation',{ contactId: '5f46c21651be84339c17455f', lastMessage: '5f5f1a34313e3634d4a258f2'});
+socket.emit('request_conversation',{ contactId: '5f53da54d143be03eb33291e'});
 
 // Get messages new style
 socket.on('receive_conversation', ({
