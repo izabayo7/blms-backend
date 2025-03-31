@@ -100,12 +100,6 @@ exports.createUserInvitation = async (req, res) => {
     if (!user_category)
       return res.send(formatResult(404, 'UserCategory not found'))
 
-    const _user = await User.findOne({
-      user_name: req.user.user_name
-    })
-    if (!_user)
-      return res.send(formatResult(400, `user not found`))
-
     const savedInvitations = []
 
     const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
@@ -119,7 +113,7 @@ exports.createUserInvitation = async (req, res) => {
       }
 
       const newDocument = new User({
-        user: _user._id,
+        user: req.user._id,
         email: email,
         category: category,
         college: college,
