@@ -1,5 +1,5 @@
 exports.invitationToSystem = ({ inviter, institution, token }) => {
-    const result = `
+  const result = `
     <!DOCTYPE html>
     <html lang="en">
     
@@ -184,11 +184,11 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
     </html>
     `;
 
-    return result;
+  return result;
 };
 
 exports.invitationToSystem = ({ inviter, institution, token }) => {
-    const result = `
+  const result = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -210,6 +210,7 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
               style="
                 background-color: white;
                 padding: 49px 39px 0;
+                border-top: 3px solid #193074;
                 margin: auto;
                 height: 340px;
                 max-width: 522px;
@@ -355,5 +356,5 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
     
     `;
 
-    return result;
+  return result;
 };
