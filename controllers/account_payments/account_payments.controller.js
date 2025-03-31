@@ -199,7 +199,7 @@ async function createPayment(req, res) {
             }
         }
 
-        if (req.body.amount_paid !== balance)
+        if (req.body.amount_paid < balance)
             return res.send(formatResult(403, `The amount you gave is invalid (you should pay ${balance})`));
 
         const payment = await Account_payments.findOneAndUpdate({

@@ -230,18 +230,12 @@ exports.update_password = async ({password, user_id}) => {
     });
 }
 
-exports.calculateAmount = async (collegePlan, periodType, periodValue, total_users, registration = false) => {
+exports.calculateAmount = async (collegePlan, periodType, periodValue, total_users, currentTotalUsers = undefined) => {
 
-    if (registration && !['HUGUKA', 'JIJUKA', 'MINUZA_ACCELERATE'].includes(collegePlan.plan)) {
-        const admin_category = await this.findDocument(this.User_category, {name: "ADMIN"})
-        const obj = {
-            college: collegePlan.college._id.toString(),
-            category: {$ne: admin_category._id.toString()},
-            "status.deleted": {$ne: 1}
-        }
-        let currentTotalUsers = await this.countDocuments(this.User, obj)
+    if (currentTotalUsers && !['HUGUKA', 'JIJUKA', 'MINUZA_ACCELERATE'].includes(collegePlan.plan)) {
+
         currentTotalUsers--;
-        const maxValue = collegePlan.plan === 'MINUZA_STARTER' ? 200 : 600
+        const maxValue = collegePlan.plan === 'MINUZA_STARTER' ? 10 : 600
         if (currentTotalUsers > maxValue) {
             collegePlan = this.simplifyObject(collegePlan)
             collegePlan.plan = 'JIJUKA'

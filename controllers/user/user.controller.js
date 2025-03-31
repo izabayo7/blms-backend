@@ -1022,6 +1022,7 @@ router.post('/', async (req, res) => {
         }
         return res.status(201).send(result)
     } catch (error) {
+        console.log(error)
         return res.send(formatResult(500, error))
     }
 })
@@ -1673,6 +1674,16 @@ async function addUserBill(collegeId, userCategory) {
     const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
 // akabazo on minuza package
     if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
+
+        const admin_category = await findDocument(User_category, {name: "ADMIN"})
+
+        const obj = {
+            college: college.college,
+            category: {$ne: admin_category._id.toString()},
+            "status.deleted": {$ne: 1}
+        }
+        let currentTotalUsers = await countDocuments(User, obj)
+
         const payment = await Account_payments.findOne({
             college: collegeId,
             status: 'ACTIVE'
@@ -1688,15 +1699,11 @@ async function addUserBill(collegeId, userCategory) {
             college: collegeId,
             endingDate: {$gt: new Date(today).toISOString()}
         }).populate({
-            path: 'collegePaymentPlan',
-            populate: {
-                path: 'college',
-                model: 'Component'
-            }
+            path: 'collegePaymentPlan'
         })
 
         for (const i in payments) {
-            amount += await calculateAmount(payments[i].collegePaymentPlan, payments[i].periodType, payments[i].periodValue, 1, true)
+            amount += await calculateAmount(payments[i].collegePaymentPlan, payments[i].periodType, payments[i].periodValue, 1, currentTotalUsers)
         }
 
         if (amount !== 0)
