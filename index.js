@@ -123,6 +123,13 @@ app.use(`${basePath}/comment`, auth, comment_controller)
 app.use(`${basePath}/live_session`, auth, live_session_controller)
 app.use(`${basePath}/user_invitations`, User_invitation_routes)
 
+// serve assets
+app.use(
+    "/assets",
+    express.static(path.join(__dirname, "views/assets"))
+);
+
+
 // start the server
 server.listen(port, () => {
     if (process.env.DEBUG == "false") {
