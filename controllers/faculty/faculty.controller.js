@@ -1,4 +1,5 @@
 // import dependencies
+const { User_group } = require('../../models/user_group/user_group.model')
 const {
   express,
   findDocuments,
@@ -174,7 +175,6 @@ exports.createFaculty = async (req, res) => {
  */
 exports.updateFaculty = async (req, res) => {
   try {
-    console.log(req.params.faculty_id)
     let {
       error
     } = validateObjectId(req.params.faculty_id)
@@ -229,7 +229,7 @@ exports.deleteFaculty = async (req, res) => {
 
 
   // check if the faculty is never used
-  const faculty_college_found = await findDocument(Faculty_college_year, {
+  const faculty_college_found = await findDocument(User_group, {
     faculty: req.params.faculty_id
   })
   if (!faculty_college_found) {
