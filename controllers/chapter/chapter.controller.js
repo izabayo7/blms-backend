@@ -641,7 +641,7 @@ router.put('/:id/video', async (req, res) => {
       const result = await updateDocument(Chapter, req.params.id, {
         uploaded_video: req.file.filename
       })
-      result.data.uploaded_video = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${req.params.id}/video/${result.data.uploaded_video}`
+      result.data.uploaded_video = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${req.params.id}/video/${result.data.uploaded_video}`
       return res.status(201).send(result)
 
     })
@@ -720,7 +720,7 @@ router.post('/:id/attachments', async (req, res) => {
       })
       for (const i in result.data.attachments) {
         const obj = {
-          download_link: `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${req.params.id}/attachment/${result.data.attachments[i].src}/download`,
+          download_link: `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${req.params.id}/attachment/${result.data.attachments[i].src}/download`,
           name: result.data.attachments[i].src
         }
         result.data.attachments[i] = obj

@@ -551,7 +551,7 @@ router.post('/login', async (req, res) => {
     user = simplifyObject(user)
     user.category = _.pick(user_category, 'name')
     if (user.profile) {
-      user.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
+      user.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
     }
 
     // return token
@@ -781,7 +781,7 @@ router.put('/profile', auth, async (req, res) => {
       })
       result = simplifyObject(result)
       result.category = _.pick(user_category, 'name')
-      result.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${req.file.filename}`
+      result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${req.file.filename}`
       return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
     })
 

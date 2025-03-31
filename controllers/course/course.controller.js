@@ -738,7 +738,7 @@ router.put('/:id/cover_picture', async (req, res) => {
             const result = await updateDocument(Course, req.params.id, {
                 cover_picture: req.file.filename
             })
-            result.data.cover_picture = `http://${process.env.HOST}${process.env.BASE_PATH}/course/${course.name}/cover_picture/${result.data.cover_picture}`
+            result.data.cover_picture = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/course/${course.name}/cover_picture/${result.data.cover_picture}`
             return res.send(result)
         })
 
