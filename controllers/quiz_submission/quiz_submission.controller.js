@@ -389,6 +389,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
       return res.send(formatResult(404, 'quiz_submission not found'))
     result = simplifyObject(result)
     result = simplifyObject(await injectQuiz([result]))
+    result = await injectUserFeedback(result)
     result = result[0]
     result.quiz = await addQuizTarget([result.quiz])
     result.quiz = await addAttachmentMediaPaths(result.quiz)
