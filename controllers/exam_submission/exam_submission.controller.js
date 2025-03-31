@@ -204,6 +204,8 @@ router.get('/', auth, async (req, res) => {
                         for (const l in submissions[k].answers) {
                             submissions[k].total_feedbacks += submissions[k].answers[l].feedback ? 1 : 0;
                         }
+                        if (submissions[k].hasVideo)
+                            submissions[k].videoUrl = `http${process.env.NODE_ENV === 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/exam_submission/${submissions[k]._id}/video`
                     }
                     exams[i].submissions = submissions
                     foundSubmissions.push(exams[i])
@@ -492,7 +494,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
     }
 })
 
-router.get('/:id/video',filterUsers(["INSTRUCTOR"]), auth, async (req, res) => {
+router.get('/:id/video', filterUsers(["INSTRUCTOR"]), auth, async (req, res) => {
     try {
 
         const {

@@ -969,7 +969,6 @@ module.exports.listen = (app) => {
                 const path = `${dir}/video.webm`
                 const dataBuffer = new Buffer(data, 'base64');
                 const fileStream = fs.createWriteStream(path, {flags: 'a'});
-                console.log(submission_id,'twahageze')
                 fileStream.write(dataBuffer);
                 if (!saved) {
                     await Exam_submission.updateOne({_id: submission_id}, {hasVideo: true})
