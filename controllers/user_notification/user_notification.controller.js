@@ -287,6 +287,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - User_notification
  *     description: Delete a notification
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User_notification's id
