@@ -31,6 +31,10 @@ const course_schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    maximum_marks: {
+        type: Number,
+        required: true
+    },
     published_on: {
         type: Date
     },
@@ -49,6 +53,7 @@ function validate_course(credentials) {
         user: Joi.string().min(3).max(100).required(),
         faculty_college_year: Joi.ObjectId().required(),
         description: Joi.string().max(1000).min(10),
+        maximum_marks: Joi.number().min(1),
         cover_picture: Joi.string(),
         published: Joi.boolean(),
         status: Joi.number().min(0).max(1)

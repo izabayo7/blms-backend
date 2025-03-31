@@ -52,6 +52,8 @@ const router = express.Router()
  *         type: string
  *       coverPicture:
  *         type: string
+ *       maximum_marks:
+ *         type: number
  *       published:
  *         type: boolean
  *     required:
@@ -59,6 +61,7 @@ const router = express.Router()
  *       - user
  *       - faculty_college_year
  *       - description
+ *       - maximum_marks
  */
 
 /**
