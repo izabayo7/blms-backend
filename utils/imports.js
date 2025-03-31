@@ -81,11 +81,11 @@ module.exports.validate_faculty = validate_faculty
 
 const {
     faculty_college,
-    validateFacultyCollege
+    validate_faculty_college
 } = require('../models/faculty_college/faculty_college.model')
 
 module.exports.Faculty_college = faculty_college
-module.exports.validateFacultyCollege = validateFacultyCollege
+module.exports.validate_faculty_college = validate_faculty_college
 
 const {
     faculty_college_year,

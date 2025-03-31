@@ -32,13 +32,17 @@ const faculty_college_schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    leaders: [leader_schema]
+    leaders: [leader_schema],
+    status: {
+        type: Number,
+        default: 1
+    },
 })
 
 faculty_college_schema.plugin(timestamps)
 
 // validate faculty-college
-function validateFacultyCollege(credentials) {
+function validate_faculty_college(credentials) {
     const schema = {
         faculty: Joi.ObjectId().required(),
         college: Joi.ObjectId().required(),
@@ -56,4 +60,4 @@ const faculty_college = mongoose.model('faculty_college', faculty_college_schema
 
 // export the model and the validation function
 module.exports.faculty_college = faculty_college
-module.exports.validateFacultyCollege = validateFacultyCollege
+module.exports.validate_faculty_college = validate_faculty_college
