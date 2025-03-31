@@ -1302,14 +1302,15 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/status/:username/:value', auth, async (req, res) => {
+router.put('/status/:username/:value', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
         if (!['hold','unhold'].includes(req.params.value))
             return res.send(formatResult(400, "invalid status"))
 
         // check if user exist
         let user = await findDocument(User, {
-            user_name: req.params.username
+            user_name: req.params.username,
+            college: req.user.college
         })
         if (!user)
             return res.send(formatResult(400, `User not found`))
@@ -1349,7 +1350,7 @@ router.put('/status/:username/:value', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
         let {
             error
@@ -1359,7 +1360,8 @@ router.delete('/:id', auth, async (req, res) => {
 
         // check if user exist
         let user = await findDocument(User, {
-            _id: req.params.id
+            _id: req.params.id,
+            college: req.user.college
         })
         if (!user)
             return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
