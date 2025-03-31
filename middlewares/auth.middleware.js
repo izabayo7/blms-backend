@@ -2,7 +2,8 @@
 const { jwt, config, formatResult } = require('../utils/imports')
 
 function auth(req, res, next) {
-    const token = req.header('authorization').split(' ')[1] || req.query.token
+    const header = req.header('authorization')
+    const token = header ? header.split(' ')[1] : req.query.token
     if (!token)
         return res.send(formatResult(401, 'No Token Found'))
     try {
