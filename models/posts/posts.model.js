@@ -1,5 +1,6 @@
 // import dependencies
 const { Schema } = require('mongoose')
+const { paginate } = require('mongoose-paginate-v2')
 const {
     mongoose,
     Joi,
@@ -69,6 +70,8 @@ const post_schema = new mongoose.Schema({
         default: 'DRAFT'
     }
 }, { timestamps: true })
+
+post_schema.plugin(paginate)
 
 // validate post
 function validate_post(credentials) {

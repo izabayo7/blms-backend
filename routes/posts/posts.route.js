@@ -11,6 +11,8 @@ router.route('/')
      *     tags:
      *       - Post
      *     description: Returns current logged in posts
+     *     security:
+     *       - bearerAuth: -[]
      *     parameters:
      *       - name: page
      *         description: page number
