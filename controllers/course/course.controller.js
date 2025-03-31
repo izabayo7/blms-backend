@@ -373,9 +373,9 @@ router.get('/:id', async (req, res) => {
         if (!course)
             return res.send(formatResult(404, 'course not found'))
 
-        // course = await injectUser([course], 'user')
-        // course = await injectChapters(course)
-        // course = course[0]
+        course = await injectUser([course], 'user')
+        course = await injectChapters(course)
+        course = course[0]
 
         return res.send(course)
     } catch (error) {
@@ -390,6 +390,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Returns the cover_picture of a specified course
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: course_name
  *         description: Course name
