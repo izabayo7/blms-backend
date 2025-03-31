@@ -111,6 +111,10 @@ module.exports.listen = (app) => {
                 })
             }
 
+            if (name === `live_class_ended_${user._id}`) {
+                socket.emit('live/classEnded')
+            }
+
             if (name === `conversation_created_${user._id}`) {
                 socket.emit('res/message/conversation_created', data)
             }
