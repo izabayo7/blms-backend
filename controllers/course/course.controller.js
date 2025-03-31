@@ -748,6 +748,8 @@ router.put('/:id/cover_picture', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Remove course cover_picture (file upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Course id
