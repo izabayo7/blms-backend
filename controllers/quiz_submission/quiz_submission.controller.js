@@ -304,11 +304,13 @@ router.get('/user/:user_name', async (req, res) => {
           quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
           quizes[i].target.faculty_college_year = course.faculty_college_year
 
-
         }
         let quiz_submission = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
         })
+
+        quizes[i].total_submissions = quiz_submission.length
+
         if (quiz_submission.length) {
           quiz_submission = await injectUser(quiz_submission, 'user')
           // quiz_submission = await injectQuiz(quiz_submission)
