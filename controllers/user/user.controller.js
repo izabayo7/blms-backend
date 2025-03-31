@@ -884,7 +884,8 @@ router.post('/admin', async (req, res) => {
         // check if the name or email were not used
         let user = await findDocument(User, {
             $or: [{
-                email: req.body.email
+                email: req.body.email,
+                "status.deleted": {$ne: 1}
             }, {
                 user_name: req.body.user_name
             }],
