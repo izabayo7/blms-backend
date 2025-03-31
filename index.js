@@ -46,7 +46,7 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
-app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs, false, { docExpansion: "none" }));
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs, false, {docExpansion: "none"}));
 
 // import models
 require('./models/mongodb')
@@ -73,8 +73,8 @@ const chat_group_controller = require('./controllers/chat_group/chat_group.contr
 const message_controller = require('./controllers/message/message.controller')
 const comment_controller = require('./controllers/comments/comments.controller')
 const live_session_controller = require('./controllers/live_session/live_session.controller')
-const { User_invitation_routes } = require('./routes/user_invitations/user_invitations.routes');
-const { Post_routes } = require('./routes/posts/posts.route');
+const {User_invitation_routes} = require('./routes/user_invitations/user_invitations.routes');
+const {Post_routes} = require('./routes/posts/posts.route');
 
 // use middlewares
 app.use(cors())
@@ -93,9 +93,10 @@ let server = httpServer.createServer(app);
 
 // importing our socket
 const io = require('./utils/socket');
-const { User_feedback_routes } = require('./routes/user_feedbacks/user_feedbacks.routes');
-const { Reset_password_routes } = require('./routes/reset_password/reset_password.routes');
-const { Faculty_Routes } = require('./routes/faculty/faculty.routes');
+const {filterUsers} = require("./middlewares/auth.middleware");
+const {User_feedback_routes} = require('./routes/user_feedbacks/user_feedbacks.routes');
+const {Reset_password_routes} = require('./routes/reset_password/reset_password.routes');
+const {Faculty_Routes} = require('./routes/faculty/faculty.routes');
 io.listen(server)
 
 
@@ -106,7 +107,7 @@ app.use(`${basePath}/user_category`, user_category_controller)
 app.use(`${basePath}/user_role`, auth, user_role_controller)
 app.use(`${basePath}/college`, college_controller)
 // app.use(`${basePath}/college_year`, auth, college_year_controller)
-app.use(`${basePath}/faculty`, auth, Faculty_Routes)
+app.use(`${basePath}/faculty`, [auth, filterUsers(["SUPERADMIN", "ADMIN"])], Faculty_Routes)
 // app.use(`${basePath}/faculty_college`, auth, faculty_college_controller)
 app.use(`${basePath}/user_groups`, auth, user_group_controller)
 app.use(`${basePath}/user_user_group`, auth, user_faculty_college_year_controller)
@@ -139,7 +140,8 @@ app.use(
 // start the server
 server.listen(port, () => {
     if (process.env.DEBUG == "false") {
-        console.log = function () { }
+        console.log = function () {
+        }
     }
     console.log(`Kurious Server activated on port...${port}`)
 })

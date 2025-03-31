@@ -113,7 +113,6 @@ exports.getFaculties = async (req, res) => {
       //     return res.send(formatResult(404, `Faculty ${faculty_college.faculty} Not Found`)) // recheck use case
       //   foundFaculties.push(faculty)
       // }
-      console.log('aaaaaaaooooooo')
       faculties = await findDocuments(Faculty, fetch_all_faculties ? {} : {
         _id: req.params.faculty_id
       }
