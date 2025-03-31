@@ -208,6 +208,43 @@ router.get('/:id', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /abbreviation/{abbreviation}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: Returns a specified college
+ *     parameters:
+ *       - name: id
+ *         description: College's abbreviation
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/abbreviation/:abbreviation', async (req, res) => {
+    try {
+
+        let college = await findDocument(College, {
+            abbreviation: req.params.abbreviation
+        })
+        if (!college)
+            return res.send(formatResult(404, `College ${req.params.abbreviation} Not Found`))
+        college = await injectMediaPaths([college])
+        college = college[0]
+        return res.send(formatResult(u, u, college))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
  * /college/checkNameExistance/{college_name}:
  *   get:
  *     tags:
@@ -459,7 +496,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
                 const phoneFound = req.body.phone == college.phone
                 const nameFound = req.body.name == college.name
                 const emailFound = req.body.email == college.email
-                return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
+                return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ' url abbreviation'} arleady exist`))
             }
         }
         // never go back to trial
