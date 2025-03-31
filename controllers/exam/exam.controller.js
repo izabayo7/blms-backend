@@ -267,7 +267,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         const {
             error
@@ -275,26 +275,12 @@ router.post('/', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
-        })
-
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create exam'))
-
         // check if examname exist
-        let exam = await findDocument(Exam, {
-            name: req.body.name,
-            user: user._id
+        let course = await findDocument(Course, {
+            _id: req.body.course
         })
-        if (exam)
-            return res.send(formatResult(400, 'name was taken'))
+        if (!course)
+            return res.send(formatResult(404, 'course not found'))
 
         const validQuestions = validateQuestions(req.body.questions)
         if (validQuestions.status !== true)
@@ -304,7 +290,9 @@ router.post('/', async (req, res) => {
             name: req.body.name,
             duration: req.body.duration,
             instructions: req.body.instructions,
-            user: user._id,
+            course: req.body.course,
+            type: req.body.type,
+            user: req.user._id,
             questions: req.body.questions,
             total_marks: validQuestions.total_marks,
             passMarks: req.body.passMarks
