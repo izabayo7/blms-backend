@@ -19,11 +19,11 @@ const college_schema = new mongoose.Schema({
     phone: {
         type: String,
         unique: true,
-        required: true
+        // required: true
     },
     location: {
         type: String,
-        required: true
+        // required: true
     },
     logo: {
         type: String,
