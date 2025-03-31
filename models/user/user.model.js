@@ -115,7 +115,7 @@ exports.validate_admin = (credentials, method = 'create') => {
         email: Joi.string().email().required(),
         maximum_users: Joi.number().required(),
         college: Joi.string().min(3).max(200),
-        position: Joi.string().min(3).max(50)
+        position: Joi.string().min(3).max(50).required()
     }
     return Joi.validate(credentials, schema)
 }

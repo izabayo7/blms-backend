@@ -516,7 +516,7 @@ router.post('/admin', async (req, res) => {
   try {
     const {
       error
-    } = validate_user(req.body)
+    } = validate_admin(req.body)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
@@ -526,7 +526,7 @@ router.post('/admin', async (req, res) => {
     })
 
     if (user)
-      return res.send(formatResult(400, `User with same email arleady exist`))
+      return res.send(formatResult(400, `User with same email is arleady registered`))
 
 
     // avoid user_name === group name
@@ -537,35 +537,18 @@ router.post('/admin', async (req, res) => {
       return res.send(formatResult(403, 'user_name was taken'))
 
     let user_category = await findDocument(User_category, {
-      name: req.body.category
+      name: "ADMIN"
     })
     if (!user_category)
-      return res.send(formatResult(404, 'category not found'))
-
-    if (!req.body.college) {
-      return res.send(formatResult(400, `${user_category.name.toLowerCase()} must have a college`))
-    }
-
-
-    const {
-      error
-    } = validate_college(req.body)
-    if (error)
-      return res.send(formatResult(404, error.details[0].message))
+      return res.send(formatResult(404, 'ADMIN category not found'))
 
     // check if the name or email were not used
     let college = await findDocument(College, {
       name: req.body.name
     })
+    if (college)
+      return res.send(formatResult(403, `College with same name is arleady registered`))
 
-    if (college) {
-      // const phoneFound = req.body.phone == college.phone
-      const phoneFound = false
-      const nameFound = req.body.name == college.name
-      // const emailFound = req.body.email == college.email
-      const emailFound = false
-      return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
-    }
 
     let result = await createDocument(College, {
       name: req.body.name,
@@ -574,34 +557,17 @@ router.post('/admin', async (req, res) => {
 
     college = result.data
 
-    if (user_category.name === 'ADMIN') {
-      const find_admin = await findDocument(User, {
-        category: user_category._id,
-        college: college._id
-      })
-
-      if (find_admin)
-        return res.send(formatResult(404, `College ${college.name} can't have more than one admin`))
-    }
-
-
     let result = await createDocument(User, {
-      user_name: await random_user_name(),
+      user_name: req.body.user_name,
       sur_name: req.body.sur_name,
       other_names: req.body.other_names,
-      national_id: req.body.national_id,
-      phone: req.body.phone,
       gender: req.body.gender,
       email: req.body.email,
-      phone: req.body.phone,
       password: await hashPassword(req.body.password),
-      college: req.body.college,
-      category: req.body.category,
-      date_of_birth: req.body.date_of_birth
+      college: college._id,
+      category: category._id
     })
 
-    // result = await add_user_details([result])
-    // result = result[0]
     return res.status(201).send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
