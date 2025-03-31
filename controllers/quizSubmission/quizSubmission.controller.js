@@ -103,8 +103,14 @@ router.get('/student/:id', async (req, res) => {
     if (quizSubmissions.length < 1)
       return res.status(404).send(`Ther are no submissions for ${student.surName} ${student.otherNames}`)
     quizSubmissions = await injectQuiz(quizSubmissions)
+    for (const i in quizSubmissions) {
+      quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
+      quizSubmissions[i].quiz = quizSubmissions[i].quiz[0]
+    }
+    quizSubmissions = await injectStudent(quizSubmissions)
     return res.status(200).send(quizSubmissions)
   } catch (error) {
+    console.log(error)
     return res.status(500).send(error)
   }
 })
