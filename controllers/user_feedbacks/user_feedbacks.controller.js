@@ -1,5 +1,5 @@
 const {
-  formatResult, u
+  formatResult, u, Joi
 } = require('../../utils/imports');
 const { sendInvitationMail } = require('../email/email.controller');
 
@@ -17,7 +17,7 @@ exports.contactUs = async (req, res) => {
     if (err)
       return res.send(formatResult(500, err));
 
-    return res.send(formatResult(201, 'CREATED', result));
+    return res.send(formatResult(200, 'Email was successfully send'));
   } catch
   (e) {
     return res.send(formatResult(500, e))
@@ -38,9 +38,23 @@ exports.requestCallback = async (req, res) => {
     if (err)
       return res.send(formatResult(500, err));
 
-    return res.send(formatResult(201, 'CREATED', result));
+    return res.send(formatResult(200, 'Email was successfully sent', result));
   } catch
   (e) {
     return res.send(formatResult(500, e))
   }
+}
+
+function validate_user_feedback(body, type) {
+  const schema = type == 'contact_us' ? {
+    user_name: Joi.string().min(3).max(300).required(),
+    user_email: Joi.string().email().required(),
+    message: Joi.string().min(15).max(500).required()
+  } : {
+      user_name: Joi.string().min(3).max(300).required(),
+      role_at_institurion: Joi.string().required(),
+      institution_name: Joi.string().min(5).max(50).required(),
+      phone_number: Joi.string().min(10).max(15).required()
+    }
+  return Joi.validate(body, schema)
 }
