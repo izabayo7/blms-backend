@@ -1,5 +1,5 @@
 // import dependencies
-const { Schema } = require('mongoose')
+const {Schema} = require('mongoose')
 const {
     mongoose,
     Joi,
@@ -53,20 +53,27 @@ const announcement_schema = new mongoose.Schema({
     viewers: [{
         type: String,
         ref: 'user'
+    }],
+    specific_receivers: [{
+        type: String,
+        ref: 'user'
     }]
 }, {timestamps: true})
 
 // validate announcement
-function validate_announcement(credentials, action = 'create') {
-    const schema = action == 'create' ? {
+function validate_announcement(credentials, action = 'create', type) {
+    const schema = action === 'create' ? type === 'specific_users' ? {
+        content: Joi.string().max(9000).required(),
+        specific_receivers: Joi.array().min(1).items(Joi.ObjectId())
+    } : {
         target: Joi.object({
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
         }).required(),
         content: Joi.string().max(9000).required()
     } : {
-            content: Joi.string().max(9000).required()
-        }
+        content: Joi.string().max(9000).required()
+    }
     return Joi.validate(credentials, schema)
 }
 

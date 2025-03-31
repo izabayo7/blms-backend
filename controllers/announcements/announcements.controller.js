@@ -78,7 +78,8 @@ router.get('/user', async (req, res) => {
                 {"target.id": {$in: ids}},
                 {sender: req.user._id},
             ]
-        }).populate('viewers').sort({_id: -1})
+        }).populate('viewers', ['sur_name', 'other_names']).sort({_id: -1})
+
         announcements = await injectUser(announcements, 'sender')
 
         return res.send(formatResult(u, u, announcements))
@@ -89,7 +90,7 @@ router.get('/user', async (req, res) => {
 
 /**
  * @swagger
- * /announcement:
+ * /announcement/{receivers}:
  *   post:
  *     tags:
  *       - Announcement
@@ -97,6 +98,11 @@ router.get('/user', async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
+ *       - name: receivers
+ *         in: path
+ *         type: string
+ *         enum: ['group','specific_users']
+ *         description: Announcement's Id
  *       - name: body
  *         description: Fields for a announcement
  *         in: body
@@ -128,7 +134,7 @@ router.get('/user', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
+router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
     try {
         const {
             error
@@ -136,57 +142,67 @@ router.post('/', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
+        if(!['group','specific_users'].includes(req.params.receivers))
+            return res.send(formatResult(400, "invalid receivers parameter value"))
 
         req.body.sender = req.user._id
 
-        req.body.target.type = req.body.target.type.toLowerCase()
+        if (req.params.receivers === "group") {
 
-        const allowedTargets = ['course', 'student_group', 'faculty', 'college']
+            req.body.target.type = req.body.target.type.toLowerCase()
 
-        if (!allowedTargets.includes(req.body.target.type))
-            return res.send(formatResult(400, 'invalid announcement target_type'))
+            const allowedTargets = ['course', 'student_group', 'faculty', 'college']
 
-        let target
-        // TODO check if instructor has access to the target
-        switch (req.body.target.type) {
-            case 'course':
-                target = await findDocument(Course, {
-                    _id: req.body.target.id
-                })
-                break;
+            if (!allowedTargets.includes(req.body.target.type))
+                return res.send(formatResult(400, 'invalid announcement target_type'))
 
-            case 'student_group':
-                target = await findDocument(User_group, {
-                    _id: req.body.target.id
-                })
-                break;
+            let target
+            // TODO check if instructor has access to the target
+            switch (req.body.target.type) {
+                case 'course':
+                    target = await findDocument(Course, {
+                        _id: req.body.target.id
+                    })
+                    break;
 
-            case 'faculty':
-                target = await findDocument(Faculty_college, {
-                    _id: req.body.target.id
-                })
-                break;
+                case 'student_group':
+                    target = await findDocument(User_group, {
+                        _id: req.body.target.id
+                    })
+                    break;
 
-            case 'college':
-                target = await findDocument(College, {
-                    _id: req.body.target.id
-                })
-                break;
+                case 'faculty':
+                    target = await findDocument(Faculty_college, {
+                        _id: req.body.target.id
+                    })
+                    break;
 
-            default:
-                break;
+                case 'college':
+                    target = await findDocument(College, {
+                        _id: req.body.target.id
+                    })
+                    break;
+
+                default:
+                    break;
+            }
+
+            if (!target)
+                return res.send(formatResult(404, 'announcement target not found'))
+
+            if (req.body.target.type === 'college' && req.body.target.id !== req.user.college)
+                return res.send(formatResult(403, 'You are not allowed to send announcement in another college'))
+
+            if (req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
+                return res.send(formatResult(403, 'You are not allowed to send announcement in the whole college'))
+
+        } else{
+            for (const i in req.body.specific_receivers) {
+               const user = await User.findOne({user_name: req.body.specific_receivers[i]})
+               if(!user)
+                   return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
+            }
         }
-
-        if (!target)
-            return res.send(formatResult(404, 'announcement target not found'))
-
-        if (req.body.target.type === 'college' && req.body.target.id !== req.user.college)
-            return res.send(formatResult(403, 'You are not allowed to send announcement in another college'))
-
-        if (req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
-            return res.send(formatResult(403, 'You are not allowed to send announcement in the whole college'))
-
-
         let result = await createDocument(Announcement, req.body)
         result = simplifyObject(result)
         result.data = await injectUser([result.data], 'sender')
