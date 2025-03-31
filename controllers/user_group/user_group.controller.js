@@ -82,7 +82,7 @@ router.get('/statistics', async (req, res) => {
  *   get:
  *     tags:
  *       - User_group
- *     description: Get all user_groupss
+ *     description: Get all user_groups
  *     security:
  *       - bearerAuth: -[]
  *     responses:
@@ -94,11 +94,9 @@ router.get('/statistics', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
+    // need improvement
     try {
         let result = await findDocuments(User_group)
-
-        if (result.length === 0)
-            return res.send(formatResult(404, 'user_groups list is empty'))
 
         // result = await injectDetails(result)
 
@@ -114,7 +112,7 @@ router.get('/', async (req, res) => {
  *   get:
  *     tags:
  *       - User_group
- *     description: Returns user_groupss in a specified college
+ *     description: Returns user_groups in a specified college
  *     parameters:
  *       - name: faculty
  *         description: Faculty Id *use ALL in case you need to see for all faculties
@@ -141,7 +139,7 @@ router.get('/college/:faculty', async (req, res) => {
             if (!faculty)
                 return res.send(formatResult(404, 'faculty not found'))
         }
-        let user_groupss = await findDocuments(Faculty_college, fetch_all_faculties ? {
+        let user_groups = await findDocuments(Faculty_college, fetch_all_faculties ? {
             college: req.user.college
         } : {
             college: req.user.college, faculty: req.params.faculty
@@ -149,7 +147,7 @@ router.get('/college/:faculty', async (req, res) => {
 
         let foundUser_groups = []
 
-        for (const faculty_college of user_groupss) {
+        for (const faculty_college of user_groups) {
 
             const faculty_details = await findDocument(Faculty, {
                 _id: faculty_college.faculty
@@ -189,7 +187,7 @@ router.get('/college/:faculty', async (req, res) => {
  *   get:
  *     tags:
  *       - User_group
- *     description: Returns user_groupss for a specified user
+ *     description: Returns user_groups for a specified user
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -389,40 +387,40 @@ async function injectDetails(user_groupss) {
     const student_category = await findDocument(User_category, { name: "STUDENT" })
     const instructor_category = await findDocument(User_category, { name: "INSTRUCTOR" })
 
-    for (const i in user_groupss) {
+    for (const i in user_groups) {
 
         const faculty_college = await findDocument(Faculty_college, {
-            _id: user_groupss[i].faculty_college
+            _id: user_groups[i].faculty_college
         })
-        user_groupss[i].faculty_college = simplifyObject(removeDocumentVersion(faculty_college))
+        user_groups[i].faculty_college = simplifyObject(removeDocumentVersion(faculty_college))
 
         const faculty = await findDocument(Faculty, {
-            _id: user_groupss[i].faculty_college.faculty
+            _id: user_groups[i].faculty_college.faculty
         })
-        user_groupss[i].faculty_college.faculty = simplifyObject(removeDocumentVersion(faculty))
+        user_groups[i].faculty_college.faculty = simplifyObject(removeDocumentVersion(faculty))
 
         const college = await findDocument(College, {
-            _id: user_groupss[i].faculty_college.college
+            _id: user_groups[i].faculty_college.college
         })
-        user_groupss[i].faculty_college.college = simplifyObject(removeDocumentVersion(college))
+        user_groups[i].faculty_college.college = simplifyObject(removeDocumentVersion(college))
         if (user_groupss[i].faculty_college.college.logo) {
-            user_groupss[i].faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+            user_groups[i].faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
         }
 
         const college_year = await findDocument(College_year, {
-            _id: user_groupss[i].college_year
+            _id: user_groups[i].college_year
         })
-        user_groupss[i].college_year = removeDocumentVersion(college_year)
+        user_groups[i].college_year = removeDocumentVersion(college_year)
 
         const total_courses = await countDocuments(Course, {
-            user_groups: user_groupss[i]._id
+            user_groups: user_groups[i]._id
         })
         // add courses
-        user_groupss[i].total_courses = total_courses
+        user_groups[i].total_courses = total_courses
 
         // add the number of students
         const attendants = await User_user_groups.find({
-            user_groups: user_groupss[i]._id
+            user_groups: user_groups[i]._id
         }).populate('user')
 
         let total_students = 0, total_instructors = 0
@@ -435,10 +433,10 @@ async function injectDetails(user_groupss) {
                 total_instructors++
             }
         }
-        user_groupss[i].total_students = total_students
-        user_groupss[i].total_instructors = total_instructors
+        user_groups[i].total_students = total_students
+        user_groups[i].total_instructors = total_instructors
     }
-    return user_groupss
+    return user_groups
 }
 
 // export the router

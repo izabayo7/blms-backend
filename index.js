@@ -57,9 +57,9 @@ const user_category_controller = require('./controllers/user_category/user_categ
 const user_role_controller = require('./controllers/user_role/user_role.controller')
 const college_controller = require('./controllers/college/college.controller')
 const college_year_controller = require('./controllers/college_year/college_year.controller')
-const faculty_controller = require('./controllers/faculty/faculty.controller')
+// const faculty_controller = require('./controllers/faculty/faculty.controller')
 const faculty_college_controller = require('./controllers/faculty_college/faculty_college.controller')
-const faculty_college_year_controller = require('./controllers/faculty_college_year/faculty_college_year.controller')
+const faculty_college_year_controller = require('./controllers/user_group/user_group.controller')
 const user_faculty_college_year_controller = require('./controllers/user_faculty_college_year/user_faculty_college_year.controller')
 const course_controller = require('./controllers/course/course.controller')
 const chapter_controller = require('./controllers/chapter/chapter.controller')
@@ -94,6 +94,7 @@ let server = httpServer.createServer(app);
 const io = require('./utils/socket');
 const { User_feedback_routes } = require('./routes/user_feedbacks/user_feedbacks.routes');
 const { Reset_password_routes } = require('./routes/reset_password/reset_password.routes');
+const { Faculty_Routes } = require('./routes/faculty/faculty.routes');
 io.listen(server)
 
 // Serve the chatdemo
@@ -109,7 +110,7 @@ app.use(`${basePath}/user_category`, user_category_controller)
 app.use(`${basePath}/user_role`, auth, user_role_controller)
 app.use(`${basePath}/college`, college_controller)
 app.use(`${basePath}/college_year`, auth, college_year_controller)
-app.use(`${basePath}/faculty`, auth, faculty_controller)
+app.use(`${basePath}/faculty`, auth, Faculty_Routes)
 app.use(`${basePath}/faculty_college`, auth, faculty_college_controller)
 app.use(`${basePath}/faculty_college_year`, auth, faculty_college_year_controller)
 app.use(`${basePath}/user_faculty_college_year`, auth, user_faculty_college_year_controller)

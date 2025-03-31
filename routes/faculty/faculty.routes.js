@@ -1,4 +1,5 @@
 const express = require('express')
+const { getFacultyStatistics, createFaculty, updateFaculty, deleteFaculty, getFaculties } = require('../../controllers/faculty/faculty.controller')
 const router = express.Router()
 
 router.route('/')
