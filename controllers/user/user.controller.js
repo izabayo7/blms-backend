@@ -463,8 +463,8 @@ router.post('/', async (req, res) => {
       email: req.body.email,
       phone: req.body.phone,
       password: await hashPassword(req.body.password),
-      college: req.body.college,
-      category: req.body.category,
+      college: college._id,
+      category: category._id,
       date_of_birth: req.body.date_of_birth
     })
 
