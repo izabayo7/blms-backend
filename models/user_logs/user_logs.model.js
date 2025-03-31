@@ -11,7 +11,6 @@ const user_log_schema = new mongoose.Schema({
     user: {
         type: String,
         ref: 'user',
-        unique: true,
         required: true
     },
     online: {
