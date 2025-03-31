@@ -802,7 +802,7 @@ module.exports.injectStudentProgress = async (courses, studentId) => {
             course: courses[i]._id, student: studentId
         })
 
-        courses[i].progress = studentProgress ? { id: studentProgress._id, progress: studentProgress.progress, dateStarted: studentProgress.createdAt } : undefined
+        courses[i].progress = studentProgress ? { id: studentProgress._id, progress: studentProgress.progress, dateStarted: studentProgress.createdAt, lastUpdated: studentProgress.updatedAt } : undefined
     }
     return courses
 }

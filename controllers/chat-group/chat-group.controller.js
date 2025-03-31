@@ -1,35 +1,23 @@
 
 // coming mukanya
 // import dependencies
-const { express, multer, fs, Message, Student, Admin, Instructor, validateMessage, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student } = require('../../utils/imports')
+const { express, multer, fs, ChatGroup, Student, Admin, Instructor, validatechatGroup, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
-// configure multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/attachments')
-  },
-  filename: function (req, file, cb) {
-    const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-    cb(null, fileName)
-  }
-})
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5
-  },
-  fileFilter: fileFilter
-})
+// get groups
+// get group members
+// get all users able to join
+// create group
+// update group
+// delete group
 
 
 /**
  * @swagger
  * definitions:
- *   Message:
+ *   ChatGroup:
  *     properties:
  *       _id:
  *         type: string
@@ -62,7 +50,7 @@ const upload = multer({
  * /kurious/message:
  *   get:
  *     tags:
- *       - Message
+ *       - ChatGroup
  *     description: Get all messages
  *     responses:
  *       200:
@@ -73,10 +61,10 @@ const upload = multer({
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const messages = await Message.find()
+  const messages = await ChatGroup.find()
   try {
     if (messages.length === 0)
-      return res.send('Message list is empty').status(404)
+      return res.send('ChatGroup list is empty').status(404)
     return res.send(messages).status(200)
   } catch (error) {
     return res.send(error).status(500)
@@ -88,7 +76,7 @@ router.get('/', async (req, res) => {
  * /kurious/message/user/{id}:
  *   get:
  *     tags:
- *       - Message
+ *       - ChatGroup
  *     description: Returns messages to and from a specified user
  *     parameters:
  *       - name: id
@@ -111,8 +99,8 @@ router.get('/user/:id', async (req, res) => {
   let userFound = await findUser(req.params.id)
   if (!userFound)
     return res.send('The User id is invalid')
-  const sent = await Message.find({ sender: req.params.id })
-  const recieved = await Message.find({ receiver: req.params.id })
+  const sent = await ChatGroup.find({ sender: req.params.id })
+  const recieved = await ChatGroup.find({ receiver: req.params.id })
 
   return res.send({ sent: sent, recieved: recieved }).status(200)
 })
@@ -122,7 +110,7 @@ router.get('/user/:id', async (req, res) => {
  * /kurious/message:
  *   post:
  *     tags:
- *       - Message
+ *       - ChatGroup
  *     description: Send a message
  *     parameters:
  *       - name: body
@@ -130,7 +118,7 @@ router.get('/user/:id', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Message'
+ *           $ref: '#/definitions/ChatGroup'
  *     responses:
  *       201:
  *         description: Created
@@ -141,8 +129,8 @@ router.get('/user/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', upload.single('attachments'), async (req, res) => {
-  const { error } = validateMessage(req.body)
+router.post('/', async (req, res) => {
+  const { error } = validateChatGroup(req.body)
   if (error)
     return res.send(error.details[0].message).status(400)
 
@@ -156,7 +144,7 @@ router.post('/', upload.single('attachments'), async (req, res) => {
   }
 
 
-  let newDocument = new Message({
+  let newDocument = new ChatGroup({
     sender: req.body.sender,
     receivers: req.body.receivers,
     content: req.body.content,
@@ -166,7 +154,7 @@ router.post('/', upload.single('attachments'), async (req, res) => {
   const saveDocument = await newDocument.save()
   if (saveDocument)
     return res.send(saveDocument).status(201)
-  return res.send('New Message not Registered').status(500)
+  return res.send('New ChatGroup not Registered').status(500)
 })
 
 /**
@@ -174,19 +162,19 @@ router.post('/', upload.single('attachments'), async (req, res) => {
  * /kurious/message/{id}:
  *   put:
  *     tags:
- *       - Message
+ *       - ChatGroup
  *     description: Update a message
  *     parameters:
  *       - name: id
  *         in: path
  *         type: string
- *         description: Message's Id
+ *         description: ChatGroup's Id
  *       - name: body
- *         description: Fields for a Message
+ *         description: Fields for a ChatGroup
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Message'
+ *           $ref: '#/definitions/ChatGroup'
  *     responses:
  *       201:
  *         description: Created
@@ -197,21 +185,21 @@ router.post('/', upload.single('attachments'), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', upload.single('attachments'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
-  error = validateMessage(req.body)
+  error = validateChatGroup(req.body)
   error = error.error
   if (error)
     return res.send(error.details[0].message).status(400)
 
   // check if message exist
-  let message = await Message.findOne({ _id: req.params.id })
+  let message = await ChatGroup.findOne({ _id: req.params.id })
   if (!message)
-    return res.send(`Message with code ${req.params.id} doens't exist`)
+    return res.send(`ChatGroup with code ${req.params.id} doens't exist`)
 
-  const updateDocument = await Message.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+  const updateDocument = await ChatGroup.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
     return res.send(updateDocument).status(201)
   return res.send("Error ocurred").status(500)
@@ -223,11 +211,11 @@ router.put('/:id', upload.single('attachments'), async (req, res) => {
  * /kurious/message/{id}:
  *   delete:
  *     tags:
- *       - Message
+ *       - ChatGroup
  *     description: Delete a message
  *     parameters:
  *       - name: id
- *         description: Message's id
+ *         description: ChatGroup's id
  *         in: path
  *         required: true
  *         type: string
@@ -245,14 +233,14 @@ router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
-  let message = await Message.findOne({ _id: req.params.id })
+  let message = await ChatGroup.findOne({ _id: req.params.id })
   if (!message)
-    return res.send(`Message of Code ${req.params.id} Not Found`)
+    return res.send(`ChatGroup of Code ${req.params.id} Not Found`)
   // need to delete all attachments
-  let deleteDocument = await Message.findOneAndDelete({ _id: req.params.id })
+  let deleteDocument = await ChatGroup.findOneAndDelete({ _id: req.params.id })
   if (!deleteDocument)
-    return res.send('Message Not Deleted').status(500)
-  return res.send(`Message ${deleteDocument._id} Successfully deleted`).status(200)
+    return res.send('ChatGroup Not Deleted').status(500)
+  return res.send(`ChatGroup ${deleteDocument._id} Successfully deleted`).status(200)
 })
 
 async function findUser(id) {
