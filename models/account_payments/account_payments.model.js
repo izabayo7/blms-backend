@@ -9,7 +9,7 @@ const {
 const methods = ['MTN_MOMO', 'CARD']
 const statuses = ['ACTIVE', 'INACTIVE']
 
-// to
+// to trace college plan changes
 const college_payment_plan = new mongoose.Schema(
     {
         name: {
@@ -58,4 +58,4 @@ exports.validate_account_payments = (credentials) => {
     return Joi.validate(credentials, schema)
 }
 // create users model
-exports.User_payments = mongoose.model('user_payment', userPaymentsSchema)
+exports.Account_payments = mongoose.model('account_payment', userPaymentsSchema)
