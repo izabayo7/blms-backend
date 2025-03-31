@@ -6,7 +6,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const blog_schema = new mongoose.Schema({
+const post_schema = new mongoose.Schema({
     creator: {
         type: Schema.Types.ObjectId,
         ref: 'user',
@@ -38,8 +38,8 @@ const blog_schema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-// validate blog
-function validate_blog(credentials) {
+// validate post
+function validate_post(credentials) {
     const schema = {
         title: Joi.string().required(),
         content: Joi.string().min(30).max(10000).required()
@@ -47,9 +47,9 @@ function validate_blog(credentials) {
     return Joi.validate(credentials, schema)
 }
 
-// create blogs model
-const blog = mongoose.model('blog', blog_schema)
+// create posts model
+const post = mongoose.model('post', post_schema)
 
 // export the model and the validation function
-module.exports.blog = blog
-module.exports.validate_blog = validate_blog
+module.exports.Post = post
+module.exports.validate_post = validate_post
