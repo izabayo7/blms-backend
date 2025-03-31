@@ -1,5 +1,5 @@
 // import dependencies
-const {superAdmin} = require("../../middlewares/superAdmin.middleware");
+const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
 const {validateUserPasswordUpdate, validate_admin} = require('../../models/user/user.model')
@@ -132,7 +132,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', [auth, superAdmin], async (req, res) => {
+router.get('/', [auth, filterUsers(["SUPERADMIN"])], async (req, res) => {
     try {
         let users = await findDocuments(User)
 
@@ -164,7 +164,7 @@ router.get('/', [auth, superAdmin], async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics', auth, async (req, res) => {
+router.get('/statistics', [auth, filterUsers(["SUPERADMIN","ADMIN"])], async (req, res) => {
     try {
         let total_users, total_students, total_instructors, total_staff;
         const student_category = await findDocument(User_category, {name: "STUDENT"})
@@ -244,7 +244,7 @@ router.get('/statistics', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/statistics/user_joins', auth, async (req, res) => {
+router.get('/statistics/user_joins', [auth,filterUsers(["ADMIN"])], async (req, res) => {
     try {
         const {start_date, end_date} = req.query
         const result = await User.aggregate([
@@ -303,7 +303,7 @@ router.get('/statistics/user_joins', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:id/:category', auth, async (req, res) => {
+router.get('/college/:id/:category', [auth,filterUsers(["ADMIN"])], async (req, res) => {
     try {
         const {
             error
@@ -362,7 +362,7 @@ router.get('/college/:id/:category', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/faculty/:id/:category', auth, async (req, res) => {
+router.get('/faculty/:id/:category', [auth,filterUsers(["ADMIN"])], async (req, res) => {
     try {
         const {
             error
