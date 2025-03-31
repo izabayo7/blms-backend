@@ -311,22 +311,26 @@ router.get('/user/:user_name', async (req, res) => {
 
         quizes[i].total_submissions = quiz_submissions.length
 
-        let marking_status = 0
-
         if (quiz_submissions.length) {
-
-
-          if(quiz_submissions[i])
 
           quiz_submissions = await injectUser(quiz_submissions, 'user')
           quiz_submissions = await injectUserFeedback(quiz_submissions)
 
+          quizes[i].marking_status = 0
+          const percentage_of_one_submission = 100 / quiz_submissions.length
+
           for (const k in quiz_submissions) {
+
+            if (quiz_submissions[k].marked) {
+              quizes[i].marking_status += percentage_of_one_submission
+            }
+
             quiz_submissions[k].quiz = await addAttachmentMediaPaths([quiz_submissions[k].quiz])
             quiz_submissions[k].quiz = quiz_submissions[k].quiz[0]
           }
           quizes[i].submissions = quiz_submissions
           foundSubmissions.push(quizes[i])
+          quizes[i].marking_status += '%'
         }
       }
 
