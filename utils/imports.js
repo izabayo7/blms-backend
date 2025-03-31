@@ -806,6 +806,21 @@ exports.formatContacts = async (messages, user_id, user, connected) => {
     return formatedContacts
 }
 
+exports.addAssignmentTarget = async (assignments) => {
+    for (const i in assignments) {
+        if (assignments[i].target.type === 'course') {
+            assignments[i].target.course = await Course.findOne({_id: assignments[i].target.id}, {name: 1})
+        } else {
+            assignments[i].target.chapter = await Chapter.findOne({_id: assignments[i].target.id}, {
+                name: 1,
+                course: 1
+            }).populate('course', ['name'])
+            assignments[i].target.course = assignments[i].target.chapter.course
+        }
+    }
+    return assignments
+}
+
 // format messages
 exports.formatMessages = async (messages, user_id) => {
     let messagesCopy = this.simplifyObject(messages)

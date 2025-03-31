@@ -88,116 +88,105 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
             let coursesWithSubmissions = []
 
             for (const j in courses) {
-                // check if there are assignmentes made by the user
-                let chapters = await findDocuments(Chapter, {
-                    course: courses[j]._id
+                const chapters = await Chapter.find({course: courses[j]._id})
+                const ids = chapters.map(x=>x._id.toString())
+                ids.push(courses[i]._id)
+
+                // check if there are assignments made by the user
+                let assignments = await findDocuments(Assignment, {
+                    "target.id": {$in: ids},
+                    status: "RELEASED"
                 }, u, u, u, u, u, {
                     _id: -1
                 })
 
-                for (const l in chapters) {
+                let foundSubmissions = []
+                assignments = await addAssignmentTarget(assignments)
+                for (const i in assignments) {
 
-                    let assignmentes = await findDocuments(Assignment, {
-                        "target.id": chapters[l]._id,
-                        status: 2 // only released marks
+                    let assignment_submissions = await findDocuments(Assignment_submission, {
+                        assignment: assignments[i]._id,
+                        user: req.user._id
                     }, u, u, u, u, u, {
                         _id: -1
                     })
+                    if (assignment_submissions.length) {
 
-                    let foundSubmissions = []
-                    assignmentes = await addAssignmentTarget(assignmentes)
-                    for (const i in assignmentes) {
+                        assignment_submissions = await injectUserFeedback(assignment_submissions)
 
-                        let assignment_submissions = await findDocuments(Assignment_submission, {
-                            assignment: assignmentes[i]._id,
-                            user: req.user._id
-                        }, u, u, u, u, u, {
-                            _id: -1
-                        })
-                        if (assignment_submissions.length) {
+                        for (const k in assignment_submissions) {
 
-                            assignment_submissions = await injectUserFeedback(assignment_submissions)
+                            assignment_submissions[k].total_feedbacks = 0
 
-                            for (const k in assignment_submissions) {
-
-                                assignment_submissions[k].total_feedbacks = 0
-
-                                for (const l in assignment_submissions[k].answers) {
-                                    assignment_submissions[k].total_feedbacks += assignment_submissions[k].answers[l].feedback ? 1 : 0;
-                                }
-                                assignment_submissions[k].assignment = assignmentes[i]
-                                foundSubmissions.push(assignment_submissions[k])
+                            for (const l in assignment_submissions[k].answers) {
+                                assignment_submissions[k].total_feedbacks += assignment_submissions[k].answers[l].feedback ? 1 : 0;
                             }
+                            assignment_submissions[k].assignment = assignments[i]
+                            foundSubmissions.push(assignment_submissions[k])
                         }
                     }
-                    if (foundSubmissions.length) {
-                        foundSubmissions = foundSubmissions.sort((a, b) => {
-                            if (a.createdAt > b.createdAt) return -1;
-                            if (a.createdAt < b.createdAt) return 1;
-                            return 0;
-                        })
-                        courses[j].submissions = foundSubmissions
-                        courses[j].marking_status = 0
-                        courses[j].unread_results = 0
-                        const percentage_of_one_submission = 100 / foundSubmissions.length
-                        for (const a in foundSubmissions) {
-                            if (foundSubmissions[a].marked) {
-                                courses[j].marking_status += percentage_of_one_submission
-                            }
-                            if (!foundSubmissions[a].results_seen) {
-                                courses[j].unread_results++
-                            }
-                        }
-                        courses[j].marking_status += '%'
-                        courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
-                        coursesWithSubmissions.push(courses[j])
-                    }
+                }
+                if (foundSubmissions.length) {
+                    foundSubmissions = foundSubmissions.sort((a, b) => {
+                        if (a.createdAt > b.createdAt) return -1;
+                        if (a.createdAt < b.createdAt) return 1;
+                        return 0;
+                    })
 
+                    courses[j].submissions = foundSubmissions
+                    courses[j].marking_status = 0
+                    courses[j].unread_results = 0
+                    const percentage_of_one_submission = 100 / foundSubmissions.length
+                    for (const a in foundSubmissions) {
+                        if (foundSubmissions[a].marked) {
+                            courses[j].marking_status += percentage_of_one_submission
+                        }
+                        if (!foundSubmissions[a].results_seen) {
+                            courses[j].unread_results++
+                        }
+                    }
+                    courses[j].marking_status += '%'
+                    courses[j].last_submitted = foundSubmissions[foundSubmissions.length - 1].updatedAt
+                    coursesWithSubmissions.push(courses[j])
                 }
 
             }
 
             result = coursesWithSubmissions
         } else {
-            // check if there are assignmentes made by the user
-            let assignmentes = await findDocuments(Assignment, {
+            // check if there are assignments made by the user
+            let assignments = await findDocuments(Assignment, {
                 user: req.user._id,
-                target: {
-                    $ne: undefined
-                }
             }, u, u, u, u, u, {
                 _id: -1
             })
-            if (!assignmentes.length)
+            if (!assignments.length)
                 return res.send(formatResult(404, 'assignment_submissions not found'))
 
             let foundSubmissions = []
 
-            assignmentes = await addAttachmentMediaPaths(assignmentes)
-
-            assignmentes = await addAssignmentTarget(assignmentes)
-            for (const i in assignmentes) {
+            assignments = await addAssignmentTarget(assignments)
+            for (const i in assignments) {
 
                 let assignment_submissions = await findDocuments(Assignment_submission, {
-                    assignment: assignmentes[i]._id
+                    assignment: assignments[i]._id
                 }, u, u, u, u, u, {
                     _id: -1
                 })
 
-                assignmentes[i].total_submissions = assignment_submissions.length
-
+                assignments[i].total_submissions = assignment_submissions.length
                 if (assignment_submissions.length) {
 
                     assignment_submissions = await injectUser(assignment_submissions, 'user')
                     assignment_submissions = await injectUserFeedback(assignment_submissions)
 
-                    assignmentes[i].marking_status = 0
+                    assignments[i].marking_status = 0
                     const percentage_of_one_submission = 100 / assignment_submissions.length
 
                     for (const k in assignment_submissions) {
 
                         if (assignment_submissions[k].marked) {
-                            assignmentes[i].marking_status += percentage_of_one_submission
+                            assignments[i].marking_status += percentage_of_one_submission
                         }
 
                         assignment_submissions[k].total_feedbacks = 0
@@ -206,14 +195,12 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
                             assignment_submissions[k].total_feedbacks += assignment_submissions[k].answers[l].feedback ? 1 : 0;
                         }
                     }
-                    assignmentes[i].submissions = assignment_submissions
-                    foundSubmissions.push(assignmentes[i])
-                    assignmentes[i].marking_status += '%'
+                    assignments[i].submissions = assignment_submissions
+                    foundSubmissions.push(assignments[i])
+                    assignments[i].marking_status += '%'
                 }
             }
 
-            if (!foundSubmissions.length)
-                return res.send(formatResult(404, 'assignment_submissions not found'))
             result = foundSubmissions
         }
         result = await injectUser(result, 'user')
@@ -770,6 +757,20 @@ async function get_faculty_college_year(assignment) {
         _id: chapter ? chapter.course : assignment.target.id
     })
     return course.user_group
+}
+
+async function injectUserFeedback(submissions) {
+    for (const i in submissions) {
+        for (const k in submissions[i].answers) {
+            let feedback = await Comment.find({
+                "target.type": 'assignment_submission_answer', auth,
+                "target.id": submissions[i].answers[k]._id
+            })
+            feedback = await injectUser(simplifyObject(feedback), 'sender')
+            submissions[i].answers[k].feedback = feedback[0]
+        }
+    }
+    return submissions
 }
 
 // export the router

@@ -1,4 +1,5 @@
 // import dependencies
+const {addAssignmentTarget} = require("../../utils/imports");
 const {simplifyObject} = require("../../utils/imports");
 const {upload_multiple} = require("../../utils/imports");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
@@ -79,21 +80,6 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
-async function addAssignmentTarget(assignments) {
-    for (const i in assignments) {
-        if (assignments[i].target.type === 'course') {
-            assignments[i].target.course = await Course.findOne({_id: assignments[i].target.id}, {name: 1})
-        } else {
-            assignments[i].target.chapter = await Chapter.findOne({_id: assignments[i].target.id}, {
-                name: 1,
-                course: 1
-            }).populate('course', ['name'])
-            assignments[i].target.course = assignments[i].target.chapter.course
-        }
-    }
-    return assignments
-}
 
 /**
  * @swagger
