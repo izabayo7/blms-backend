@@ -32,6 +32,7 @@ const {
     simplifyObject,
     fs,
     upload_multiple,
+    upload_single,
     Comment,
     addQuizTarget,
     auth,
@@ -884,7 +885,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
         if (!file_missing)
             return res.send(formatResult(400, 'all attachments for this quiz_submission were already uploaded'))
 
-        upload_multiple(req, res, async (err) => {
+        upload_single(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
@@ -898,7 +899,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/feedback/{id}/{question}:
+ * /quiz_submission/feedback/{id}/{answer}:
  *   post:
  *     tags:
  *       - Quiz_submission
@@ -911,8 +912,8 @@ router.post('/:id/attachment', auth, async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
- *       - name: question
- *         description: Question id
+ *       - name: answer
+ *         description: Answer id
  *         in: path
  *         required: true
  *         type: string
@@ -926,7 +927,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/feedback/:id/:question', auth, async (req, res) => {
+router.post('/feedback/:id/:answer', auth, async (req, res) => {
     try {
         let {
             error
@@ -934,7 +935,7 @@ router.post('/feedback/:id/:question', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, "invalid quiz_submission id"))
 
-        error = validateObjectId(req.params.question)
+        error = validateObjectId(req.params.answer)
         error = error.error
         if (error)
             return res.send(formatResult(400, "invalid question id"))
@@ -944,6 +945,10 @@ router.post('/feedback/:id/:question', auth, async (req, res) => {
         })
         if (!quiz_submission)
             return res.send(formatResult(404, 'quiz_submission not found'))
+
+        const answer = quiz_submission.answers.filter(e => e._id == req.params.answer)
+        if (!answer.length)
+            return res.send(formatResult(404, 'answer not found'))
 
         const quiz = await findDocument(Quiz, {
             _id: quiz_submission.quiz
@@ -961,24 +966,16 @@ router.post('/feedback/:id/:question', auth, async (req, res) => {
             dir: path,
         }
 
-        let file_missing = false
 
-        for (const i in quiz_submission.answers) {
-            if (quiz_submission.answers[i].src) {
-                const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].feedback_src}`)
-                if (!file_found) {
-                    file_missing = true
-                }
-            }
-        }
-        if (!file_missing)
-            return res.send(formatResult(400, 'all feedbacks for this quiz_submission were already uploaded'))
+        const file_found = await fs.exists(`${path}/${quiz_submission.answers[i].feedback_src}`)
+        if (file_found)
+            return res.send(formatResult(400, 'feedbacks for this answer was already uploaded'))
 
         upload_multiple(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
 
-            return res.send(formatResult(u, 'All feedback attachments were successfuly uploaded'))
+            return res.send(formatResult(u, 'Feedback attachment was successfuly uploaded'))
         })
 
     } catch (error) {
