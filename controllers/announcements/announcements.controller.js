@@ -127,7 +127,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
 
             if (!allowedTargets.includes(req.body.target.type))
                 return res.send(formatResult(400, 'invalid announcement target_type'))
-            
+
             // TODO check if instructor has access to the target
             switch (req.body.target.type) {
                 case 'course':
@@ -188,7 +188,8 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                     data: result.data
                 });
             }
-        } else {
+        }
+        else {
             let user_groups = []
             switch (req.body.target.type) {
                 case 'course':
@@ -219,7 +220,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                 default:
                     break;
             }
-            const users = await User_user_group.distinct('user', { user_group: { $in: user_groups.map(x => x.toString()), _id: {$ne: req.user._id} } })
+            const users = await User_user_group.distinct('user', { user_group: { $in: user_groups.map(x => x.toString()) }, user: { $ne: req.user._id.toString() } })
             for (const i in users) {
                 MyEmitter.emit('socket_event', {
                     name: `send_message_${users[i]}`,
@@ -230,6 +231,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
 
         return res.send(result)
     } catch (error) {
+        console.log(error)
         return res.send(formatResult(500, error))
     }
 })
