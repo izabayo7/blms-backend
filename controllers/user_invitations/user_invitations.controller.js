@@ -123,7 +123,7 @@ exports.createUserInvitation = async (req, res) => {
       });
 
       const result = await newDocument.save();
-
+      console.log(process.env.EMAIL, process.env.PASSWORD)
       await sendInvitationMail(req, res);
 
       savedInvitations.push(result)

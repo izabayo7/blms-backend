@@ -20,9 +20,8 @@ const mailGenerator = new Mailgen({
     }
 });
 
-exports.sendInvitationMail = async (req, res) => {
+exports.sendInvitationMail = async (email, token) => {
     try {
-        const { email } = req.body;
         const response = {
             body: {
                 name: req.body.names,
@@ -33,7 +32,7 @@ exports.sendInvitationMail = async (req, res) => {
                     button: {
                         color: '#1a0c2f',
                         text: 'Reset Your Password',
-                        link: 'https://lean.kurious.rw/signup?email=' + req.body.email + '&' + 'token=' + req.body.token
+                        link: 'https://lean.kurious.rw/signup?email=' + email + '&' + 'token=' + token
                     }
                 },
                 outro: 'This code expires after 1 Week !'
@@ -49,11 +48,15 @@ exports.sendInvitationMail = async (req, res) => {
             html: mail,
         };
 
-        return await transporter.sendMail(message);
+        return {
+            sent: await transporter.sendMail(message);
+        }
 
     }
     catch (err) {
-        return res.status(500).send(err);
+        return {
+            error: err
+        }
     }
 };
 
