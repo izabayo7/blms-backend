@@ -545,7 +545,8 @@ router.put('/:code', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let { error } = validate_chat_group(req.body, 'update')
+    error = validate_chat_group(req.body, 'update')
+    error = error.error
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
