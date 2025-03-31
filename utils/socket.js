@@ -123,6 +123,21 @@ module.exports.listen = (app) => {
 
     })
 
+    // notify members after group creation
+    socket.on('message/create', async ({
+      inviter,
+      group_code
+    }) => {
+// handle errors
+      const group = await findDocument(Chat_group, { code: group_code })
+      const message = await findDocument(Message, {group: group._id}, {receivers: 0, _id: 0})
+
+      group.members.forEach(m => {
+        // send the message
+        socket.broadcast.to(m.id).emit('res/message/new', message)
+      })
+    })
+
     // start a new conversation
     socket.on('message/start_conversation', async ({
       conversation_id
@@ -130,6 +145,7 @@ module.exports.listen = (app) => {
 
       // avoid dupplicate initialisation
       const conversation_found = await getConversationMessages({ user_id: id, conversation_id: conversation_id, limit: 1 })
+      console.log(conversation_found)
       if (!conversation_found.length) {
 
         const user = await findDocument(User, { user_name: conversation_id })
@@ -143,7 +159,9 @@ module.exports.listen = (app) => {
           return
         }
 
-        await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
+        const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
+        console.log(result)
+        socket.broadcast.to(user._id).emit('res/message/new', result.data)
       }
 
       // send success mesage
