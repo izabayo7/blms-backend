@@ -32,7 +32,7 @@ exports.getFacultyStatistics = async (req, res) => {
     if (req.user.category.name == "SUPERADMIN") {
       total_faculties = await countDocuments(Faculty)
     } else {
-      total_faculties = await countDocuments(Faculty_college, { college: req.user.college })
+      total_faculties = await countDocuments(Faculty, { college: req.user.college })
     }
     return res.send(formatResult(u, u, { total_faculties }))
   } catch (error) {
