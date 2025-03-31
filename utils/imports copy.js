@@ -78,11 +78,11 @@ exports.User_progress = user_progress
 exports.validate_user_progress = validate_user_progress
 
 const {
-  Faculty,
+  faculty,
   validate_faculty
 } = require('../models/faculty/faculty.model')
 
-exports.Faculty = Faculty
+exports.Faculty = faculty
 exports.validate_faculty = validate_faculty
 
 const {

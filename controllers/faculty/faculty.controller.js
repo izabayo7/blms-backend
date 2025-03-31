@@ -53,30 +53,14 @@ router.get('/statistics', async (req, res) => {
   }
 })
 
-/**
- * @swagger
- * /faculty/college/{faculty}:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Returns faculties in a specified college
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: faculty
- *         description: Faculty Id *use ALL in case you need to see for all faculties
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+// handle all users down here
+
+/***
+ * Get faculties
+ * @param req
+ * @param res
  */
-router.get('/college/:faculty', async (req, res) => {
+exports.getFaculties = async (req, res) => {
   try {
 
     let foundFaculties = []
@@ -122,35 +106,15 @@ router.get('/college/:faculty', async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
-/**
- * @swagger
- * /faculty:
- *   post:
- *     tags:
- *       - Faculty
- *     description: Create Faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: body
- *         description: Fields for a Faculty
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/Faculty'
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+
+/***
+ * create faculty
+ * @param req
+ * @param res
  */
-router.post('/', async (req, res) => {
+exports.createFaculty = async (req, res) => {
   try {
     const {
       error
@@ -173,7 +137,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
 /**
  * @swagger
