@@ -1230,12 +1230,10 @@ exports.addAttachedCourse = async (quizes) => {
                     _id: quizes[i].target.id
                 })
                 courseId = chapter.course
-            }
-            else if (quizes[i].target.type == 'live_session') {
-                cosnt
-                live_session = await this.Live_session.findOne({
-                    _id: quizes[i].target.id
-                })
+            } else if (quizes[i].target.type == 'live_session') {
+                const live_session = await this.Live_session.findOne({
+                        _id: quizes[i].target.id
+                    })
                 const chapter = await this.Chapter.findOne({_id: live_session.target.id})
                 courseId = chapter.course
             }
@@ -1770,7 +1768,7 @@ exports.add_user_details = async (users) => {
     for (const i in users) {
         const category = await this.findDocument(this.User_category, {_id: users[i].category})
         users[i].category = category.name
-        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email","registration_number"])
+        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email", "registration_number"])
         if (users[i].profile) {
             users[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
         }
@@ -1938,7 +1936,7 @@ exports.addQuizTarget = async (quizes) => {
                 course = await this.Course.findOne({
                     _id: chapter ? chapter.course : quizes[i].target.id
                 }).populate('user_group')
-                quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group','_id'])
+                quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt', 'user_group', '_id'])
                 quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
 
             }
