@@ -656,8 +656,8 @@ router.put('/', auth, async (req, res) => {
     let user_category = await findDocument(User_category, {
       _id: result.data.category
     })
-    result.data = simplifyObject(result.data)
-    user.category = _.pick(user_category, 'name')
+    result = simplifyObject(result)
+    result.data.category = _.pick(user_category, 'name')
 
     return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result.data)))
   } catch (error) {
