@@ -1705,7 +1705,7 @@ router.post('/fromCourse', async (req, res) => {
             return res.send(formatResult(404, 'STUDENT category not found'))
 
         let course = await Course.findOne({
-            id: req.body.course_id,
+            _id: req.body.course_id,
             published: true
         }).populate({
             path: 'user_group',
