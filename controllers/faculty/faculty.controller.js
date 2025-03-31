@@ -24,34 +24,6 @@ const router = express.Router()
 
 /**
  * @swagger
- * /faculty:
- *   get:
- *     tags:
- *       - Faculty
- *     description: Get all Faculties
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/', async (req, res) => {
-  try {
-    const result = await findDocuments(Faculty)
-    if (!result.length)
-      return res.send(formatResult(404, 'Faculty list is empty'))
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
  * /faculty/statistics:
  *   get:
  *     tags:
