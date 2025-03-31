@@ -282,6 +282,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Faculty
  *     description: Update Faculty
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         in: path
