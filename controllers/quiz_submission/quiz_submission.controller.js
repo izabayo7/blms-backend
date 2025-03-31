@@ -258,7 +258,7 @@ router.get('/user/:user_name', async (req, res) => {
     if (user_category.name == 'STUDENT') {
       result = simplifyObject(await findDocuments(Quiz_submission, {
         user: user._id
-      }))
+      }, u, u, u, u, u, { _id: -1 }))
       if (!result.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
