@@ -112,6 +112,7 @@ app.use(`${basePath}/college_year`, auth, college_year_controller)
 app.use(`${basePath}/faculty`, auth, faculty_controller)
 app.use(`${basePath}/faculty_college`, auth, faculty_college_controller)
 app.use(`${basePath}/faculty_college_year`, auth, faculty_college_year_controller)
+// ejo hera aha wlh
 app.use(`${basePath}/user_faculty_college_year`, auth, user_faculty_college_year_controller)
 app.use(`${basePath}/course`, auth, course_controller)
 app.use(`${basePath}/chapter`, auth, chapter_controller)

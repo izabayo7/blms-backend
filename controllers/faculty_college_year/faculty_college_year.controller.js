@@ -152,6 +152,8 @@ router.get('/college/:id', async (req, res) => {
  *     tags:
  *       - Faculty_college_year
  *     description: Returns faculty_college_years for a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User's user_name
