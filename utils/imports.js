@@ -1405,7 +1405,7 @@ exports.injectFaculty_college_year = async (courses) => {
   for (const i in courses) {
     const faculty_college_year = await this.findDocument(this.Faculty_college_year, {
       _id: courses[i].faculty_college_year
-    }, { _v: 0 }, true, false)
+    }, { college_year: 1, faculty_college: 1, _id: 0 }, true, false)
 
     courses[i].faculty_college_year = faculty_college_year
 
