@@ -57,7 +57,7 @@ exports.createPasswordReset = async (req, res) => {
 */
 exports.updatePasswordReset = async (req, res) => {
   try {
-    const { error } = validatePasswordReset(req.body, 'update');
+    const { error } = validatp(req.body, 'update');
     if (error) return res.send(formatResult(400, error.details[0].message));
 
     const user = await User.findOne({ email: req.body.email });

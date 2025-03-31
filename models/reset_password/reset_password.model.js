@@ -21,4 +21,15 @@ const resetPassword = mongoose.Schema({
     }
 }, { timestamps: true })
 
+exports.validatePasswordReset = (data, action = 'create') => {
+    const schema = action == 'create' ? Joi.object({
+        email: Joi.string().email().required(),
+    }) : Joi.object({
+        password: Joi.string().min(8).required(),
+        email: Joi.string().email().required(),
+        token: Joi.string().required()
+    })
+    return schema.validate(data)
+}
+
 exports.Reset_password = mongoose.model('reset_password', resetPassword);
