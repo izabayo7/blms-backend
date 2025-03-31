@@ -267,7 +267,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
       result = simplifyObject(await injectQuiz(result))
-
+      result = await injectUserFeedback(result)
       for (const i in result) {
         if (result[i].quiz) {
           result[i].quiz = await addAttachmentMediaPaths([result[i].quiz])
@@ -587,7 +587,10 @@ router.post('/', auth, async (req, res) => {
 
     result = simplifyObject(result)
     result.data = await injectQuiz([result.data])
-    result.data = result.data[0]
+    result.data = {
+      document: result.data[0],
+      is_selection_only: is_selection_only
+    }
 
     return res.send(formatResult(result))
   } catch (error) {

@@ -306,7 +306,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
 
     quiz = await addAttachmentMediaPaths([quiz])
     quiz = await addAttachedCourse(quiz)
-    quiz =  await addQuizTarget(quiz)
+    quiz = await addQuizTarget(quiz)
     quiz = quiz[0]
 
     return res.send(formatResult(u, u, quiz))
@@ -393,7 +393,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
     })
 
     const file_path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`
-
+    console.log(file_path)
     const file_type = await findFileType(req.params.file_name)
 
     if (file_type === 'image') {
@@ -585,20 +585,20 @@ router.put('/:id', async (req, res) => {
       if (
         quiz_copy.questions[i].type.includes("file_select")
       ) {
-        let deleteAll = false
-        if (!req.body.questions[i].type.includes('file_select')) {
-          deleteAll = true
-        }
+        let current_question = quiz.questions.filter(q = q._id == quiz_copy.questions[i]._id)
+        current_question = current_question[0]
         for (const j in quiz_copy.questions[i].options.choices) {
           let deletePicture = true
-          if (req.body.questions[i].type.includes('file_select')) {
-            for (const k in req.body.questions[i].options.choices) {
-              if (quiz_copy.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
-                deletePicture = false
+          if (current_question) {
+            if (current_question.type.includes('file_select')) {
+              for (const k in current_question.options.choices) {
+                if (quiz_copy.questions[i].options.choices[j].src === current_question.options.choices[k].src) {
+                  deletePicture = false
+                }
               }
             }
           }
-          if (deleteAll || deletePicture) {
+          if (deletePicture) {
             const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`
             fs.exists(path, (exists) => {
               if (exists) {
