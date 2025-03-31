@@ -1016,7 +1016,7 @@ exports.injectUser = async (array, property, newProperty) => {
       const category = await this.findDocument(this.User_category, { _id: user.category })
       user.category = category.name
       // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
-      array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
+      array[i][`${name}`] = this._.pick(user, ['email', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
       if (array[i][`${name}`].profile) {
         array[i][`${name}`].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
       }

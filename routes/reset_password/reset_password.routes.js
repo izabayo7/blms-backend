@@ -1,5 +1,5 @@
 const express = require('express')
-const { createPasswordReset, updatePasswordReset } = require('../../controllers/reset_password/reset_password.controller')
+const { createPasswordReset, updatePasswordReset, getPasswordResetbyToken } = require('../../controllers/reset_password/reset_password.controller')
 const router = express.Router()
 
 router.route('/')
@@ -58,5 +58,27 @@ router.route('/')
      *         description: Internal Server Error
      */
     .put(updatePasswordReset)
+
+router.route('/:token')
+    /**
+     * @swagger
+     * /reset_password/{token}:
+     *   get:
+     *     tags:
+     *       - User
+     *     description: Returns a specific password reset
+     *     parameters:
+     *       - name: token
+     *         description: Password reset token
+     *         in: path
+     *         type: string
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     */
+    .get(getPasswordResetbyToken)
 
 exports.Reset_password_routes = router

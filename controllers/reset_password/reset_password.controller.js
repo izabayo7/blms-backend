@@ -1,7 +1,34 @@
 const { Reset_password, validatePasswordReset } = require("../../models/reset_password/reset_password.model");
-const { formatResult, User, ONE_DAY, update_password } = require("../../utils/imports");
+const { formatResult, User, ONE_DAY, update_password, u, injectUser, findDocument, findDocuments } = require("../../utils/imports");
 const { sendResetPasswordEmail } = require("../email/email.controller");
 const { v4: uuid, validate: uuidValidate } = require('uuid');
+
+/***
+ * Get password reset by token
+ * @param req
+ * @param res
+ */
+exports.getPasswordResetbyToken = async (req, res) => {
+  try {
+    let { token } = req.params;
+    if (!token)
+      return res.send(formatResult(400, 'Token is required'))
+
+    if (!(uuidValidate(token)))
+      return res.status(400).send(formatResult(400, 'Invalid password reset token'));
+
+    let result = await findDocuments(Reset_password, { token: token });
+    if (!result.length)
+      return res.send(formatResult(400, 'Password reset was not found'))
+
+    result = await injectUser(result, 'user')
+
+    res.send(formatResult(200, u, result[0]))
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
 
 /**
  * Create (open) a password reset
