@@ -155,6 +155,8 @@ async function createPayment(req, res) {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
         if (!college || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
+        let total_users = 0
+
         if (college.plan !== 'HUGUKA') {
             if (req.user.category.name !== 'ADMIN')
                 return res.send(formatResult(403, `Your administration is in charge of the payment process`));
@@ -171,13 +173,22 @@ async function createPayment(req, res) {
                 } :
                 {college: college.college, category: {$ne: admin_category._id.toString()}, "status.deleted": {$ne: 1}}
 
-            const total_users = await countDocuments(User, obj)
+            total_users = await countDocuments(User, obj)
 
             if (req.body.total_users < total_users)
                 return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total ${college.plan === 'MINUZA_ACCELERATE' ? 'non admin users' : 'students'} in your college)`));
+        } else {
+            if (req.user.category.name !== 'STUDENT')
+                return res.send(formatResult(403, `In this payment plan students are the only one who are responsible for their payments`));
+
+            total_users = 1
         }
 
         let balance = req.body.amount_paid
+
+        let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, total_users)
+
+        balance -= amount
 
         const payment = await Account_payments.findOneAndUpdate({
             user: req.user._id,
@@ -334,9 +345,9 @@ async function calculateAmount(collegePlan, periodType, periodValue, total_users
  */
 async function getPaymentHistory(req, res) {
     try {
-        const college = await College.findOne({_id: req.user.college, status: 1});
+        const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
 
-        if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(u, u, []));
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, u, []));
 
         const payments = await Account_payments.find({user: req.user._id}).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
 
