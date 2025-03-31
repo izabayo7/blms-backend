@@ -501,7 +501,7 @@ router.post('/', async (req, res) => {
 
         let result = await createDocument(Course, {
             name: req.body.name,
-            user: req.body.user,
+            user: user._id,
             faculty_college_year: req.body.faculty_college_year,
             description: req.body.description
         })
