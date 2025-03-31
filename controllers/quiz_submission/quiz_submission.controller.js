@@ -176,7 +176,7 @@ router.get('/user', auth, async (req, res) => {
                 }, u, u, u, u, u, {
                     _id: -1
                 })
-
+                let submissions_found = false
                 for (const l in chapters) {
 
                     let quizes = await findDocuments(Quiz, {
@@ -189,9 +189,9 @@ router.get('/user', auth, async (req, res) => {
                     let live_sessions = await findDocuments(Live_session, {
                         "target.id": mongoose.Types.ObjectId(chapters[l]._id)
                     })
-                    if(live_sessions.length){
+                    if (live_sessions.length) {
                         let live_quizes = await findDocuments(Quiz, {
-                            "target.id": {$in: live_sessions.map(x=>x._id.toString())},
+                            "target.id": {$in: live_sessions.map(x => x._id.toString())},
                             // status: 2 // only released marks
                         }, u, u, u, u, u, {
                             _id: -1
@@ -225,6 +225,7 @@ router.get('/user', auth, async (req, res) => {
                         }
                     }
                     if (foundSubmissions.length) {
+                        submissions_found = true
                         foundSubmissions = foundSubmissions.sort((a, b) => {
                             if (a.createdAt > b.createdAt) return -1;
                             if (a.createdAt < b.createdAt) return 1;
@@ -247,7 +248,8 @@ router.get('/user', auth, async (req, res) => {
                     }
 
                 }
-                coursesWithSubmissions.push(courses[j])
+                if (submissions_found)
+                    coursesWithSubmissions.push(courses[j])
             }
             result = coursesWithSubmissions
         } else {
@@ -721,7 +723,7 @@ function findQuizMarks(quizarray, quizid, passMarks = false) {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', auth,filterUsers(["STUDENT"]), async (req, res) => {
+router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
     try {
         req.body.user = req.user.user_name
         let {
