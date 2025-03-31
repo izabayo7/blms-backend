@@ -300,6 +300,7 @@ router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
             user: req.user._id,
             questions: req.body.questions,
             total_marks: validQuestions.total_marks,
+            starting_time: req.body.starting_time,
             passMarks: req.body.passMarks
         })
 
@@ -381,6 +382,7 @@ router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
         exam.name = req.body.name
         exam.course = req.body.course
         exam.type = req.body.type
+        exam.starting_time = req.body.starting_time,
         exam.instructions = req.body.instructions
         exam.duration = req.body.duration
         exam.questions = req.body.questions

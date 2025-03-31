@@ -93,6 +93,10 @@ const exam_schema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    starting_time: {
+        type: Date,
+        required: true
+    },
     questions: [{
         type: {
             type: String,
@@ -156,6 +160,7 @@ function validate_exam(body) {
         passMarks: Joi.number().min(1).required(),
         course: Joi.ObjectId().required(),
         duration: Joi.number().min(1).required(),
+        starting_time: Joi.date().required(),
         questions: Joi.array().min(1).items(Joi.object({
             _id: Joi.ObjectId(),
             type: Joi.string().required(),
