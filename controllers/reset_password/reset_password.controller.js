@@ -1,5 +1,6 @@
 const { Reset_password } = require("../../models/reset_password/reset_password.model");
 const { formatResult, User, ONE_DAY } = require("../../utils/imports");
+const { sendResetPasswordEmail } = require("../email/email.controller");
 
 /**
  * Create (open) a password reset
@@ -12,7 +13,7 @@ exports.createPasswordReset = async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message));
 
-    const user = await User.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email }).populate('college');
     if (!user)
       return res.send(formatResult(404, 'User not found'));
 
@@ -34,9 +35,13 @@ exports.createPasswordReset = async (req, res) => {
 
       await resetPassword.save();
     }
-    req.body.names = user.sur_name + ' ' + user.other_names;
-    req.body.token = token;
-    await sendResetPasswordMail(req, res);
+
+    const { sent, err } = await sendResetPasswordEmail({ email: user.email, user_name: user.sur_name + ' ' + user.other_names, token, institution_name: user.college.name });
+    if (err)
+      return res.send(formatResult(500, err));
+
+    return res.send(formatResult(201, 'Password reset was sucessfully created'));
+
   }
   catch (err) {
     return res.send(formatResult(500, err))

@@ -145,10 +145,10 @@ exports.sendRequestCallback = async ({ user_name, institution_name, role_at_inst
     }
 };
 
-exports.sendResetPasswordEmail = async ({ email, token, names, institution_name }) => {
+exports.sendResetPasswordEmail = async ({ email, token, user_name, institution_name }) => {
     try {
 
-        const mail = reset_password({ user_name: names, institution_name, token })
+        const mail = reset_password({ user_name, institution_name, token })
 
         const message = {
             from: process.env.EMAIL,
