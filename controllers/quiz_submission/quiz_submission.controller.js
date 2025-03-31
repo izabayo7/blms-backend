@@ -313,7 +313,7 @@ router.get('/user/:user_name', async (req, res) => {
         }
         let quiz_submissions = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
-        })
+        }, u, u, u, u, u, { _id: -1 })
 
         quizes[i].total_submissions = quiz_submissions.length
 
