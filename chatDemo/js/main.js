@@ -364,16 +364,17 @@ function computeActiveMessages(Id) {
     messages = allMessages.filter(el => el.group == Id)
   } else {
     for (const i in allMessages) {
-      if (allMessages[i].sender == user || allMessages[i].sender == Id) {
+      if (!allMessages[i].group) {
         for (const receiver of allMessages[i].receivers) {
-          if (receiver.id == Id || receiver.id == user) {
+          if (receiver.id == Id && allMessages[i].sender == user) {
+            messages.push(allMessages[i])
+          } else if (allMessages[i].sender == Id && receiver.id == user) {
             messages.push(allMessages[i])
           }
         }
       }
     }
   }
-  console.log(messages, Id)
   if (messages.length < 1)
     return messages
 

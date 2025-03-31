@@ -10,6 +10,7 @@ const {
     getPreviousMessagesInGroup,
     returnUser,
     Message,
+    getLatestMessages,
     ChatGroup
 } = require('./imports')
 
@@ -21,6 +22,22 @@ module.exports.listen = (app) => {
         const id = socket.handshake.query.id
         socket.join(id)
 
+        /**
+         * Real chat codes
+         */
+
+        // send contacts
+        socket.on('request_user_contacts', async () => {
+            // get the latest conversations
+            const latestMessages = await getLatestMessages(id)
+            // send the messages
+            socket.emit('recieve_user_contacts', unreadMessages);
+        })
+
+
+        /**
+         * Chat demo codes
+         */
         // send userInformation and his / her contacts
         socket.on('request-self-groups-and-contacts', async () => {
             // find the connected user
@@ -241,7 +258,7 @@ module.exports.listen = (app) => {
                     group: undefined,
                     receivers: { $elemMatch: { id: id, read: false } }
                 })
-            } 
+            }
             // fetch unread messages in a group
             else {
                 documents = await Message.find({

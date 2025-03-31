@@ -168,6 +168,17 @@ module.exports.getPreviousMessagesInGroup = async (groupId, lastMessage) => {
     const messages = lastMessage ? await Message.find({ _id: { $lt: lastMessage }, group: groupId }).lean() : await Message.find({ group: groupId }).lean()
     return messages
 }
+
+// get 20 latest conversations
+module.exports.getLatestMessages = async (userId) => {
+    const messages = await Message.aggregate(
+        [
+            { "$group": { "_id": { receivers: "$receivers" } } }
+        ]
+    )
+    return messages
+}
+
 // find a specific user
 module.exports.returnUser = async (id) => {
     let user = await Admin.findOne({ _id: id })
