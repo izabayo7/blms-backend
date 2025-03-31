@@ -198,7 +198,7 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
       </head>
     
       <body style="margin: 0; background-color: #ececec">
-        <div class="logo" style="text-align: center; margin: 25px auto">
+        <div class="logo" style="text-align: center; margin: 35px auto 25px">
           <img src="https://apis.kurious.rw/assets/images/image%204.png" alt="" />
         </div>
         <div
