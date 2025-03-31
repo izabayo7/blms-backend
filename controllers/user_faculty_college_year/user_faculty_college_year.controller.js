@@ -74,6 +74,7 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - User_faculty_college_year
  *     description: Get a user's current userFaculty_college_year
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User's id
