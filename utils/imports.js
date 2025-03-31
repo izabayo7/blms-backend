@@ -592,7 +592,6 @@ module.exports.formatContacts = async (messages, user_id) => {
       members: members
     })
   }
-  console.log(formatedContacts)
   return formatedContacts
 }
 
@@ -753,7 +752,6 @@ module.exports.getLatestMessages = async (user_id) => {
   for (const message of sentMessages) {
     latestMessages.push(message)
   }
-console.log(latestMessages)
   // arrange the messages that the latest comes in front
   return latestMessages.sort((a, b) => {
     if (a.createdAt > b.createdAt) return -1;

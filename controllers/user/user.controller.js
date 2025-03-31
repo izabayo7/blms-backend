@@ -358,7 +358,6 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
 
     sendResizedImage(req, res, path)
   } catch (error) {
-    console.log(error)
     return res.send(formatResult(500, error))
   }
 })
