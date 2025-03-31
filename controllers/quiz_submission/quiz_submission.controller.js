@@ -295,7 +295,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
           })
 
           let foundSubmissions = []
-
+          quizes = await addQuizTarget(quizes)
           for (const i in quizes) {
 
             let quiz_submissions = await findDocuments(Quiz_submission, {
@@ -303,9 +303,6 @@ router.get('/user/:user_name', auth, async (req, res) => {
             }, u, u, u, u, u, {
               _id: -1
             })
-            console.log(quiz_submissions)
-            quizes[i].total_submissions = quiz_submissions.length
-
             if (quiz_submissions.length) {
 
               quiz_submissions = await injectUserFeedback(quiz_submissions)
@@ -317,6 +314,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
                 for (const l in quiz_submissions[k].answers) {
                   quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
                 }
+                quiz_submissions[k].quiz = quizes[i]
                 foundSubmissions.push(quiz_submissions[k])
               }
             }
