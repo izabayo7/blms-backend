@@ -739,17 +739,7 @@ router.delete('/:id/attachment/:file_name', async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
 
 
     fs.unlink(file_path, async (err) => {
