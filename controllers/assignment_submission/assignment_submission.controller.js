@@ -156,6 +156,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
             // check if there are assignments made by the user
             let assignments = await findDocuments(Assignment, {
                 user: req.user._id,
+                status: {$ne: 'DELETED'}
             }, u, u, u, u, u, {
                 _id: -1
             })

@@ -57,7 +57,8 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
         let assignments
         if (req.user.category.name === "INSTRUCTOR") {
             assignments = await findDocuments(Assignment, {
-                user: req.user._id
+                user: req.user._id,
+                status: {$ne: "DELETED"}
             }, u, u, u, u, u, {_id: -1})
         } else {
             const instructor_category = await User_category.findOne({name: "INSTRUCTOR"})
@@ -118,7 +119,8 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
 
         let assignment = await findDocument(Assignment, isInstructor ? {
             _id: req.params.id,
-            user: req.user._id
+            user: req.user._id,
+            status: {$ne: "DELETED"}
         } : {_id: req.params.id})
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
@@ -624,11 +626,11 @@ router.delete('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         // check if the assignment is never used
         let used = false
 
-        // const submission = await findDocument(Assignment_submission, {
-        //     assignment: req.params.id
-        // })
-        // if (submission)
-        //     used = true
+        const submission = await findDocument(Assignment_submission, {
+            assignment: req.params.id
+        })
+        if (submission)
+            used = true
 
         if (!used) {
 
