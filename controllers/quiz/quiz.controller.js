@@ -11,7 +11,8 @@ const {
   validateObjectId,
   Student,
   _,
-  StudentFacultyCollegeYear
+  StudentFacultyCollegeYear,
+  addAttachmentMediaPaths
 } = require('../../utils/imports')
 const {
   parseInt
@@ -183,7 +184,7 @@ router.get('/student/:id/:quiz_name', async (req, res) => {
     let quiz = await Quiz.findOne({
       name: req.params.quiz_name
     }).lean()
-  
+
 
     if (!quiz.target)
       return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
@@ -371,16 +372,17 @@ router.put('/:id', async (req, res) => {
           }
         }
         if (deleteAll || deletePicture) {
+          console.log(quiz.questions[i].options.choices[j].src)
           const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
-          fs.exists(path, (exists) => {
-            if (exists) {
-              fs.unlink(path, (err) => {
-                if (err) {
-                  return res.status(500).send(err)
-                }
-              })
-            }
-          })
+          // fs.exists(path, (exists) => {
+          //   if (exists) {
+          //     fs.unlink(path, (err) => {
+          //       if (err) {
+          //         return res.status(500).send(err)
+          //       }
+          //     })
+          //   }
+          // })
         }
       }
     }
@@ -602,21 +604,6 @@ async function injectInstructor(quizes) {
     quizes[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
     if (quizes[i].instructor.profile) {
       quizes[i].instructor.profile = `${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}`
-    }
-  }
-  return quizes
-}
-
-async function addAttachmentMediaPaths(quizes) {
-  for (const i in quizes) {
-    for (const k in quizes[i].questions) {
-      if (quizes[i].questions[k].options) {
-        for (const j in quizes[i].questions[k].options.choices) {
-          if (quizes[i].questions[k].options.choices[j].src && !quizes[i].questions[k].options.choices[j].src.includes('http')) {
-            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
-          }
-        }
-      }
     }
   }
   return quizes

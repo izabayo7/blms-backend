@@ -19,7 +19,8 @@ const {
     College,
     Quiz,
     resizeImage,
-    ChatGroup
+    ChatGroup,
+    addAttachmentMediaPaths
 } = require('../../utils/imports')
 
 // create router
@@ -41,10 +42,7 @@ const storage = multer.diskStorage({
         })
     },
     filename: (req, file, cb) => {
-        const {
-            model
-        } = req.kuriousStorageData
-        cb(null, `${model}-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
+        cb(null, `${file.originalname}`)
     }
 })
 
@@ -1068,7 +1066,6 @@ router.put('/updateCollegeLogo/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${req.params.id}`,
-            model: 'college'
         }
 
         upload(req, res, async (err) => {
@@ -1114,7 +1111,6 @@ router.put('/updateSuperAdminProfile/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: './uploads/system/superAdmin',
-            model: 'superAdmin'
         }
 
         upload(req, res, async (err) => {
@@ -1160,7 +1156,6 @@ router.put('/updateAdminProfile/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${admin.college}/users/admin`,
-            model: 'admin'
         }
 
         upload(req, res, async (err) => {
@@ -1206,7 +1201,6 @@ router.put('/updateInstructorProfile/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}`,
-            model: 'instructor'
         }
 
         upload(req, res, async (err) => {
@@ -1245,9 +1239,9 @@ router.post('/quizAttachedFiles/:quiz', async (req, res) => {
         if (error)
             return res.status(400).send(error.details[0].message)
 
-        const quiz = await Quiz.findOne({
+        let quiz = await Quiz.findOne({
             _id: req.params.quiz
-        })
+        }).lean()
         if (!quiz)
             return res.status(404).send(`Quiz with code ${req.params.quiz} doens't exist`)
 
@@ -1257,39 +1251,15 @@ router.post('/quizAttachedFiles/:quiz', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${instructor.college}/assignments/${req.params.quiz}`,
-            model: 'quizAttachment'
         }
 
         uploadPlus(req, res, async (err) => {
             if (err)
                 return res.status(500).send(err.message)
-            const questions = []
-            for (const question of quiz.questions) {
-                if (
-                    question.type.includes("file-select") &&
-                    question.options.choices.length > 0
-                ) {
-                    for (const index in question.options.choices) {
-                        for (const f_index in req.files) {
-                            if (question.options.choices[index].src === req.files[f_index].originalname) {
-                                question.options.choices[index].src = req.files[f_index].filename
-                            }
-                        }
-                    }
-                }
-                questions.push(question);
-            }
 
-            const updateDocument = await Quiz.findOneAndUpdate({
-                _id: req.params.quiz
-            }, {
-                questions: questions
-            }, {
-                new: true
-            })
-            if (updateDocument)
-                return res.status(201).send(updateDocument)
-            return res.status(500).send("Error ocurred")
+            quiz = await addAttachmentMediaPaths([quiz])
+
+            return res.status(201).send(quiz[0])
         })
 
     } catch (error) {
@@ -1307,15 +1277,15 @@ router.post('/submissionAttachedFiles/:submission', async (req, res) => {
         if (error)
             return res.status(400).send(error.details[0].message)
 
-        const submission = await QuizSubmission.findOne({
+        let submission = await QuizSubmission.findOne({
             _id: req.params.submission
-        })
+        }).lean()
         if (!submission)
             return res.status(404).send(`QuizSubmission with code ${req.params.submission} doens't exist`)
 
-        const quiz = await Quiz.findOne({
+        let quiz = await Quiz.findOne({
             _id: submission.quiz
-        })
+        }).lean()
         if (!quiz)
             return res.status(404).send(`Quiz with code ${submission.quiz} doens't exist`)
 
@@ -1325,37 +1295,16 @@ router.post('/submissionAttachedFiles/:submission', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${instructor.college}/assignments/${submission.quiz}/submissions/${req.params.submission}`,
-            model: 'submissionAttachment'
         }
 
         uploadPlus(req, res, async (err) => {
             if (err)
                 return res.status(500).send(err.message)
-            const answers = []
 
-            for (const i in quiz.questions) {
-                if (
-                    quiz.questions[i].type.includes("upload")
-                ) {
-                    for (const f_index in req.files) {
-                        if (submission.answers[i].src === req.files[f_index].originalname) {
-                            submission.answers[i].src = req.files[f_index].filename
-                        }
-                    }
-                }
-                answers.push(submission.answers[i])
-            }
+            quiz = await addAttachmentMediaPaths([quiz])
+            submission.quiz = quiz[0]
 
-            const updateDocument = await QuizSubmission.findOneAndUpdate({
-                _id: req.params.submission
-            }, {
-                answers: answers
-            }, {
-                new: true
-            })
-            if (updateDocument)
-                return res.status(201).send(updateDocument)
-            return res.status(500).send("Error ocurred")
+            return res.status(201).send(submission)
         })
 
     } catch (error) {
@@ -1380,7 +1329,6 @@ router.put('/updateStudentProfile/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${student.college}/users/students`,
-            model: 'student'
         }
 
         upload(req, res, async (err) => {
@@ -1432,7 +1380,6 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}`,
-            model: 'course'
         }
         upload(req, res, async (err) => {
             if (err)
@@ -1480,7 +1427,6 @@ router.put('/updateGroupProfilePicture/:id', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${group.college}/chat/${req.params.id}`,
-            model: 'group'
         }
         upload(req, res, async (err) => {
             if (err)
@@ -1577,7 +1523,6 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/video`,
-            model: 'mainVideo'
         }
         upload(req, res, async (err) => {
             if (err)
@@ -1631,7 +1576,6 @@ router.post('/addAttachments/:chapter', async (req, res) => {
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${facultyCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/attachments`,
-            model: 'attachment'
         }
         let savedAttachments = []
         uploadPlus(req, res, async (err) => {

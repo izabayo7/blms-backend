@@ -634,6 +634,22 @@ module.exports.resizeImage = function resize(path, format, width, height) {
     return readStream.pipe(transform)
 }
 
+// add mediapaths to quiz attachments
+module.exports.addAttachmentMediaPaths = (quizes) => {
+    for (const i in quizes) {
+      for (const k in quizes[i].questions) {
+        if (quizes[i].questions[k].options) {
+          for (const j in quizes[i].questions[k].options.choices) {
+            if (quizes[i].questions[k].options.choices[j].src && !quizes[i].questions[k].options.choices[j].src.includes('http')) {
+              quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
+            }
+          }
+        }
+      }
+    }
+    return quizes
+  }
+
 // authentication middlewares
 const {
     auth

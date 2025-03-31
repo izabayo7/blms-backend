@@ -6,6 +6,7 @@ const {
   Student,
   validateQuizSubmission,
   validateObjectId,
+  addAttachmentMediaPaths,
   _
 } = require('../../utils/imports')
 const {
@@ -186,8 +187,10 @@ router.get('/instructor/:id', async (req, res) => {
       if (quizSubmissions.length > 0) {
         quizSubmissions = await injectStudent(quizSubmissions)
         quizSubmissions = await injectQuiz(quizSubmissions)
-        for (let submission of quizSubmissions) {
-          foundSubmissions.push(submission)
+        for (const i in quizSubmissions) {
+          quizSubmissions[i].quiz = await addAttachmentMediaPaths([quizSubmissions[i].quiz])
+          quizSubmissions[i].quiz = quizSubmissions[i].quiz[0]
+          foundSubmissions.push(quizSubmissions[i])
         }
       }
     }
@@ -390,21 +393,6 @@ async function injectQuiz(submissions) {
     submissions[i].quiz = quiz
   }
   return submissions
-}
-
-async function addAttachmentMediaPaths(quizes) {
-  for (const i in quizes) {
-    for (const k in quizes[i].questions) {
-      if (quizes[i].questions[k].options) {
-        for (const j in quizes[i].questions[k].options.choices) {
-          if (quizes[i].questions[k].options.choices[j].src && !quizes[i].questions[k].options.choices[j].src.includes('http')) {
-            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
-          }
-        }
-      }
-    }
-  }
-  return quizes
 }
 
 // export the router
