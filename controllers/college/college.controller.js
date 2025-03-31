@@ -518,7 +518,6 @@ router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
         upload_single_image(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
-
             if (college.logo && college.logo != req.file.filename) {
                 fs.unlink(`${path}/${college.logo}`, (err) => {
                     if (err)

@@ -491,19 +491,18 @@ exports.getConversationMessages = async ({
                 code: conversation_id
             })
             conversation_id = group._id
-            messages = lastMessage ? await this.findDocuments(this.Message, {
+            messages = lastMessage ? await this.Message.find({
                 _id: {
                     $lt: lastMessage
                 },
                 group: group._id
             }, {
                 receivers: 0
-            }, limit) : await this.findDocuments(this.Message, {
+            }).limit(limit).sort({_id: -1}) : await this.Message.find({
                 group: group._id
             }, {
                 receivers: 0
-            }, limit)
-
+            }).sort({_id: -1}).limit(limit)
         } else {
             const user = await this.findDocument(this.User, {
                 user_name: conversation_id
@@ -559,7 +558,15 @@ exports.getConversationMessages = async ({
                 obj
                 , {
                     receivers: 0
-                }).limit(limit).sort({_id: -1})
+                }).limit(limit).sort({_id: -1}).populate({
+                path: 'reply',
+                model: 'message',
+                populate: {
+                    path: 'sender',
+                    model: 'user',
+                    select: ['sur_name', 'other_names']
+                }
+            })
         }
 
         return await this.replaceUserIds(messages.reverse(), user_id)
@@ -1088,7 +1095,7 @@ exports.getLatestMessages = async (user_id) => {
  * @param {Object} action creat of update
  * @returns FormatedResult
  */
-exports.Create_or_update_message = async (sender, receiver, content, _id, user_id, attachments) => {
+exports.Create_or_update_message = async (sender, receiver, content, _id, user_id, attachments, reply, forwarded) => {
     if (_id) {
         const message = await this.findDocument(this.Message, {
             _id: _id
@@ -1150,8 +1157,10 @@ exports.Create_or_update_message = async (sender, receiver, content, _id, user_i
         sender: _sender._id,
         receivers: receivers,
         content: content,
+        reply,
         group: chat_group ? chat_group._id : this.u,
-        attachments
+        attachments,
+        forwarded
     })
 
 }
@@ -1350,6 +1359,9 @@ exports.injectChapters = async (courses, user_id) => {
             // add media path of the video
             if (courses[i].chapters[k].uploaded_video) {
                 courses[i].chapters[k].uploaded_video = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
+            }
+            if (courses[i].chapters[k].uploaded_content) {
+                courses[i].chapters[k].uploaded_content_url = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/uploaded_content`
             }
             if (!courses[i].chapters[k].attachments)
                 courses[i].chapters[k].attachments = []
@@ -1803,6 +1815,14 @@ exports.addMessageDetails = async (msg, id) => {
     // inject sender Info
     let _user = await this.injectUser([{id: id}], 'id', 'data')
     msg.sender = _user[0].data
+
+    if (msg.reply) {
+        msg.reply = await this.Message.findOne({_id: msg.reply}).populate({
+            path: 'sender',
+            model: 'user',
+            select: ['sur_name', 'other_names']
+        })
+    }
 
     if (msg.group) {
         const group = await this.findDocument(this.Chat_group, {_id: msg.group})

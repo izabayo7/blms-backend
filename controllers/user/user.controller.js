@@ -644,9 +644,33 @@ router.get('/search', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error))
 
+
         data = simplifyObject(data)
 
         data.results = await add_user_details(data.results)
+
+        let obj = await Search(Chat_group, {
+            "members.id": req.user._id,
+            name: {
+                $regex: req.query.data,
+                $options: '$i'
+            }
+        }, {
+            name: 1,
+            code: 1
+        }, req.query.page, req.query.limit)
+
+        if (obj.data && obj.data.results.length) {
+            for (const i in obj.data.results) {
+                data.results.push({
+                    user_name: obj.data.results[i].code,
+                    sur_name: obj.data.results[i].name,
+                    other_names: '',
+                    profile: obj.data.results[i].profile ? `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${obj.data.results[i].code}/profile/${obj.data.results[i].profile}` : undefined,
+                    category: ''
+                })
+            }
+        }
 
         res.send(formatResult(u, u, data))
     } catch (error) {

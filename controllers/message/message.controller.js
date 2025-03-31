@@ -171,7 +171,7 @@ router.post('/', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
+        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content, u, u, u, req.body.reply)
 
         return res.send(result)
     } catch (error) {
@@ -181,20 +181,24 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /message:
+ * /message/{receiver}/forward/{message_id}:
  *   post:
  *     tags:
  *       - Message
- *     description: Send a message
+ *     description: Update a message
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *       - name: body
- *         description: Fields for a message
- *         in: body
+ *       - name: receiver
+ *         in: path
+ *         type: string
  *         required: true
- *         schema:
- *           $ref: '#/definitions/Message'
+ *         description: Message receiver
+ *       - name: message_id
+ *         in: path
+ *         type: string
+ *         required: true
+ *         description: Id of the message you want to forward
  *     responses:
  *       201:
  *         description: Created
@@ -205,17 +209,75 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/:receiver/forward/:message_id', async (req, res) => {
     try {
         const {
             error
-        } = validate_message(req.body)
+        } = validateObjectId(req.params.message_id)
         if (error)
-            return res.send(formatResult(400, error.details[0].message))
+            return res.send(formatResult(400, "invalid message id"))
 
-        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
+        const id = req.user._id
+        let message = await findDocument(Message, {
+            _id: req.params.message_id,
+            $or: [
+                {sender: id},
+                {"receivers.id": id}
+            ]
+        })
+        if (!message)
+            return res.send(formatResult(404, 'message not found'))
 
-        return res.send(result)
+        const {attachments, content} = message
+        const {receiver} = req.params
+        const isGroup = /^[0-9]{9}$/.test(receiver)
+        if (!isGroup) {
+            const Receiver = await findDocument(User, {user_name: receiver})
+            const _content = `This is the begining of conversation between __user__${req.user._id} and __user__${Receiver._id}`
+            const conversation_found = await Message.findOne({content: _content})
+            if (!conversation_found) {
+                await Create_or_update_message('SYSTEM', receiver, _content, u, req.user._id)
+                MyEmitter.emit('socket_event', {
+                    name: `conversation_created_${req.user._id}`,
+                    data: receiver
+                });
+                MyEmitter.emit('socket_event', {
+                    name: `conversation_created_${Receiver._id}`,
+                    data: req.user.user_name
+                });
+            }
+        }
+
+        let result = await Create_or_update_message(req.user.user_name, isGroup ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, undefined, true)
+
+        result = simplifyObject(result)
+
+        let msg = result.data
+
+        if (attachments && attachments.length) {
+            const dst_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+            const src_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${message.group ? '/groups/' + message.group : 'userFiles'}/${message.sender}`)
+
+            !fs.existsSync(dst_path) && fs.mkdirSync(dst_path, {recursive: true})
+
+            for (const i in attachments) {
+                fs.copyFile(`${src_path}${attachments[i].src}`, `${dst_path}${attachments[i].src}`);
+            }
+        }
+
+
+        msg = await addMessageDetails(msg, msg.sender)
+
+        MyEmitter.emit('socket_event', {
+            name: `send_message_${msg.receivers[0].id}`,
+            data: msg
+        });
+        msg.receiver = receiver
+        MyEmitter.emit('socket_event', {
+            name: `send_message_${req.user._id}`,
+            data: msg
+        });
+        return res.send(formatResult(u, 'Message forwarded'))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -253,7 +315,7 @@ router.post('/', async (req, res) => {
 router.put('/:receiver/attachements', async (req, res) => {
     try {
 
-        let {content, attachments} = req.query
+        let {content, attachments, reply} = req.query
         const {receiver} = req.params
 
         if (!attachments || !attachments.length)
@@ -273,14 +335,15 @@ router.put('/:receiver/attachements', async (req, res) => {
             sender: req.user.user_name,
             receiver: receiver,
             content: content,
-            attachments
+            attachments,
+            reply
         })
 
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
 
-        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments)
+        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{9}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, reply)
 
         result = simplifyObject(result)
 
@@ -347,10 +410,10 @@ router.put('/:receiver/attachements', async (req, res) => {
  */
 router.put('/voiceNote/:receiver', async (req, res) => {
     try {
-
+        const {reply} = req.query
         const name = `voice_${req.params.receiver}_${new Date().getTime()}.mp3`
 
-        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}])
+        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}], reply)
 
         if (result.status !== 404) {
             let msg = result.data
@@ -512,14 +575,24 @@ router.delete('/:id', async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         let message = await findDocument(Message, {
-            _id: req.params.id
+            _id: req.params.id,
         })
         if (!message)
             return res.send(formatResult(404, 'message not found'))
 
-        // need to delete all attachments
+        if (message.sender !== req.user._id.toString())
+            return res.send(formatResult(403, 'You can only delete your messages'))
 
         const result = await deleteDocument(Message, req.params.id)
+
+        for (const i in message.attachments) {
+            const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${message.group ? '/groups/' + message.group : 'userFiles/' + req.user._id}/${message.attachments[i].src}`)
+            fs.exists(file_path, (exists) => {
+                if (exists) {
+                    fs.unlink(file_path)
+                }
+            })
+        }
 
         return res.send(result)
     } catch (error) {
