@@ -1,4 +1,7 @@
 // import dependencies
+const {calculateAmount} = require("../../utils/imports");
+const {Account_payments} = require("../../models/account_payments/account_payments.model");
+const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {User_attendance} = require("../../models/user_attendance/user_attendance.model");
 const {Live_session} = require("../../utils/imports");
 const {Chapter} = require("../../utils/imports");
@@ -1010,6 +1013,8 @@ router.post('/', async (req, res) => {
             college: college._id,
         }, {status: "ACCEPTED"})
 
+        await addUserBill(college._id, user_category)
+
         const new_user = result.data
         result.data = {
             user: new_user,
@@ -1659,7 +1664,42 @@ async function checkUsernameExistence(req, res) {
     } catch (err) {
         return res.send(formatResult(500, err));
     }
-};
+}
+
+async function addUserBill(collegeId, userCategory) {
+
+    collegeId = collegeId.toString()
+
+    const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
+    console.log(college)
+    if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
+        const payment = await Account_payments.findOne({
+            college: collegeId,
+            status: 'ACTIVE'
+        })
+
+        let amount = 0
+
+        const today = new Date()
+        today.setDate(today.getDate() + 1)
+
+        // all payments that this user will be valid to
+        const payments = await Account_payments.find({
+            college: collegeId,
+            endingDate: {$gt: new Date(today).toISOString()}
+        })
+
+        for (const i in payments) {
+            amount += await calculateAmount(college, payments[i].periodType, payments[i].periodValue, 1)
+        }
+
+        if (amount !== 0)
+            await Account_payments.updateOne({
+                college: collegeId,
+                status: 'ACTIVE'
+            }, {balance: payment.balance - amount})
+    }
+}
 
 // export the router
 module.exports = router
