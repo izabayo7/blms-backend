@@ -45,10 +45,10 @@ const router = express.Router()
 
 /**
  * @swagger
- * /quiz:
+ * /assignments:
  *   get:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Get all quizes
  *     security:
  *       - bearerAuth: -[]
@@ -78,10 +78,10 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/user/{id}:
+ * /assignments/user/{id}:
  *   get:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Returns quizes of a specified user
  *     security:
  *       - bearerAuth: -[]
@@ -125,10 +125,10 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/user/{user_name}:
+ * /assignments/user/{user_name}:
  *   get:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Returns quizes of a specified user
  *     security:
  *       - bearerAuth: -[]
@@ -170,10 +170,10 @@ router.get('/user/:user_name', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/user/{user_name}/{quiz_name}:
+ * /assignments/user/{user_name}/{quiz_name}:
  *   get:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Returns a quiz with the specified name
  *     security:
  *       - bearerAuth: -[]
@@ -266,10 +266,10 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/{id}/attachment/{file_name}:
+ * /assignments/{id}/attachment/{file_name}:
  *   get:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Returns the files attached to a specified quiz ( use format height and width only when the attachment is a picture)
  *     security:
  *       - bearerAuth: -[]
@@ -359,10 +359,10 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
 
 /**
  * @swagger
- * /quiz:
+ * /assignments:
  *   post:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Create quiz
  *     security:
  *       - bearerAuth: -[]
@@ -383,47 +383,49 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         const {
             error
-        } = validate_quiz(req.body)
+        } = validate_assignment(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
-        })
+        const allowedTargets = ['chapter', 'course']
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
+        if (!allowedTargets.includes(req.body.target.type))
+            return res.send(formatResult(400, 'invalid assignment target_type'))
 
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create quiz'))
+        let target
 
-        // check if quizname exist
-        let quiz = await findDocument(Quiz, {
-            name: req.body.name,
-            user: user._id
-        })
-        if (quiz)
-            return res.send(formatResult(400, 'name was taken'))
+        switch (req.body.type) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.body.target.id
+                })
+                break;
 
-        const validQuestions = validateQuestions(req.body.questions)
-        if (validQuestions.status !== true)
-            return res.send(formatResult(400, validQuestions.error))
+            case 'course':
+                target = await findDocument(Course, {
+                    _id: req.body.target.id
+                })
+                break;
 
-        let result = await createDocument(Quiz, {
-            name: req.body.name,
-            duration: req.body.duration,
-            instructions: req.body.instructions,
-            user: user._id,
-            questions: req.body.questions,
-            total_marks: validQuestions.total_marks,
-            passMarks: req.body.passMarks
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'assignment target not found'))
+
+        let result = await createDocument(Assignment, {
+            title: req.body.title,
+            dueDate: req.body.dueDate,
+            user: req.user._id,
+            attachments: req.body.attachments,
+            total_marks: req.body.total_marks,
+            passMarks: req.body.passMarks,
+            target: req.body.target
         })
 
         return res.send(result)
@@ -434,10 +436,10 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/{id}:
+ * /assignments/{id}:
  *   put:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Update quiz
  *     security:
  *       - bearerAuth: -[]
@@ -518,10 +520,10 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
 /**
  * @swagger
- * /quiz/release_marks/{id}:
+ * /assignments/release_marks/{id}:
  *   put:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Publish quiz marks
  *     security:
  *       - bearerAuth: -[]
@@ -571,7 +573,7 @@ router.put('/release_marks/:id', async (req, res) => {
                         instructor_names: req.user.sur_name + ' ' + req.user.other_names,
                         assignment_name: quiz.name,
                         assignment_type: 'quiz',
-                        link: `https://${process.env.FRONTEND_HOST}/quiz/${quiz.name}/${submissions[i].user.user_name}`
+                        link: `https://${process.env.FRONTEND_HOST}/assignments/${quiz.name}/${submissions[i].user.user_name}`
                     })
                 }
             }
@@ -584,10 +586,10 @@ router.put('/release_marks/:id', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/{id}/attachment:
+ * /assignments/{id}/attachment:
  *   post:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Upload quiz attacments
  *     security:
  *       - bearerAuth: -[]
@@ -660,10 +662,10 @@ router.post('/:id/attachment', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/{id}:
+ * /assignments/{id}:
  *   delete:
  *     tags:
- *       - Quiz
+ *       - Assignment
  *     description: Delete a quiz
  *     security:
  *       - bearerAuth: -[]
