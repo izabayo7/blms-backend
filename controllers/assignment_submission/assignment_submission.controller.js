@@ -539,7 +539,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res) => {
     try {
         let {
             error
@@ -554,49 +554,26 @@ router.put('/:id', auth, async (req, res) => {
 
         let assignment_submission = await findDocument(Assignment_submission, {
             _id: req.params.id
-        })
+        }).populate('assignment')
         if (!assignment_submission)
             return res.send(formatResult(404, 'assignment_submission not found'))
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
+        if (assignment_submission.assignment.status !== "PUBLISHED")
+            return res.send(formatResult(403, 'Submission on this assignment have ended'))
+
+        req.body.user = req.user._id
+
+        const user_group = await get_faculty_college_year(req.body.assignment)
+
+        let user_user_group = await findDocument(User_faculty_college_year, {
+            user: req.user._id,
+            faculty_college_year: user_group
         })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        req.body.user = user._id
-
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-
-        if (user_category.name != 'STUDENT')
+        if (!user_user_group)
             return res.send(formatResult(403, 'user is not allowed to do this assignment'))
 
-        let assignment = await findDocument(Assignment, {
-            _id: req.body.assignment
-        })
-        if (!assignment)
-            return res.send(formatResult(404, 'assignment not found'))
-
-        if (!assignment.target.id)
-            return res.send(formatResult(404, 'assignment is not available'))
-
-        const faculty_college_year = await get_faculty_college_year(req.body.assignment)
-
-        let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
-            faculty_college_year: faculty_college_year._id
-        })
-        if (!user_faculty_college_year)
-            return res.send(formatResult(403, 'user is not allowed to do this assignment'))
-
-        const valid_submision = validateSubmittedAnswers(assignment.questions, req.body.answers, 'marking')
-        if (valid_submision.status !== true)
-            return res.send(formatResult(400, valid_submision.error))
-
-        req.body.total_marks = valid_submision.total_marks
-        req.body.marked = true
+        if (req.user.category.name === 'INSTRUCTOR')
+            req.body.marked = true
 
         const result = await updateDocument(Assignment_submission, req.params.id, req.body)
 
