@@ -230,8 +230,8 @@ router.get('/user/:user_name', async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *       - name: userId
- *         description: User id
+ *       - name: user_name
+ *         description: User_name
  *         in: path
  *         required: true
  *         type: string
@@ -273,7 +273,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
         let chapter
         let course
 
-        if (quiz.target) {
+        if (quiz.target && quiz.target != {}) {
             if (quiz.target.type === 'chapter') {
                 chapter = await findDocument(Chapter, {
                     _id: quiz.target.id
