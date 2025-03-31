@@ -357,6 +357,7 @@ module.exports.listen = (app) => {
         socket.on('message/typing', async ({
                                                conversation_id
                                            }) => {
+            console.log("tapa shn ", conversation_id)
             let receivers = [], chat_group
             if (typeof conversation_id !== 'string') {
                 chat_group = await findDocument(Chat_group, {code: conversation_id})
@@ -373,7 +374,7 @@ module.exports.listen = (app) => {
                 }
             }
             receivers.forEach(receiver => {
-                socket.broadcast.to(receiver.id).emit('res/message/typing', user_name, chat_group ? conversation_id : u)
+                socket.broadcast.to(receiver.id).emit('res/message/typing', user.user_name, chat_group ? conversation_id : u)
             })
         })
 
