@@ -1230,12 +1230,15 @@ exports.addAttachedCourse = async (quizes) => {
                     _id: quizes[i].target.id
                 })
                 courseId = chapter.course
-            }else if (quizes[i].target.type == 'live_session') {
+            }
+            else if (quizes[i].target.type == 'live_session') {
                 cosnt
                 live_session = await this.Live_session.findOne({
                     _id: quizes[i].target.id
                 })
                 const chapter = await this.Chapter.findOne({_id: live_session.target.id})
+                courseId = chapter.course
+            }
             const course = await this.Course.findOne({
                 _id: courseId
             })
