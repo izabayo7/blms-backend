@@ -384,8 +384,16 @@ async function getPaymentStatus(req, res) {
     try {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
 
-        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: !college}));
+        if (!college) return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: true}));
+        else if (college.plan === 'TRIAL') {
 
+            const valid = () => {
+                const date = new Date(college.createdAt)
+                date.setMonth(date.getMonth() + 2)
+                return new Date() < new Date(date)
+            }
+            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {disabled: !valid}));
+        }
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
             status: 'ACTIVE'
