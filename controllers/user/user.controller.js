@@ -1047,7 +1047,8 @@ router.post('/', async (req, res) => {
             college: college._id,
         }, {status: "ACCEPTED"})
 
-        await addUserBill(college._id, user_category)
+        if (user_category !== "ADMIN")
+            await addUserBill(college._id, user_category)
 
         const new_user = result.data
         result.data = {
