@@ -266,17 +266,8 @@ router.post('/', async (req, res) => {
  *         type: string
  *         description: Message receiver
  *       - in: formData
- *         name: file
- *         type: file
- *         required: true
- *         description: attachment to upload
- *       - in: formData
  *         name: content
  *         type: string
- *         description: message content
- *       - in: formData
- *         name: attachments
- *         type: array
  *         description: message content
  *     responses:
  *       201:
@@ -291,16 +282,24 @@ router.post('/', async (req, res) => {
 router.put('/:receiver/attachements', async (req, res) => {
     try {
 
-        let {content, attachments} = req.body
+        let {content, attachments} = req.query
         const {receiver} = req.params
+
+        if (!attachments || !attachments.length)
+            return res.send(formatResult(400, "attachments are required"))
+
+        if (typeof attachments === "string")
+            attachments = [attachments]
 
         if (content === "")
             content = undefined
-        if (!attachments.length)
-            attachments = undefined
+
+        for (const i in attachments) {
+            attachments[i] = {src: attachments[i]}
+        }
 
         const {error} = validate_message({
-            sender: user.user_name,
+            sender: req.user.user_name,
             receiver: receiver,
             content: content,
             attachments
@@ -326,7 +325,8 @@ router.put('/:receiver/attachements', async (req, res) => {
         upload_multiple(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
-            msg = await addMessageDetails(msg,msg.sender)
+            msg = await addMessageDetails(msg, msg.sender)
+
             MyEmitter.emit('socket_event', {
                 name: `send_message_${req.user._id}`,
                 data: msg
@@ -395,7 +395,7 @@ router.put('/voiceNote/:receiver', async (req, res) => {
                 if (err)
                     return res.send(formatResult(500, err.message))
 
-                msg = await addMessageDetails(msg,msg.sender)
+                msg = await addMessageDetails(msg, msg.sender)
                 MyEmitter.emit('socket_event', {
                     name: `send_message_${req.user._id}`,
                     data: msg
