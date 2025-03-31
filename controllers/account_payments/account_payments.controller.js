@@ -72,9 +72,10 @@ router.get('/status', getPaymentStatus)
  *           properties:
  *             periodType:
  *               type: string
+ *               enum: ['MONTH', 'YEAR']
  *               required: true
  *             periodValue:
- *               type: string
+ *               type: number
  *               required: true
  *             total_users:
  *               type: number
@@ -106,6 +107,16 @@ router.post('/bill', getTotalBills)
  *         schema:
  *           type: object
  *           properties:
+ *             periodType:
+ *               type: string
+ *               enum: ['MONTH', 'YEAR']
+ *               required: true
+ *             periodValue:
+ *               type: number
+ *               required: true
+ *             total_users:
+ *               type: number
+ *               required: true
  *             method_used:
  *               type: string
  *               required: true

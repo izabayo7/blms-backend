@@ -103,14 +103,14 @@ const userPaymentsSchema = new mongoose.Schema({
 // validate user
 exports.validate_account_payments = (credentials, type = 'payment') => {
     const schema = type === 'payment' ? {
-        method_used: Joi.string().enum(methods).required(),
+        method_used: Joi.string().valid(methods).required(),
         amount_paid: Joi.number().min(1).max(100).required(),
-        periodType: Joi.string().enum(periods).required(),
+        periodType: Joi.string().valid(periods).required(),
         periodValue: Joi.number().min(1).required(),
         total_users: Joi.number(),
         startingDate: Joi.date().required()
     } : {
-        periodType: Joi.string().enum(periods).required(),
+        periodType: Joi.string().valid(periods).required(),
         periodValue: Joi.number().min(1).required(),
     }
 
