@@ -177,13 +177,15 @@ router.get('/', [auth, filterUsers(["SUPERADMIN"])], async (req, res) => {
  */
 router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (req, res) => {
     try {
-        let total_users, total_students, total_instructors, total_staff;
+        let total_users, total_students, total_instructors, total_staff, total_admins;
+        const admin_category = await findDocument(User_category, {name: "ADMIN"})
         const student_category = await findDocument(User_category, {name: "STUDENT"})
         const instructor_category = await findDocument(User_category, {name: "INSTRUCTOR"})
 
         if (req.user.category.name == "SUPERADMIN") {
             total_users = await countDocuments(User)
             total_students = await countDocuments(User, {category: student_category._id})
+            total_admins = await countDocuments(User, {category: admin_category._id})
             total_instructors = await countDocuments(User, {category: instructor_category._id})
             total_staff = await countDocuments(User, {
                 $and: [
@@ -204,6 +206,11 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
             total_students = await countDocuments(User, {
                 college: req.user.college,
                 category: student_category._id,
+                "status.deleted": {$ne: 1}
+            })
+            total_admins = await countDocuments(User, {
+                college: req.user.college,
+                category: admin_category._id,
                 "status.deleted": {$ne: 1}
             })
             total_instructors = await countDocuments(User, {
@@ -228,7 +235,7 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
                 ]
             })
         }
-        return res.send(formatResult(u, u, {total_users, total_students, total_instructors, total_staff}))
+        return res.send(formatResult(u, u, {total_users, total_students, total_instructors, total_staff, total_admins}))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -1049,7 +1056,6 @@ router.post('/', async (req, res) => {
         }
         return res.status(201).send(result)
     } catch (error) {
-        console.log(error)
         return res.send(formatResult(500, error))
     }
 })
