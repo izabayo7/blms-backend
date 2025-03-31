@@ -269,7 +269,7 @@ router.post('/', async (req, res) => {
             if (!quiz)
                 return res.send(formatResult(404, 'quiz not found'))
 
-            if(quiz.target){
+            if(quiz.target.id){
                 return res.send(formatResult(404, 'quiz already taken'))
             }
 
