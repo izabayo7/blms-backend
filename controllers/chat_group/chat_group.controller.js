@@ -225,12 +225,21 @@ router.get('/user/:user_name', async (req, res) => {
  */
 router.get('/:code/profile/:file_name', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     // check if course exist
     const group = await findDocument(Chat_group, {
       code: req.params.code
     })
     if (!group)
       return res.send(formatResult(404, 'group not found'))
+
+    console.log(group)
 
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
@@ -280,6 +289,13 @@ router.get('/:code/profile/:file_name', async (req, res) => {
  */
 router.get('/:code/search_members', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     const group = await findDocument(Chat_group, {
       code: req.params.code
     })
@@ -376,7 +392,7 @@ router.get('/:code', async (req, res) => {
 
     if (!result)
       return res.send(formatResult(404, 'Chat_group not found'))
-    console.log(result)
+
     result = await injectDetails([result])
     result = result[0]
 
@@ -524,6 +540,13 @@ router.post('/', async (req, res) => {
  */
 router.put('/:code', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     let { error } = validate_chat_group(req.body, 'update')
     if (error)
       return res.send(formatResult(400, error.details[0].message))
@@ -579,6 +602,13 @@ router.put('/:code', async (req, res) => {
  */
 router.put('/:code/profile', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     // check if chat_group exist
     const chat_group = await findDocument(Chat_group, {
       code: req.params.code
@@ -659,6 +689,13 @@ router.put('/:code/profile', async (req, res) => {
  */
 router.put('/:code/add_members', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     error = validate_chat_group(req.body, 'add_members')
     error = error.error
     if (error)
@@ -729,6 +766,13 @@ router.put('/:code/add_members', async (req, res) => {
  */
 router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     /** only admins can make members admins or the member him self can change from admin */
 
     // check if chat_group exist
@@ -793,6 +837,13 @@ router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
  */
 router.put('/:code/remove_member/:member_user_name', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
       code: req.params.code
@@ -848,6 +899,13 @@ router.put('/:code/remove_member/:member_user_name', async (req, res) => {
  */
 router.delete('/:code', async (req, res) => {
   try {
+
+    let {
+      error
+    } = validateChat_group_code(req.params.code)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
     // check if chat_group exist
     let chat_group = await findDocument(Chat_group, {
       _id: req.params.code
