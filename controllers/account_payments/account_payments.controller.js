@@ -364,9 +364,9 @@ async function getPaymentHistory(req, res) {
  */
 async function getPaymentStatus(req, res) {
     try {
-        const college = await College.findOne({_id: req.user.college, status: 1});
+        const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
 
-        if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan'));
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan'));
 
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
@@ -375,33 +375,22 @@ async function getPaymentStatus(req, res) {
 
         if (!payment) return res.send(formatResult(u, 'You don\'t have a payment'));
 
+        const endDate = findPaymentStartingTime(payment)
+
         // {
         //     startDate,
         //         endDate,
         //         currentBalance
         // }
 
-        const result = await getPaymentDetailst(payment)
-
-        return res.send(formatResult(200, u, result));
+        return res.send(formatResult(200, u, {
+            startDate: payment.startingDate,
+            endDate,
+            balance: payment.balance
+        }));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
-}
-
-async function getPaymentDetailst(payment) {
-    const startDate = new Date(payment.createdAt)
-    let endDate
-    let currentBalance
-
-    if (!payment.college) {
-        endDate = new Date(payment.periodType === 'MONTH' ? startDate.setMonth(startDate.getMonth() + payment.periodValue) : startDate.setFullYear(startDate.getFullYear() + payment.periodValue))
-    } else {
-        endDate = undefined
-    }
-
-    return {startDate, endDate, currentBalance}
-
 }
 
 // export the router
