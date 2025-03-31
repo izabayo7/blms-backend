@@ -19,6 +19,9 @@ const quiz_submission_schema = new mongoose.Schema({
         required: true
     },
     answers: [{
+        not_done: {
+          type: Boolean
+        },
         text: {
             type: String
         },
@@ -59,6 +62,12 @@ const quiz_submission_schema = new mongoose.Schema({
     published: {
         type: Boolean,
         default: false
+    },
+    time_started: {
+        type: Date
+    },
+    time_submitted: {
+        type: Date
     }
 })
 

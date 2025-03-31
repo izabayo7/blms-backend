@@ -1,4 +1,6 @@
 const socket_io = require('socket.io')
+const {autoMarkSelectionQuestions} = require("./imports");
+const {Quiz_submission} = require("./imports");
 const {User_notification} = require("./imports");
 const {User_user_group} = require("../models/user_user_group/user_user_group.model");
 // import modules
@@ -747,6 +749,52 @@ module.exports.listen = (app) => {
                     }
                 })
 
+            }
+
+        });
+
+        /**
+         * auto save quiz-submission while student is working
+         */
+        socket.on('start-quiz', async ({
+                                           quiz
+                                       }) => {
+
+            let newDocument = new Quiz_submission({
+                user: id,
+                quiz,
+                used_time: 0,
+                time_started: new Date()
+            })
+            const saveDocument = await newDocument.save()
+            if (saveDocument) {
+                socket.emit('start-quiz', saveDocument._id);
+            }
+
+        });
+
+        socket.on('save-progress', async ({
+                                              index,
+                                              submission_id,
+                                              attempt,
+                                              end,
+                                              questions
+                                          }) => {
+
+            attempt.user = id
+
+            const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(questions, attempt.answers)
+
+            let updateDocument = await Quiz_submission.findByIdAndUpdate(submission_id, end ? {
+                answers: answers,
+                used_time: attempt.used_time,
+                auto_submitted: attempt.auto_submitted,
+                total_marks: total_marks,
+                marked: is_selection_only,
+                time_submitted: new Date()
+            } : attempt)
+            if (updateDocument) {
+                socket.emit('progress-saved', {index, end, is_selection_only});
             }
 
         });

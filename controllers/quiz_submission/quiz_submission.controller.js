@@ -1,4 +1,5 @@
 // import dependencies
+const {autoMarkSelectionQuestions} = require("../../utils/imports");
 const {
     quiz
 } = require('../../models/quiz/quiz.model')
@@ -825,12 +826,18 @@ router.put('/:id/results_seen', auth, async (req, res) => {
  *     description: Upload quiz submission attacments
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: Quiz_submission id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: files
+ *         type: file
+ *         description: attachment to upload
  *     responses:
  *       201:
  *         description: Created
@@ -1228,48 +1235,6 @@ function validateSubmittedAnswers(questions, answers, mode) {
     } : {
         status: false,
         error: message
-    }
-}
-
-// auto mark selection questions
-function autoMarkSelectionQuestions(questions, answers) {
-    let is_selection_only = true, total_marks = 0;
-    for (const i in questions) {
-        if (questions[i].type.includes("select")) {
-            answers[i].marks = 0
-            if (answers[i].choosed_options.length) {
-                const rightChoices = questions[i].options.choices.filter((choice) => choice.right);
-                if (questions[i].type.includes("single")) {
-                    if (questions[i].type.includes("file")) {
-                        answers[i].marks = (answers[i].choosed_options[0].src == rightChoices[0].src) ? questions[i].marks : 0;
-                    } else {
-                        answers[i].marks = (answers[i].choosed_options[0].text == rightChoices[0].text) ? questions[i].marks : 0;
-                    }
-                } else {
-                    for (const k in answers[i].choosed_options) {
-                        if (questions[i].type.includes("file")) {
-                            let checkStatus = rightChoices.filter((choice) => choice.src == answers[i].choosed_options[k].src);
-                            if (checkStatus.length > 0) {
-                                answers[i].marks += questions[i].marks / rightChoices.length;
-                            }
-                        } else {
-                            let checkStatus = rightChoices.filter((choice) => choice.text == answers[i].choosed_options[k].text);
-                            if (checkStatus.length > 0) {
-                                answers[i].marks += questions[i].marks / rightChoices.length;
-                            }
-                        }
-                    }
-                }
-                total_marks += answers[i].marks
-            }
-        } else {
-            is_selection_only = false
-        }
-    }
-    return {
-        answers: answers,
-        total_marks: total_marks,
-        is_selection_only: is_selection_only
     }
 }
 
