@@ -842,7 +842,6 @@ module.exports.injectChapters = async (courses) => {
                 "target.type": "chapter",
                 "target.id": courses[i].chapters[k]._id
             })
-            console.log(chapterQuiz)
             courses[i].chapters[k].quiz = chapterQuiz.data
             courses[i].assignmentsLength += chapterQuiz.data.length
         }

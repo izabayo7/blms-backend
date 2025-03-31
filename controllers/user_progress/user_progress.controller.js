@@ -318,7 +318,7 @@ router.put('/:id', async (req, res) => {
       user: user.data._id,
       status: 1
     })
-    if (course.faculty_college_year != user_faculty_college_year.data.faculty_college_year)
+    if (course.data.faculty_college_year != user_faculty_college_year.data.faculty_college_year)
       return res.send(formatResult(403, 'user is not allowed to study this course'))
 
     // check if chapter exist
