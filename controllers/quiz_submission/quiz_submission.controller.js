@@ -29,7 +29,8 @@ const {
   simplifyObject,
   fs,
   upload_multiple,
-  Comment
+  Comment,
+  injectFaculty_college_year
 } = require('../../utils/imports')
 
 // create router
@@ -297,15 +298,13 @@ router.get('/user/:user_name', async (req, res) => {
             _id: chapter ? chapter.course : quiz.target.id
           })
 
-          const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
-            faculty_college_year: course.faculty_college_year
-          })
+          course = await injectFaculty_college_year([course])
+          course = course[0]
 
           quizes[i].target.course = _.pick(course, ['name', 'cover_picture', 'createdAt'])
           quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
-          quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
-          
+          quizes[i].target.faculty_college_year = course.faculty_college_year
+
 
         }
         let quiz_submission = await findDocuments(Quiz_submission, {
