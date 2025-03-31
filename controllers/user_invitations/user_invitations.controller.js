@@ -1,8 +1,9 @@
 const { User_invitation, validate_user_invitation } = require('../../models/user_invitations/user_invitations.model');
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 const {
-  formatResult, u, User_category, College, ONE_DAY, updateDocument
-} = require('../../utils/imports')
+  formatResult, u, User_category, College, ONE_DAY, updateDocument, User
+} = require('../../utils/imports');
+const { sendInvitationMail } = require('../email/email.controller');
 
 const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
 
@@ -112,7 +113,15 @@ exports.createUserInvitation = async (req, res) => {
         return res.send(formatResult(400, `User with email (${email}) arleady exist`))
       }
 
-      const newDocument = new User({
+      const user_invitation = await User_invitation.findOne({
+        email: email,
+        status: "PENDING"
+      })
+      if (user_invitation) {
+        return res.send(formatResult(400, `User with email (${email}) have a pending invitation`))
+      }
+
+      const newDocument = new User_invitation({
         user: req.user._id,
         email: email,
         category: category,
@@ -122,7 +131,14 @@ exports.createUserInvitation = async (req, res) => {
       });
 
       const result = await newDocument.save();
-      savedInvitations.push(result)
+
+      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token });
+      if (err)
+        return res.send(formatResult(500, err));
+
+      if (sent) {
+        savedInvitations.push(result)
+      }
     }
 
     return res.send(formatResult(201, 'CREATED', savedInvitations));
@@ -160,6 +176,15 @@ exports.acceptOrDenyInvitation = async (req, res) => {
     if (_invitation.expiration_date < Date.now())
       return res.send(formatResult(400, 'invitation has expired'))
 
+    if (action == 'accept') {
+      const user = await User.findOne({
+        email: _invitation.email
+      })
+      if (!user) {
+        return res.send(formatResult(400, `This invitation can only be marked as accepted when user finish signing up.`))
+      }
+    }
+
     _invitation.status = req.params.action == 'accept' ? "ACCEPTED" : "DENIED"
 
     const result = await _invitation.save()
@@ -196,8 +221,15 @@ exports.renewInvitation = async (req, res) => {
 
     const result = await _invitation.save()
 
-    return res.send(formatResult(200, "UPDATED", result));
+    const { sent, err } = await sendInvitationMail({ email: _invitation.email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token });
+    if (err)
+      return res.send(formatResult(500, err));
 
+    if (sent) {
+
+      return res.send(formatResult(200, "UPDATED", result));
+
+    }
   } catch (err) {
     return res.send(formatResult(500, err));
   }
@@ -213,7 +245,7 @@ exports.deleteInvitation = async (req, res) => {
     if (!(uuidValidate(req.params.token)))
       return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const result = await User_invitation.findOneAdDelete({ token: req.params.token, user: req.user._id });
+    const result = await User_invitation.findOneAndDelete({ token: req.params.token, user: req.user._id });
     if (!result)
       return res.send(formatResult(404, 'invitation not found'));
 

@@ -31,7 +31,7 @@ router.route('/')
     .get([auth, getMyInvitations])
     /**
      * @swagger
-     * /users:
+     * /user_invitations:
      *   post:
      *     tags:
      *       - User_invitation
@@ -52,16 +52,7 @@ router.route('/')
      *             emails:
      *               type: array
      *               items:
-     *                 type: object
-     *                 properties:
-     *                   name:
-     *                     type: string
-     *                   is_exam:
-     *                     type: boolean
-     *                   is_ignored:
-     *                     type: boolean
-     *                   maximum_marks:
-     *                     type: number
+     *                 type: string
      *           required:
      *             - college
      *             - category
@@ -99,6 +90,30 @@ router.route('/all')
      */
     .get([auth, getAllInvitations])
 
+router.route('/:token/renew')
+    /**
+     * @swagger
+     * /user_invitations/{token}/renew:
+     *   put:
+     *     tags:
+     *       - User_invitation
+     *     description: Extends the expiration time of an invitation
+     *     security:
+     *       - bearerAuth: -[]
+     *     parameters:
+     *       - name: token
+     *         description: invitation token
+     *         in: path
+     *         type: string
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     */
+    .put([auth, renewInvitation])
+
 router.route('/:token/:action')
     /**
      * @swagger
@@ -124,31 +139,8 @@ router.route('/:token/:action')
      *       500:
      *         description: Internal Server Error
      */
-    .get(acceptOrDenyInvitation)
+    .put(acceptOrDenyInvitation)
 
-router.route('/:token/renew')
-    /**
-     * @swagger
-     * /user_invitations/{token}/renew:
-     *   put:
-     *     tags:
-     *       - User_invitation
-     *     description: Extends the expiration time of an invitation
-     *     security:
-     *       - bearerAuth: -[]
-     *     parameters:
-     *       - name: token
-     *         description: invitation token
-     *         in: path
-     *         type: string
-     *         required: true
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     */
-    .get([auth, renewInvitation])
 
 router.route('/:token/delete')
     /**
@@ -172,6 +164,6 @@ router.route('/:token/delete')
      *       500:
      *         description: Internal Server Error
      */
-    .get([auth, deleteInvitation])
+    .delete([auth, deleteInvitation])
 
 exports.User_invitation_routes = router

@@ -14,29 +14,28 @@ const transporter = nodemailer.createTransport({
 const mailGenerator = new Mailgen({
     theme: 'salted',
     product: {
-        name: 'Organiser',
+        name: 'Kurious',
         link: 'https://kurious.rw/',
-        // logo: 'http://www.rca.ac.rw/images/logo-white-rca.png'
+        logo: 'https://learn.kurious.rw/online-assets/logo.svg'
     }
 });
 
-exports.sendResetPasswordMail = async (req, res) => {
+exports.sendInvitationMail = async ({ email, token, names }) => {
     try {
-        const { email } = req.body;
         const response = {
             body: {
-                name: req.body.names,
+                name: names,
                 email,
-                intro: 'Someone hopefully you, has requested to reset the password for your account.<br>',
+                intro: 'invited on Kurious.<br>',
                 action: {
                     instructions: 'Click to complete the process',
                     button: {
                         color: '#1a0c2f',
-                        text: 'Reset Your Password',
-                        link: 'http://rca.ac.rw/reset-password?email=' + req.body.email + '&' + 'token=' + req.body.token
+                        text: 'View invitation',
+                        link: 'https://learn.kurious.rw/signup?email=' + email + '&' + 'token=' + token
                     }
                 },
-                outro: 'This code expires after 24 Hours !'
+                outro: 'This code expires after 1 Week !'
             },
         };
 
@@ -45,16 +44,19 @@ exports.sendResetPasswordMail = async (req, res) => {
         const message = {
             from: process.env.EMAIL,
             to: email,
-            subject: 'Reset Password',
+            subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
             html: mail,
         };
 
-        const sent = await transporter.sendMail(message);
+        return {
+            sent: await transporter.sendMail(message)
+        }
 
-        if (sent) return res.send(formatResult(200, `We've sent an email to !!`))
     }
     catch (err) {
-        return res.status(500).send(err);
+        return {
+            err: err
+        }
     }
 };
 

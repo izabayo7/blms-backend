@@ -5,6 +5,8 @@ const {
     timestamps
 } = require('../../utils/imports')
 
+const paginate = require('mongoose-paginate-v2')
+
 /**
  * @swagger
  * definitions:
@@ -71,10 +73,12 @@ const user_invitation_schema = new mongoose.Schema({
     },
 }, { timestamps: true })
 
+user_invitation_schema.plugin(paginate)
+
 // validate user_invitation
 exports.validate_user_invitation = (credentials) => {
     const schema = {
-        email: Joi.string().email().required(),
+        emails: Joi.array().min(1).items(Joi.string().email().required()).required(),
         user: Joi.ObjectId(),
         college: Joi.ObjectId(),
         category: Joi.ObjectId().required()
