@@ -16,6 +16,7 @@ const user_role_schema = new mongoose.Schema({
     description: {
         type: String
     },
+    // role status 1(active) 0(inactive)
     status: {
         type: Number,
         default: 1
@@ -28,6 +29,7 @@ user_role_schema.plugin(timestamps)
 function validate_user_role(credentials) {
     const schema = {
         name: Joi.string().min(5).required(),
+        description: Joi.string()
     }
     return Joi.validate(credentials, schema)
 }

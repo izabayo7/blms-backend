@@ -244,7 +244,7 @@ router.delete('/:id', async (req, res) => {
     const update_category = await updateDocument(User_category, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(500, `User_category ${user_category.name} couldn't be deleted because it was used, instead it was disabled`))
+    return res.send(formatResult(200, `User_category ${user_category.name} couldn't be deleted because it was used, instead it was disabled`))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

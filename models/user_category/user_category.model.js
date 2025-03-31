@@ -14,6 +14,7 @@ const user_category_schema = new mongoose.Schema({
     description: {
         type: String
     },
+    // category status 1(active) 0(inactive)
     status: {
         type: Number,
         default: 1

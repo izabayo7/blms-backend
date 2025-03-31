@@ -73,14 +73,10 @@ require('./models/mongodb')
 // const userController = require('./controllers/user/user.controller')
 const user_controller = require('./controllers/users/user.controller')
 const user_category_controller = require('./controllers/user_category/user_category.controller')
+const user_role_controller = require('./controllers/user_role/user_role.controller')
 
 // use middlewares
 app.use(cors())
-// app.use(express.json());
-// app.use(express.urlencoded({
-//     extended: true
-// }));
-
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({
     limit: '50mb',
@@ -93,7 +89,6 @@ const server = http.createServer(app);
 
 // importing our socket
 const io = require('./utils/socket');
-const { user_category } = require('./models/user_category/user_category.model');
 io.listen(server)
 
 // Serve the chatdemo
@@ -125,6 +120,7 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 // app.use('/kurious/user', userController)
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, user_category_controller)
+app.use(`${basePath}/user_role`, user_role_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))
