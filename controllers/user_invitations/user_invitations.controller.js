@@ -493,7 +493,13 @@ exports.createMultipleUsers = async (req, res, next) => {
             },
             'GENDER': {
                 prop: 'gender',
-                type: String,
+                type: (value) => {
+                    value = value.toLowerCase()
+                    if (!['male', 'female'].includes(value)) {
+                        throw new Error('invalid')
+                    }
+                    return value
+                },
                 required: true
             },
             'DATE OF BIRTH': {
@@ -505,19 +511,20 @@ exports.createMultipleUsers = async (req, res, next) => {
                 type: (value) => {
                     let error
                     if (!/^(?=.*[a-z])/.test(value))
-                        error = "password must contain a lowercase letter"
+                        error = "invalid, password must contain a lowercase letter"
                     else if (!/^(?=.*[A-Z])/.test(value))
-                        error = "password must contain an uppercase letter"
+                        error = "invalid, password must contain an uppercase letter"
                     else if (!/^(?=.*[0-9])/.test(value))
-                        error = "password must contain a number"
+                        error = "invalid, password must contain a number"
                     else if (!/^(?=.{8,})/.test(value))
-                        error = "password must have atleast 8 characters"
+                        error = "invalid, password must have atleast 8 characters"
 
                     if (error) {
                         throw new Error(error)
                     }
                     return value
                 },
+                required: true
             },
             'EMAIL': {
                 prop: 'email',
@@ -625,19 +632,19 @@ exports.createMultipleUsers = async (req, res, next) => {
                 })
 
 
-                if (rows[i].email) {
-                    const {sent, err} = await sendInvitationMail({
-                        email: rows[i].email,
-                        names: req.user.sur_name + ' ' + req.user.other_names,
-                        token: token,
-                        institution: {name: college ? college.name : faculties[0].college.name},
-                        user_group: user_group
-                    });
-                    if (err) {
-                        creationErrors.push(err)
-                        break
-                    }
-                }
+                // if (rows[i].email) {
+                //     const {sent, err} = await sendInvitationMail({
+                //         email: rows[i].email,
+                //         names: req.user.sur_name + ' ' + req.user.other_names,
+                //         token: token,
+                //         institution: {name: college ? college.name : faculties[0].college.name},
+                //         user_group: user_group
+                //     });
+                //     if (err) {
+                //         creationErrors.push(err)
+                //         break
+                //     }
+                // }
 
                 const newDocument = new User({
                     sur_name: rows[i].sur_name,

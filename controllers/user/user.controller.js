@@ -1084,7 +1084,7 @@ router.post('/', async (req, res) => {
  * /user/multiple:
  *   post:
  *     tags:
- *       - User_invitation
+ *       - User
  *     description: Creates Users from uploaded file
  *     security:
  *       - bearerAuth: -[]
