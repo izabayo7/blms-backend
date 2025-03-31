@@ -98,11 +98,6 @@ const { Reset_password_routes } = require('./routes/reset_password/reset_passwor
 const { Faculty_Routes } = require('./routes/faculty/faculty.routes');
 io.listen(server)
 
-// Serve the chatdemo
-app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
-
-// Serve the live
-app.use('/live', express.static(path.join(__dirname, 'views/live')));
 
 app.get("/", express.static(path.join(__dirname, 'views')))
 
