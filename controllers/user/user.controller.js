@@ -388,6 +388,7 @@ router.get('/faculty/:id/:category', auth, async (req, res) => {
       }).populate('user')
       for (const j in user_user_groups) {
         if (user_user_groups[j].user.category == user_category._id)
+          // remove password
           result.push(user_user_groups[j].user)
       }
     }
