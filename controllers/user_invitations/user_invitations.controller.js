@@ -340,7 +340,7 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
             req.kuriousStorageData.path = `${req.kuriousStorageData.dir}/${req.file.filename}`
 
 
-            const {rows, errors} = await readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema})
+            const {rows, errors} = await readXlsxFile(req.kuriousStorageData.path, {schema})
 
             // `errors` list items have shape: `{ row, column, error, value }`.
             if (errors.length) {
