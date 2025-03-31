@@ -315,8 +315,6 @@ router.get('/user/:user_name', auth, async (req, res) => {
 
               for (const k in quiz_submissions) {
 
-
-
                 quiz_submissions[k].total_feedbacks = 0
 
                 for (const l in quiz_submissions[k].answers) {
@@ -329,10 +327,14 @@ router.get('/user/:user_name', auth, async (req, res) => {
           if (foundSubmissions.length) {
             courses[j].submissions = foundSubmissions
             courses[j].marking_status = 0
+            courses[j].unread_results = 0
             const percentage_of_one_submission = 100 / foundSubmissions.length
             for (const a in foundSubmissions) {
               if (foundSubmissions[a].marked) {
                 courses[j].marking_status += percentage_of_one_submission
+              }
+              if (!foundSubmissions[a].results_seen) {
+                courses[j].unread_results++
               }
             }
             courses[j].marking_status += '%'
