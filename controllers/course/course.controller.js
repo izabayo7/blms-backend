@@ -488,7 +488,7 @@ router.post('/', async (req, res) => {
         })
 
         let user = await findDocument(User, {
-            user_name: req.body.user_name
+            user_name: req.body.user
         })
         if (!user)
             return res.send(formatResult(404, 'user not found'))
@@ -622,7 +622,7 @@ router.put('/:id', async (req, res) => {
         })
 
         let user = await findDocument(User, {
-            _id: req.body.user
+            user_name: req.body.user
         })
         if (!user)
             return res.send(formatResult(404, 'user not found'))
