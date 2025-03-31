@@ -9,8 +9,7 @@ const notification_schema = new mongoose.Schema({
         type: String,
     },
     link: {
-        type: String,
-        required: true
+        type: String
     },
     content: {
         type: String,
@@ -22,7 +21,7 @@ notification_schema.plugin(timestamps)
 // validate notification
 function validate_notification(credentials) {
     const schema = {
-        link: Joi.string().required(),
+        link: Joi.string(),
         content: Joi.string().required()
     }
     return Joi.validate(credentials, schema)
