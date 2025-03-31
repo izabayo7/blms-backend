@@ -238,6 +238,7 @@ router.put('/:id', async (req, res) => {
     return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
   if (req.body.target) {
+
     req.body.target.type = req.body.target.type.toLowerCase()
 
     const allowedTargets = ['chapter', 'course', 'facilitycollegeyear']
@@ -272,6 +273,12 @@ router.put('/:id', async (req, res) => {
 
     if (!Target)
       return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
+
+    const latesTargetedQuiz = await Quiz.findOne({ target: req.body.target })
+    if (latesTargetedQuiz){
+      latesTargetedQuiz.target = undefined
+      latesTargetedQuiz.save()
+    }
   }
 
   const validQuestions = validateQuestions(req.body.questions)

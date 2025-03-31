@@ -299,7 +299,7 @@ router.put('/:id', async (req, res) => {
   const chapters = await Chapter.find({
     course: req.body.course
   })
-
+console.log(chapter.number, chapters.length)
   const progress = (chapter.number / chapters.length) * 100
 
   let updateObject = {
