@@ -342,6 +342,8 @@ router.get('/user/:user_name/:courseName', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Returns a specific course
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Course id
