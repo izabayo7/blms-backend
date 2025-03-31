@@ -197,7 +197,7 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/attachment/:file_name', filterUsers(["INSTRUCTOR"]), async (req, res) => {
+router.get('/:id/attachment/:file_name', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
 
         const {
