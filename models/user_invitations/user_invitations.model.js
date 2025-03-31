@@ -83,4 +83,4 @@ exports.validate_user_invitation = (credentials) => {
 }
 
 // create users model
-exports.user_invitation = mongoose.model('user_invitation', user_invitation_schema)
+exports.User_invitation = mongoose.model('user_invitation', user_invitation_schema)
