@@ -53,6 +53,11 @@ const user_invitation_schema = new mongoose.Schema({
         ref: "user_category",
         required: true
     },
+    user_group: {
+        type: mongoose.Types.ObjectId,
+        ref: "user_group",
+        required: true
+    },
     email: {
         type: String,
         required: true
@@ -80,6 +85,7 @@ exports.validate_user_invitation = (credentials) => {
     const schema = {
         emails: Joi.array().min(1).items(Joi.string().email().required()).required(),
         user: Joi.ObjectId(),
+        user_group: Joi.ObjectId(),
         college: Joi.ObjectId(),
         category: Joi.string().min(5).required()
     }
