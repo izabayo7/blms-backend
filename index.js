@@ -82,7 +82,7 @@ app.use(express.json({
     limit: '50mb'
 }));
 app.use(express.urlencoded({
-    limit: '50mb', 
+    limit: '50mb',
     extended: true
 }));
 
@@ -92,6 +92,7 @@ let server = httpServer.createServer(app);
 
 // importing our socket
 const io = require('./utils/socket');
+const { User_feedback_routes } = require('./routes/user_feedbacks/user_feedbacks.routes');
 io.listen(server)
 
 // Serve the chatdemo
@@ -124,6 +125,7 @@ app.use(`${basePath}/comment`, auth, comment_controller)
 app.use(`${basePath}/live_session`, auth, live_session_controller)
 app.use(`${basePath}/user_invitations`, User_invitation_routes)
 app.use(`${basePath}/posts`, Post_routes)
+app.use(`${basePath}/feedback`, User_feedback_routes)
 
 // serve assets
 app.use(

@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
-const { invitationToSystem } = require('../../utils/emailGenerator');
+const { invitationToSystem, contactUs, requestCallback } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
 
@@ -27,24 +27,6 @@ const mailGenerator = new Mailgen({
 
 exports.sendInvitationMail = async ({ email, token, names, institution }) => {
     try {
-        const response = {
-            body: {
-                name: names,
-                email,
-                intro: 'invited on Kurious.<br>',
-                action: {
-                    instructions: 'Click to complete the process',
-                    button: {
-                        color: '#1a0c2f',
-                        text: 'View invitation',
-                        link: 'https://kurious.rw/auth/register?token=' + token
-                    }
-                },
-                outro: 'This code expires after 1 Week !'
-            },
-        };
-
-        // const mail = mailGenerator.generate(response);
 
         const mail = invitationToSystem({ inviter: names, institution, token })
 
@@ -52,6 +34,88 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
             from: process.env.EMAIL,
             to: email,
             subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
+            html: mail,
+        };
+
+        /*
+            {
+                "college": "5f8f38ad558d86f96186daf0",
+                "category": "STUDENT",
+                "emails": [
+                    "nadibire08@gmail.com"
+                ]
+            }
+        */
+
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
+
+        return {
+            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    }
+    catch (err) {
+        console.log(err)
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
+    try {
+
+        const mail = contactUs({ user_name, user_email, message })
+
+        const _message = {
+            from: process.env.EMAIL,
+            to: process.env.COMMUNICATION_TEAM_EMAIL,
+            subject: 'Contacted by ' + user_name,
+            html: mail,
+        };
+
+        /*
+            {
+                "college": "5f8f38ad558d86f96186daf0",
+                "category": "STUDENT",
+                "emails": [
+                    "nadibire08@gmail.com"
+                ]
+            }
+        */
+
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
+
+        return {
+            sent: await transporter.sendMail(_message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    }
+    catch (err) {
+        console.log(err)
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendRequestCallback = async ({ user_name, institution_name, role_at_institution, phone_number }) => {
+    try {
+
+        const mail = requestCallback({ user_name, institution_name, role_at_institution, phone_number })
+
+        const message = {
+            from: process.env.EMAIL,
+            to: process.env.COMMUNICATION_TEAM_EMAIL,
+            subject: user_name + ' requested a callback.',
             html: mail,
         };
 
