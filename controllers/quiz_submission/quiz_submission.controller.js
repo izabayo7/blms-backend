@@ -279,36 +279,35 @@ router.get('/user/:user_name', async (req, res) => {
       let foundSubmissions = []
 
       for (const i in quizes) {
-        let chapter, course;
 
-        if (quizes[i].target.type === 'chapter') {
-          chapter = await findDocument(Chapter, {
-            _id: quizes[i].target.id
-          }, u, true)
+        if (quiz.target.type !== 'faculty_college_year') {
+
+          let chapter, course;
+
+          if (quizes[i].target.type === 'chapter') {
+            chapter = await findDocument(Chapter, {
+              _id: quizes[i].target.id
+            }, u, true)
+            course = await findDocument(Course, {
+              _id: chapter.course
+            })
+          }
+
           course = await findDocument(Course, {
-            _id: chapter.course
+            _id: chapter ? chapter.course : quiz.target.id
           })
-          chapter.course = course
-          quizes[i].target.chapter = chapter
-          // faculty_college_year = course.faculty_college_year
-        } else if (quiz.target.type === 'course') {
-          course = await findDocument(Course, {
-            _id: quiz.target.id
+
+          const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+            user: user._id,
+            faculty_college_year: course.faculty_college_year
           })
-          quizes[i].target.course = course
-          // faculty_college_year = course.faculty_college_year
+
+          quizes[i].target.course = _.pick(course, ['name', 'cover_picture', 'createdAt'])
+          quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
+          quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
+          
+
         }
-
-        // else if (quiz.target.type === 'faculty_college_year') {
-        //   faculty_college_year = quiz.target.id
-        // }
-        // const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-        //   user: user._id,
-        //   faculty_college_year: faculty_college_year
-        // })
-        // if (!user_faculty_college_year)
-        //   return res.send(formatResult(404, 'quiz not found'))
-
         let quiz_submission = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
         })
