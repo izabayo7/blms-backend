@@ -349,6 +349,31 @@ module.exports.listen = (app) => {
         })
 
         // notify members that quiz is released
+        socket.on('live/checkAttendance', async ({receivers}) => {
+
+            // make code
+            const code = makeCode(6);
+
+            receivers.forEach(receiver => {
+                socket.broadcast.to(receiver.id).emit('res/live/checkAttendance', {code})
+            })
+
+            // send success mesage
+            socket.emit('res/live/checkAttendance')
+        })
+
+        // notify instructor that you are still following
+        socket.on('live/checkAttendance', async ({receivers}) => {
+
+            receivers.forEach(receiver => {
+                socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', {id})
+            })
+
+            // send success mesage
+            socket.emit('res/live/checkAttendance')
+        })
+
+        // notify members that quiz is released
         socket.on('live/releaseQuiz', async ({quiz, receivers}) => {
 
             receivers.forEach(receiver => {

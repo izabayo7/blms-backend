@@ -1485,6 +1485,17 @@ exports.handleChunk = async (chunk, id) => {
     console.log("id: " + id + "\n\nchunk: " + chunk)
 }
 
+exports.makeCode = (length) => {
+    var result           = '';
+    var characters       = 'AiB0CD1EfF2GpH3IaJ4KhL5MmN6OeP7QR8ScT9UVWXnYbZdgjkloqrstuvwxyz';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() *
+            charactersLength));
+    }
+    return result;
+}
+
 // proper way to define user roles
 // proper way to use jwt
 // proper way to use config
