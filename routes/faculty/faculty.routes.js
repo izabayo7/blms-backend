@@ -126,4 +126,23 @@ router.route('/:faculty_id')
      *         description: Internal Server error
      */
     .delete()
+router.route('/statistics')
+    /**
+     * @swagger
+     * /faculty/statistics:
+     *   get:
+     *     tags:
+     *       - Statistics
+     *     description: Get Faculty statistics
+     *     security:
+     *       - bearerAuth: -[]
+     *     responses:
+     *       200:
+     *         description: OK
+     *       404:
+     *         description: Not found
+     *       500:
+     *         description: Internal Server error
+     */
+    .get()
 exports.Faculty_Routes = router

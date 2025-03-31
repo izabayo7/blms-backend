@@ -19,27 +19,12 @@ const {
   Course,
 } = require('../../utils/imports')
 
-// create router
-const router = express.Router()
-
-/**
- * @swagger
- * /faculty/statistics:
- *   get:
- *     tags:
- *       - Statistics
- *     description: Get Faculty statistics
- *     security:
- *       - bearerAuth: -[]
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+/***
+ * Get faculty statistics
+ * @param req
+ * @param res
  */
-router.get('/statistics', async (req, res) => {
+exports.getFacultyStatistics = async (req, res) => {
   try {
     let total_faculties
     if (req.user.category.name == "SUPERADMIN") {
@@ -51,7 +36,7 @@ router.get('/statistics', async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
 // handle all users down here
 
@@ -232,6 +217,3 @@ async function injectDetails(faculties, faculty_colleges) {
   }
   return faculties
 }
-
-// export the router
-module.exports = router
