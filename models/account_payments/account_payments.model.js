@@ -8,6 +8,7 @@ const {
 
 const methods = ['MTN_MOMO', 'CARD']
 const statuses = ['ACTIVE', 'INACTIVE']
+const periods = ['MONTH','YEAR']
 
 // to trace college plan changes
 const college_payment_plan = new mongoose.Schema(
@@ -37,6 +38,13 @@ const userPaymentsSchema = new mongoose.Schema({
     amount_paid: {
         type: Number
     },
+    periodType: {
+        type: String,
+        enum: periods
+    },
+    periodValue: {
+        type: Number
+    },
     college: {
         type: String,
         ref: "college"
@@ -53,7 +61,9 @@ const userPaymentsSchema = new mongoose.Schema({
 exports.validate_account_payments = (credentials) => {
     const schema = {
         method_used: Joi.string().enum(methods).required(),
-        amount_paid: Joi.number().min(1).max(100).required()
+        amount_paid: Joi.number().min(1).max(100).required(),
+        periodType: Joi.string().enum(periods).required(),
+        periodValue: Joi.number().required(),
     }
     return Joi.validate(credentials, schema)
 }
