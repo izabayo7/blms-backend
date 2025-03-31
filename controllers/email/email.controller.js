@@ -50,8 +50,8 @@ const {
 // });
 
 const transporter = createTransport(smtpTransport({
-    host: "mail.kurious.rw",
-    port: 25,
+    host: "smtp.privateemail.com",
+    port: 587,
     auth: {
         user: process.env.EMAIL,
         pass: process.env.PASSWORD
