@@ -1,5 +1,19 @@
 // import dependencies
-const { express, fs, Notification, validateNotification, returnUser, validateObjectId } = require('../../utils/imports')
+const {
+  express,
+  fs,
+  Notification,
+  validate_notification,
+  validateObjectId,
+  findDocuments,
+  formatResult,
+  findDocument,
+  User,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  User_notification
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -9,19 +23,17 @@ const router = express.Router()
  * definitions:
  *   Notification:
  *     properties:
- *       _id:
+ *       user_type:
  *         type: string
- *       doer_type:
- *         type: string
- *       doer_id:
+ *       user:
  *         type: string
  *       link:
  *         type: string
  *       content:
  *         type: string
  *     required:
- *       - doer_type
- *       - doer_id
+ *       - user_type
+ *       - user
  *       - content
  */
 
@@ -41,13 +53,15 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const notifications = await Notification.find()
   try {
-    if (notifications.length === 0)
-      return res.status(404).send('Notification list is empty')
-    return res.status(200).send(notifications)
+    const result = await findDocuments(Notification)
+
+    if (!result.data.length)
+      return res.send(formatResult(404, 'Notification list is empty'))
+
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -73,15 +87,29 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/user/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let userFound = await returnUser(req.params.id)
-  if (!userFound)
-    return res.status(400).send('The User id is invalid')
-  const notifications = await Notification.find({ doer_id: req.params.id })
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  return res.status(200).send({ notifications: notifications })
+    let user_found = await findDocument(User, {
+      _id: req.params.id
+    })
+    if (!user_found.data)
+      return res.send(formatResult(404, 'user not found'))
+
+    const result = await findDocuments(Notification, {
+      user: req.params.id
+    })
+    if (!result.data.length)
+      return res.send(formatResult(404, 'notifications not found'))
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -109,29 +137,29 @@ router.get('/user/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  const { error } = validateNotification(req.body)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      error
+    } = validate_notification(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  let doer = await returnUser(req.body.doer_id)
-  if (!doer)
-    return res.status(404).send(`Doer Not Found`)
-  const allowed_doer_types = ['User']
-  if (!allowed_doer_types.includes(req.body.doer_type))
-    return res.status(400).send(`${req.body.doer_type} is not allowed`)
+    let user = await findDocument(User, { _id: req.body.user })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-  let newDocument = new Notification({
-    doer_type: req.body.doer_type,
-    doer_id: req.body.doer_id,
-    content: req.body.content,
-    link: req.body.link,
-    content: req.body.content
-  })
+    let result = await createDocument(Notification, {
+      user_type: req.body.user_type,
+      user: req.body.user,
+      content: req.body.content,
+      link: req.body.link,
+      content: req.body.content
+    })
 
-  const saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.status(201).send(saveDocument)
-  return res.status(500).send('New Notification not Registered')
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -163,23 +191,35 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  let { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  error = validateNotification(req.body)
-  error = error.error
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if notification exist
-  let notification = await Notification.findOne({ _id: req.params.id })
-  if (!notification)
-    return res.status(404).send(`Notification with code ${req.params.id} doens't exist`)
+    error = validate_notification(req.body)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  const updateDocument = await Notification.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
-  if (updateDocument)
-    return res.status(201).send(updateDocument)
-  return res.status(500).send("Error ocurred")
+    // check if notification exist
+    let notification = await findDocument(Notification, {
+      _id: req.params.id
+    })
+    if (!notification.data)
+      return res.send(formatResult(404, 'notification not found'))
+
+    let user = await findDocument(User, { _id: req.body.user })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
+
+    const result = await updateDocument(Notification, req.params.id, req.body)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -206,17 +246,41 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let notification = await Notification.findOne({ _id: req.params.id })
-  if (!notification)
-    return res.status(404).send(`Notification of Code ${req.params.id} Not Found`)
-  // need to delete all attachments
-  let deleteDocument = await Notification.findOneAndDelete({ _id: req.params.id })
-  if (!deleteDocument)
-    return res.status(500).send('Notification Not Deleted')
-  return res.status(200).send(`Notification ${deleteDocument._id} Successfully deleted`)
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if notification exist
+    let notification = await findDocument(Notification, {
+      _id: req.params.id
+    })
+    if (!notification.data)
+      return res.send(formatResult(404, 'notification not found'))
+
+    const user_notifications = await findDocuments(User_notification, { "notifications.id": req.params.id })
+    if (user_notifications.data.length) {
+      for (const i in user_notifications.data) {
+        let notifications = user_notifications.data[i].notifications
+        for (const k in user_notifications.data[i].notifications) {
+          if (user_notifications.data[i].notifications[k].id == req.params.id) {
+            notifications.splice(k, 1)
+          }
+        }
+        user_notifications.data[i].notifications = notifications
+        await user_notifications.data[i].save()
+      }
+    }
+
+    // need to delete all attachments
+    let result = await deleteDocument(Notification, req.params.id)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 // export the router

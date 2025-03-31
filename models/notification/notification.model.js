@@ -5,11 +5,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 const notification_schema = new mongoose.Schema({
-    doer_type: {
-        type: String,
-        required: true
-    },
-    doer_id: {
+    user: {
         type: String,
     },
     link: {
@@ -26,8 +22,7 @@ notification_schema.plugin(timestamps)
 // validate notification
 function validate_notification(credentials) {
     const schema = {
-        doer_id: Joi.ObjectId().required(),
-        doer_type: Joi.string().required(),
+        user: Joi.ObjectId().required(),
         link: Joi.string().required(),
         content: Joi.string().required()
     }
