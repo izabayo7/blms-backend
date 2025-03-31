@@ -748,32 +748,25 @@ router.put('/profile', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    // check if user exist
-    const user = await findDocument(User, {
-      user_name: req.user.user_name
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
-
-    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles` : `./uploads/system/user_profiles`
+    const path = req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`
 
     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
-    if (user.profile) {
-      fs.unlink(`${path}/${user.profile}`, (err) => {
+    if (req.user.profile) {
+      fs.unlink(`${path}/${req.user.profile}`, (err) => {
         if (err)
           return res.send(formatResult(500, err))
       })
     }
-    let result = await User.findByIdAndUpdate(user._id, {
+    let result = await User.findByIdAndUpdate(req.user._id, {
       profile: filename
     })
     let user_category = await findDocument(User_category, {
-      _id: user.category
+      _id: req.user.category
     })
     result = simplifyObject(result)
     result.category = _.pick(user_category, 'name')
-    result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${filename}`
+    result.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${req.user.user_name}/profile/${filename}`
     return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
 
 
