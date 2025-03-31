@@ -610,7 +610,9 @@ router.put('/:id', async (req, res) => {
         }
       }
     }
-
+    quiz = await addQuizUsages([quiz])
+    quiz = await addAttachedCourse(quiz)
+    quiz = quiz[0]
     return res.send(formatResult(200, 'UPDATED', quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -999,9 +1001,9 @@ function validateQuestions(questions) {
     status: true,
     total_marks: marks
   } : {
-      status: false,
-      error: message
-    }
+    status: false,
+    error: message
+  }
 }
 
 // replace user id by the user information
