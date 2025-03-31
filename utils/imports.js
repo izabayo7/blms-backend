@@ -24,6 +24,10 @@ class MyEmitter extends EventEmitter {
 }
 
 const myEmitter = new MyEmitter();
+
+// add maximum listeners the emitter can handle
+myEmitter.setMaxListeners(1000)
+
 exports.MyEmitter = myEmitter
 
 
