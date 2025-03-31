@@ -563,7 +563,7 @@ router.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /user/{user_name}:
+ * /user:
  *   put:
  *     tags:
  *       - User
@@ -571,10 +571,6 @@ router.post('/login', async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *        - name: user_name
- *          in: path
- *          type: string
- *          description: User's user name
  *        - name: body
  *          description: Fields for a User
  *          in: body
@@ -609,22 +605,19 @@ router.post('/login', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:user_name', auth, async (req, res) => {
+router.put('/', auth, async (req, res) => {
   try {
     const {
       error
     } = validate_user(req.body, 'update')
     if (error)
-      return res.send(formatResult(400, error.details[0].message + 'jjjjjjjjjjjjjj'))
-
+      return res.send(formatResult(400, error.details[0].message))
+    console.log(req.user)
     const user = await User.findOne({
-      user_name: req.params.user_name
-    }).populate('category')
+      user_name: req.user.user_name
+    })
     if (!user)
       return res.send(formatResult(400, `user not found`))
-
-    if (req.user.user_name !== user.user_name)
-      return res.send(formatResult(403, 'YOU ARE NOT AUTHORIZED'))
 
     // check if the name or email were not used
     const _user = await findDocument(User, {
