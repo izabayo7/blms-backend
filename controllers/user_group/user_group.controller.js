@@ -252,7 +252,7 @@ router.get('/user',filterUsers(["INSTRUCTOR"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/',filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
@@ -313,7 +313,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
