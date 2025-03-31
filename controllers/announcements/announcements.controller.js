@@ -1,4 +1,5 @@
 // import dependencies
+const {sendAnnouncementEmail} = require("../email/email.controller");
 const {findDocuments} = require("../../utils/imports");
 const {User, getUserAnnouncements, injectTarget, Faculty} = require("../../utils/imports");
 const {Announcement} = require("../../models/announcements/announcements.model");
@@ -228,6 +229,14 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                     name: `send_message_${users[i]}`,
                     data: result.data
                 });
+                if (users[i].email) {
+                    await sendAnnouncementEmail({
+                        email: users[i].email,
+                        user_names: `Mr${users[i].gender === 'female' ? 's' : ''} ${users[i].sur_name} ${users[i].other_names}`,
+                        announcer: req.user.sur_name + ' ' + req.user.other_names,
+                        link: `https://${process.env.FRONTEND_HOST}/messages/announcements`
+                    })
+                }
             }
         }
 

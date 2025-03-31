@@ -3,6 +3,7 @@ const Mailgen = require('mailgen');
 const {formatResult} = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
+const {announcement_email} = require("../../utils/emailGenerator");
 const {live_scheduled_email} = require("../../utils/emailGenerator");
 const {marks_release_email} = require("../../utils/emailGenerator");
 const {confirm_email} = require("../../utils/emailGenerator");
@@ -260,6 +261,33 @@ exports.sendLiveScheduledEmail = async ({
             from: process.env.EMAIL,
             to: email,
             subject: 'New Live session.',
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(_message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendAnnouncementEmail = async ({
+                                           email,
+                                           user_names,
+                                           announcer,
+                                           link,
+                                       }) => {
+    try {
+
+        const mail = announcement_email({user_names, announcer, link})
+        const _message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'New Announcement.',
             html: mail,
         };
 
