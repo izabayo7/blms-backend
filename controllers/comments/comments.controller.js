@@ -217,6 +217,9 @@ router.post('/', async (req, res) => {
 
     const result = await createDocument(Comment, req.body)
 
+    result.data = await injectUser([result.data], 'sender')
+    result.data = result.data[0]
+
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
