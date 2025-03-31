@@ -110,7 +110,7 @@ exports.getFaculties = async (req, res) => {
 
 
 /***
- * create faculty
+ * Create faculty
  * @param req
  * @param res
  */
@@ -140,7 +140,12 @@ exports.createFaculty = async (req, res) => {
 }
 
 
-router.put('/:id', async (req, res) => {
+/***
+ * Update faculty
+ * @param req
+ * @param res
+ */
+exports.updateFaculty = async (req, res) => {
   try {
     let {
       error
@@ -171,34 +176,14 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     return res.send(formatResult(500, error))
   }
-})
+}
 
-/**
- * @swagger
- * /faculty/{id}:
- *   delete:
- *     tags:
- *       - Faculty
- *     description: Delete as Faculty
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Faculty's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
+/***
+ * Delete faculty
+ * @param req
+ * @param res
  */
-router.delete('/:id', async (req, res) => {
+exports.deleteFaculty = async (req, res) => {
   const {
     error
   } = validateObjectId(req.params.id)
@@ -223,7 +208,7 @@ router.delete('/:id', async (req, res) => {
   }
 
   return res.send(formatResult(200, `Faculty ${faculty.name} couldn't be deleted because it was used`))
-})
+}
 
 async function injectDetails(faculties, faculty_colleges) {
   // add head teacher

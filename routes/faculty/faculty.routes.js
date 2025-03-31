@@ -100,5 +100,30 @@ router.route('/:faculty_id')
      *         description: Internal Server error
      */
     .put()
-
+    /**
+     * @swagger
+     * /faculty/{id}:
+     *   delete:
+     *     tags:
+     *       - Faculty
+     *     description: Delete as Faculty
+     *     security:
+     *       - bearerAuth: -[]
+     *     parameters:
+     *       - name: id
+     *         description: Faculty's id
+     *         in: path
+     *         required: true
+     *         type: string
+     *     responses:
+     *       200:
+     *         description: OK
+     *       400:
+     *         description: Bad request
+     *       404:
+     *         description: Not found
+     *       500:
+     *         description: Internal Server error
+     */
+    .delete()
 exports.Faculty_Routes = router
