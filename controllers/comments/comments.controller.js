@@ -64,7 +64,7 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    let results = await findDocuments(Comment)
+    let results = await findDocuments(Comment, { reply: undefined }, u, u, u, u, u, { _id: -1 })
     results = await injectUser(results, 'sender')
     results = await injectCommentsReplys(results)
     return res.send(formatResult(u, u, results))
