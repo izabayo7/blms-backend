@@ -1,5 +1,5 @@
 // import dependencies
-const { mongoose, Joi } = require('../../utils/imports')
+const { mongoose, Joi, timestamps } = require('../../utils/imports')
 
 const collegeSchema = new mongoose.Schema({
     name: {
@@ -29,6 +29,8 @@ function validateCollege(credentials) {
     }
     return Joi.validate(credentials, schema)
 }
+
+collegeSchema.plugin(timestamps)
 
 // create Colleges model
 const College = mongoose.model('College', collegeSchema)

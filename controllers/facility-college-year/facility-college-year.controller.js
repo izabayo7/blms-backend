@@ -1,5 +1,6 @@
 // import dependencies
-const { express, FacilityCollegeYear, CollegeYear, FacilityCollege, auth, _superAdmin, _admin, validateFacilityCollegeYear, validateObjectId, _student } = require('../../utils/imports')
+const { express, FacilityCollegeYear, CollegeYear, College, FacilityCollege, auth, _superAdmin, _admin, validateFacilityCollegeYear, validateObjectId, _student } = require('../../utils/imports')
+const { Facility } = require('../../models/facility/facility.model')
 // create router
 const router = express.Router()
 
@@ -12,6 +13,39 @@ router.get('/', async (req, res) => {
     return res.send(facilityCollegeYears).status(200)
   } catch (error) {
     return res.send(error).status(500)
+  }
+})
+
+// Get all facilityCollegeYears in a college
+router.get('/college/:id', async (req, res) => {
+  try {
+    // check if college exist
+    let college = await College.findOne({ _id: req.params.id })
+    if (!college)
+      return res.send(`College with code ${req.params.id} doens't exist`)
+
+    let facilityColleges = await FacilityCollege.find({ college: req.params.id })
+    if (facilityColleges.length < 1)
+      return res.send(`facilityCollege in ${college.name} Not Found`)
+    let allfacilityCollegeYears = []
+    for (const facilityCollege of facilityColleges) {
+      const facilityDetails = await Facility.findOne({ _id: facilityCollege.facility })
+      const response = await FacilityCollegeYear.find({ facilityCollege: facilityCollege._id })
+      for (const newFacilityCollegeYear of response) {
+        const yearDetails = await CollegeYear.findOne({ _id: newFacilityCollegeYear.collegeYear })
+        allfacilityCollegeYears.push({
+          _id: newFacilityCollegeYear._id,
+          facilityCollege: newFacilityCollegeYear.facilityCollege,
+          collegeYear: newFacilityCollegeYear.collegeYear,
+          name: `${facilityDetails.name} Year ${yearDetails.digit}`
+        })
+      }
+    }
+    if (allfacilityCollegeYears.length < 1)
+      return res.status(404).send(`There are no Facility College Years in ${college.name}`)
+    return res.send(allfacilityCollegeYears).status(200)
+  } catch (error) {
+    return res.status(500).send(error)
   }
 })
 

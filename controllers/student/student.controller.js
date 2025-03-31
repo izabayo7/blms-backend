@@ -10,10 +10,10 @@ router.get('/', async (req, res) => {
   const students = await Student.find()
   try {
     if (students.length === 0)
-      return res.send('Student list is empty').status(404)
-    return res.send(students).status(200)
+      return res.status(404).send('Student list is empty')
+    return res.status(200).send(students)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -21,17 +21,17 @@ router.get('/', async (req, res) => {
 router.get('/college/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
   let college = await College.findOne({ _id: req.params.id })
   if (!college)
-    return res.send(`College ${req.params.id} Not Found`)
+    return res.status(404).send(`College ${req.params.id} Not Found`)
   const students = await Student.find({ college: req.params.id })
   try {
     if (students.length === 0)
-      return res.send(`${college.name} student list is empty`).status(404)
-    return res.send(students).status(200)
+      return res.status(404).send(`${college.name} student list is empty`)
+    return res.status(200).send(students)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -39,14 +39,14 @@ router.get('/college/:id', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
   const student = await Student.findOne({ _id: req.params.id })
   try {
     if (!student)
-      return res.send(`Student ${req.params.id} Not Found`).status(404)
-    return res.send(student).status(200)
+      return res.status(404).send(`Student ${req.params.id} Not Found`)
+    return res.status(200).send(student)
   } catch (error) {
-    return res.send(error).status(500)
+    return res.status(500).send(error)
   }
 })
 
@@ -54,11 +54,11 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const { error } = validateStudent(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
   const status = await checkRequirements('Student', req.body)
   if (status !== 'alright')
-    return res.send(status).status(400)
+    return res.status(400).send(status)
 
   let newDocument = new Student({
     surName: req.body.surName,
@@ -76,52 +76,52 @@ router.post('/', async (req, res) => {
   newDocument.password = await hashPassword(newDocument.password)
   const saveDocument = await newDocument.save()
   if (saveDocument)
-    return res.send(saveDocument).status(201)
-  return res.send('New Student not Registered').status(500)
+    return res.status(201).send(saveDocument)
+  return res.status(500).send('New Student not Registered')
 })
 
 // student login
 router.post('/login', async (req, res) => {
   const { error } = validateUserLogin(req.body)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
   // find student
   let student = await Student.findOne({ email: req.body.email })
   if (!student)
-    return res.send('Invalid Email or Password').status(400)
+    return res.status(400).send('Invalid Email or Password')
 
   // check if passed password is valid
   const validPassword = await bcrypt.compare(req.body.password, student.password)
 
   if (!validPassword)
-    return res.send('Invalid Email or Password').status(400)
+    return res.status(400).send('Invalid Email or Password')
   // return token
-  return res.send(student.generateAuthToken()).status(200)
+  return res.status(200).send(student.generateAuthToken())
 })
 
 // updated a student
 router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
   error = validateStudent(req.body)
   error = error.error
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
 
   // check if student exist
   let student = await Student.findOne({ _id: req.params.id })
   if (!student)
-    return res.send(`Student with code ${req.params.id} doens't exist`)
+    return res.status(404).send(`Student with code ${req.params.id} doens't exist`)
 
   if (req.body.password)
     req.body.password = await hashPassword(req.body.password)
   const updateDocument = await Student.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
-    return res.send(updateDocument).status(201)
-  return res.send("Error ocurred").status(500)
+    return res.status(201).send(updateDocument)
+  return res.status(500).send("Error ocurred")
 
 })
 
@@ -129,20 +129,20 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(400).send(error.details[0].message)
   let student = await Student.findOne({ _id: req.params.id })
   if (!student)
-    return res.send(`Student of Code ${req.params.id} Not Found`)
+    return res.status(404).send(`Student of Code ${req.params.id} Not Found`)
   let deleteDocument = await Student.findOneAndDelete({ _id: req.params.id })
   if (!deleteDocument)
-    return res.send('Student Not Deleted').status(500)
+    return res.status(500).send('Student Not Deleted')
   if (student.profile) {
     fs.unlink(`./uploads/colleges/${student.college}/users/students/${student.profile}`, (err) => {
       if (err)
-        return res.send(err).status(500)
+        return res.status(500).send(err)
     })
   }
-  return res.send(`${student.surName} ${student.otherNames} was successfully deleted`).status(200)
+  return res.status(200).send(`${student.surName} ${student.otherNames} was successfully deleted`)
 })
 
 // export the router

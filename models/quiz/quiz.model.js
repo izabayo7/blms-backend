@@ -39,9 +39,7 @@ const QuizSchema = new mongoose.Schema({
         default: false
     }
 })
-QuizSchema.plugin(timestamps, {
-    createdAt: 'createdAt'
-});
+QuizSchema.plugin(timestamps);
 
 // validate Quiz
 function validateQuiz(credentials) {

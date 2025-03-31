@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps,
 } = require('../../utils/imports')
 
 const studentFacilityCollegeYearSchema = new mongoose.Schema({
@@ -13,7 +14,13 @@ const studentFacilityCollegeYearSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        type: Number,
+        default: 1
+    },
 })
+
+studentFacilityCollegeYearSchema.plugin(timestamps)
 
 // validate student-facility-college-year
 function validateStudentFacilityCollegeYear(credentials) {

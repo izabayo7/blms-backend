@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps,
 } = require('../../utils/imports')
 
 const messageSchema = new mongoose.Schema({
@@ -24,6 +25,8 @@ const messageSchema = new mongoose.Schema({
         default: false
     }
 })
+
+messageSchema.plugin(timestamps)
 
 // validate message
 function validateMessage(credentials) {

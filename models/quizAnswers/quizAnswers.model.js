@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps,
 } = require('../../utils/imports')
 
 const QuizAnswersSchema = new mongoose.Schema({
@@ -39,6 +40,8 @@ const QuizAnswersSchema = new mongoose.Schema({
         default: false
     }
 })
+
+QuizAnswersSchema.plugin(timestamps)
 
 // validate QuizAnswers
 function validateQuizAnswers(credentials) {

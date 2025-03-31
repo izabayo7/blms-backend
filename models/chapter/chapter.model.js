@@ -2,6 +2,7 @@
 const {
     mongoose,
     Joi,
+    timestamps,
 } = require('../../utils/imports')
 
 const chapterSchema = new mongoose.Schema({
@@ -28,6 +29,8 @@ const chapterSchema = new mongoose.Schema({
         type: String,
     }
 })
+
+chapterSchema.plugin(timestamps)
 
 // validate chapter
 function validateChapter(credentials) {

@@ -1,5 +1,5 @@
 // import dependencies
-const { mongoose, Joi, jwt, config } = require('../../utils/imports')
+const { mongoose, Joi, jwt, config, timestamps } = require('../../utils/imports')
 
 const adminSchema = new mongoose.Schema({
     surName: {
@@ -54,6 +54,8 @@ const adminSchema = new mongoose.Schema({
         type: String,
     }
 })
+
+adminSchema.plugin(timestamps)
 
 // generate login token
 adminSchema.methods.generateAuthToken = function () {

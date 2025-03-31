@@ -1,5 +1,5 @@
 // import dependencies
-const { mongoose, Joi, jwt, config } = require('../../utils/imports')
+const { mongoose, Joi, jwt, config, timestamps } = require('../../utils/imports')
 
 const superSuperAdminSchema = new mongoose.Schema({
     surName: {
@@ -50,6 +50,8 @@ const superSuperAdminSchema = new mongoose.Schema({
         type: String,
     }
 })
+
+superSuperAdminSchema.plugin(timestamps)
 
 // generate login token
 superSuperAdminSchema.methods.generateAuthToken = function () {

@@ -32,6 +32,13 @@ router.post('/', async (req, res) => {
     if (!student)
       return res.send(`Student with code ${req.body.student} doens't exist`)
 
+    let activeStudentFacilliyCollegeYear = await StudentFacilityCollegeYear.findOne({ student: req.body.student, status: 1 })
+    if (activeStudentFacilliyCollegeYear) {
+      let updateDocument = await StudentFacilityCollegeYear.findOneAndUpdate({ student: req.body.student, status: 1 }, { status: 0 })
+      if (!updateDocument)
+        return res.send(`Error while inserting student facility`)
+    }
+
     let studentFacilliyCollegeYear = await StudentFacilityCollegeYear.findOne({
       facilityCollegeYear: req.body.facilityCollegeYear,
       student: req.body.student

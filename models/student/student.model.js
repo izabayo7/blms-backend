@@ -3,7 +3,8 @@ const {
     mongoose,
     Joi,
     jwt,
-    config
+    config,
+    timestamps
 } = require('../../utils/imports')
 
 const studentSchema = new mongoose.Schema({
@@ -63,6 +64,8 @@ const studentSchema = new mongoose.Schema({
         type: String,
     }
 })
+
+studentSchema.plugin(timestamps)
 
 // generate login token
 studentSchema.methods.generateAuthToken = function () {
