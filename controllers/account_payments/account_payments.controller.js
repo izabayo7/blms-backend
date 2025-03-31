@@ -415,7 +415,7 @@ async function getPaymentStatus(req, res) {
             date.setMonth(date.getMonth() + 2)
             const valid = new Date() < new Date(date)
 
-            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {disabled: !valid,total_users}));
+            return res.send(formatResult(u, valid ? 'Your current plan is trial' : 'Your TRIAL period have ended ', {disabled: !valid,total_users, endDate: new Date(date)}));
         }
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
