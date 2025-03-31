@@ -429,6 +429,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
         await assignment.save()
 
+        assignment = simplifyObject(assignment)
         assignment = await addAssignmentTarget([assignment])
         assignment = assignment[0]
 
