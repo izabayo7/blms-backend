@@ -1010,6 +1010,8 @@ exports.injectUser = async (array, property, newProperty) => {
   let name = newProperty ? newProperty : property
   for (const i in array) {
     if (array[i]) {
+      if (array[i][`${property}`]['email'])
+        continue;
       const user = await this.findDocument(this.User, {
         _id: array[i][`${property}`]
       })
