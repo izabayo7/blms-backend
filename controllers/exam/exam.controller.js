@@ -1,6 +1,8 @@
 // import dependencies
-const {sendReleaseMarskEmail} = require("../email/email.controller");
-const {updateDocument} = require("../../utils/imports");
+const {sendReleaseMarskEmail, sendAssignmentExpirationEmail} = require("../email/email.controller");
+const {updateDocument, countDocuments, scheduleEvent, addAssignmentTarget, Notification, User_notification, MyEmitter,
+    Quiz_submission
+} = require("../../utils/imports");
 const {
     express,
     fs,
@@ -37,6 +39,9 @@ const {
 } = require('lodash')
 const {Exam} = require("../../models/exams/exam.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
+const {Exam, Assignment} = require("../../models/assignments/assignments.model");
+const {Exam_submission} = require("../../models/assignment_submission/assignment_submission.model");
+const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
 
 // create router
 const router = express.Router()
@@ -491,11 +496,11 @@ router.put('/release_marks/:id', async (req, res) => {
 
 /**
  * @swagger
- * /exam/{id}/target:
+ * /assignments/changeStatus/{id}/{status}:
  *   put:
  *     tags:
  *       - Exam
- *     description: Update exam target
+ *     description: Update exam status
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -504,17 +509,12 @@ router.put('/release_marks/:id', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
- *       - name: body
- *         description: Fields for a exam
- *         in: body
+ *       - name: status
+ *         description: Exam id
+ *         in: path
  *         required: true
- *         schema:
- *           type:
- *             type: string
- *             required: true
- *           id:
- *             type: string
- *             required: true
+ *         type: string
+ *         enum: ["DRAFT","PUBLISHED","RELEASED"]
  *     responses:
  *       201:
  *         description: Created
@@ -525,7 +525,7 @@ router.put('/release_marks/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/target', async (req, res) => {
+router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
         let {
             error
@@ -533,126 +533,49 @@ router.put('/:id/target', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        error = validate_exam(req.body, true)
-        error = error.error
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
+        if (!["DRAFT", "PUBLISHED", "RELEASED"].includes(req.params.status))
+            return res.send(formatResult(400, "Invalid status"))
 
-        // check if exam exist
-        let exam = await findDocument(Exam, {
-            _id: req.params.id
-        }, u, false)
-        if (!exam)
-            return res.send(formatResult(404, 'exam not found'))
-
-
-        req.body.type = req.body.type.toLowerCase()
-
-        const allowedTargets = ['chapter', 'course', 'faculty_college_year']
-
-        if (!allowedTargets.includes(req.body.type))
-            return res.send(formatResult(400, 'invalid exam target_type'))
-
-        let target
-
-        switch (req.body.type) {
-            case 'chapter':
-                target = await findDocument(Chapter, {
-                    _id: req.body.id
-                })
-                break;
-
-            case 'course':
-                target = await findDocument(Course, {
-                    _id: req.body.id
-                })
-                break;
-
-            case 'faculty_college_year':
-                target = await findDocument(Faculty_college_year, {
-                    _id: req.body.id
-                })
-                break;
-
-            default:
-                break;
-        }
-
-        if (!target)
-            return res.send(formatResult(404, 'exam target not found'))
-
-        // remove the previously attached exam
-        const last_targeted_exam = await findDocument(Exam, {
-            _id: {
-                $ne: req.params.id
-            },
-            "target.id": req.body.id
-        }, u, false)
-        if (last_targeted_exam) {
-            last_targeted_exam.target = undefined
-            await last_targeted_exam.save()
-        }
-
-        exam.target = {
-            type: req.body.type,
-            id: req.body.id
-        }
-
-        await exam.save()
-
-        return res.send(formatResult(200, 'UPDATED', exam))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-
-/**
- * @swagger
- * /exam/{id}/target:
- *   delete:
- *     tags:
- *       - Exam
- *     description: Remove exam target
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Exam id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.delete('/:id/target', async (req, res) => {
-    try {
-        let {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        // check if exam exist
+        // check if course exist
         let exam = await findDocument(Exam, {
             _id: req.params.id,
-            user: req.user._id
-        }, u, false)
+            user: req.user._id,
+        })
         if (!exam)
-            return res.send(formatResult(404, 'exam not found'))
+            return res.send(formatResult(404, 'assignment not found'))
 
-        exam.target = undefined
+        let unmarked = await countDocuments(Exam_submission, {
+            exam: req.params.id,
+            marked: false
+        })
 
-        await exam.save()
+        if (req.params.status === "RELEASED" && unmarked)
+            return res.send(formatResult(403, `Please mark the remaining ${unmarked} submission${unmarked > 1 ? 's' : ''} before releasing marks`))
 
-        return res.send(formatResult(200, 'UPDATED', exam))
+
+        let result = await updateDocument(Exam, req.params.id,
+            {
+                status: req.params.status
+            })
+
+        if (req.params.status === "RELEASED") {
+
+            const submissions = await Exam_submission.find({quiz: req.params.id}).populate('user')
+            for (const i in submissions) {
+                if (submissions[i].user.email) {
+                    await sendReleaseMarskEmail({
+                        email: submissions[i].user.email,
+                        user_names: `Mr${submissions[i].user.gender === 'female' ? 's' : ''} ${submissions[i].user.sur_name} ${submissions[i].user.other_names}`,
+                        instructor_names: req.user.sur_name + ' ' + req.user.other_names,
+                        assignment_name: exam.name,
+                        assignment_type: 'exam',
+                        link: `https://${process.env.FRONTEND_HOST}/exam/${req.params.id}/${submissions[i].user.user_name}`
+                    })
+                }
+            }
+
+        }
+        return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
     }
