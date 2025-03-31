@@ -296,15 +296,32 @@ router.put('/:id', async (req, res) => {
   if (chapter.course !== req.body.course)
     return res.status(403).send(`${chapter.name} doesn't belong in ${course.name}`)
 
+  if (findFinishedChapter(studentProgress.finishedChapters, req.body.chapter))
+    return res.status(400).send('Progress arleady exists')
+
+  studentProgress.finishedChapters.push({ id: req.body.chapter })
+
   const chapters = await Chapter.find({
     course: req.body.course
   })
-  const progress = (chapter.number / chapters.length) * 100
+
+  let finishedChapters = 0
+
+  for (const i in chapters) {
+    if (findFinishedChapter(studentProgress.finishedChapters, chapters[i]._id)) {
+      finishedChapters++
+    }
+  }
+
+  const progress = (finishedChapters / chapters.length) * 100
+
+  console.log(finishedChapters)
 
   let updateObject = {
     student: req.body.student,
     course: req.body.course,
     progress: progress,
+    finishedChapters: studentProgress.finishedChapters
   }
 
   const updateDocument = await StudentProgress.findOneAndUpdate({
@@ -317,6 +334,16 @@ router.put('/:id', async (req, res) => {
   return res.status(500).send("Error ocurred")
 
 })
+
+// find if the id is arleady in finished chapters
+function findFinishedChapter(finishedChapters, id) {
+  for (const k in finishedChapters) {
+    if (finishedChapters[k].id == id) {
+      return true
+    }
+  }
+  return false
+}
 
 // export the router
 module.exports = router

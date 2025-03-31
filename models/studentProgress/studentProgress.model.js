@@ -5,6 +5,14 @@ const {
     timestamps
 } = require('../../utils/imports')
 
+const finishedChaptersSchema = new mongoose.Schema({
+    id: {
+        type: String,
+        required: true
+    }
+})
+finishedChaptersSchema.plugin(timestamps)
+
 const studentProgressSchema = new mongoose.Schema({
     student: {
         type: String,
@@ -14,6 +22,9 @@ const studentProgressSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    finishedChapters: [
+        finishedChaptersSchema
+    ],
     progress: {
         type: Number,
         max: 100,
