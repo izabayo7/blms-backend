@@ -270,11 +270,10 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
         }).populate('live_session',
             {attendance_check: 1, _id: 0}
         )
-
+        console.log(attendances)
         let total_required_marks = 0
         let total_got_marks = 0
         let total_attendance = 0
-        let attendance_count = 0
 
 
         for (const i in students) {
@@ -287,17 +286,17 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
             let student_required_marks = 0
             let student_got_marks = 0
             for (const iKey in submissions) {
-                if(submissions[iKey].user.toString() === students[i]._id.toString()) {
+                if (submissions[iKey].user.toString() === students[i]._id.toString()) {
                     student_required_marks += submissions[iKey].quiz.total_marks
                     student_got_marks += submissions[iKey].total_marks
                 }
             }
 
-            if(student_required_marks){
+            if (student_required_marks) {
                 total_required_marks += student_required_marks
                 total_got_marks += student_got_marks
                 students[i].perfomance = (student_got_marks / student_required_marks) * 100
-            } else{
+            } else {
                 students[i].perfomance = 0
             }
 
@@ -305,28 +304,29 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
             let student_attendance_count = 0
 
             for (const iKey in attendances) {
-                if(attendances[iKey].user.toString() === students[i]._id.toString()) {
+                if (attendances[iKey].user.toString() === students[i]._id.toString()) {
+                    console.log(attendances[iKey].attendance)
                     student_total_attendance += (attendances[iKey].attendance / attendances[iKey].live_session.attendance_check)
+                    student_attendance_count++
                     break
                 }
             }
 
-            if(student_attendance_count){
-                total_attendance += student_total_attendance
-                attendance_count += student_attendance_count
+            if (student_attendance_count) {
+                total_attendance += (student_total_attendance / student_attendance_count)
                 students[i].attendance = (student_total_attendance / student_attendance_count)
             } else {
                 students[i].attendance = 0
             }
 
-            if(!students[i].perfomance)
+            if (!students[i].perfomance)
                 students[i].perfomance = 0
         }
 
         return res.send(formatResult(u, u, {
             students: students,
             total_perfomance: total_required_marks ? (total_got_marks / total_required_marks) * 100 : 0,
-            total_attendance:  attendance_count ? total_attendance / attendance_count : 0
+            total_attendance: students.length ? total_attendance / students.length : 0
         }))
     } catch
         (error) {
