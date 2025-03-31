@@ -171,9 +171,93 @@ router.post('/', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content,u,u,u,req.body.reply)
+        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content, u, u, u, req.body.reply)
 
         return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /message/{receiver}/forward{message_id}:
+ *   put:
+ *     tags:
+ *       - Message
+ *     description: Update a message
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: receiver
+ *         in: path
+ *         type: string
+ *         description: Message receiver
+ *       - name: message_id
+ *         in: path
+ *         type: string
+ *         description: Id of the message you want to forward
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/:receiver/forward/:message_id', async (req, res) => {
+    try {
+        const id = req.user._id
+        let message = await findDocument(Message, {
+            _id: req.params.message_id,
+            $or: [
+                {sender: id},
+                {"receivers.id": id}
+            ]
+        })
+        if (!message)
+            return res.send(formatResult(404, 'message not found'))
+
+        const {attachments, content} = message
+        const {receiver} = req.params
+
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+
+        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, undefined, true)
+
+        result = simplifyObject(result)
+
+        let msg = result.data
+
+        if (attachments && attachments.length) {
+            const dst_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+            const src_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${message.group ? '/groups/' + message.group : 'userFiles'}/${message.sender}`)
+
+            !fs.existsSync(dst_path) && fs.mkdirSync(dst_path, {recursive: true})
+
+            for (const i in attachments) {
+                fs.copyFile(`${src_path}${attachments[i].src}`, `${dst_path}${attachments[i].src}`);
+            }
+        }
+
+
+        msg = await addMessageDetails(msg, msg.sender)
+
+        MyEmitter.emit('socket_event', {
+            name: `send_message_${req.user._id}`,
+            data: msg
+        });
+        for (const i in msg.receivers) {
+            MyEmitter.emit('socket_event', {
+                name: `send_message_${msg.receivers[i].id}`,
+                data: msg
+            });
+        }
+        return res.send(formatResult(u, 'Message forwarded'))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -211,7 +295,7 @@ router.post('/', async (req, res) => {
 router.put('/:receiver/attachements', async (req, res) => {
     try {
 
-        let {content, attachments,reply} = req.query
+        let {content, attachments, reply} = req.query
         const {receiver} = req.params
 
         if (!attachments || !attachments.length)
@@ -239,7 +323,7 @@ router.put('/:receiver/attachements', async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
 
-        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments,reply)
+        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, reply)
 
         result = simplifyObject(result)
 
@@ -309,7 +393,7 @@ router.put('/voiceNote/:receiver', async (req, res) => {
         const {reply} = req.query
         const name = `voice_${req.params.receiver}_${new Date().getTime()}.mp3`
 
-        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}],reply)
+        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}], reply)
 
         if (result.status !== 404) {
             let msg = result.data

@@ -1096,7 +1096,7 @@ exports.getLatestMessages = async (user_id) => {
  * @param {Object} action creat of update
  * @returns FormatedResult
  */
-exports.Create_or_update_message = async (sender, receiver, content, _id, user_id, attachments, reply) => {
+exports.Create_or_update_message = async (sender, receiver, content, _id, user_id, attachments, reply,forwarded) => {
     if (_id) {
         const message = await this.findDocument(this.Message, {
             _id: _id
@@ -1160,7 +1160,8 @@ exports.Create_or_update_message = async (sender, receiver, content, _id, user_i
         content: content,
         reply,
         group: chat_group ? chat_group._id : this.u,
-        attachments
+        attachments,
+        forwarded
     })
 
 }

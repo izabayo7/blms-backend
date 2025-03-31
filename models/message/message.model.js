@@ -27,6 +27,9 @@ const message_schema = new mongoose.Schema({
     group: {
         type: String,
     },
+    forwarded: {
+        type: Boolean,
+    },
     reply: {
         type: String,
         ref: 'message'
