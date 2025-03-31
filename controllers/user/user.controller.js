@@ -31,7 +31,9 @@ const {
   College_year,
   Faculty_college,
   Faculty,
-  Faculty_college_year
+  Faculty_college_year,
+  upload_single_image,
+  Compress_images
 } = require('../../utils/imports')
 
 // create router
@@ -339,7 +341,7 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
     if (user.college) {
       path = `./uploads/colleges/${user.college}/user_profiles/${user.profile}`
     } else {
-      path = `./uploads/colleges/system/user_profiles/${user.profile}`
+      path = `./uploads/system/user_profiles/${user.profile}`
     }
 
     sendResizedImage(req, res, path)
@@ -619,6 +621,140 @@ router.put('/:id', async (req, res) => {
     // result = await injectDetails([result])
     // result = result[0]
     return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/{id}/profile:
+ *   put:
+ *     tags:
+ *       - User
+ *     description: Upload user profile (file upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: User id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/profile', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if user exist
+    const user = await findDocument(User, {
+      _id: req.params.id
+    })
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles` : `./uploads/system/user_profiles`
+    const temp_path = user.college ? `./uploads/colleges/${user.college}/temp` : `./uploads/system/temp`
+    req.kuriousStorageData = {
+      dir: temp_path,
+    }
+    upload_single_image(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+
+      await Compress_images(temp_path, path)
+
+      setTimeout(() => {
+        fs.unlink(`${temp_path}/${req.file.filename}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }, 1000);
+
+      if (user.profile && user.profile != req.file.filename) {
+        fs.unlink(`${path}/${user.profile}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }
+      const result = await updateDocument(User, req.params.id, {
+        profile: req.file.filename
+      })
+      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${result.data.profile}`
+      return res.send(result)
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/{id}/profile/{file_name}:
+ *   delete:
+ *     tags:
+ *       - User
+ *     description: remove User profile
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id/profile/:file_name', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if user exist
+    const user = await findDocument(User, {
+      _id: req.params.id
+    }, u, false)
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    if (!user.profile || user.profile !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}` 
+
+    fs.unlink(path, (err) => {
+      if (err)
+        return res.send(formatResult(500, err))
+    })
+    user.profile = u
+    await user.save()
+    return res.send(formatResult(u, u, user))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

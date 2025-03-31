@@ -655,6 +655,81 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /quiz/{id}/attachment:
+ *   post:
+ *     tags:
+ *       - Quiz
+ *     description: Upload chapter attacments (file upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: Quiz id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/:id/attachment', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    })
+
+    req.kuriousStorageData = {
+      dir: `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`,
+    }
+    let savedAttachments = []
+
+    upload_multiple(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+      const status = true
+      for (const i in req.files) {
+        const file_found = chapter.attachments.filter(attachment => attachment.src == req.files[i].filename)
+        if (!file_found.length) {
+          chapter.attachments.push({ src: req.files[i].filename })
+        }
+      }
+
+      const result = await updateDocument(Chapter, req.params.id, {
+        attachments: chapter.attachments
+      })
+      return res.status(201).send(result)
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+
+/**
+ * @swagger
  * /quiz/{id}:
  *   delete:
  *     tags:
