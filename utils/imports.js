@@ -324,12 +324,12 @@ exports.checkCollegePayment = async (arguements) => {
     try {
         let paid = false
         const {link, registration_number} = arguements
-        const res = await axios.get(link +'/'+ registration_number)
+        const res = await axios.get(link + '/' + registration_number)
         if (res.data)
             paid = res.data.paid
-        return paid
+        return {paid}
     } catch (e) {
-        return {err: e.response.status}
+        return {err: e.response.status, paid: false}
     }
 }
 
@@ -1134,7 +1134,7 @@ exports.resizeImage = function resize(path, format, width, height) {
 }
 
 // add mediapaths to quiz attachments
-exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false,isExam=false) => {
+exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false, isExam = false) => {
     for (const i in quizes) {
         for (const k in quizes[i].questions) {
             if (quizes[i].questions[k].options) {
