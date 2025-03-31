@@ -261,15 +261,92 @@ module.exports.checkRequirements = async (category, body) => {
 }
 
 /**
- *  finds a single document with the given id
- * @param {String} id  document id
- * @returns Document
+ *  creates a new document with the data
+ * @param {Object} model Model
+ * @param {Object} properties Model
+ * @returns formatedResult 
  */
-module.exports.findDocument = async (model, id) => {
-    const document = await model.findOne({
-        _id: id
-    })
-    return document
+module.exports.createDocument = async (model, properties) => {
+    try {
+        let newDocument = new model(properties)
+        const savedDocument = await newDocument.save()
+        return this.formatResult(201, 'CREATED', savedDocument)
+    } catch (error) {
+        return this.formatResult(500, error)
+    }
+}
+
+/**
+ *  updates the document with the given id
+ * @param {Object} model Model
+ * @param {Object} id MongoId of the document
+ * @param {Object} properties Model
+ * @returns formatedResult
+ */
+module.exports.updateDocument = async (model, id, properties) => {
+    try {
+        const updatedDocument = await model.findOneAndUpdate({
+            _id: id
+        }, properties, {
+            new: true
+        })
+        return this.formatResult(200, 'UPDATED', updatedDocument)
+    } catch (error) {
+        return this.formatResult(500, error)
+    }
+}
+
+/**
+ *  deletes a document with the given id
+ * @param {Object} model Model
+ * @param {Object} id MongoId of the document
+ * @returns formatedResult
+ */
+module.exports.deleteDocument = async (model, id, properties) => {
+    try {
+        const deletedDocument = await model.findOneAndDelete({
+            _id: id
+        })
+        return this.formatResult(200, 'DELETED', deletedDocument)
+    } catch (error) {
+        return this.formatResult(500, error)
+    }
+}
+
+/**
+ *  finds the requested data from the given model
+ * @param {Object} model Model
+ * @param {Object} query Query object
+ * @param {Object} fields Specifies the needed fields
+ * @param {Number} limit Specifies the limit
+ * @param {Number} startIndex Specifies the startingIndex
+ * @returns formatedResult
+ */
+module.exports.findDocuments = async (model, query, fields, limit, startIndex) => {
+    try {
+        const documents = await model.find(query, fields).limit(limit).skip(startIndex).exec()
+        return this.formatResult(200, 'OK', documents)
+
+    } catch (error) {
+        return this.formatResult(500, error)
+    }
+}
+
+
+/**
+ *  finds the requested document from the given model
+ * @param {Object} model Model
+ * @param {Object} query Query object
+ * @param {Object} fields Specifies the needed fields
+ * @returns formatedResult
+ */
+module.exports.findDocument = async (model, query, fields) => {
+    try {
+        const document = await model.findOne(query, fields).exec()
+        return this.formatResult(200, 'OK', document)
+    } catch (error) {
+        return this.formatResult(500, error)
+    }
 }
 
 module.exports.getCollege = async (id, type) => {

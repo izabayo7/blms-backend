@@ -3,7 +3,10 @@ const {
   express,
   User,
   validate_user,
-  formatResult
+  formatResult,
+  findDocument,
+  findDocuments,
+  u
 } = require('../../utils/imports')
 
 // create router
@@ -83,14 +86,14 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    let users = await User.find().lean()
+    let result = await findDocuments(User)
 
-    if (users.length === 0)
+    if (result.data.length === 0)
       return res.send(formatResult(404, 'User list is empty'))
 
-    users = await injectDetails(users)
+    // users = await injectDetails(users)
 
-    return res.send(users)
+    return res.send(result)
   } catch (error) {
     console.log(error)
     return res.status(500).send(error)

@@ -13,6 +13,13 @@ const user_role_schema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    description: {
+        type: String
+    },
+    status: {
+        type: Number,
+        default: 1
+    }
 })
 
 user_role_schema.plugin(timestamps)
