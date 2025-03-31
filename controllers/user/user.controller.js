@@ -739,7 +739,7 @@ router.get('/:user_name', auth, async (req, res) => {
                     let live_sessions = await Live_session.find({
                         "target.type": "chapter",
                         "target.id": {$in: chapters.map(x => x.toString())}
-                    }, {_id: 1}).sort({_id:-1})
+                    }, {_id: 1}).sort({_id: -1})
 
                     const attendances = await User_attendance.find({
                         user: user._id.toString(),
@@ -755,7 +755,7 @@ router.get('/:user_name', auth, async (req, res) => {
                     if (attendances.length) {
                         courses[coursesKey].attendanceRate = student_total_attendance / attendances.length
                         const found = attendances.filter(x => x.live_session._id.toString() === live_sessions[0]._id.toString())
-                        if(found.length)
+                        if (found.length)
                             courses[coursesKey].attendanceLastSession = true
                     }
                 }
@@ -1275,38 +1275,53 @@ router.put('/', auth, async (req, res) => {
         } = validate_user(req.body, 'update')
         if (error)
             return res.send(formatResult(400, error.details[0].message))
+        const arr = []
 
-        // check if the name or email were not used
-        const user = await findDocument(User, {
-            _id: {
-                $ne: req.user._id
-            },
-            $or: [{
+        if (req.body.email)
+            arr.push({
                 email: req.body.email
-            }, {
-                national_id: req.body.national_id
-            }, {
+            })
+
+        if (req.body.national_id)
+            arr.push({
+                name: req.body.name
+            })
+
+        if (req.body.user_name)
+            arr.push({
                 user_name: req.body.user_name
-            }, {
+            })
+
+        if (req.body.phone)
+            arr.push({
                 phone: req.body.phone
-            }],
-        })
+            })
 
-        if (user) {
-            const phoneFound = req.body.phone == user.phone
-            const national_idFound = req.body.national_id == user.national_id
-            const emailFound = req.body.email == user.email
-            const user_nameFound = req.body.user_name == user.user_name
-            return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+        if (arr.length) {
+            // check if the name or email were not used
+            const user = await findDocument(User, {
+                _id: {
+                    $ne: req.user._id
+                },
+                $or: arr,
+            })
+
+            if (user) {
+                const phoneFound = req.body.phone == user.phone
+                const national_idFound = req.body.national_id == user.national_id
+                const emailFound = req.body.email == user.email
+                const user_nameFound = req.body.user_name == user.user_name
+                return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+            }
         }
-
-        // avoid user_name === group name
-        let chat_group = await findDocument(Chat_group, {
-            name: req.body.user_name
-        })
-        if (chat_group)
-            return res.send(formatResult(403, 'user_name was taken'))
-
+        if (req.body.user_name) {
+            // avoid user_name === group name
+            let chat_group = await findDocument(Chat_group, {
+                name: req.body.user_name
+            })
+            if (chat_group)
+                return res.send(formatResult(403, 'user_name was taken'))
+        }
 
         let result = await updateDocument(User, req.user._id, req.body)
 
@@ -1617,11 +1632,11 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
  * @param req
  * @param res
  */
-async function checkEmailExistance (req, res) {
+async function checkEmailExistance(req, res) {
     try {
-        const user = await User.findOne({ email: req.params.email, "status.deleted": {$ne: 1} });
-        if (user) return res.send(formatResult(200, 'Email Already Taken', { exists: true }));
-        return res.send(formatResult(200, 'Email Available', { exists: false }));
+        const user = await User.findOne({email: req.params.email, "status.deleted": {$ne: 1}});
+        if (user) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+        return res.send(formatResult(200, 'Email Available', {exists: false}));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
@@ -1633,11 +1648,11 @@ async function checkEmailExistance (req, res) {
  * @param req
  * @param res
  */
-async function checkUsernameExistence (req, res) {
+async function checkUsernameExistence(req, res) {
     try {
-        const user = await User.findOne({ user_name: req.params.user_name, "status.deleted": {$ne: 1} });
-        if (user) return res.send(formatResult(200, 'Username Already Taken', { exists: true }));
-        return res.send(formatResult(200, 'Username Available', { exists: false }));
+        const user = await User.findOne({user_name: req.params.user_name, "status.deleted": {$ne: 1}});
+        if (user) return res.send(formatResult(200, 'Username Already Taken', {exists: true}));
+        return res.send(formatResult(200, 'Username Available', {exists: false}));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
