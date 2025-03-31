@@ -13,13 +13,13 @@ const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOStri
  */
 exports.getAllInvitations = async (req, res) => {
   try {
-    const { limit, page } = req.query;
+    let { limit, page } = req.query;
 
     if (!page)
-      return res.send(formatResult(400, 'Page query is required'))
+      page = 1
 
     if (!limit)
-      return res.send(formatResult(400, 'Limit query is required'))
+      limit = 20
 
     if (page < 1)
       return res.send(formatResult(400, 'Page query must be greater than 0'))
@@ -49,13 +49,13 @@ exports.getAllInvitations = async (req, res) => {
  */
 exports.getMyInvitations = async (req, res) => {
   try {
-    const { limit, page } = req.query;
+    let { limit, page } = req.query;
 
     if (!page)
-      return res.send(formatResult(400, 'Page query is required'))
+      page = 1
 
     if (!limit)
-      return res.send(formatResult(400, 'Limit query is required'))
+      limit = 20
 
     if (page < 1)
       return res.send(formatResult(400, 'Page query must be greater than 0'))
