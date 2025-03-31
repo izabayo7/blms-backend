@@ -404,7 +404,7 @@ router.put('/:id/logo', async (req, res) => {
     if (!college)
       return res.send(formatResult(404, 'college not found'))
 
-    const path = `./uploads/colleges/${req.params.id}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
     req.kuriousStorageData = {
       dir: path,
     }
