@@ -389,12 +389,10 @@ module.exports.getConversationMessages = async ({
     }, limit)
 
   } else {
-    console.log(conversation_id)
     const user = await this.findDocument(this.User, {
       user_name: conversation_id
     })
     conversation_id = user._id
-    console.log(user._id)
     messages = await this.findDocuments(this.Message, {
       $or: [{
         $and: [

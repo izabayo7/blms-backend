@@ -5,7 +5,6 @@ function auth(req, res, next) {
     const token = req.header('authorization')
     if (!token)
         return res.send(formatResult(401, 'No Token Found'))
-
     try {
         const decoded = jwt.verify(token, config.get('auth_key'))
         req.user = decoded

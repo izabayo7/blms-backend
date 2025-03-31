@@ -31,8 +31,6 @@ module.exports.listen = (app) => {
 
   io.on('connection', async (socket) => {
 
-    // console.log(socket)
-
     RTCMultiConnectionServer.addSocket(socket);
 
     const user_name = socket.handshake.query.user_name
@@ -40,7 +38,7 @@ module.exports.listen = (app) => {
     const user = await findDocument(User, { user_name: user_name })
     if (!user) {
       socket.error('user not found')
-      socket.disconnect(true)
+      // socket.disconnect(true)
     }
 
     const id = user._id.toString()
@@ -170,7 +168,6 @@ module.exports.listen = (app) => {
 
       // avoid dupplicate initialisation
       const conversation_found = await getConversationMessages({ user_id: id, conversation_id: conversation_id, limit: 1 })
-      console.log(conversation_found)
       if (!conversation_found.length) {
 
         const user = await findDocument(User, { user_name: conversation_id })
@@ -185,7 +182,6 @@ module.exports.listen = (app) => {
         }
 
         const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
-        console.log(result)
         socket.broadcast.to(user._id).emit('res/message/new', result.data)
       }
 
