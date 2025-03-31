@@ -701,10 +701,10 @@ exports.assingment_expiration = ({
 }
 
 exports.announcement_email = ({
-                                   user_names,
-                                   announcer,
-                                   link,
-                               }) => {
+                                  user_names,
+                                  announcer,
+                                  link,
+                              }) => {
     const result = `
         <!DOCTYPE html>
         <html lang="en">
@@ -2359,6 +2359,157 @@ exports.invitationToSystem = ({
         </div>
         </body>
         </html>
+    `;
+
+    return result;
+};
+exports.invitationToUserGroup = ({
+                                  user_names,
+                                  user_group_name,
+                                  user_type
+                              }) => {
+    const result = `
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+    </style>
+</head>
+
+<body style="margin: 0; background-color: #ececec">
+<div class="logo" style="text-align: center; margin: 25px auto">
+    <a href="https://kurious.rw"><img src="https://apis.kurious.rw/assets/images/logo.png" alt="" /></a>
+</div>
+<div
+        class="flex"
+>
+    <div class="">
+        <div
+                class="content"
+                style="
+                                background-color: white;
+                                padding: 49px 39px 0;
+                                border-top: 3px solid #193074;
+                                margin: auto;
+                                min-height: 340px;
+                                max-width: 522px;
+                                border-radius: 0px;
+                                align-self: center;
+                              "
+        >
+            <div
+                    class="message"
+                    style="
+                                  font-family: 'Inter', sans-serif;
+                                  font-size: 15px;
+                                  font-style: normal;
+                                  font-weight: 400;
+                                  line-height: 24px;
+                                  letter-spacing: 0em;
+                                  text-align: left;
+                                  min-height: 96px;
+                                  width: 465px;
+                                  left: 39px;
+                                  top: 99px;
+                                "
+            >
+                Dear ${user_name} <br>
+                You have you have been assigned to ${ user_type === 'INSTRUCTOR' ? 'teach': 'learn'} in :  ${user_group_name},student group. ${ user_type === 'INSTRUCTOR' ? 'You now have this group as a destination when you create courses': 'You can now access courses in this user group'}.
+                <br>
+                <br>
+                Login to your kurious learn account to check more details.
+                <br>
+                Happy ${ user_type === 'INSTRUCTOR' ? 'teaching': 'learning'} !
+            </div>
+            <div
+                    class="thanks"
+                    style="
+                                  font-family: 'Inter', sans-serif;
+                                  font-size: 15px;
+                                  font-style: normal;
+                                  font-weight: 400;
+                                  line-height: 24px;
+                                  letter-spacing: 0em;
+                                  text-align: left;
+                                  margin: 50px 0;
+                                  height: 60px;
+                                  width: 126px;
+                                  left: 39px;
+                                  top: 328px;
+                                "
+            >Kurious learn team
+            </div>
+        </div>
+        <div
+                class="footer"
+                style="
+                                height: 66px;
+                                left: 0px;
+                                top: 476px;
+                                max-width: 600px;
+                                margin: auto;
+                                border-radius: 0px;
+                                background: #193074;
+                              "
+        >
+            <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+            >
+                <img
+                        class="ig_icon"
+                        style="
+                                    height: 20px;
+                                    width: 20px;
+                                    left: 41px;
+                                    top: 499px;
+                                    border-radius: 0px;
+                                    margin: 24px 12px;
+                                  "
+                        src="https://apis.kurious.rw/assets/images/ig.png"
+                        alt=""
+                />
+            </a>
+            <a
+                    href="https://kurious.rw"
+                    target="_blank"
+                    rel="noopener noreferrer"
+            >
+                <img
+                        class="fb_icon"
+                        style="
+                                    height: 20px;
+                                    width: 11px;
+                                    left: 87px;
+                                    top: 499px;
+                                    border-radius: 0px;
+                                    margin: 24px 12px;
+                                  "
+                        src="https://apis.kurious.rw/assets/images/fb.png"
+                        alt=""
+                />
+            </a>
+            <a
+                    href="https://twitter.com/kuriouslearnRw"
+                    target="_blank"
+                    rel="noopener noreferrer"
+            >
+                <img
+                        class="twitter_icon"
+                        style="left: 87px; margin: 24px 12px"
+                        src="https://apis.kurious.rw/assets/images/twitter.png"
+                        alt=""
+                />
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
     `;
 
     return result;
