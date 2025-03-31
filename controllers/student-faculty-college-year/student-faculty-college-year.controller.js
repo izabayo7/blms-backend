@@ -11,6 +11,7 @@ const {
   College,
   FacultyCollege,
   removeDocumentVersion,
+  simplifyObject,
   _
 } = require('../../utils/imports')
 // create router
@@ -172,11 +173,15 @@ router.post('/', async (req, res) => {
       facultyCollegeYear: req.body.facultyCollegeYear,
       student: req.body.student
     })
-    const saveDocument = await newDocument.save()
-    if (saveDocument)
-      return res.send(saveDocument).status(201)
+    let saveDocument = await newDocument.save()
+    if (saveDocument){
+      saveDocument = await simplifyObject(saveDocument)
+      saveDocument = await injectDetails([saveDocument])
+      return res.send(saveDocument[0]).status(201)
+    }
     return res.send('New studentFacilliyCollegeYear not Registered').status(500)
   } catch (error) {
+    console.log(error)
     return res.send(error).status(500)
   }
 })

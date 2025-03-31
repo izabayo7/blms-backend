@@ -141,6 +141,7 @@ router.get('/college/:id', async (req, res) => {
     students = await injectDetails(students)
     return res.status(200).send(students)
   } catch (error) {
+    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -179,7 +180,7 @@ router.get('/:id', async (req, res) => {
 
     if (!student)
       return res.status(404).send(`Student ${req.params.id} Not Found`)
-      student = await injectDetails([student])
+    student = await injectDetails([student])
     return res.status(200).send(student[0])
   } catch (error) {
     return res.status(500).send(error)
@@ -235,7 +236,7 @@ router.post('/', async (req, res) => {
   })
 
   newDocument.password = await hashPassword(newDocument.password)
-  const saveDocument = await newDocument.save()
+  let saveDocument = await newDocument.save()
   if (saveDocument)
     return res.status(201).send(saveDocument)
   return res.status(500).send('New Student not Registered')
@@ -342,13 +343,15 @@ router.put('/:id', async (req, res) => {
 
   if (req.body.password)
     req.body.password = await hashPassword(req.body.password)
-  const updateDocument = await Student.findOneAndUpdate({
+  let updateDocument = await Student.findOneAndUpdate({
     _id: req.params.id
   }, req.body, {
     new: true
   })
-  if (updateDocument)
-    return res.status(201).send(updateDocument)
+  if (updateDocument) {
+    updateDocument = await injectDetails([updateDocument])
+    return res.status(201).send(updateDocument[0])
+  }
   return res.status(500).send("Error ocurred")
 
 })
