@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation, acceptOrDenyInvitation, getInvitationbyToken } = require('../../controllers/user_invitations/user_invitations.controller')
+const { getAllPosts } = require('../../controllers/posts/posts.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
@@ -9,10 +9,8 @@ router.route('/')
      * /posts:
      *   get:
      *     tags:
-     *       - Posts
+     *       - Post
      *     description: Returns current logged in user_invitations
-     *     security:
-     *       - bearerAuth: -[]
      *     parameters:
      *       - name: page
      *         description: page number
@@ -28,7 +26,7 @@ router.route('/')
      *       500:
      *         description: Internal Server Error
      */
-    .get([auth, getMyInvitations])
+    .get(getAllPosts)
     /**
      * @swagger
      * /user_invitations:
