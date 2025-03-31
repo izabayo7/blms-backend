@@ -384,7 +384,8 @@ async function getPaymentStatus(req, res) {
     try {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
 
-        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: !college}));
+        // if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: !college}));
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: false}));
 
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],

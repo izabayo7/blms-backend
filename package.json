@@ -4,13 +4,16 @@
   "description": "e learning platform",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --name \"Kurious\"",
-    "restart": "pm2 restart Kurious --update-env",
+    "start:prod": "pm2 start index.js --name \"Kurious\"",
+    "start": "pm2 start index.js --name \"Kurious-Dev\"",
+    "restart:prod": "pm2 restart Kurious --update-env",
+    "restart": "pm2 restart Kurious-Dev --update-env",
+    "stop:prod": "pm2 stop Kurious-Dev",
     "stop": "pm2 stop Kurious",
     "dev": "nodemon .\\index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "I.Cedric",
+  "author": "Izabayo Cedric",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
