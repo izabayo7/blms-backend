@@ -145,6 +145,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Faculty_college
  *     description: Delete as faculty_college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: faculty_college's id
