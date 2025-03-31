@@ -1188,6 +1188,7 @@ router.post('/admin', async (req, res) => {
             other_names: req.body.other_names,
             gender: req.body.gender,
             email: req.body.email,
+            position: req.body.position,
             password: await hashPassword(req.body.password),
             college: saved_college.data._id,
             category: user_category._id

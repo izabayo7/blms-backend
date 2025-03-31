@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    position: {
+        type: String
+    },
     national_id: {
         type: String,
         // unique: true,
@@ -91,7 +94,10 @@ exports.validate_user = (credentials, method = 'create') => {
         date_of_birth: Joi.date(),
         college: Joi.string(),
         category: Joi.string().required(),
-        status: Joi.object({ disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required() })
+        status: Joi.object({
+            disabled: Joi.number().min(0).max(1).required(),
+            active: Joi.number().min(0).max(2).required()
+        })
     } : {
         sur_name: Joi.string().min(3).max(100),
         other_names: Joi.string().min(3).max(100),
