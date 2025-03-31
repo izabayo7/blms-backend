@@ -111,6 +111,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Returns chat_groups in a specified college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: name
  *         description: College's name
