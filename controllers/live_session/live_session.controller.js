@@ -289,10 +289,19 @@ router.post('/', async (req, res) => {
         const date = new Date(givenDate.getFullYear(), givenDate.getMonth(), givenDate.getDate(), parseInt(time[0]), parseInt(time[1]), 0);
         date.setMinutes(date.getMinutes() - 1)
 
-        const callback = function () {
+        let callback = function () {
+            console.log('dore wana')
             MyEmitter.emit(`upcoming_livesession_${req.user._id}`, target.course.user_group);
         }
 
+
+        scheduleEvent(date,callback)
+
+        date.setMinutes(date.getMinutes() + 1)
+
+        callback = function () {
+            MyEmitter.emit(`upcoming_livesession_${req.user._id}`, target.course.user_group, true, result.data._id);
+        }
 
         scheduleEvent(date,callback)
 

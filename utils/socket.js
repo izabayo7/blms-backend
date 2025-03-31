@@ -65,12 +65,17 @@ module.exports.listen = (app) => {
             });
 
         } else if (user.category.name == "INSTRUCTOR") {
+
             // tell users that live session is near
-            MyEmitter.on(`upcoming_livesession_${user._id}`, async(user_group) => {
+            MyEmitter.on(`upcoming_livesession_${user._id}`, async (user_group, isLive, liveId) => {
                 console.log('birabaye shn ', user_group, ' at ', new Date())
-                let newDocument = new Notification({
-                    content: "you have a live class in 5 minutes",
-                })
+                let newDocument = new Notification(isLive ? {
+                        link: `/live/${liveId}`,
+                        content: "Live session just started"
+                    } : {
+                        content: "you have a live class in 5 minutes",
+                    }
+                )
                 const saveDocument = await newDocument.save()
                 if (saveDocument) {
 
