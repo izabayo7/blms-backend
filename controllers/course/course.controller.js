@@ -189,7 +189,6 @@ router.get('/instructor/:id', async (req, res) => {
 
     return res.status(200).send(courses)
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -442,6 +441,7 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
+  try {
   const {
     error
   } = validateCourse(req.body)
@@ -465,10 +465,14 @@ router.post('/', async (req, res) => {
   let saveDocument = await newDocument.save()
   if (!saveDocument)
     return res.status(500).send('New Course not Registered')
+
+  saveDocument= JSON.parse(JSON.stringify(saveDocument))
   saveDocument = await injectChapters([saveDocument])
   saveDocument = await injectFacultyCollegeYear(saveDocument)
   return res.status(201).send(saveDocument[0])
-
+} catch (error) {
+  return res.status(500).send(error)
+}
 })
 
 /**

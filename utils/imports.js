@@ -215,7 +215,7 @@ module.exports.getCollege = async (id, type) => {
     })
     if (!facultyCollegeYear)
         return `facultyCollegeYear ${id} Not Found`
-    let facultyCollege = await FacultyCollege.findOne({
+    let facultyCollege = await module.exports.FacultyCollege.findOne({
         _id: facultyCollegeYear.facultyCollege
     })
     return facultyCollege.college
@@ -584,7 +584,8 @@ module.exports.getLatestMessages = async (userId) => {
             return 0;
         })
     } catch (error) {
-        console.log(error)
+        // handle this
+        return error
     }
 }
 
