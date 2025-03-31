@@ -913,6 +913,7 @@ module.exports.listen = (app) => {
                                                    submission_id,
                                                    attempt,
                                                    end,
+                                                   cheated
                                                }) => {
             if (!submission_id)
                 return
@@ -932,10 +933,11 @@ module.exports.listen = (app) => {
                 auto_submitted: attempt.auto_submitted,
                 total_marks: total_marks,
                 marked: is_selection_only,
-                time_submitted: new Date()
+                time_submitted: new Date(),
+                cheated
             } : attempt)
             if (updateDocument) {
-                socket.emit('exam-progress-saved', {index, end, is_selection_only});
+                socket.emit('exam-progress-saved', {index, end, cheated});
             }
 
         });

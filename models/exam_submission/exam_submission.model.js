@@ -99,6 +99,10 @@ const exam_submission_schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    cheated: {
+        type: Boolean,
+        default: false
+    },
     marked: {
         type: Boolean,
         default: false
