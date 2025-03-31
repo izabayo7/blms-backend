@@ -325,6 +325,11 @@ router.get('/user/:user_name', auth, async (req, res) => {
             }
           }
           if (foundSubmissions.length) {
+            foundSubmissions = foundSubmissions.sort((a, b) => {
+              if (a.createdAt > b.createdAt) return -1;
+              if (a.createdAt < b.createdAt) return 1;
+              return 0;
+            })
             courses[j].submissions = foundSubmissions
             courses[j].marking_status = 0
             courses[j].unread_results = 0
