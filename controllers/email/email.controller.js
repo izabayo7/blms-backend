@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
 const { invitationToSystem } = require('../../utils/emailGenerator');
-const ProtonMail = require('protonmail-api');
+// const ProtonMail = require('protonmail-api');
 
 
 const transporter = nodemailer.createTransport({
