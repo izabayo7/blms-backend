@@ -13,18 +13,14 @@ const {
  * @param req
  * @param res
  */
-exports.getInvitationbyToken = async (req, res) => {
+exports.getEmailConfirmation = async (req, res) => {
     try {
-        let {token} = req.params;
-        if (!token)
-            return res.send(formatResult(400, 'Token is required'))
-
-        if (!(uuidValidate(token)))
-            return res.status(400).send(formatResult(400, 'Invalid confirmation token'));
 
         const confirmation = await Account_confirmation.findOne({
-            token: token
-        }).populate(['college', 'category', 'user_group']);
+            user: req.user._id.toString(),
+            hasEmail: true,
+            status: "PENDING",
+        });
         if (!confirmation)
             return res.send(formatResult(400, 'User confirmation was not found'))
 
@@ -41,11 +37,14 @@ exports.getInvitationbyToken = async (req, res) => {
 /***
  *  Create's a new user_confirmation
  * @param user_id
+ * @param hasEmail
  */
-exports.createAccountConfirmation = async ({user_id}) => {
+exports.createAccountConfirmation = async ({user_id, email}) => {
     return await Account_confirmation.create({
         user: user_id,
         token: uuid(),
+        email,
+        hasEmail: email !== undefined
     });
 }
 
@@ -109,6 +108,7 @@ exports.confirmAccount = async (req, res) => {
         confirmation.status = "CONFIRMED"
 
         await confirmation.save()
+        await User.findOneAndUpdate({_id: confirmation.user._id()}, {email: confirmation.email})
 
         return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}`)
 

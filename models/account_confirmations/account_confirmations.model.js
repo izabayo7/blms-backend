@@ -33,6 +33,13 @@ const account_confirmation_schema = new mongoose.Schema({
         type: String,
         required: true
     },
+    email: {
+      type: String,
+    },
+    hasEmail:{
+      type: Boolean,
+      default: false
+    },
     status: {
         type: String,
         enum: ['PENDING', 'ACCEPTED', 'CONFIRMED'],

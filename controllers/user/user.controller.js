@@ -1455,6 +1455,12 @@ router.put('/', auth, async (req, res) => {
                 return res.send(formatResult(403, 'user_name was taken'))
         }
 
+        if (req.body.email) {
+            // create user account confirmation
+            await createAccountConfirmation({user_id: req.user._id, email: req.body.email})
+            req.body.email = undefined
+        }
+
         let result = await updateDocument(User, req.user._id, req.body)
 
         let user_category = await findDocument(User_category, {
