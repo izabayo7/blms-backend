@@ -314,10 +314,12 @@ router.get('/college/:category', [auth,filterUsers(["ADMIN"])], async (req, res)
         })
 
         let users = await findDocuments(User, req.params.category === 'ALL' ? {
-            college: req.user.college
+            college: req.user.college,
+            _id: {$ne: req.user._id}
         } : {
             college: req.user.college,
-            category: user_category._id
+            category: user_category._id,
+            _id: {$ne: req.user._id}
         })
 
         users = await add_user_details(users)
