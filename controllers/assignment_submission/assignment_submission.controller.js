@@ -608,7 +608,7 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/results_seen', auth, async (req, res) => {
+router.put('/:id/results_seen', auth,filterUsers(["STUDENT"]), async (req, res) => {
     try {
         const {
             error
@@ -617,7 +617,8 @@ router.put('/:id/results_seen', auth, async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         let assignment_submission = await findDocument(Assignment_submission, {
-            _id: req.params.id
+            _id: req.params.id,
+            user: req.user._id
         })
         if (!assignment_submission)
             return res.send(formatResult(404, 'assignment_submission not found'))
