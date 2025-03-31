@@ -91,17 +91,12 @@ const io = require('./utils/socket');
 io.listen(server)
 
 // Serve the chatdemo
-app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
-
-// Serve the chatdemo
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
 // Serve the live
 app.use('/live', express.static(path.join(__dirname, 'views/live')));
 
 app.get("/", express.static(path.join(__dirname, 'views')))
-
-// app.use('/kurious/message', messageController)
 
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, auth, user_category_controller)
