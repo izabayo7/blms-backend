@@ -73,9 +73,10 @@ const userSchema = new mongoose.Schema({
 })
 userSchema.plugin(timestamps)
 
+const PasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/
+
 // validate user
 exports.validate_user = (credentials, method = 'create') => {
-    const PasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/
     const schema = method == 'create' ? {
         sur_name: Joi.string().min(3).max(100).required(),
         other_names: Joi.string().min(3).max(100).required(),
@@ -100,6 +101,22 @@ exports.validate_user = (credentials, method = 'create') => {
             email: Joi.string().email(),
             date_of_birth: Joi.date()
         }
+    return Joi.validate(credentials, schema)
+}
+
+// validate admin
+exports.validate_admin = (credentials, method = 'create') => {
+    const schema = {
+        sur_name: Joi.string().min(3).max(100).required(),
+        other_names: Joi.string().min(3).max(100).required(),
+        user_name: Joi.string().min(3).max(100).required(),
+        gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
+        password: Joi.string().max(100).regex(PasswordRegex).required(),
+        email: Joi.string().email().required(),
+        maximum_users: Joi.number().required(),
+        college: Joi.string().min(3).max(200),
+        position: Joi.string().min(3).max(50)
+    }
     return Joi.validate(credentials, schema)
 }
 
