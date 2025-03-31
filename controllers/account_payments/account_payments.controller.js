@@ -386,16 +386,16 @@ async function getPaymentStatus(req, res) {
         let paid = true
         // const _college = await College.findOne({_id: req.user.college})
 
-        // if (_college.users_verification_link) {
-        //
-        //     if (!req.user.registration_number)
-        //         paid = false
-        //     else
-        //         paid = await checkCollegePayment({
-        //             registration_number: req.user.registration_number,
-        //             link: _college.users_verification_link
-        //         })
-        // }
+        if (_college.users_verification_link) {
+
+            if (!req.user.registration_number)
+                paid = false
+            else
+                paid = await checkCollegePayment({
+                    registration_number: req.user.registration_number,
+                    link: _college.users_verification_link
+                })
+        }
 
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
         let total_users = 1

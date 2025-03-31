@@ -130,8 +130,9 @@ const router = express.Router()
 router.get('/reg_number/:regnumber', async (req, res) => {
     try {
         console.log(req.params.regnumber)
+
         // check from db if the given reg_number exists
-        let exists = true, paid = false
+        let exists = true, paid = true
         if (!exists)
             return res.status(404).send("Reg number is invalid")
 
