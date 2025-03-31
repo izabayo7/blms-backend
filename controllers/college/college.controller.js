@@ -15,7 +15,8 @@ const {
   validateObjectId,
   sendResizedImage,
   u,
-  upload_single_image
+  upload_single_image,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -209,7 +210,7 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
     if (!college.logo || (college.logo !== req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    const path = `./uploads/colleges/${college._id}/${college.logo}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${college._id}/${college.logo}`)
 
     sendResizedImage(req, res, path)
   } catch (error) {
