@@ -16,10 +16,9 @@ const college_schema = new mongoose.Schema({
     //     unique: true,
     //     required: true
     // },
-    phone: {
-        type: String,
-        unique: true,
-        // required: true
+    maximum_users: {
+        type: Number,
+        required: true
     },
     location: {
         type: String,
