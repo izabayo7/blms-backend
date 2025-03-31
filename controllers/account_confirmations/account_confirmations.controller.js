@@ -90,7 +90,7 @@ exports.confirmAccount = async (req, res) => {
 
         if (!(uuidValidate(req.params.token))) return res.status(400).send(formatResult(400, 'Invalid confirmation token'));
 
-        const confirmation = await Account_confirmation.findOne({token: req.params.token, status: "CONFIRMED"}).populate({
+        const confirmation = await Account_confirmation.findOne({token: req.params.token}).populate({
             path: 'user',
             model: 'user',
             populate: {
