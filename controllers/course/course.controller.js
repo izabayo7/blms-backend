@@ -170,11 +170,11 @@ router.get('/statistics/user', async (req, res) => {
         let total_courses = 0
         if (req.user.category.name == "INSTRUCTOR") {
 
-            let courses = await Course.find({user: req.user._id})
+            let courses = await Course.find({user: req.user._id},{_id:1})
             const course_ids = courses.map(x => x._id.toString())
             let students = await User_progress.distinct('user', {course: {$in: course_ids}})
 
-            let chapters = await Chapter.find({course: {$in: course_ids}})
+            let chapters = await Chapter.find({course: {$in: course_ids}},{_id:1})
 
             let comments = await Comment.find({
                 "target.type": 'chapter',

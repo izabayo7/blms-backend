@@ -538,7 +538,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         for (let i in submission.answers) {
             i = parseInt(i)
             if (quiz.questions[i].type == 'file_upload') {
-                if (submission.answers[i].src == req.params.file_name || submission.answers[i].feedback_src == req.params.file_name ) {
+                if (submission.answers[i].src == req.params.file_name || submission.answers[i].feedback_src == req.params.file_name) {
                     file_found = true
                     break
                 }
@@ -601,7 +601,7 @@ router.get('/statistics/submitted', async (req, res) => {
     try {
         const {start_date, end_date} = req.query
         const student = await User_category.findOne({name: "STUDENT"});
-        const users = await User.find({college: req.user.college,category: student._id},{_id: 1})
+        const users = await User.find({college: req.user.college, category: student._id}, {_id: 1})
 
         const result = await Quiz_submission.aggregate([
             {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
@@ -630,6 +630,54 @@ router.get('/statistics/submitted', async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /quiz_submission/statistics/user:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of a user
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/user', async (req, res) => {
+    try {
+        let courses = await Course.find({user: req.user._id}, {_id: 1})
+        let chapters = await Chapter.find({course: {$in: courses.map(x => x._id.toString())}}, {_id: 1})
+        let quiz = await Quiz.find({
+            "target.type": "chapter",
+            "target.id": {$in: chapters.map(x => x._id.toString())}
+        }, {_id: 1, passMarks: 1, total_marks: 1})
+
+        const result = await Quiz_submission.find({quiz: {$in: quiz.map(x => x._id.toString())}}).sort({_id: -1})
+        const total_submissions = result.length
+        let marked = result.filter(e => e.marked)
+
+        let passed = marked.filter(e => ((e.total_marks / findQuizMarks(quiz, e.quiz)) * 100) >= findQuizMarks(quiz, e.quiz, true))
+        result.length = 4
+        return res.send(formatResult(u, u, {
+            marking_status: (marked.length / total_submissions) * 100,
+            perfomance: (passed.length / marked.length) * 100,
+            submissions: result
+        }))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+function findQuizMarks(quizarray, quizid, passMarks = false) {
+    for (const i in quizarray) {
+        if (quizarray[i]._id.toString() === quizid)
+            return passMarks ? quizarray[i].passMarks : quizarray[i].total_marks
+    }
+}
 
 /**
  * @swagger
