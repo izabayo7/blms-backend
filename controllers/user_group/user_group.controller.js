@@ -1,4 +1,5 @@
 // import dependencies
+const {filterUsers} = require("../../middlewares/auth.middleware");
 const { User_group, validate_user_group } = require('../../models/user_group/user_group.model')
 const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
@@ -101,7 +102,7 @@ router.get('/statistics', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/',filterUsers(["SUPERADMIN"]), async (req, res) => {
     // need improvement
     try {
         let result = await findDocuments(User_group)
@@ -137,7 +138,7 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:faculty', async (req, res) => {
+router.get('/college/:faculty',filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const fetch_all_faculties = req.params.faculty === "ALL"
 
@@ -189,7 +190,7 @@ router.get('/college/:faculty', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user', async (req, res) => {
+router.get('/user',filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
 
         let user_user_groups = await findDocuments(User_user_group, {
