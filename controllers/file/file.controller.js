@@ -1403,6 +1403,7 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
 // add an attachment
 router.post('/addAttachments/:chapter', async (req, res) => {
     try {
+        console.log(req)
         const {
             error
         } = validateObjectId(req.params.chapter)

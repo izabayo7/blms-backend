@@ -14,7 +14,7 @@ const {
     ChatGroup,
     formatContacts,
     getConversationMessages,
-    formatMessages
+    formatMessages,
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -43,7 +43,7 @@ module.exports.listen = (app) => {
 
         socket.on('request_conversation', async ({ groupId, contactId, lastMessage }) => {
             // get the messages
-            const messages = await getConversationMessages({ userId: id, groupId: groupId, contactId: contactId, lastMessage: lastMessage  })
+            const messages = await getConversationMessages({ userId: id, groupId: groupId, contactId: contactId, lastMessage: lastMessage })
 
             // format the messages
             const formatedMessages = await formatMessages(messages, id)
@@ -213,12 +213,16 @@ module.exports.listen = (app) => {
             const saveDocument = await newDocument.save()
 
             if (saveDocument) {
+                newDocument = JSON.parse(JSON.stringify(newDocument))
+                // inject sender Info
+                newDocument.sender = await returnUser(newDocument.sender)
+
                 recipients.forEach(recipient => {
                     // send the message
-                    socket.broadcast.to(recipient.id).emit('receive-message', newDocument)
+                    socket.broadcast.to(recipient.id).emit('receive-message',newDocument)
                 })
                 // send success mesage
-                socket.emit('message-sent', newDocument)
+                socket.emit('message-sent', saveDocument)
             }
         })
 

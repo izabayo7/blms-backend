@@ -99,7 +99,7 @@ socket.on('receive-message', (message) => {
   allMessages.push(message)
 
   // display the message if we are discussing with the sender
-  if (recipient.id == message.sender || recipient.id == message.group) {
+  if (recipient.id == message.sender._id || recipient.id == message.group) {
     outputMessage(message)
     socket.emit("message_received", {
       messageId: message._id
@@ -116,7 +116,7 @@ socket.on('receive-message', (message) => {
     // for groups
     else {
       for (const i in userContacts) {
-        if (message.sender == userContacts[i].id) {
+        if (message.sender._id == userContacts[i].id) {
           userContacts[i].unreadMessages += 1
           contactsList.childNodes[i].innerHTML = `${userContacts[i].userName} ${userContacts[i].unreadMessages}`
         }

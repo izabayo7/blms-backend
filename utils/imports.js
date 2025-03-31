@@ -410,7 +410,7 @@ module.exports.formatContacts = async (messages, userId) => {
             const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
             id = user._id
             name = `${user.surName} ${user.otherNames}`
-            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin'? 'superAdmin' : user.category.toLowerCase() }Profile/${students[i]._id}` : ''
+            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}` : ''
             unreadMessagesLength = await Message.find({
                 sender: user._id,
                 receivers: {
@@ -450,9 +450,14 @@ module.exports.formatMessages = async (messages, userId) => {
                     let diff = (new Date(message.createdAt).getTime() - new Date(relatedMessages[i].createdAt).getTime()) / 1000;
                     diff /= 60;
                     diff = Math.abs(Math.round(diff))
-                    if (diff < 1) {
+                    if (diff < 5) {
                         matchingMessages.push({ timestamp: relatedMessages[i].createdAt, message: relatedMessages[i].content })
-                        messagesCopy.splice(i, 1)
+                        for (const k in messagesCopy) {
+                            if (relatedMessages[i]._id == messagesCopy[k]._id) {
+                                messagesCopy.splice(k, 1)
+                            }
+                        }
+
                     }
                 }
                 formatedMessages.push({
@@ -583,7 +588,7 @@ module.exports.getLatestMessages = async (userId) => {
     }
 }
 
-// find a specific user
+// find a specific user (remove personal info)
 module.exports.returnUser = async (id) => {
     let user = await Admin.findOne({
         _id: id
