@@ -221,31 +221,35 @@ router.get('/user/:user_name', async (req, res) => {
         if (!user)
             return res.send(formatResult(404, 'user not found'))
 
-        const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
-            status: 1
-        })
-        if (!user_faculty_college_year)
-            return res.send(formatResult(200, undefined, []))
+        let result
 
-        let result = await findDocuments(Course, {
-            faculty_college_year: user_faculty_college_year.faculty_college_year
+        let user_category = await findDocument(User_category, {
+            _id: user.category
         })
+        if (user_category.name == 'STUDENT') {
+            const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+                user: user._id,
+                status: 1
+            })
+            if (!user_faculty_college_year)
+                return res.send(formatResult(200, undefined, []))
 
+            result = await findDocuments(Course, {
+                faculty_college_year: user_faculty_college_year.faculty_college_year
+            })
+
+            result = await injecUserProgress(result, user._id)
+            result = await injectUser(result, 'user')
+        }
+        else {
+            result = await findDocuments(Course, {
+                user: user._id
+            })
+        }
         // ******* while adding permissions remember to filter data according to the user requesting *******
 
         result = simplifyObject(result)
 
-        result = await injectChapters(result)
-        result = await injectFaculty_college_year(result)
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-
-        if (user_category.name == 'STUDENT') {
-            result = await injecUserProgress(result, user._id)
-            result = await injectUser(result, 'user')
-        }
 
         return res.send(formatResult(u, u, result))
     } catch (error) {
