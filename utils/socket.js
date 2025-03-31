@@ -110,6 +110,7 @@ module.exports.listen = (app) => {
                             content: "you have a live class in 5 minutes",
                         }
                     )
+                    console.log()
                     const saveDocument = await newDocument.save()
                     if (saveDocument) {
 
