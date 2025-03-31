@@ -469,7 +469,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
 
 /**
  * @swagger
- * /quiz_submission/{id}/attachment/{file_name}:
+ * /quiz_submission/attachment/{id}/{file_name}:
  *   get:
  *     tags:
  *       - Quiz_submission
@@ -495,7 +495,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id/attachment/:file_name', auth, async (req, res) => {
+router.get('/attachment/:id/:file_name', auth, async (req, res) => {
   try {
 
     const {
