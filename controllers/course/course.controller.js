@@ -204,15 +204,18 @@ router.get('/college', async (req, res) => {
                 if (!courses.length)
                     continue
 
-                for (const course of courses) {
-                    foundCourses.push(course)
+                for (const i in courses) {
+                    let total_students = await countDocuments(User_progress, { course: courses[i]._id })
+                    courses[i].total_students = total_students
+
+                    let total_chapters = await countDocuments(Chapter, { course: courses[i]._id })
+                    courses[i].total_topics = total_chapters
+
+                    foundCourses.push(courses[i])
                 }
             }
 
         }
-
-        if (foundCourses.length === 0)
-            return res.send(formatResult(404, `${college.name} course list is empty`))
 
         // foundCourses = await injectUser(foundCourses, 'user')
         // foundCourses = await injectChapters(foundCourses)
