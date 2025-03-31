@@ -454,7 +454,7 @@ router.post('/', async (req, res) => {
       if (find_super_admin)
         return res.send(formatResult(404, `System can't have more than one super_admin`))
     }
-console.log(college)
+
     let result = await createDocument(User, {
       user_name: req.body.user_name,
       sur_name: req.body.sur_name,

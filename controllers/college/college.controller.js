@@ -378,12 +378,18 @@ router.put('/:id', auth, async (req, res) => {
  *     description: Upload college logo (file upload using swagger is still under construction)
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *       - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: College id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: college logo to upload.
  *     responses:
  *       201:
  *         description: Created
