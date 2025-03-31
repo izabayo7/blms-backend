@@ -621,13 +621,18 @@ router.post('/', async (req, res) => {
 
     // check if the name or email were not used
     let user = await findDocument(User, {
-      email: req.body.email
+      $or: [{
+        email: req.body.email
+      }, {
+        user_name: req.body.user_name
+      }],
     })
 
     if (user) {
-      return res.send(formatResult(400, `User with same email is arleady registered`))
+      const emailFound = req.body.email == user.email
+      const user_nameFound = req.body.user_name == user.user_name
+      return res.send(formatResult(403, `User with ${emailFound ? 'same email ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
     }
-
     // avoid user_name === group name
     let chat_group = await findDocument(Chat_group, {
       name: req.body.user_name
@@ -1202,10 +1207,10 @@ router.delete('/:id', auth, async (req, res) => {
     // check if the user is never used
     let user_used = false
 
-    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+    const user_user_group = await findDocument(User_user_group, {
       user: req.params.id
     })
-    if (user_faculty_college_year)
+    if (user_user_group)
       user_used = true
 
     const course = await findDocument(Course, {
