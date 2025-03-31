@@ -50,7 +50,6 @@ require('./models/mongodb')
 
 // import controllers
 // const studentProgressController = require('./controllers/studentProgress/studentProgress.controller')
-// const chapterController = require('./controllers/chapter/chapter.controller')
 // const messageController = require('./controllers/message/message.controller')
 // const fileController = require('./controllers/file/file.controller')
 // const quizController = require('./controllers/quiz/quiz.controller')
@@ -68,6 +67,7 @@ const faculty_college_controller = require('./controllers/faculty_college/facult
 const faculty_college_year_controller = require('./controllers/faculty_college_year/faculty_college_year.controller')
 const user_faculty_college_year_controller = require('./controllers/user_faculty_college_year/user_faculty_college_year.controller')
 const course_controller = require('./controllers/course/course.controller')
+const chapter_controller = require('./controllers/chapter/chapter.controller')
 
 // use middlewares
 app.use(cors())
@@ -91,7 +91,6 @@ app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
 app.get("/", express.static(path.join(__dirname, 'views')))
 
 // app.use('/kurious/studentProgress', studentProgressController)
-// app.use('/kurious/chapter', chapterController)
 // app.use('/kurious/message', messageController)
 // app.use('/kurious/file', fileController)
 // app.use('/kurious/quiz', quizController)
@@ -110,6 +109,7 @@ app.use(`${basePath}/faculty_college`, faculty_college_controller)
 app.use(`${basePath}/faculty_college_year`, faculty_college_year_controller)
 app.use(`${basePath}/user_faculty_college_year`, user_faculty_college_year_controller)
 app.use(`${basePath}/course`, course_controller)
+app.use(`${basePath}/chapter`, chapter_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

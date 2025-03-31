@@ -15,8 +15,7 @@ const chapter_schema = new mongoose.Schema({
         required: true
     },
     description: {
-        type: String,
-        required: true
+        type: String
     },
     number: {
         type: Number,
@@ -27,7 +26,11 @@ const chapter_schema = new mongoose.Schema({
     },
     liveVideo: {
         type: String,
-    }
+    },
+    status: {
+        type: Number,
+        default: 1
+    },
 })
 
 chapter_schema.plugin(timestamps)
@@ -38,8 +41,9 @@ function validate_chapter(credentials) {
         name: Joi.string().min(3).required(),
         number: Joi.number().min(1),
         course: Joi.ObjectId().required(),
-        description: Joi.string().max(500).min(10).required(),
-        document: Joi.string()
+        description: Joi.string().max(500).min(10),
+        document: Joi.string(),
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

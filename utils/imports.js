@@ -321,19 +321,14 @@ module.exports.findDocument = async (model, query, fields) => {
     }
 }
 
-module.exports.getCollege = async (id, type) => {
-    let course = type === 'chapter' ? await Course.findOne({
-        _id: id
-    }) : undefined
-    let facultyCollegeYear = await this.FacultyCollegeYear.findOne({
-        _id: type === 'chapter' ? course.facultyCollegeYear : id
-    })
-    if (!facultyCollegeYear)
-        return `facultyCollegeYear ${id} Not Found`
-    let facultyCollege = await this.FacultyCollege.findOne({
-        _id: facultyCollegeYear.facultyCollege
-    })
-    return facultyCollege.college
+/**
+ *  counts documents from the given model using the given query
+ * @param {Object} model Model
+ * @param {Object} query Query object
+ * @returns Number
+ */
+module.exports.countDocuments = async (model, query) => {
+    return await model.find(query).countDocuments().exec()
 }
 
 module.exports.getCourse = async (id) => {

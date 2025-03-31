@@ -1,5 +1,22 @@
 // import dependencies
-const { express, Chapter, validateChapter, Course, validateObjectId } = require('../../utils/imports')
+const {
+  express,
+  Chapter,
+  fs,
+  validate_chapter,
+  Course,
+  validateObjectId,
+  formatResult,
+  findDocument,
+  countDocuments,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  Faculty_college,
+  Faculty_college_year,
+  User_progress,
+  Quiz,
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -9,8 +26,6 @@ const router = express.Router()
  * definitions:
  *   Chapter:
  *     properties:
- *       _id:
- *         type: string
  *       name:
  *         type: string
  *       course:
@@ -26,7 +41,6 @@ const router = express.Router()
  *     required:
  *       - name
  *       - course
- *       - description
  */
 
 /**
@@ -54,34 +68,43 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
+  try {
+    const {
+      error
+    } = validate_chapter(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  const { error } = validateChapter(req.body)
-  if (error)
-    return res.send(error.details[0].message).status(400)
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.body.course
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
-  // check if course exist
-  let course = await Course.findOne({ _id: req.body.course })
-  if (!course)
-    return res.send(`Course with code ${req.body.course} doens't exist`)
+    // avoid chapters with same names in the same course
+    let chapter = await findDocument(Chapter, {
+      course: req.body.course,
+      name: req.body.name
+    })
+    if (chapter.data)
+      return res.send(formatResult(400, 'name was taken'))
 
-  // avoid chapters with same names in the same course
-  let chapter = await Chapter.findOne({ course: req.body.course, name: req.body.name })
-  if (chapter)
-    return res.send(`Two chapters with the same in the same course are not allowed`)
+    const number = await countDocuments(Chapter, {
+      course: req.body.course
+    }) + 1
 
-  const number = await Chapter.find({ course: req.body.course }).countDocuments() + 1
+    let result = await createDocument(Chapter, {
+      name: req.body.name,
+      description: req.body.description,
+      number: number,
+      course: req.body.course
+    })
 
-  let newDocument = new Chapter({
-    name: req.body.name,
-    description: req.body.description,
-    number: number,
-    course: req.body.course
-  })
-
-  const saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.send(saveDocument).status(201)
-  return res.send('New Chapter not Registered').status(500)
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 
@@ -115,24 +138,48 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  let { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(error.details[0].message).status(400)
-  error = validateChapter(req.body)
-  error = error.error
-  if (error)
-    return res.send(error.details[0].message).status(400)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if chapter exist
-  let chapter = await Chapter.findOne({ _id: req.params.id })
-  if (!chapter)
-    return res.send(`Chapter with code ${req.params.id} doens't exist`)
+    error = validate_chapter(req.body)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  const updateDocument = await Chapter.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
-  if (updateDocument)
-    return res.send(updateDocument).status(201)
-  return res.send("Error ocurred").status(500)
+    // check if chapter exist
+    let chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
 
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.body.course
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
+
+    // avoid chapters with same names in the same course
+    chapter = await findDocument(Chapter, {
+      _id: {
+        $ne: req.params.id
+      },
+      course: req.body.course,
+      name: req.body.name
+    })
+    if (chapter.data)
+      return res.send(formatResult(400, 'name was taken'))
+
+    const result = await updateDocument(Chapter, req.params.id, req.body)
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -159,16 +206,70 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(error.details[0].message).status(400)
-  let chapter = await Chapter.findOne({ _id: req.params.id })
-  if (!chapter)
-    return res.send(`Chapter of Code ${req.params.id} Not Found`)
-  let deleteDocument = await Chapter.findOneAndDelete({ _id: req.params.id })
-  if (!deleteDocument)
-    return res.send('Chapter Not Deleted').status(500)
-  return res.send(`Chapter ${deleteDocument._id} Successfully deleted`).status(200)
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    let chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    // check if the course is never used
+    const chapter_used = false
+
+    const progress = await findDocument(User_progress, {
+      "finished_chapters.id": req.params.id
+    })
+    if (progress.data)
+      chapter_used = true
+
+    const quiz = await findDocument(Quiz, {
+      "target.id": req.params.id
+    })
+    if (quiz.data)
+      chapter_used = true
+
+    if (!chapter_used) {
+
+      const result = await deleteDocument(Chapter, req.params.id)
+
+      // check if course exist
+      let course = await findDocument(Course, {
+        _id: chapter.data.course
+      })
+
+      let faculty_college_year = await findDocument(Faculty_college_year, {
+        _id: course.data.faculty_college_year
+      })
+
+      let faculty_college = await findDocument(Faculty_college, {
+        _id: faculty_college_year.data.faculty_college
+      })
+
+      const path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${req.params.id}`
+      fs.exists(path, (exists) => {
+        if (exists) {
+          fs.remove(path, {
+            recursive: true
+          })
+        }
+      })
+
+      return res.send(result)
+    }
+
+    const updated_chapter = await updateDocument(Chapter, req.params.id, {
+      status: 0
+    })
+    return res.send(formatResult(200, 'chapter couldn\'t be deleted because it was used, instead it was disabled', updated_chapter.data))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 // export the router

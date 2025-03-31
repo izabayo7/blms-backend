@@ -328,8 +328,11 @@ router.delete('/:id', async (req, res) => {
       // delete files if available
       const path = `./uploads/colleges/${req.params.id}`
       fs.exists(path, (exists) => {
-        if (exists)
-          fs.rmdir(path, { recursive: true })
+        if (exists) {
+          fs.remove(path, {
+            recursive: true
+          })
+        }
       })
 
       return res.send(result)
