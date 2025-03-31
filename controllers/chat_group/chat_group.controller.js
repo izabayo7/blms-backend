@@ -452,7 +452,7 @@ router.put('/:id/profile', async (req, res) => {
       const result = await updateDocument(Chat_group, req.params.id, {
         profile: req.file.filename
       })
-      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${req.params.id}/profile/${result.data.profile}`
+      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${req.params.id}/profile/${result.data.profile}`
       return res.send(result)
     })
 
