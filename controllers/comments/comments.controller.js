@@ -278,7 +278,11 @@ router.post('/', async (req, res) => {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/Comment'
+ *           type: object
+ *           properties:
+ *             content:
+ *               type: string
+ *               required: true
  *     responses:
  *       201:
  *         description: Created
