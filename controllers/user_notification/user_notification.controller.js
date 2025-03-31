@@ -192,10 +192,9 @@ router.put('/allSeen', async (req, res) => {
         // check if notification exist
         let user_notification = await findDocument(User_notification, {
             user: req.user._id.toString()
-        },u,false)
+        }, u, false)
         if (!user_notification)
             return res.send(formatResult(404, 'user_notification not found'))
-
 
 
         for (const i in user_notification.notifications) {
@@ -242,14 +241,14 @@ router.put('/:notification/read', async (req, res) => {
         // check if notification exist
         let user_notification = await findDocument(User_notification, {
             user: req.user._id.toString()
-        },u,false)
+        }, u, false)
         if (!user_notification)
             return res.send(formatResult(404, 'user_notification not found'))
 
 
         let notification_found = false
         for (const i in user_notification.notifications) {
-            if (user_notification.notifications[i].id ===  req.params.notification) {
+            if (user_notification.notifications[i].id === req.params.notification) {
                 user_notification.notifications[i].status = 1
             }
         }
