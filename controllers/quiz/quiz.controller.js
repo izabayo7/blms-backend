@@ -588,7 +588,7 @@ router.put('/:id', async (req, res) => {
             if (
                 quiz_copy.questions[i].type.includes("image_select")
             ) {
-                let current_question = quiz.questions.filter(q = q._id == quiz_copy.questions[i]._id)
+                let current_question = quiz.questions.filter(q => q._id == quiz_copy.questions[i]._id)
                 current_question = current_question[0]
                 for (const j in quiz_copy.questions[i].options.choices) {
                     let deletePicture = true
