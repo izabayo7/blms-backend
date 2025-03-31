@@ -1,10 +1,337 @@
+exports.submission_email = ({
+                                user_name,
+                                institution_name,
+                                institution_email,
+                                subscription,
+                                token,
+                                user_email,
+                                user_phone,
+                                max_users,
+                            }) => {
+    const result = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width"/>
+            <style>
+                @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
+            </style>
+        </head>
+        
+        <body style="margin: 0; background-color: #ececec">
+        <div class="logo" style="text-align: center; margin: 25px auto">
+            <a href="https://kurious.rw"><img src="https://apis.kurious.rw/assets/images/logo.png" alt="" /></a>
+        </div>
+        <div class="flex">
+            <div class="">
+                <div
+                        class="content"
+                        style="
+                                background-color: white;
+                                border-top: 3px solid #193074;
+                                padding: 69px 39px;
+                                margin: auto;
+                                max-width: 522px;
+                                border-radius: 0px;
+                                align-self: center;
+                              "
+                >
+                    <div
+                            class="message"
+                            style="
+                                  font-family: 'Inter', sans-serif;
+                                  font-style: normal;
+                                  font-weight: normal;
+                                  font-size: 15px;
+                                  line-height: 24px;
+                                  color: #343434;
+                                  width: 281px;
+                                  margin-bottom: 10px;
+                                "
+                    >
+                        User ${user_name}. <br/>
+                        Registered a new college
+                    </div>
+                    <div
+                            style="
+                                  margin: auto;
+                                  width: 311px;
+                                  left: 265px;
+                                  top: 235px;
+                                "
+                    >
+                        <div
+                                style="
+                                    font-family: 'Inter', sans-serif;
+                                    font-style: normal;
+                                    font-weight: bold;
+                                    font-size: 15px;
+                                    line-height: 30px;
+                                    color: #343434;
+                                  "
+                        >
+                            Submission details are :
+                        </div>
+                        <div>
+                                  <span
+                                          style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                                  >Institution name</span
+                                  >
+                            :
+                            <span
+                                    style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                            >${institution_name}</span
+                            >
+                        </div>
+                        <div>
+                                  <span
+                                          style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                                  >Institution email</span
+                                  >
+                            :
+                            <span
+                                    style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                            >${institution_email}</span
+                            >
+                        </div>
+                        <div>
+                                  <span
+                                          style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                                  >User email</span
+                                  >
+                            :
+                            <span
+                                    style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                            >${user_email}</span
+                            >
+                        </div>
+                        <div>
+                                  <span
+                                          style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                                  >User phone</span
+                                  >
+                            :
+                            <span
+                                    style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                            >${user_phone}</span
+                            >
+                        </div>
+                        <div>
+                                  <span
+                                          style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                                  >Maximum users</span
+                                  >
+                            :
+                            <span
+                                    style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                            >${max_users}</span
+                            >
+                        </div>
+                        <div>
+                                  <span
+                                          style="
+                                      margin-right: 65px;
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                                  >Type</span
+                                  >
+                            :
+                            <span
+                                    style="
+                                      font-family: 'Inter', sans-serif;
+                                      font-style: normal;
+                                      font-weight: normal;
+                                      font-size: 14px;
+                                      line-height: 30px;
+                                      color: #343434;
+                                    "
+                            >${subscription}</span
+                            >
+                        </div>
+                    </div>
+                    <div class="text-center" style="text-align: center">
+                        <a
+                                href="https://elearning.rw/verify_account?token=${token}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                        >
+                            <button
+                                    class="confirm"
+                                    style="
+                                      height: 54px;
+                                      width: 172px;
+                                      left: 0px;
+                                      top: 0px;
+                                      border-radius: 10px;
+                                      background: #193074;
+                                      color: white;
+                                      border: none;
+                                      text-align: center;
+                                      margin: 24px auto 0px;
+                                      cursor: pointer;
+                                    "
+                                    onfocus="this.style.outline='none'"
+                            >
+                                Accept submission
+                            </button>
+                        </a>
+                    </div>
+                </div>
+                <div
+                        class="footer"
+                        style="
+                                height: 66px;
+                                left: 0px;
+                                top: 476px;
+                                border-radius: 0px;
+                                max-width: 600px;
+                                margin: auto;
+                                background: #193074;
+                              "
+                >
+                    <a
+                            href="https://twitter.com/kuriouslearnRw"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                    >
+                        <img
+                                class="ig_icon"
+                                style="
+                                    height: 20px;
+                                    width: 20px;
+                                    left: 41px;
+                                    top: 499px;
+                                    border-radius: 0px;
+                                    margin: 24px 12px;
+                                  "
+                                src="https://apis.kurious.rw/assets/images/ig.png"
+                                alt=""
+                        />
+                    </a>
+                    <a
+                            href="https://kurious.rw"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                    >
+                        <img
+                                class="fb_icon"
+                                style="
+                                    height: 20px;
+                                    width: 11px;
+                                    left: 87px;
+                                    top: 499px;
+                                    border-radius: 0px;
+                                    margin: 24px 12px;
+                                  "
+                                src="https://apis.kurious.rw/assets/images/fb.png"
+                                alt=""
+                        />
+                    </a>
+                    <a
+                            href="https://kurious.rw"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                    >
+                        <img
+                                class="twitter_icon"
+                                style="left: 87px; margin: 24px 12px"
+                                src="https://apis.kurious.rw/assets/images/twitter.png"
+                                alt=""
+                        />
+                    </a>
+                </div>
+            </div>
+        </div>
+        </body>
+        </html>
+  `;
+
+    return result;
+};
+
 exports.confirmation_email = ({
-                             user_name,
-                             institution_name,
-                             institution_email,
-                             subscription,
-                             token
-                         }) => {
+                                  user_name,
+                                  institution_name,
+                                  institution_email,
+                                  subscription,
+                                  token
+                              }) => {
     const result = `
         <!DOCTYPE html>
         <html lang="en">
@@ -275,9 +602,9 @@ exports.confirmation_email = ({
 };
 
 exports.confirm_account = ({
-                             user_name,
-                             token
-                         }) => {
+                               user_name,
+                               token
+                           }) => {
     const result = `
         <!DOCTYPE html>
         <html lang="en">
