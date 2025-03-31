@@ -109,7 +109,7 @@ router.get('/:id/document', async (req, res) => {
     if (!exists)
       return res.send("")
 
-    return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+    return res.sendFile(file_path)
 
   } catch (error) {
     return res.send(formatResult(500, error))
