@@ -20,12 +20,9 @@ exports.getEmailConfirmation = async (req, res) => {
             user: req.user._id.toString(),
             hasEmail: true,
             status: "PENDING",
-        });
+        }, {token: 0});
         if (!confirmation)
             return res.send(formatResult(400, 'User confirmation was not found'))
-
-        if (confirmation.status == "ACCEPTED")
-            return res.send(formatResult(400, 'User confirmation already accepted'))
 
         res.send(formatResult(200, u, confirmation))
     } catch

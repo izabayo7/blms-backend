@@ -1,4 +1,5 @@
 // import dependencies
+const {getEmailConfirmation} = require("../account_confirmations/account_confirmations.controller");
 const {sendEmailConfirmation} = require("../email/email.controller");
 const {Account_confirmation} = require("../../models/account_confirmations/account_confirmations.model");
 const {AcceptCollege} = require("../account_confirmations/account_confirmations.controller");
@@ -575,6 +576,23 @@ router.get('/current', auth, async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
+
+/**
+ * @swagger
+ * /user/checkEmailUpdateRequest:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: returns the latest pending email update request
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/checkEmailUpdateRequest', getEmailConfirmation)
 
 /**
  * @swagger
