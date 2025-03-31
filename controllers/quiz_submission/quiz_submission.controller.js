@@ -659,12 +659,13 @@ router.get('/statistics/user', async (req, res) => {
         const result = await Quiz_submission.find({quiz: {$in: quiz.map(x => x._id.toString())}}).populate('user',
             {sur_name: 1, other_names: 1, user_name: 1, _id: 0}
         ).populate('quiz',
-            {name: 1, _id:0}
+            {name: 1}
         ).sort({_id: -1})
         const total_submissions = result.length
         let marked = result.filter(e => e.marked)
 
-        let passed = marked.filter(e => ((e.total_marks / findQuizMarks(quiz, e.quiz)) * 100) >= findQuizMarks(quiz, e.quiz, true))
+        let passed = marked.filter(e => ((e.total_marks / findQuizMarks(quiz, e.quiz._id)) * 100) >= findQuizMarks(quiz, e.quiz._id, true))
+
         if (result.length > 4)
             result.length = 4
 
@@ -680,8 +681,9 @@ router.get('/statistics/user', async (req, res) => {
 
 function findQuizMarks(quizarray, quizid, passMarks = false) {
     for (const i in quizarray) {
-        if (quizarray[i]._id.toString() === quizid)
+        if (quizarray[i]._id.toString() === quizid.toString()) {
             return passMarks ? quizarray[i].passMarks : quizarray[i].total_marks
+        }
     }
 }
 
