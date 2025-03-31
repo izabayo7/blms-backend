@@ -24,8 +24,8 @@ const {
     createDocument,
     updateDocument,
     Chapter,
-    User_faculty_college_year,
-    Faculty_college_year,
+    User_user_group,
+    User_group,
     Course,
     deleteDocument,
     findFileType,
@@ -42,6 +42,7 @@ const {
     addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {filterUsers} = require("../../middlewares/auth.middleware");
+const {Faculty} = require("../../models/faculty/faculty.model");
 
 // create router
 const router = express.Router()
@@ -717,13 +718,13 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (!quiz.target.id)
             return res.send(formatResult(404, 'quiz is not available'))
 
-        const faculty_college_year = await get_faculty_college_year(req.body.quiz)
+        const user_group = await get_user_group(req.body.quiz)
 
-        let user_faculty_college_year = await findDocument(User_faculty_college_year, {
+        let user_user_group = await findDocument(User_user_group, {
             user: req.user._id,
-            faculty_college_year: faculty_college_year._id
+            user_group: user_group._id
         })
-        if (!user_faculty_college_year)
+        if (!user_user_group)
             return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
         const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'anwsering')
@@ -793,7 +794,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         let {
             error
@@ -822,9 +823,6 @@ router.put('/:id', auth, async (req, res) => {
 
         if (!quiz.target.id)
             return res.send(formatResult(404, 'quiz is not available'))
-
-        const faculty_college_year = await get_faculty_college_year(req.body.quiz)
-
 
         const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'marking')
         if (valid_submision.status !== true)
@@ -1210,13 +1208,13 @@ router.delete('/:id', auth, async (req, res) => {
             _id: quiz_submission.quiz
         })
         if (!quiz.target.id) {
-            let faculty_college_year = await get_faculty_college_year(quiz._id)
+            let user_group = await get_user_group(quiz._id)
 
-            let faculty_college = await findDocument(Faculty_college, {
-                _id: faculty_college_year.faculty_college
+            let faculty = await findDocument(Faculty, {
+                _id: user_group.faculty
             })
 
-            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
             fs.exists(path, (exists) => {
                 if (exists) {
                     fs.remove(path)
@@ -1337,7 +1335,7 @@ async function injectUserFeedback(submissions) {
     return submissions
 }
 
-async function get_faculty_college_year(quiz_id) {
+async function get_user_group(quiz_id) {
     let quiz = await findDocument(Quiz, {
         _id: quiz_id
     })
@@ -1350,18 +1348,18 @@ async function get_faculty_college_year(quiz_id) {
         course = await findDocument(Course, {
             _id: chapter.course
         })
-        return await findDocument(Faculty_college_year, {
-            _id: course.faculty_college_year
+        return await findDocument(User_group, {
+            _id: course.user_group
         })
     } else if (quiz.target.type == 'course') {
         course = await findDocument(Course, {
             _id: quiz.target.id
         })
-        return await findDocument(Faculty_college_year, {
-            _id: course.faculty_college_year
+        return await findDocument(User_group, {
+            _id: course.user_group
         })
     } else {
-        return await findDocument(Faculty_college_year, {
+        return await findDocument(User_group, {
             _id: quiz.target.id
         })
     }
