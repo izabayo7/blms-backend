@@ -549,6 +549,11 @@ router.get('/current', auth, async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
+ *       - name: measure
+ *         description: Tells if you need few info or extended
+ *         in: query
+ *         type: string
+ *         enum: ['few','extended']
  *     responses:
  *       200:
  *         description: OK
@@ -560,7 +565,8 @@ router.get('/current', auth, async (req, res) => {
 router.get('/:user_name', auth, async (req, res) => {
     try {
         let user = await findDocument(User, {
-            user_name: req.params.user_name
+            user_name: req.params.user_name,
+            college: req.user.college
         })
 
         if (!user)
@@ -569,7 +575,13 @@ router.get('/:user_name', auth, async (req, res) => {
         user = await add_user_details([user])
         user = user[0]
 
+        if (!req.query.measure || req.query.measure.toLowerCase() !== 'extended')
+            return res.send(formatResult(u, u, user))
+
+        const user_user_groups = User_user_group.find({user: user._id})
+
         return res.send(formatResult(u, u, user))
+
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -934,7 +946,7 @@ router.post('/admin', async (req, res) => {
             college: saved_college.data._id,
             category: user_category._id
         })
-console.log(result)
+        console.log(result)
         const {sent, err} = await sendConfirmEmail({
             email: result.data.email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,

@@ -1297,7 +1297,7 @@ exports.decodeAuthToken = async ({
 // all regex expressions
 exports.base64EncodedImage = /^data:([A-Za-z-+\/]+);base64,(.+)$/;
 
-exports.add_user_details = async (users) => {
+    exports.add_user_details = async (users) => {
     for (const i in users) {
         const category = await this.findDocument(this.User_category, {_id: users[i].category})
         users[i].category = category.name
