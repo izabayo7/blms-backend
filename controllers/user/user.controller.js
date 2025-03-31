@@ -242,8 +242,7 @@ router.get('/faculty/:id', auth, async (req, res) => {
           faculty_college_year: faculty_college_years[k]._id,
         }).populate('user')
         for (const j in user_faculty_college_years) {
-          console.log(user_faculty_college_years[j])
-          if (user_faculty_college_years[j].category == user_category._id)
+          if (user_faculty_college_years[j].user.category == user_category._id)
             result.push(user_faculty_college_years[j])
         }
       }
