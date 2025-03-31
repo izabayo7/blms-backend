@@ -20,11 +20,11 @@ const mailGenerator = new Mailgen({
     }
 });
 
-exports.sendInvitationMail = async (email, token) => {
+exports.sendInvitationMail = async ({email, token, names}) => {
     try {
         const response = {
             body: {
-                name: req.body.names,
+                name: names,
                 email,
                 intro: 'You was invited on Kurious.<br>',
                 action: {

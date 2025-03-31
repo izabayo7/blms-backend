@@ -125,7 +125,7 @@ exports.createUserInvitation = async (req, res) => {
       const result = await newDocument.save();
       console.log(process.env.EMAIL, process.env.PASSWORD)
 
-      const { sent, err } = await sendInvitationMail(req, res);
+      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token });
       if (err)
         return res.send(formatResult(500, err));
       console.log(sent)
