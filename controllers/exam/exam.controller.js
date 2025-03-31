@@ -110,7 +110,7 @@ router.get('/user/:user_name', filterUsers(['INSTRUCTOR']), async (req, res) => 
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:exam_name', async (req, res) => {
+router.get('/user/:user_name/:exam_id', async (req, res) => {
     try {
         let user = await findDocument(User, {
             user_name: req.params.user_name
@@ -125,9 +125,9 @@ router.get('/user/:user_name/:exam_name', async (req, res) => {
         const isInstructor = user.category == user_category._id
 
         let exam = await Exam.findOne(isInstructor ? {
-            name: req.params.exam_name,
+            _id: req.params.exam_id,
             user: user._id
-        } : {name: req.params.exam_name}).populate('course')
+        } : {_id: req.params.exam_id}).populate('course')
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
@@ -275,7 +275,6 @@ router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        // check if examname exist
         let course = await findDocument(Course, {
             _id: req.body.course
         })
@@ -335,7 +334,7 @@ router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
     try {
         let {
             error
@@ -348,38 +347,21 @@ router.put('/:id', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
+        let course = await findDocument(Course, {
+            _id: req.body.course
         })
-
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create exam'))
+        if (!course)
+            return res.send(formatResult(404, 'course not found'))
 
         // check if exam exist
         let exam = await findDocument(Exam, {
             _id: req.params.id,
-            user: user._id
+            user: req.user._id
         }, u, false)
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
         let exam_copy = exam
-
-        // check if examname exist
-        exam = await findDocument(Exam, {
-            _id: {
-                $ne: req.params.id
-            },
-            name: req.body.name
-        })
-        if (exam)
-            return res.send(formatResult(400, 'name was taken'))
 
         exam = exam_copy
         exam_copy = simplifyObject(exam)
@@ -391,16 +373,16 @@ router.put('/:id', async (req, res) => {
         req.body.total_marks = validQuestions.total_marks
 
         exam.name = req.body.name
+        exam.course = req.body.course
+        exam.type = req.body.type
         exam.instructions = req.body.instructions
         exam.duration = req.body.duration
         exam.questions = req.body.questions
         exam.total_marks = req.body.total_marks
-        exam.user = user._id
-        exam.published = req.body.published
+        exam.user = req.user._id
         exam.passMarks = req.body.passMarks
 
         await exam.save()
-
 
         // delete removed files
         for (const i in exam_copy.questions) {
