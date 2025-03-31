@@ -96,12 +96,9 @@ exports.getFaculties = async (req, res) => {
       if (error)
         return res.send(formatResult(400, error.details[0].message))
 
-      const faculty = await findDocument(Faculty, {
+      faculties = await findDocuments(Faculty, {
         _id: req.params.faculty_id
       })
-      if (!faculty)
-        return res.send(formatResult(404, 'faculty not found'))
-      foundFaculties.push(faculty)
     }
     else {
       // if (!faculty_colleges.length)
@@ -122,7 +119,6 @@ exports.getFaculties = async (req, res) => {
       )
 
     }
-
     // foundFaculties = await injectDetails(faculties, faculty_colleges)
     foundFaculties = faculties
     return res.send(formatResult(u, u, foundFaculties.length ? fetch_all_faculties ? foundFaculties : foundFaculties[0] : []))
