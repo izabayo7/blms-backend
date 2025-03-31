@@ -22,11 +22,6 @@ const userSchema = new mongoose.Schema({
     position: {
         type: String
     },
-    national_id: {
-        type: String,
-        // unique: true,
-        // required: true
-    },
     date_of_birth: {
         type: Date
     },
@@ -102,7 +97,6 @@ exports.validate_user = (credentials, method = 'create') => {
         sur_name: Joi.string().min(3).max(100),
         other_names: Joi.string().min(3).max(100),
         user_name: Joi.string().min(3).max(100), // regex needed
-        national_id: Joi.string().min(16).max(16), // regex needed
         gender: Joi.string().min(4).max(6).valid('male', 'female'),
         phone: Joi.string().regex(this.PhoneRegex),
         email: Joi.string().email(),

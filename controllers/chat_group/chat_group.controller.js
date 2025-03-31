@@ -345,7 +345,6 @@ router.get('/:code/search_members', auth, async (req, res) => {
       }]
     }, {
       phone: 0,
-      national_id: 0,
       _id: 0,
       password: 0,
       createdAt: 0,

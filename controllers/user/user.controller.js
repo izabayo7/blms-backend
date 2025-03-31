@@ -80,8 +80,6 @@ const router = express.Router()
  *         type: string
  *       user_name:
  *         type: string
- *       national_id:
- *         type: number
  *       date_of_birth:
  *         type: string
  *         format: date
@@ -110,7 +108,6 @@ const router = express.Router()
  *     required:
  *       - sur_name
  *       - other_names
- *       - national_id
  *       - gender
  *       - phone
  *       - email
@@ -499,7 +496,6 @@ router.get('/search', auth, async (req, res) => {
             }]
         }, {
             phone: 0,
-            national_id: 0,
             _id: 0,
             password: 0,
             createdAt: 0,
@@ -1047,7 +1043,6 @@ router.post('/', async (req, res) => {
             user_name: req.body.user_name,
             sur_name: req.body.sur_name,
             other_names: req.body.other_names,
-            national_id: req.body.national_id,
             phone: req.body.phone,
             gender: req.body.gender,
             email: req.body.email,
@@ -1399,8 +1394,6 @@ router.post('/login', async (req, res) => {
  *               type: string
  *              user_name:
  *                type: string
- *              national_id:
- *                type: string
  *              date_of_birth:
  *                type: string
  *                format: date
@@ -1435,11 +1428,6 @@ router.put('/', auth, async (req, res) => {
                 email: req.body.email
             })
 
-        if (req.body.national_id)
-            arr.push({
-                name: req.body.name
-            })
-
         if (req.body.user_name)
             arr.push({
                 user_name: req.body.user_name
@@ -1461,10 +1449,9 @@ router.put('/', auth, async (req, res) => {
 
             if (user) {
                 const phoneFound = req.body.phone ? req.body.phone == user.phone : false
-                const national_idFound = req.body.national_id ? req.body.national_id == user.national_id : false
                 const emailFound = req.body.email ? req.body.email == user.email : false
                 const user_nameFound = req.body.user_name ? req.body.user_name == user.user_name : false
-                return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+                return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
             }
         }
         if (req.body.user_name) {
