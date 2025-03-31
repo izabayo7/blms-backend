@@ -492,6 +492,46 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
     }
 })
 
+router.get('/:id/video',filterUsers(["INSTRUCTOR"]), auth, async (req, res) => {
+    try {
+
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+
+        const submission = await findDocument(Exam_submission, {
+            _id: req.params.id
+        })
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
+
+        if (!submission.hasVideo)
+            return res.send(formatResult(404, 'file not found'))
+
+        const exam = await findDocument(Exam, {
+            _id: submission.exam
+        })
+
+        const user = await findDocument(User, {
+            _id: exam.user
+        })
+
+        if (req.user._id !== exam.user)
+            return res.send(formatResult(403, 'you don\'t have access'))
+
+
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.exam}/submissions/${submission._id}/video.webm`)
+
+        streamVideo(req, res, file_path)
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 /**
  * @swagger
  * /submission/statistics/submitted:
