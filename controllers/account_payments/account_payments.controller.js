@@ -154,6 +154,9 @@ async function createPayment(req, res) {
 
         if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
+        if (college.plan !== 'HUGUKA' && req.user.category.name !== 'ADMIN')
+            return res.send(formatResult(403, `Your administration is in charge of the payment process`));
+
         // const requiredAmount = 5000
         //
         // if(req.body.amount_paid !== requiredAmount)
@@ -162,6 +165,7 @@ async function createPayment(req, res) {
             method_used: req.body.method_used,
             user: req.user._id,
             amount_paid: req.body.amount_paid,
+            balance: '',
             startingDate: req.body.startingDate,
             periodType: req.body.periodType,
             periodValue: req.body.periodValue,
@@ -198,6 +202,9 @@ async function getTotalBills(req, res) {
         if (!college || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
         if (college.plan !== 'HUGUKA') {
+            if (req.user.category.name !== 'ADMIN')
+                return res.send(formatResult(403, `Your administration is in charge of the payment process`));
+
             const total_users = await countDocuments(User, {college: college.college})
 
             if (req.body.total_users < total_users)
