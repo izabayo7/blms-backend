@@ -406,7 +406,7 @@ router.get('/faculty/:id/:category', auth, async (req, res) => {
 /**
  * @swagger
  * /user/search:
- *   post:
+ *   get:
  *     tags:
  *       - User
  *     description: Search users
