@@ -105,7 +105,13 @@ exports.validate_user = (credentials, method = 'create') => {
     return Joi.validate(credentials, schema)
 }
 
-
+exports.validateUserPasswordUpdate = (data) => {
+    const schema = {
+        current_password: Joi.string().min(8).required(),
+        new_password: Joi.string().min(8).required()
+    }
+    return Joi.validate(data, schema)
+}
 
 // create users model
 exports.user = mongoose.model('user', userSchema)
