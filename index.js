@@ -24,7 +24,7 @@ const swaggerOptions = {
     swaggerDefinition: {
 
         info: {
-            title: "KURIOUS APIs 📖",
+            title: "BLMS APIs 📖",
             version: '1.0.0',
             description: "Explore APIs as you wish",
         },
@@ -113,7 +113,7 @@ app.use(`${basePath}/user_category`, user_category_controller)
 app.use(`${basePath}/college`, college_controller)
 app.use(`${basePath}/faculty`, auth, Faculty_Routes)
 app.use(`${basePath}/user_groups`, auth, user_group_controller)
-app.use(`${basePath}/user_user_group`, auth, user_faculty_college_year_controller)
+app.use(`${basePath}/user_user_group`, user_faculty_college_year_controller)
 app.use(`${basePath}/user_logs`, auth, user_logs_controller)
 app.use(`${basePath}/course`, course_controller)
 app.use(`${basePath}/chapter`, auth, chapter_controller)
@@ -153,5 +153,5 @@ server.listen(port, () => {
         console.log = function () {
         }
     }
-    console.log(`Kurious Server activated on port...${port}`)
+    console.log(`BMLS Server activated on port...${port}`)
 })

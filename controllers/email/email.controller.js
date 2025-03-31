@@ -40,26 +40,26 @@ const {
 // const ProtonMail = require('protonmail-api');
 
 
-// const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     port: 465,
-//     auth: {
-//         user: process.env.EMAIL,
-//         pass: process.env.PASSWORD
-//     }
-// });
-
-const transporter = createTransport(smtpTransport({
-    host: "smtp.privateemail.com",
-    port: 587,
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    port: 465,
     auth: {
         user: process.env.EMAIL,
         pass: process.env.PASSWORD
-    },
-    tls: {
-        rejectUnauthorized: false
     }
-}));
+});
+
+// const transporter = createTransport(smtpTransport({
+//     host: "smtp.privateemail.com",
+//     port: 587,
+//     auth: {
+//         user: process.env.EMAIL,
+//         pass: process.env.PASSWORD
+//     },
+//     tls: {
+//         rejectUnauthorized: false
+//     }
+// }));
 
 // let transporter
 

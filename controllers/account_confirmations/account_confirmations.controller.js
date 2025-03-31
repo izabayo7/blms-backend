@@ -55,7 +55,7 @@ exports.AcceptCollege = async (req, res) => {
 
         let {token} = req.params
 
-        const confirmation = await Account_confirmation.findOne({_id: token, status: "PENDING"}).populate('user');
+        const confirmation = await Account_confirmation.findOne({ status: "PENDING"}).populate('user');
         if (!confirmation)
             return res.send(formatResult(400, 'Bad request'));
 
@@ -67,11 +67,12 @@ exports.AcceptCollege = async (req, res) => {
         if (err)
             return res.send(formatResult(500, err));
 
-        await Account_confirmation.updateOne({_id: token}, {status: 'ACCEPTED'})
+        await Account_confirmation.updateOne({status: 'ACCEPTED'})
 
         return res.send(formatResult(200, "College was accepted"));
 
     } catch (err) {
+        console.error(err)
         return res.send(formatResult(500, err));
     }
 };

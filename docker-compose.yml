@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blms-backend
+    ports:
+      - "${PORT:-7070}:${PORT:-7070}"
+    env_file:
+      - .env
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+      - uploads:/usr/src/app/uploads
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    container_name: blms-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env.db
+    volumes:
+      - mongodb-data:/data/db
+
+volumes:
+  mongodb-data:
+  uploads:

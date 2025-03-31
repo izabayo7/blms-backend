@@ -16,7 +16,7 @@ const college_schema = new mongoose.Schema({
     },
     maximum_users: {
         type: Number,
-        required: true
+        required: false
     },
     location: {
         type: String,
