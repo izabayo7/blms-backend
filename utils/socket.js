@@ -1,18 +1,12 @@
 const socket_io = require('socket.io')
 // import modules
 const {
-  Instructor,
-  Student,
-  Admin,
-  returnUser,
   Message,
   getLatestMessages,
-  ChatGroup,
   formatContacts,
   getConversationMessages,
   formatMessages,
   injectChapters,
-  StudentFacultyCollegeYear,
   simplifyObject,
   _,
   u,
@@ -22,7 +16,6 @@ const {
   UserNotification,
   injectDoer,
   injectStudentProgress,
-  formatResult,
   findDocument,
   User,
   Create_or_update_message,
