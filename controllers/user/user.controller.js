@@ -41,7 +41,8 @@ const {
   auth,
   validate_chat_group_profile_udpate,
   savedecodedBase64Image,
-  addStorageDirectoryToPath
+  addStorageDirectoryToPath,
+  countDocuments
 } = require('../../utils/imports')
 
 // create router
@@ -157,12 +158,48 @@ router.get('/', auth, async (req, res) => {
  */
 router.get('/statistics', auth, async (req, res) => {
   try {
-    console.log(req.user)
-    let users = req.user.college ? await findDocuments(User, { college: user.college }) : await findDocuments(User)
+    let total_users, total_students, total_instructors, total_staff;
+    const student_category = await findDocument(User_category, { name: "STUDENT" })
+    const instructor_category = await findDocument(User_category, { name: "INSTRUCTOR" })
 
-    users = await add_user_details(users)
-
-    return res.send(formatResult(u, u, users))
+    if (req.user.category.name == "SUPERADMIN") {
+      total_users = await countDocuments(User)
+      total_students = await countDocuments(User, { category: student_category._id })
+      total_instructors = await countDocuments(User, { category: instructor_category._id })
+      total_staff = await countDocuments(User, {
+        $and: [
+          {
+            category: {
+              $ne: student_category._id
+            },
+          },
+          {
+            category: {
+              $ne: instructor_category._id
+            },
+          }
+        ]
+      })
+    } else {
+      total_users = await countDocuments(User, { college: req.user.college })
+      total_students = await countDocuments(User, { college: req.user.college, category: student_category._id })
+      total_instructors = await countDocuments(User, { college: req.user.college, category: instructor_category._id })
+      total_staff = await countDocuments(User, {
+        college: req.user.college, $and: [
+          {
+            category: {
+              $ne: student_category._id
+            },
+          },
+          {
+            category: {
+              $ne: instructor_category._id
+            },
+          }
+        ]
+      })
+    }
+    return res.send(formatResult(u, u, { total_users, total_students, total_instructors, total_staff }))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
