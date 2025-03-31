@@ -99,7 +99,7 @@ exports.confirmAccount = async (req, res) => {
         if (!confirmation)
             return res.send(formatResult(403, 'account confirmation not found'));
         if (confirmation.status === "CONFIRMED")
-            return res.redirect(`https://elearning.rw/login?institution=${confirmation.user.college.name}`);
+            return res.redirect(`https://test.elearning.rw/login?institution=${confirmation.user.college.name}`);
 
 
         confirmation.status = "CONFIRMED"
