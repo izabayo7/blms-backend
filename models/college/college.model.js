@@ -8,10 +8,12 @@ const {
 const college_schema = new mongoose.Schema({
     name: {
         type: String,
+        unique: true,
         required: true
     },
     email: {
         type: String,
+        unique: true,
         required: true
     },
     phone: {
@@ -26,21 +28,22 @@ const college_schema = new mongoose.Schema({
     logo: {
         type: String,
     },
-    disabled: {
-        type: Boolean,
-        default: false,
-    }
+    // college status 1(active) 0(inactive)
+    status: {
+        type: Number,
+        default: 1
+    },
 })
 
 // validate college
 function validate_college(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
-        email: Joi.string().required(),
+        email: Joi.string().required(), 
         logo: Joi.string(),
         phone: Joi.string().max(15).required(),
-        location: Joi.string().required(),
-        disabled: Joi.boolean()
+        location: Joi.string().required(), // regex needed
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

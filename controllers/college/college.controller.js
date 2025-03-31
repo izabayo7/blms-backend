@@ -1,5 +1,19 @@
+const { exist } = require('joi')
 // import dependencies
-const { express, College, validateCollege, findDocument } = require('../../utils/imports')
+const {
+  express,
+  College,
+  User,
+  fs,
+  validate_college,
+  findDocument,
+  findDocuments,
+  formatResult,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  validateObjectId
+} = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -44,15 +58,15 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-    try {
-        let colleges = await College.find()
-        if (colleges.length === 0)
-            return res.status(404).send('College list is empty')
-        colleges = await injectLogoMediaPaths(colleges)
-        return res.status(200).send(colleges)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
+  try {
+    let result = await findDocuments(College)
+    if (result.data.length === 0)
+      return res.send(formatResult(404, 'College list is empty'))
+    result.data = await injectLogoMediaPaths(result.data)
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -77,15 +91,18 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/name/:name', async (req, res) => {
-    try {
-        let college = await College.findOne({ name: req.params.name })
-        if (!college)
-            return res.status(404).send(`College ${req.params.name} Not Found`)
-        college = await injectLogoMediaPaths([college])
-        return res.status(200).send(college[0])
-    } catch (error) {
-        return res.status(500).send(error)
-    }
+  try {
+    let result = await findDocument(College, {
+      name: req.params.name
+    })
+    if (!result.data)
+      return res.send(formatResult(404, `College ${req.params.name} Not Found`))
+    result.data = await injectLogoMediaPaths([result.data])
+    result.data = result.data[0]
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -110,15 +127,24 @@ router.get('/name/:name', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-    try {
-        let college = await findDocument(College, req.params.id)
-        if (!college)
-            return res.status(404).send(`College ${req.params.id} Not Found`)
-        college = await injectLogoMediaPaths([college])
-        return res.status(200).send(college[0])
-    } catch (error) {
-        return res.status(500).send(error)
-    }
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    let result = await findDocument(College, {
+      _id: req.params.id
+    })
+    if (!result.data)
+      return res.status(404).send(`College ${req.params.id} Not Found`)
+    result.data = await injectLogoMediaPaths([result.data])
+    result.data = result.data[0]
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 
@@ -145,35 +171,45 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-    try {
-        const { error } = validateCollege(req.body)
-        if (error)
-            return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      error
+    } = validate_college(req.body)
+    if (error)
+      return res.send(formatResult(404, error.details[0].message))
 
-        let college = await College.findOne({ email: req.body.email })
-        if (college)
-            return res.status(400).send(`College with email ${req.body.email} arleady exist`)
+    // check if the name or email were not used
+    let college = await findDocument(College, {
+      $or: [{
+        email: req.body.email
+      }, {
+        name: req.body.name
+      }, {
+        phone: req.body.phone
+      }]
+    })
 
-        college = await College.findOne({ name: req.body.name })
-        if (college)
-            return res.status(400).send(`College with name ${req.body.name} arleady exist`)
-
-        let newDocument = new College({
-            name: req.body.name,
-            email: req.body.email,
-            logo: req.file === undefined ? undefined : req.file.filename
-
-        })
-
-        let saveDocument = await newDocument.save()
-        if (saveDocument) {
-            saveDocument = await injectLogoMediaPaths([saveDocument])
-            return res.status(201).send(saveDocument[0])
-        }
-        return res.status(500).send('New College not Registered')
-    } catch (error) {
-        return res.status(500).send(error)
+    if (college.data) {
+      const phoneFound = req.body.phone == college.data.phone
+      const nameFound = req.body.name == college.data.name
+      const emailFound = req.body.email == college.data.email
+      return res.send(formatResult(400, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
+
+    let result = await createDocument(College, {
+      name: req.body.name,
+      email: req.body.email,
+      location: req.body.location,
+      phone: req.body.phone
+    })
+
+    result.data = await injectLogoMediaPaths([result.data])
+    result.data = result.data[0]
+    return res.send(result)
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -205,25 +241,52 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-    try {
-        const { error } = validateCollege(req.body, 'update')
-        if (error)
-            return res.status(400).send(error.details[0].message)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-        // check if college exist
-        let college = await findDocument(College, req.params.id)
-        if (!college)
-            return res.status(404).send(`College with code ${req.params.id} doens't exist`)
+    error = validate_college(req.body, 'update')
+    error = error.error
 
-        let updateDocument = await College.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
-        if (updateDocument) {
-            updateDocument = await injectLogoMediaPaths([updateDocument])
-            return res.status(201).send(updateDocument[0])
-        }
-        return res.status(500).send("Error ocurred")
-    } catch (error) {
-        return res.status(500).send(error)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if college exist
+    let college = await findDocument(College, { _id: req.params.id })
+    if (!college.data)
+      return res.send(formatResult(404, `College with code ${req.params.id} doens't exist`))
+
+    // check if the name or email were not used
+    college = await findDocument(College, {
+      _id: {
+        $ne: req.params.id
+      },
+      $or: [{
+        email: req.body.email
+      }, {
+        name: req.body.name
+      }, {
+        phone: req.body.phone
+      }]
+    })
+
+    if (college.data) {
+      const phoneFound = req.body.phone == college.data.phone
+      const nameFound = req.body.name == college.data.name
+      const emailFound = req.body.email == college.data.email
+      return res.send(formatResult(400, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
+
+    const result = await updateDocument(College, req.params.id, req.body)
+    result.data = await injectLogoMediaPaths([result.data])
+    result.data = result.data[0]
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -250,22 +313,44 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-    let college = await findDocument(College, req.params.id)
-    if (!college)
-        return res.status(404).send(`College of Code ${req.params.id} Not Found`)
-    let deleteDocument = await College.findOneAndDelete({ _id: req.params.id })
-    if (!deleteDocument)
-        return res.status(500).send('College Not Deleted')
-    return res.status(200).send(`College ${deleteDocument._id} Successfully deleted`)
+  try {
+
+    let college = await findDocument(College, { _id: req.params.id })
+    if (!college.data)
+      return res.send(formatResult(404, `College with code ${req.params.id} Not Found`))
+    // check if the college is never used
+    const user = await findDocument(User, {
+      college: req.params.id
+    })
+    if (!user.data) {
+      const result = await deleteDocument(College, req.params.id)
+
+      // delete files if available
+      const path = `./uploads/colleges/${req.params.id}`
+      fs.exists(path, (exists) => {
+        if (exists)
+          fs.rmdir(path, { recursive: true })
+      })
+
+      return res.send(result)
+    }
+
+    const update_role = await updateDocument(College, req.params.id, {
+      status: 0
+    })
+    return res.send(formatResult(200, `College ${college.name} couldn't be deleted because it was used, instead it was disabled`))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 async function injectLogoMediaPaths(colleges) {
-    for (const i in colleges) {
-        if (colleges[i].logo) {
-            colleges[i].logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${colleges[i]._id}/${colleges[i].logo}`
-        }
+  for (const i in colleges) {
+    if (colleges[i].logo) {
+      colleges[i].logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${colleges[i]._id}/${colleges[i].logo}`
     }
-    return colleges
+  }
+  return colleges
 }
 
 // export the router

@@ -48,6 +48,14 @@ module.exports.User_role = user_role
 module.exports.validate_user_role = validate_user_role
 
 const {
+    college,
+    validate_college
+} = require('../models/college/college.model')
+
+module.exports.College = college
+module.exports.validate_college = validate_college
+
+const {
     user_faculty_college_year,
     validate_user_faculty_college_year
 } = require('../models/user_faculty_college_year/user_faculty_college_year.model')

@@ -50,7 +50,6 @@ require('./models/mongodb')
 
 // import controllers
 // const superAdminController = require('./controllers/superAdmin/superAdmin.controller')
-// const collegeController = require('./controllers/college/college.controller')
 // const adminController = require('./controllers/admin/admin.controller')
 // const instructorController = require('./controllers/instructor/instructor.controller')
 // const studentController = require('./controllers/student/student.controller')
@@ -74,6 +73,7 @@ require('./models/mongodb')
 const user_controller = require('./controllers/users/user.controller')
 const user_category_controller = require('./controllers/user_category/user_category.controller')
 const user_role_controller = require('./controllers/user_role/user_role.controller')
+const college_controller = require('./controllers/college/college.controller')
 
 // use middlewares
 app.use(cors())
@@ -121,6 +121,7 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, user_category_controller)
 app.use(`${basePath}/user_role`, user_role_controller)
+app.use(`${basePath}/college`, college_controller)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))
