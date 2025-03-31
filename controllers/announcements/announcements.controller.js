@@ -1,4 +1,5 @@
 // import dependencies
+const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
 const {College} = require("../../utils/imports");
 const {Faculty_college} = require("../../utils/imports");
 const {Course} = require("../../utils/imports");
@@ -57,62 +58,46 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/:target/:id', async (req, res) => {
+router.get('/user', async (req, res) => {
     try {
 
-        let {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
 
-        const allowedTargetTypes = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
+        const ids = [req.user.college]
 
-        if (!allowedTargetTypes.includes(req.params.target)) {
-            return res.send(formatResult(400, 'invalid target type'))
+        // ['course', 'student_group', 'faculty', 'college']
+
+        const user_user_group = await findDocument(User_user_group, {
+            user: req.user._id,
+            status: "ACTIVE"
+        }, {user_group: 1}).populate('user_group',
+            {faculty: 1}
+        )
+
+        user_user_group.map(async (x) => {
+            ids.push(x.user_group._id.toString())
+            ids.push(x.user_group.faculty.toString())
+        })
+
+        if (req.user.category.name === 'STUDENT') {
+
+            const courses = await Course.find({
+                user_group: {$in: user_user_group.map(x => x.user_group._id.toString())},
+                published: true
+            }, {_id: 1})
+
+            courses.map(async (x) => {
+                ids.push(x._id.toString())
+            })
+
         }
 
-        let target
-
-        switch (req.params.target) {
-            case 'chapter':
-                target = await findDocument(Chapter, {
-                    _id: req.params.id
-                })
-                break;
-
-            case 'live_session':
-                target = await findDocument(Live_session, {
-                    _id: req.params.id
-                })
-                break;
-
-            case 'quiz_submission':
-                target = await findDocument(Quiz_submission, {
-                    _id: req.params.id
-                })
-                break;
-
-            case 'quiz_submission_answer':
-                target = await findDocument(Quiz_submission, {
-                    "answers._id": req.params.id
-                })
-                break;
-
-            default:
-                break;
-        }
-
-        if (!target)
-            return res.send(formatResult(404, 'announcement target not found'))
-
-        let announcements = await findDocuments(Announcement, {
-            "target.type": req.params.target,
-            "target.id": req.params.id,
-            reply: undefined
-        }, u, u, u, u, u, {_id: -1})
+        let announcements = await Announcement.find({
+            $or: [
+                {"target.id": {$in: ids}},
+                {user: req.user._id},
+            ]
+        }).sort({_id: -1})
         announcements = await injectUser(announcements, 'sender')
-        announcements = await injectAnnouncementsReplys(announcements)
         return res.send(formatResult(u, u, announcements))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -212,10 +197,10 @@ router.post('/', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
         if (!target)
             return res.send(formatResult(404, 'announcement target not found'))
 
-        if(req.body.target.type === 'college' && req.body.target.id != req.user.college)
+        if (req.body.target.type === 'college' && req.body.target.id != req.user.college)
             return res.send(formatResult(403, 'You are not allowed to send announcement in another college'))
 
-        if(req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
+        if (req.body.target.type === 'college' && req.user.category.name === "INSTRUCTOR")
             return res.send(formatResult(403, 'You are not allowed to send announcement in the whole college'))
 
 
