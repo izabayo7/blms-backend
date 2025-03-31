@@ -276,7 +276,7 @@ async function getTotalBills(req, res) {
             startingDate = new Date(payment.endingDate).toISOString()
         }
 
-        return res.send(formatResult(u, u, {amount, startingDate}));
+        return res.send(formatResult(u, u, {amount: amount > 0 ? amount : 0, startingDate}));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
@@ -323,14 +323,18 @@ async function getPaymentStatus(req, res) {
     try {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
 
-        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan'));
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: !college}));
 
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
             status: 'ACTIVE'
         }).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
 
-        if (!payment) return res.send(formatResult(u, 'You don\'t have a payment'));
+        if (!payment) return res.send(formatResult(u, 'You don\'t have a payment', {
+            disabled:
+                (college.plan === 'HUGUKA' && req.user.category.name === 'STUDENT') ||
+                (req.user.category.name !== 'ADMIN')
+        }));
 
         // {
         //     startDate,
@@ -341,7 +345,8 @@ async function getPaymentStatus(req, res) {
         return res.send(formatResult(200, u, {
             startDate: payment.startingDate,
             endDate: payment.endingDate,
-            balance: payment.balance
+            balance: payment.balance,
+            disabled: new Date() > new Date(payment.endingDate)
         }));
     } catch (err) {
         return res.send(formatResult(500, err));
