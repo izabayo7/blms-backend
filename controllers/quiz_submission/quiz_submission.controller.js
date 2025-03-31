@@ -797,7 +797,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
       _id: quiz.user
     })
 
-    const path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
 
     req.kuriousStorageData = {
       dir: path,
