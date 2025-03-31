@@ -27,7 +27,7 @@ const swaggerOptions = {
             version: '1.0.0',
             description: "Explore APIs as you wish",
         },
-        schemes: ['http', 'https'],
+        schemes: [process.env.NODE_ENV == 'production' ? 'https' : 'http'],
         host: host,
         basePath: basePath,
         securityDefinitions: {
