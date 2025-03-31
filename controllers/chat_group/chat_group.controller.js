@@ -766,6 +766,8 @@ router.put('/:code/add_members', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Remove a group member
+  *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         in: path
