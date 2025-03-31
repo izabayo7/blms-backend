@@ -5,6 +5,27 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
+/**
+ * @swagger
+ * definitions:
+ *   Assignment_submission:
+ *     properties:
+ *       assignment:
+ *         type: string
+ *       details:
+ *         type: string
+ *       marked:
+ *         type: boolean
+ *       total_marks:
+ *         type: number
+ *       user:
+ *         type: string
+ *     required:
+ *       - assignment
+ *       - details
+ *       - marked
+ */
+
 const schema = new mongoose.Schema({
     assignment: {
         type: String,
@@ -43,7 +64,7 @@ const schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-})
+},{timestamps: true})
 
 // validate assignment_submision
 function validate_assignment_submission(credentials) {

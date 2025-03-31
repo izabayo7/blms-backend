@@ -1,14 +1,16 @@
 // import dependencies
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {Assignment} = require("../../models/assignments/assignments.model");
-const {Assignment_submission} = require("../../models/assignment_submission/assignment_submission.model");
+const {
+    Assignment_submission,
+    validate_assignment_submission
+} = require("../../models/assignment_submission/assignment_submission.model");
 const {autoMarkSelectionQuestions} = require("../../utils/imports");
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     User,
     date,
-    validate_assignment_submission,
     validateObjectId,
     addAttachmentMediaPaths,
     injectUser,
@@ -44,53 +46,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * definitions:
- *   Assignment_submission:
- *     properties:
- *       assignment:
- *         type: string
- *       user:
- *         type: string
- *       used_time:
- *         type: number
- *       auto_submitted:
- *         type: boolean
- *       marked:
- *         type: boolean
- *       published:
- *         type: boolean
- *       total_marks:
- *         type: number
- *       answers:
- *         type: array
- *         items:
- *            type: object
- *            properties:
- *              text:
- *                type: string
- *              marks:
- *                type: number
- *              src:
- *                type: string
- *              choosed_options:
- *                type: array
- *                items:
- *                  type: object
- *                  properties:
- *                    text:
- *                      type: string
- *                    src:
- *                      type: string
- *     required:
- *       - assignment
- *       - user
- *       - used_time
- *       - answers
- */
-
-/**
- * @swagger
- * /assignment_submission/user:
+ * /assignment_submission:
  *   get:
  *     tags:
  *       - Assignment_submission
@@ -105,12 +61,12 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/user', auth, async (req, res) => {
+router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
 
         let result
 
-        if (req.user.category.name == 'STUDENT') {
+        if (req.user.category.name === 'STUDENT') {
 
             const user_user_group = await findDocument(User_user_group, {
                 user: req.user._id,
@@ -317,59 +273,6 @@ router.get('/:id', auth, async (req, res) => {
 
 /**
  * @swagger
- * /assignment_submission/assignment/{id}:
- *   get:
- *     tags:
- *       - Assignment_submission
- *     description: Returns assignment_submissions of the specified assignment
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Assignment id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/assignment/:id', auth, async (req, res) => {
-    try {
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        // check if assignment exist
-        let assignment = await findDocument(Assignment, {
-            _id: req.params.id
-        })
-        if (!assignment)
-            return res.send(formatResult(404, 'assignment not found'))
-
-        let result = await findDocuments(Assignment_submission, {
-            assignment: req.params.id
-        })
-
-        if (!result.length)
-            return res.send(formatResult(404, 'assignment_submissions not found'))
-
-        // result = await injectUser(result, 'user')
-
-        return res.send(formatResult(u, u, result))
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
  * /assignment_submission/user/{user_name}/{assignment_name}:
  *   get:
  *     tags:
@@ -559,7 +462,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
     try {
         req.body.user = req.user.user_name
         let {
@@ -568,66 +471,36 @@ router.post('/', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-
-        if (user_category.name !== 'STUDENT')
-            return res.send(formatResult(403, 'user is not allowed to do this assignment'))
-
         let assignment = await findDocument(Assignment, {
             _id: req.body.assignment
         })
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
 
-        if (!assignment.target.id)
+        if (assignment.status !== 'PUBLISHED')
             return res.send(formatResult(404, 'assignment is not available'))
 
-        const faculty_college_year = await get_faculty_college_year(req.body.assignment)
+        const user_group = await get_faculty_college_year(req.body.assignment)
 
-        let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
-            faculty_college_year: faculty_college_year._id
+        let user_user_group = await findDocument(User_user_group, {
+            user: req.user._id,
+            user_group: user_group
         })
-        if (!user_faculty_college_year)
+        if (!user_user_group)
             return res.send(formatResult(403, 'user is not allowed to do this assignment'))
-
-        const valid_submision = validateSubmittedAnswers(assignment.questions, req.body.answers, 'anwsering')
-        if (valid_submision.status !== true)
-            return res.send(formatResult(400, valid_submision.error))
 
         // check if assignment_submissions exist
         let assignment_submission = await findDocument(Assignment_submission, {
-            user: user._id,
+            user: req.user._id,
             assignment: req.body.assignment
         })
         if (assignment_submission)
             return res.send(formatResult(400, 'assignment_submission already exist'))
 
-        const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(assignment.questions, req.body.answers)
+        req.body.user = req.user._id
 
-        let result = await createDocument(Assignment_submission, {
-            user: user._id,
-            assignment: req.body.assignment,
-            answers: answers,
-            used_time: req.body.used_time,
-            auto_submitted: req.body.auto_submitted,
-            total_marks: total_marks,
-            marked: is_selection_only
-        })
+        let result = await createDocument(Assignment_submission, req.body)
         result = simplifyObject(result)
-        result.data = await injectAssignment([result.data])
-        result.data = {
-            document: result.data[0],
-            is_selection_only: is_selection_only
-        }
 
         return res.send(result)
     } catch (error) {
@@ -1115,5 +988,21 @@ router.delete('/:id', auth, filterUsers(["STUDENT"]), async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+async function get_faculty_college_year(assignment) {
+
+    let course, chapter
+
+    if (assignment.target.type === 'chapter') {
+        chapter = await findDocument(Chapter, {
+            _id: assignment.target.id
+        })
+    }
+    course = await findDocument(Course, {
+        _id: chapter ? chapter.course : assignment.target.id
+    })
+    return course.user_group
+}
+
 // export the router
 module.exports = router
