@@ -140,13 +140,13 @@ exports.createUserInvitation = async (req, res) => {
 exports.acceptOrDenyInvitation = async (req, res) => {
   try {
 
-    if (!(uuidValidate(req.body.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
+    if (!(uuidValidate(req.params.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const invitation = await User_invitation.findOne({ token: req.body.token, status: { $ne: 'PENDING' } });
+    const invitation = await User_invitation.findOne({ token: req.params.token, status: { $ne: 'PENDING' } });
     if (invitation)
       return res.send(formatResult(403, 'invitation token has already been closed'));
 
-    const _invitation = await User_invitation.findOne({ token: req.body.token, status: 'PENDING' });
+    const _invitation = await User_invitation.findOne({ token: req.params.token, status: 'PENDING' });
     if (!_invitation)
       return res.send(formatResult(403, 'invitation not found'));
 
@@ -172,13 +172,13 @@ exports.acceptOrDenyInvitation = async (req, res) => {
 exports.renewInvitation = async (req, res) => {
   try {
 
-    if (!(uuidValidate(req.body.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
+    if (!(uuidValidate(req.params.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const invitation = await User_invitation.findOne({ token: req.body.token, status: { $ne: 'PENDING' } });
+    const invitation = await User_invitation.findOne({ token: req.params.token, status: { $ne: 'PENDING' } });
     if (invitation)
       return res.send(formatResult(403, 'invitation token has already been closed'));
 
-    const _invitation = await User_invitation.findOne({ token: req.body.token, status: 'PENDING' });
+    const _invitation = await User_invitation.findOne({ token: req.params.token, status: 'PENDING' });
     if (!_invitation)
       return res.send(formatResult(403, 'invitation not found'));
 
@@ -195,3 +195,24 @@ exports.renewInvitation = async (req, res) => {
     return res.send(formatResult(500, err));
   }
 };
+
+/***
+ *  delete invitation
+ * @param req
+ * @param res
+ */
+exports.deleteInvitation = async (req, res) => {
+  try {
+    if (!(uuidValidate(req.params.token)))
+      return res.status(400).send(formatResult(400, 'Invalid invitation token'));
+
+    const result = await User_invitation.findOneAdDelete({ token: req.params.token });
+    if (!result)
+      return res.send(formatResult(404, 'invitation not found'));
+
+    return res.send(formatResult(200, 'DELETED'));
+  } catch
+  (e) {
+    return res.send(formatResult(500, e))
+  }
+}
