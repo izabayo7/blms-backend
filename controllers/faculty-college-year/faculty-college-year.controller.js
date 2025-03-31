@@ -7,7 +7,8 @@ const {
   FacultyCollege,
   validateFacultyCollegeYear,
   validateObjectId,
-  removeDocumentVersion
+  removeDocumentVersion,
+  StudentFacultyCollegeYear
 } = require('../../utils/imports')
 const {
   Faculty
@@ -186,9 +187,11 @@ router.post('/', async (req, res) => {
       facultyCollege: req.body.facultyCollege,
       collegeYear: req.body.collegeYear
     })
-    const saveDocument = await newDocument.save()
-    if (saveDocument)
-      return res.send(saveDocument).status(201)
+    let saveDocument = await newDocument.save()
+    if (saveDocument){
+      saveDocument = await injectDetails([saveDocument])
+      return res.send(saveDocument[0]).status(201)
+  }
     return res.send('New facultyCollegeYear not Registered').status(500)
   } catch (error) {
     return res.send(error).status(500)
@@ -266,6 +269,10 @@ async function injectDetails(facultyCollegeYears) {
       _id: facultyCollegeYears[i].collegeYear
     }).lean()
     facultyCollegeYears[i].collegeYear = removeDocumentVersion(collegeYear)
+
+    // add the number of students
+    const attendants = await StudentFacultyCollegeYear.find({ facultyCollegeYear: facultyCollegeYears[i]._id }).countDocuments()
+    facultyCollegeYears[i].attendants = attendants
   }
   return facultyCollegeYears
 }

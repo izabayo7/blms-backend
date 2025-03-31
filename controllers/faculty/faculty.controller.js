@@ -105,17 +105,76 @@ router.get('/college/:id', async (req, res) => {
       }).lean()
       if (!faculty)
         return res.send(`Faculty ${facultyCollege.faculty} Not Found`) // recheck use case
-        foundFaculties.push(faculty)
+      foundFaculties.push(faculty)
     }
     if (foundFaculties.length < 1)
       return res.status(404).send(`College ${college.name} has no faculties`)
-      foundFaculties = await injectDetails(foundFaculties, facultyColleges)
+    foundFaculties = await injectDetails(foundFaculties, facultyColleges)
     return res.send(foundFaculties).status(200)
 
   } catch (error) {
     return res.send(error).status(500)
   }
 })
+
+/**
+ * @swagger
+ * /faculty/import/college/{id}:
+ *   get:
+ *     tags:
+ *       - Faculty
+ *     description: Returns faculties that are not in a college hence importable
+ *     parameters:
+ *       - name: id
+ *         description: College's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/import/college/:id', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(error.details[0].message).status(400)
+    let college = await College.findOne({
+      _id: req.params.id
+    })
+    if (!college)
+      return res.status(404).send(`College ${req.params.id} Not Found`)
+
+
+    const all_faculties = await Faculty.find()
+
+    let foundFaculties = []
+
+    for (const i in all_faculties) {
+      const facultyCollege = await FacultyCollege.findOne({
+        college: req.params.id,
+        faculty: all_faculties[i]._id
+      })
+      if (!facultyCollege)
+        foundFaculties.push(all_faculties[i]);
+    }
+
+    if (foundFaculties.length < 1)
+      return res.status(404).send(`College ${college.name} has no importable faculties`)
+
+    return res.send(foundFaculties).status(200)
+
+  } catch (error) {
+    return res.send(error).status(500)
+  }
+})
+
 
 /**
  * @swagger
@@ -302,8 +361,7 @@ router.delete('/:id', async (req, res) => {
   return res.send(`Faculty ${deleteFaculty._id} Successfully deleted`).status(200)
 })
 
-async function injectDetails(faculties,facultyColleges) {
-  // add attendants
+async function injectDetails(faculties, facultyColleges) {
   // add head teacher
   for (const i in faculties) {
     let all_attendants = 0

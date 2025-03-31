@@ -6,7 +6,8 @@ const {
   Faculty,
   validateFacultyCollege,
   validateObjectId,
-  removeDocumentVersion
+  removeDocumentVersion,
+  simplifyObject
 } = require('../../utils/imports')
 // create router
 const router = express.Router()
@@ -85,7 +86,7 @@ router.post('/', async (req, res) => {
     } = validateFacultyCollege(req.body)
     if (error)
       return res.send(error.details[0].message).status(400)
-    console.log('no error')
+
     // check if faculty exist
     let faculty = await Faculty.findOne({
       _id: req.body.faculty
@@ -111,9 +112,11 @@ router.post('/', async (req, res) => {
       faculty: req.body.faculty,
       college: req.body.college
     })
-    const saveDocument = await newDocument.save()
-    if (saveDocument)
-      return res.send(saveDocument).status(201)
+    let saveDocument = await newDocument.save()
+    if (saveDocument){
+      saveDocument = await injectDetails([simplifyObject(saveDocument)])
+      return res.send(saveDocument[0]).status(201)
+    }
     return res.send('New facultyCollege not Registered').status(500)
   } catch (error) {
     return res.send(error).status(500)
