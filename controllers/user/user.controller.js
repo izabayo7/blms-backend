@@ -364,7 +364,7 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
  *         in: path
  *         required: true
  *         type: string
- *         enum: ['STUDENT','INSTRUCTOR']
+ *         enum: ['STUDENT','INSTRUCTOR','ALL']
  *     responses:
  *       200:
  *         description: OK
@@ -381,7 +381,7 @@ router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req,
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        if (!['STUDENT', 'INSTRUCTOR'].includes(req.params.category))
+        if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
             return res.send(formatResult(400, "Invalid category"))
 
         let faculty = await findDocument(Faculty, {
@@ -406,8 +406,7 @@ router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req,
                 status: "ACTIVE"
             }).populate('user')
             for (const j in user_user_groups) {
-                if (user_user_groups[j].user.category == user_category._id)
-                    // remove password
+                if (!user_category || user_user_groups[j].user.category === user_category._id.toString())
                     result.push(user_user_groups[j].user)
             }
         }

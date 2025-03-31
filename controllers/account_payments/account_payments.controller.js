@@ -8,6 +8,7 @@ const {countDocuments} = require("../../utils/imports");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {validate_account_payments} = require("../../models/account_payments/account_payments.model");
 const {Account_payments} = require("../../models/account_payments/account_payments.model");
+const Paymentwall = require('paymentwall');
 const {
     express,
     College,
@@ -202,39 +203,70 @@ async function createPayment(req, res) {
         if (req.body.amount_paid < balance)
             return res.send(formatResult(403, `The amount you gave is invalid (you should pay ${balance})`));
 
-        const payment = await Account_payments.findOneAndUpdate({
-            user: req.user._id,
-            status: 'ACTIVE'
-        }, {status: 'INACTIVE'})
+        // const payment = await Account_payments.findOneAndUpdate({
+        //     user: req.user._id,
+        //     status: 'ACTIVE'
+        // }, {status: 'INACTIVE'})
+        //
+        // if (payment)
+        //     balance -= payment.balance
+        //
+        // balance = req.body.amount_paid - balance
+        //
+        //
+        // const startingDate = payment ? payment.endingDate : new Date().toISOString()
+        // const endingDate = findPaymentEndingTime(startingDate, req.body.periodType, req.body.periodValue)
+        //
+        // // subtract the current months user value directly
+        //
+        // const obj = {
+        //     method_used: req.body.method_used,
+        //     user: req.user._id,
+        //     amount_paid: req.body.amount_paid,
+        //     balance,
+        //     total_users: req.body.total_users,
+        //     startingDate,
+        //     endingDate,
+        //     collegePaymentPlan: college._id.toString(),
+        //     periodType: req.body.periodType,
+        //     periodValue: req.body.periodValue,
+        // }
+        // if (college.plan !== 'HUGUKA')
+        //     obj.college = req.user.college
+        //
+        // let result = await createDocument(Account_payments, obj)
+        // return res.send(result);
 
-        if (payment)
-            balance -= payment.balance
+        // going to test paymentwall apis
+        Paymentwall.Configure(
+            Paymentwall.Base.API_GOODS,
+            'cf0cc980e0164b3bd5697ef5c2aadc4d',
+            'a2dcc2583618cbec643144c485106f0e'
+        );
 
-        balance = req.body.amount_paid - balance
+        let widget = new Paymentwall.Widget(
+            'user40012',                                // id of the end-user who's making the payment
+            'pw',                                       // widget code, e.g. pw; can be picked in the Widgets section of your merchant account
+            [                                           // product details for Flexible Widget Call.
+                // Leave empty if product selection happens on Paymentwall's side
+                new Paymentwall.Product(
+                    'product301',                           // id of the product in your system
+                    9.99,                                   // price
+                    'USD',                                  // currency code
+                    'Kurious Learn Subscription',                      // product name
+                    // if it is a onetime charge product, you don't need to configure time-based part
+                    Paymentwall.Product.TYPE_SUBSCRIPTION,  // this is a time-based product
+                    req.body.periodValue,                                      // length of product period
+                    req.body.periodType === 'MONTH' ? Paymentwall.Product.PERIOD_TYPE_MONTH : Paymentwall.Product.PERIOD_TYPE_YEAR,  // type of product period
+                    true                                    // this is a recurring product
+                )
+            ],
+            {'email': 'cedric@kurious.rw'}              // additional parameters. for full list check API docs
+        );
+        const html = widget.getHtmlCode()
+        return res.send(widget.getHtmlCode())
 
 
-        const startingDate = payment ? payment.endingDate : new Date().toISOString()
-        const endingDate = findPaymentEndingTime(startingDate, req.body.periodType, req.body.periodValue)
-
-        // subtract the current months user value directly
-
-        const obj = {
-            method_used: req.body.method_used,
-            user: req.user._id,
-            amount_paid: req.body.amount_paid,
-            balance,
-            total_users: req.body.total_users,
-            startingDate,
-            endingDate,
-            collegePaymentPlan: college._id.toString(),
-            periodType: req.body.periodType,
-            periodValue: req.body.periodValue,
-        }
-        if (college.plan !== 'HUGUKA')
-            obj.college = req.user.college
-
-        let result = await createDocument(Account_payments, obj)
-        return res.send(result);
     } catch (err) {
         return res.send(formatResult(500, err));
     }
@@ -352,7 +384,8 @@ async function getPaymentStatus(req, res) {
     try {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
 
-        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: !college}));
+        // if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: !college}));
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan', {disabled: false}));
 
         const payment = await Account_payments.findOne({
             $or: [{user: req.user._id}, {college: req.user.college}],
