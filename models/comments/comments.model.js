@@ -33,16 +33,18 @@ const comment_schema = new mongoose.Schema({
 comment_schema.plugin(timestamps)
 
 // validate comment
-function validate_comment(credentials) {
-    const schema = {
-        sender: Joi.ObjectId().required(),
+function validate_comment(credentials, action = 'create') {
+    const schema = action == 'create' ? {
+        sender: Joi.string().min(3).max(100).required(),
         target: Joi.object({
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
-        }),
+        }).required(),
         content: Joi.string().max(9000).required(),
         reply: Joi.ObjectId(),
-    }
+    } : {
+            content: Joi.string().max(9000).required()
+        }
     return Joi.validate(credentials, schema)
 }
 

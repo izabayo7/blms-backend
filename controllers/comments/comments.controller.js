@@ -13,7 +13,8 @@ const {
   deleteDocument,
   Live_session,
   createDocument,
-  updateDocument
+  updateDocument,
+  Chapter
 } = require('../../utils/imports')
 
 // create router
@@ -173,6 +174,12 @@ router.post('/', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
+    const user = await findDocument(User, { user_name: req.body.sender })
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    req.body.sender = user._id
+
     req.body.target.type = req.body.target.type.toLowerCase()
 
     const allowedTargets = ['chapter', 'live_session']
@@ -246,7 +253,7 @@ router.put('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    error = validate_comment(req.body)
+    error = validate_comment(req.body, 'update')
     error = error.error
     if (error)
       return res.send(formatResult(400, error.details[0].message))
