@@ -73,6 +73,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - User_progress
  *     description: Returns a specified user_progress
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: user_progress's id
