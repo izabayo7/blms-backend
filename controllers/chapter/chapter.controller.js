@@ -740,6 +740,8 @@ router.post('/:id/attachments', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Delete a chapter
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
