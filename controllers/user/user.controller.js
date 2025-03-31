@@ -567,6 +567,8 @@ router.post('/login', async (req, res) => {
  *     tags:
  *       - User
  *     description: Update User
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *        - name: id
  *          in: path
@@ -588,7 +590,7 @@ router.post('/login', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     let {
       error
