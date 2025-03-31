@@ -40,6 +40,42 @@ const router = express.Router()
 
 /**
  * @swagger
+ * /faculty_college_year/statistics:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get faculty_college_year statistics
+ *     security:
+ *       - bearerAuth: -[]
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics', async (req, res) => {
+    try {
+        let total_student_groups = 0
+        if (req.user.category.name == "SUPERADMIN") {
+            total_student_groups = await countDocuments(Faculty_college_year)
+        } else {
+
+            let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
+            for (const i in faculty_college) {
+                let faculty_college_year = await countDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+                total_student_groups += faculty_college_year
+            }
+        }
+        return res.send(formatResult(u, u, { total_student_groups }))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
  * /faculty_college_year:
  *   get:
  *     tags:

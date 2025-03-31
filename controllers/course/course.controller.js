@@ -121,10 +121,8 @@ router.get('/statistics', async (req, res) => {
         } else {
 
             let faculty_college = await findDocuments(Faculty_college, { college: req.user.college })
-            // console.log(faculty_college)
             for (const i in faculty_college) {
                 let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
-                console.log(faculty_college_year)
                 if (!faculty_college_year.length)
                     continue
 
