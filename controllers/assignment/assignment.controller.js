@@ -533,7 +533,7 @@ async function sendLiveNotifications({instructor_category, id}) {
         return
 
     let newDocument = new Notification({
-            link: `/assignments/${id}`,
+            link: `/assessments/assignments/${id}`,
             content: `Assingment '${assignment.title}' is ending in 2 hours`
         }
     )
@@ -577,7 +577,7 @@ async function sendLiveNotifications({instructor_category, id}) {
                     email: user_user_groups[i].user.email,
                     user_names: `Mr${user_user_groups[i].user.gender === 'female' ? 's' : ''} ${user_user_groups[i].user.sur_name} ${user_user_groups[i].user.other_names}`,
                     assignment_name: assignment.title,
-                    link: `https://${process.env.FRONTEND_HOST}/assignments/${assignment._id}`
+                    link: `https://${process.env.FRONTEND_HOST}/assessments/assignments/${assignment._id}`
                 })
 
 

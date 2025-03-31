@@ -645,7 +645,7 @@ router.put('/release_marks/:id', async (req, res) => {
                         instructor_names: req.user.sur_name + ' ' + req.user.other_names,
                         assignment_name: quiz.name,
                         assignment_type: 'quiz',
-                        link: `https://${process.env.FRONTEND_HOST}/quiz/${quiz.name}/${submissions[i].user.user_name}`
+                        link: `https://${process.env.FRONTEND_HOST}/assessments/quiz/${quiz.name}/${submissions[i].user.user_name}`
                     })
                 }
             }

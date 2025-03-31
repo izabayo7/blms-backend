@@ -513,7 +513,7 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
                         instructor_names: req.user.sur_name + ' ' + req.user.other_names,
                         assignment_name: exam.name,
                         assignment_type: 'exam',
-                        link: `https://${process.env.FRONTEND_HOST}/exams/${req.params.id}/${submissions[i].user.user_name}`
+                        link: `https://${process.env.FRONTEND_HOST}/assessments/exams/${req.params.id}/${submissions[i].user.user_name}`
                     })
                 }
             }
