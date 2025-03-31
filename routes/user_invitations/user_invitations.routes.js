@@ -31,7 +31,7 @@ router.route('/')
     .get([auth, getMyInvitations])
     /**
      * @swagger
-     * /users:
+     * /user_invitations:
      *   post:
      *     tags:
      *       - User_invitation
