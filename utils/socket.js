@@ -402,7 +402,7 @@ module.exports.listen = (app) => {
                 doer_type: "User",
                 doer_id: id,
                 content: `published ${course.name}`,
-                link: `/courses/preview/${course.name}`,
+                link: `/courses/preview/_id${course._id}_id`,
             })
             const saveDocument = await newDocument.save()
             if (saveDocument) {

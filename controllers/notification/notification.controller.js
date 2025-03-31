@@ -30,7 +30,6 @@ const router = express.Router()
  *       content:
  *         type: string
  *     required:
- *       - user_type
  *       - user
  *       - content
  */
@@ -88,7 +87,7 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:id', async (req, res) => {
+router.get('/user', async (req, res) => {
   try {
     const {
       error
@@ -96,17 +95,9 @@ router.get('/user/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let user_found = await findDocument(User, {
-      _id: req.params.id
-    })
-    if (!user_found)
-      return res.send(formatResult(404, 'user not found'))
-
     const result = await findDocuments(Notification, {
-      user: req.params.id
+      user: req.user._id
     })
-    if (!result.length)
-      return res.send(formatResult(404, 'notifications not found'))
 
     return res.send(result)
   } catch (error) {
@@ -153,9 +144,7 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(404, 'user not found'))
 
     let result = await createDocument(Notification, {
-      user_type: req.body.user_type,
-      user: req.body.user,
-      content: req.body.content,
+      user: req.user_id,
       link: req.body.link,
       content: req.body.content
     })
@@ -215,10 +204,6 @@ router.put('/:id', async (req, res) => {
     })
     if (!notification)
       return res.send(formatResult(404, 'notification not found'))
-
-    let user = await findDocument(User, { _id: req.body.user })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
 
     const result = await updateDocument(Notification, req.params.id, req.body)
 

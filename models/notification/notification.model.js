@@ -22,7 +22,6 @@ notification_schema.plugin(timestamps)
 // validate notification
 function validate_notification(credentials) {
     const schema = {
-        user: Joi.ObjectId().required(),
         link: Joi.string().required(),
         content: Joi.string().required()
     }
