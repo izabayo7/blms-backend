@@ -1,4 +1,5 @@
 // import dependencies
+const {Chapter} = require("../../utils/imports");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
@@ -578,16 +579,65 @@ router.get('/:user_name', auth, async (req, res) => {
         if (!req.query.measure || req.query.measure.toLowerCase() !== 'extended')
             return res.send(formatResult(u, u, user))
 
-        const user_user_groups = await User_user_group.find({user: user._id, status: "ACTIVE"}, {user_group: 1}).populate('user_group')
+        const user_user_groups = await User_user_group.find({
+            user: user._id,
+            status: "ACTIVE"
+        }, {user_group: 1}).populate('user_group')
 
         const user_group_names = []
 
-        user_user_groups.map(x=>{
+        user_user_groups.map(x => {
             user_group_names.push(x.user_group.name)
         })
 
+        let courses
+
+        if (user.category === "INSTRUCTOR") {
+
+            courses = await Course.find({
+                user: user._id.toString()
+            }).populate('user_group').lean()
+
+            for (const coursesKey in courses) {
+                const chapters = await Chapter.distinct('_id', {course: courses[coursesKey]._id.toString()})
+
+                courses[coursesKey].total_students = await User_progress.distinct('user', {course: courses[coursesKey]._id.toString()}).count()
+
+                const quiz = await Quiz.find({
+                    "target.type": "chapter",
+                    "target.id": {$in: chapters.map(x => x.toString())}
+                }, {total_marks: 1, status: 1, updatedAt: 1}).sort({_id: -1})
+
+                const submissions = await Quiz_submission.find({
+                    quiz: {$in: quiz.map(x => x._id.toString())}
+                }, {total_marks: 1, quiz: 1})
+
+                let total_required = 0
+                let total_got = 0
+
+                quiz.map(x => {
+                    total_required += (x.total_marks * submissions.filter(y => y.quiz === x._id.toString()).length)
+
+                    if (x.status === 2)
+                        if (!courses[coursesKey].latest_marks_release)
+                            courses[coursesKey].latest_marks_release = x.updatedAt
+                })
+
+                submissions.map(x => {
+                    total_got += x.total_marks
+                })
+                courses[coursesKey].successRate = (total_got / total_required) * 100
+
+                courses[coursesKey].total_chapters = chapters.length
+
+            }
+
+        }
+
+
         return res.send(formatResult(u, u, {
             user,
+            courses,
             user_groups: user_group_names.join(',')
         }))
 
