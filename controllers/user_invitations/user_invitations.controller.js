@@ -53,11 +53,11 @@ exports.getInvitationbyToken = async (req, res) => {
     let { token } = req.params;
     if (!token)
       return res.send(formatResult(400, 'Token is required'))
-console.log(token)
+    console.log(token)
     if (!(uuidValidate(token)))
       return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const invitation = await User_invitation.findOne({ token: token });
+    const invitation = await User_invitation.findOne({ token: token }).populate(['college', 'category']);
     if (!invitation)
       return res.send(formatResult(400, 'User invitation was not found'))
 
