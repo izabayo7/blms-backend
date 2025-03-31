@@ -163,17 +163,7 @@ router.get('/:id/video/:file_name', async (req, res) => {
     if (!chapter.uploaded_video || (chapter.uploaded_video !== req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${chapter.uploaded_video}`)
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${chapter.uploaded_video}`)
     const exists = await fs.exists(file_path)
     if (!exists)
       return res.send(formatResult(404, 'file not found'))
@@ -251,17 +241,8 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
 
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
 
     const file_type = await findFileType(req.params.file_name)
 
@@ -332,17 +313,7 @@ router.get('/:id/attachment/:file_name/download', async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
 
     return res.download(file_path)
 
@@ -548,17 +519,7 @@ router.put('/:id/document', async (req, res) => {
     if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
-    const dir = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`)
+    const dir = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`)
 
     fs.createFile(`${dir}/index.html`, (error) => {
       if (error)
@@ -620,18 +581,8 @@ router.put('/:id/video', async (req, res) => {
     if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
     req.kuriousStorageData = {
-      dir: addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/video`),
+      dir: addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${req.params.id}/video`),
     }
     upload_single(req, res, async (err) => {
       if (err)
@@ -699,18 +650,8 @@ router.post('/:id/attachments', async (req, res) => {
     if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
     req.kuriousStorageData = {
-      dir: addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`),
+      dir: addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`),
     }
     let savedAttachments = []
 
@@ -798,17 +739,7 @@ router.delete('/:id/attachment/:file_name', async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const course = await findDocument(Course, {
-      _id: chapter.course
-    })
-    const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.faculty_college_year
-    })
-    const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.faculty_college
-    })
-
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`)
 
 
     fs.unlink(file_path, async (err) => {
@@ -886,20 +817,7 @@ router.delete('/:id', async (req, res) => {
 
       const result = await deleteDocument(Chapter, req.params.id)
 
-      // check if course exist
-      let course = await findDocument(Course, {
-        _id: chapter.course
-      })
-
-      let faculty_college_year = await findDocument(Faculty_college_year, {
-        _id: course.faculty_college_year
-      })
-
-      let faculty_college = await findDocument(Faculty_college, {
-        _id: faculty_college_year.faculty_college
-      })
-
-      const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}`)
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${chapter.course}/chapters/${req.params.id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path, {
