@@ -250,7 +250,7 @@ router.get('/user', auth, async (req, res) => {
                 _id: -1
             })
             if (!quizes.length)
-                return res.send(formatResult(404, 'quiz_submissions not found'))
+                return res.send(formatResult(u, u, []))
 
             let foundSubmissions = []
 
@@ -291,9 +291,6 @@ router.get('/user', auth, async (req, res) => {
                     quizes[i].marking_status += '%'
                 }
             }
-
-            if (!foundSubmissions.length)
-                return res.send(formatResult(404, 'quiz_submissions not found'))
             result = foundSubmissions
         }
         result = await injectUser(result, 'user')
@@ -394,7 +391,7 @@ router.get('/quiz/:id', auth, async (req, res) => {
         })
 
         if (!result.length)
-            return res.send(formatResult(404, 'quiz_submissions not found'))
+            return res.send(formatResult(u, u, []))
 
         // result = await injectUser(result, 'user')
 
