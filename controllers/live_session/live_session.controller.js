@@ -351,7 +351,7 @@ router.put('/:id', async (req, res) => {
  *       - name: status
  *         in: path
  *         type: string
- *         enum: ["PENDING","LIVE","FINISHED"]
+     *         enum: ["PENDING","LIVE","FINISHED"]
  *         description: Live_session's Id
  *     responses:
  *       201:
