@@ -1,3 +1,4 @@
+const {Faculty} = require("../../models/faculty/faculty.model");
 const {User_invitation, validate_user_invitation} = require('../../models/user_invitations/user_invitations.model');
 const {v4: uuid, validate: uuidValidate} = require('uuid');
 const {
@@ -220,6 +221,23 @@ exports.createUserInvitation = async (req, res) => {
     }
 }
 
+function checkIfArrayIsUnique(myArray) {
+    for (let i = 0; i < myArray.length; i++) {
+        for (let j = 0; j < myArray.length; j++) {
+            if (i !== j) {
+                if (myArray[i] === myArray[j]) {
+                    return {error: `all rows must be unique (row ${i + 1} and row ${j + 1} are dupplicates)`};
+                } else if (myArray[i].email === myArray[j].email) {
+                    return {error: `email must be unique (row ${i + 1} and row ${j + 1} have same emails)`};
+                } else if (myArray[i].user_name === myArray[j].user_name) {
+                    return {error: `registration number must be unique (row ${i + 1} and row ${j + 1} have same registration numbers)`};
+                }
+            }
+        }
+    }
+    return {error: undefined}; // means there are no duplicate values.(change 2)
+}
+
 /***
  *  Create's a multiple user_invitations from a file
  * @param req
@@ -228,7 +246,18 @@ exports.createUserInvitation = async (req, res) => {
 exports.createMultipleUserInvitations = async (req, res) => {
     try {
 
-        let result = []
+        let faculties = await Faculty.find({college: req.user.college}).populate('college')
+        let college
+        if (!faculties.length)
+            college = await College.findOne({
+                _id: req.user.college
+            })
+        let user_groups = await User_group.find({
+            faculty: {$in: faculties.map(x => x._id.toString())}
+        })
+        let user_group_names = user_groups.map(x => x.name)
+        let user_categories = ["ADMIN", "STUDENT", "INSTRUCTOR"]
+
 
         const schema = {
             'EMAIL': {
@@ -236,7 +265,7 @@ exports.createMultipleUserInvitations = async (req, res) => {
                 type: (value) => {
                     const regex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
                     if (!regex.test(value)) {
-                        throw new Error('invalid email')
+                        throw new Error('invalid')
                     }
                     return value
                 },
@@ -244,13 +273,22 @@ exports.createMultipleUserInvitations = async (req, res) => {
             },
             'USER GROUP': {
                 prop: 'user_group',
-                type: String,
+                type: (value) => {
+                    if (!user_group_names.includes(value)) {
+                        throw new Error(`invalid use (${user_group_names})`)
+                    }
+                    return value
+                },
                 required: true
             },
             'USER CATEGORY': {
                 prop: 'category',
-                type: String,
-                enum: ["STUDENT","INSTRUCTOR"],
+                type: (value) => {
+                    if (!user_categories.includes(value)) {
+                        throw new Error(`invalid use (${user_categories})`)
+                    }
+                    return value
+                },
                 required: true
             },
             'REGISTRATION NUMBER': {
@@ -261,73 +299,55 @@ exports.createMultipleUserInvitations = async (req, res) => {
 
         const readXlsxFile = require('read-excel-file/node')
 
-        const {rows,errors} = await readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema})
+        const {rows, errors} = await readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema})
 
         // `errors` list items have shape: `{ row, column, error, value }`.
         if (errors.length)
-            return res.send(formatResult(400, "", errors[0]))
+            return res.send(formatResult(400, `(${errors[0].value}) ${errors[0].column} on row ${errors[0].row} is ${errors[0].error}`, errors[0]))
+
+        const {error} = checkIfArrayIsUnique(rows)
+
+        if (error)
+            return res.send(formatResult(400, error))
 
         // `rows` is an array of rows
         // each row being an array of cells.
-        result = rows
-        console.table(rows)
-        return res.status(201).send(result)
 
-        const {error} = validate_user_invitation(req.body);
-        if (error) return res.send(formatResult(400, error.details[0].message));
-
-        if (req.body.category !== "ADMIN" && !req.body.user_group)
-            return res.send(formatResult(404, 'UserGroup is required'))
-
-        const {emails, category} = req.body
-
-        let _college = await College.findOne({
-            _id: req.user.college
-        })
-        if (!_college)
-            return res.send(formatResult(404, 'UserCategory not found'))
-
-        let user_category = await User_category.findOne({
-            name: category
-        })
-        if (!user_category)
-            return res.send(formatResult(404, 'UserCategory not found'))
-
-        let user_group
-
-        if (req.body.user_group) {
-            user_group = await User_group.findOne({
-                name: req.body.user_group
-            })
-            if (!user_group)
-                return res.send(formatResult(404, 'User_group not found'))
-        }
-
+        let creationErrors = []
         const savedInvitations = []
-
-        for (const email of emails) {
+        for (const i in rows) {
             const user = await User.findOne({
-                email: email,
+                email: rows[i].email,
                 "status.deleted": {$ne: 1}
             })
             if (user) {
-                return res.send(formatResult(400, `User with email (${email}) arleady exist`))
+                creationErrors.push(`User with email (${rows[i].email}) arleady exist`)
+                break
             }
 
-            // const user_invitation = await User_invitation.findOne({
-            //   email: email,
-            //   status: "PENDING"
-            // })
-            // if (user_invitation) {
-            //   return res.send(formatResult(400, `User with email (${email}) have a pending invitation`))
-            // }
+            if (rows[i].category !== "ADMIN" && !rows[i].user_group) {
+                creationErrors.push(`User with email (${rows[i].email}) must have a student group`)
+                break
+            }
+
+
+            const user_category = user_categories.map(x => {
+                if (x.name === rows[i].category)
+                    return x._id
+            })[0]
+
+            const user_group = user_groups.map(x => {
+                if (x.name === rows[i].user_group)
+                    return x._id
+            })[0]
 
             let result = await User_invitation.findOne({
                 user: req.user._id,
-                email: email,
-                category: user_category._id,
+                email: rows[i].email,
+                category: user_category,
                 college: req.user.college,
             })
+
             let token
 
             if (result) {
@@ -340,24 +360,26 @@ exports.createMultipleUserInvitations = async (req, res) => {
 
 
             const {sent, err} = await sendInvitationMail({
-                email,
+                email: rows[i].email,
                 names: req.user.sur_name + ' ' + req.user.other_names,
                 token: token,
-                institution: {name: _college.name},
-                user_group: req.body.user_group
+                institution: {name: college ? college.name : faculties[0].college.name},
+                user_group: user_group
             });
-            if (err)
-                return res.send(formatResult(500, err));
+            if (err) {
+                creationErrors.push(err)
+                break
+            }
 
 
             if (!result) {
                 const newDocument = new User_invitation({
                     user: req.user._id,
-                    email: email,
-                    category: user_category._id,
+                    email: rows[i].email,
+                    category: user_category,
                     college: req.user.college,
                     token: token,
-                    user_group: user_group ? user_group._id : undefined,
+                    user_group: user_group,
                     expiration_date: expiration_date,
                 });
 
@@ -369,7 +391,12 @@ exports.createMultipleUserInvitations = async (req, res) => {
             }
         }
 
-        return res.send(formatResult(201, 'CREATED', savedInvitations));
+        if (creationErrors.length)
+
+            return res.send(formatResult(201, creationErrors.length ? `${savedInvitations.length} invitations ` : '' + 'CREATED', {
+                savedInvitations,
+                creationErrors
+            }));
     } catch
         (e) {
         return res.send(formatResult(500, e))
