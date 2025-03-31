@@ -242,6 +242,8 @@ router.put('/:id', async (req, res) => {
  *     tags:
  *       - User_category
  *     description: Delete as User_category
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User_category's id
