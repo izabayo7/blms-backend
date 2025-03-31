@@ -221,8 +221,15 @@ exports.renewInvitation = async (req, res) => {
 
     const result = await _invitation.save()
 
-    return res.send(formatResult(200, "UPDATED", result));
+    const { sent, err } = await sendInvitationMail({ email: _invitation.email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token });
+    if (err)
+      return res.send(formatResult(500, err));
 
+    if (sent) {
+
+      return res.send(formatResult(200, "UPDATED", result));
+
+    }
   } catch (err) {
     return res.send(formatResult(500, err));
   }
