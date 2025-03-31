@@ -155,7 +155,8 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
             if (!user_user_group)
                 return res.send(formatResult(404, 'assignment not found'))
         }
-
+        assignment = await addAssignmentTarget([assignment])
+        assignment = assignment[0]
         return res.send(formatResult(u, u, assignment))
     } catch (error) {
         return res.send(formatResult(500, error))
