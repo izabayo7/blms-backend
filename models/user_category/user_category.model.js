@@ -13,6 +13,10 @@ const user_category_schema = new mongoose.Schema({
     },
     description: {
         type: String
+    },
+    status: {
+        type: Number,
+        default: 1
     }
 })
 
@@ -23,7 +27,7 @@ user_category_schema.plugin(timestamps)
 function validate_user_category(credentials) {
     const schema = {
         name: Joi.string().min(5).required(),
-        description: Joi.string().min(10).required(),
+        description: Joi.string().min(10),
     }
     return Joi.validate(credentials, schema)
 }

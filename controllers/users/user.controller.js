@@ -2,12 +2,9 @@
 const {
   express,
   User,
-  formatResult,
-  validate_user
+  validate_user,
+  formatResult
 } = require('../../utils/imports')
-const {
-  Faculty
-} = require('../../models/faculty/faculty.model')
 
 // create router
 const router = express.Router()
@@ -17,8 +14,6 @@ const router = express.Router()
  * definitions:
  *   User:
  *     properties:
- *       _id:
- *         type: string
  *       sur_name:
  *         type: string
  *       other_names:
@@ -91,11 +86,11 @@ router.get('/', async (req, res) => {
     let users = await User.find().lean()
 
     if (users.length === 0)
-      return res.send(formatResult(404,'User list is empty'))
+      return res.send(formatResult(404, 'User list is empty'))
 
     users = await injectDetails(users)
 
-    return res.status(200).send(users)
+    return res.send(users)
   } catch (error) {
     console.log(error)
     return res.status(500).send(error)
@@ -104,7 +99,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /student/college/{id}:
+ * /user/college/{id}:
  *   get:
  *     tags:
  *       - User
@@ -140,9 +135,9 @@ router.get('/college/:id', async (req, res) => {
     }).lean()
 
     if (users.length === 0)
-      return res.status(404).send(`${college.name} student list is empty`)
+      return res.status(404).send(`${college.name} user list is empty`)
     users = await injectDetails(users)
-    return res.status(200).send(users)
+    return res.send(users)
   } catch (error) {
     console.log(error)
     return res.status(500).send(error)
@@ -151,11 +146,11 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /student/{id}:
+ * /user/{id}:
  *   get:
  *     tags:
  *       - User
- *     description: Returns a specified student
+ *     description: Returns a specified user
  *     parameters:
  *       - name: id
  *         description: User's id
@@ -177,14 +172,14 @@ router.get('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.status(400).send(error.details[0].message)
-    let student = await User.findOne({
+    let user = await User.findOne({
       _id: req.params.id
     }).lean()
 
-    if (!student)
+    if (!user)
       return res.status(404).send(`User ${req.params.id} Not Found`)
-    student = await injectDetails([student])
-    return res.status(200).send(student[0])
+    user = await injectDetails([user])
+    return res.send(user[0])
   } catch (error) {
     return res.status(500).send(error)
   }
@@ -192,7 +187,7 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /student:
+ * /user:
  *   post:
  *     tags:
  *       - User
@@ -247,7 +242,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /student/login:
+ * /user/login:
  *   post:
  *     tags:
  *       - User
@@ -281,25 +276,25 @@ router.post('/login', async (req, res) => {
   if (error)
     return res.status(400).send(error.details[0].message)
 
-  // find student
-  let student = await User.findOne({
+  // find user
+  let user = await User.findOne({
     email: req.body.email
   })
-  if (!student)
+  if (!user)
     return res.status(400).send('Invalid Email or Password')
 
   // check if passed password is valid
-  const validPassword = await bcrypt.compare(req.body.password, student.password)
+  const validPassword = await bcrypt.compare(req.body.password, user.password)
 
   if (!validPassword)
     return res.status(400).send('Invalid Email or Password')
   // return token
-  return res.status(200).send(student.generateAuthToken())
+  return res.send(user.generateAuthToken())
 })
 
 /**
  * @swagger
- * /student/{id}:
+ * /user/{id}:
  *   put:
  *     tags:
  *       - User
@@ -337,11 +332,11 @@ router.put('/:id', async (req, res) => {
   if (error)
     return res.status(400).send(error.details[0].message)
 
-  // check if student exist
-  let student = await User.findOne({
+  // check if user exist
+  let user = await User.findOne({
     _id: req.params.id
   })
-  if (!student)
+  if (!user)
     return res.status(404).send(`User with code ${req.params.id} doens't exist`)
 
   if (req.body.password)
@@ -361,7 +356,7 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /student/{id}:
+ * /user/{id}:
  *   delete:
  *     tags:
  *       - User
@@ -388,64 +383,64 @@ router.delete('/:id', async (req, res) => {
   } = validateObjectId(req.params.id)
   if (error)
     return res.status(400).send(error.details[0].message)
-  let student = await User.findOne({
+  let user = await User.findOne({
     _id: req.params.id
   })
-  if (!student)
+  if (!user)
     return res.status(404).send(`User of Code ${req.params.id} Not Found`)
   let deleteDocument = await User.findOneAndDelete({
     _id: req.params.id
   })
   if (!deleteDocument)
     return res.status(500).send('User Not Deleted')
-  if (student.profile) {
-    fs.unlink(`./uploads/colleges/${student.college}/users/users/${student.profile}`, (err) => {
+  if (user.profile) {
+    fs.unlink(`./uploads/colleges/${user.college}/users/users/${user.profile}`, (err) => {
       if (err)
         return res.status(500).send(err)
     })
   }
-  return res.status(200).send(`${student.surName} ${student.otherNames} was successfully deleted`)
+  return res.send(`${user.surName} ${user.otherNames} was successfully deleted`)
 })
 
-// link the student with his/her current college
+// link the user with his/her current college
 async function injectDetails(users) {
   for (const i in users) {
-    const studentFacultyCollegeYear = await UserFacultyCollegeYear.findOne({
-      student: users[i]._id,
+    const userFacultyCollegeYear = await UserFacultyCollegeYear.findOne({
+      user: users[i]._id,
       status: 1
     }).lean()
-    users[i].studentFacultyCollegeYear = removeDocumentVersion(studentFacultyCollegeYear)
+    users[i].userFacultyCollegeYear = removeDocumentVersion(userFacultyCollegeYear)
 
     const facultyCollegeYear = await FacultyCollegeYear.findOne({
-      _id: studentFacultyCollegeYear.facultyCollegeYear
+      _id: userFacultyCollegeYear.facultyCollegeYear
     }).lean()
-    users[i].studentFacultyCollegeYear.facultyCollegeYear = removeDocumentVersion(facultyCollegeYear)
+    users[i].userFacultyCollegeYear.facultyCollegeYear = removeDocumentVersion(facultyCollegeYear)
 
     const collegeYear = await CollegeYear.findOne({
       _id: facultyCollegeYear.collegeYear
     }).lean()
-    users[i].studentFacultyCollegeYear.facultyCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+    users[i].userFacultyCollegeYear.facultyCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
 
     const facultyCollege = await FacultyCollege.findOne({
       _id: facultyCollegeYear.facultyCollege
     }).lean()
-    users[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege = removeDocumentVersion(facultyCollege)
+    users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege = removeDocumentVersion(facultyCollege)
 
     const faculty = await Faculty.findOne({
       _id: facultyCollege.faculty
     }).lean()
-    users[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.faculty = removeDocumentVersion(faculty)
+    users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.faculty = removeDocumentVersion(faculty)
 
     const college = await College.findOne({
       _id: facultyCollege.college
     }).lean()
-    users[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
-    if (users[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo) {
-      users[i].studentFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
+    if (users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo) {
+      users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
-    // add student profile media path
+    // add user profile media path
     if (users[i].profile) {
-      users[i] = `http://${process.env.HOST}/kurious/file/studentProfile/${users[i]._id}/${student.profile}`
+      users[i] = `http://${process.env.HOST}/kurious/file/userProfile/${users[i]._id}/${user.profile}`
     }
   }
   return users

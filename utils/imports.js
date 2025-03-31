@@ -175,6 +175,8 @@ module.exports.User_notification = user_notification
 module.exports.validate_user_notification = validate_user_notification
 
 
+module.exports.u = undefined
+
 /**
  * other functions
  */
@@ -188,7 +190,7 @@ module.exports.validate_user_notification = validate_user_notification
 module.exports.formatResult = (status = 200, message = 'OK', data = {}) => {
     return {
         status: status,
-        message: message,
+        message: message.toString(),
         data: data
     }
 }
