@@ -789,7 +789,7 @@ function validateSubmittedAnswers(questions, answers, mode) {
       }
       i = parseInt(i)
       // validate questions if it was not auto_submitted
-      if (!questions[i].auto_submitted) {
+      if (!answers[i].auto_submitted) {
         if (questions[i].type.includes('select')) {
           if (!answers[i].choosed_options) {
             message = `answer ${i + 1} must have choosed_options`
