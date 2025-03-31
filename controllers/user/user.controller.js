@@ -49,6 +49,7 @@ const {
   MyEmitter,
   update_password
 } = require('../../utils/imports')
+const { sendConfirmEmail } = require('../email/email.controller')
 
 // create router
 const router = express.Router()
@@ -806,7 +807,11 @@ router.post('/admin', async (req, res) => {
       category: user_category._id
     })
 
-    return res.status(201).send(result)
+    const { sent, err } = await sendConfirmEmail(req.body);
+    if (err)
+      return res.send(formatResult(500, err));
+
+    return res.send(formatResult(201, 'Account was successfully created, check your email to confirm your email.'));
   } catch (error) {
     return res.send(formatResult(500, error))
   }

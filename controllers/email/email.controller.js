@@ -185,7 +185,7 @@ exports.sendResetPasswordEmail = async ({ email, token, user_name, institution_n
     }
 };
 
-exports.sendContactUsEmail = async ({ user_name, institution_name, institution_address, subscription }) => {
+exports.sendConfirmEmail = async ({ user_name, institution_name, institution_address, subscription }) => {
     try {
 
         const mail = confirm_email({ user_name, institution_name, institution_address, subscription })
