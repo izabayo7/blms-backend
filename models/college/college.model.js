@@ -11,11 +11,11 @@ const college_schema = new mongoose.Schema({
         unique: true,
         required: true
     },
-    email: {
-        type: String,
-        unique: true,
-        required: true
-    },
+    // email: {
+    //     type: String,
+    //     unique: true,
+    //     required: true
+    // },
     phone: {
         type: String,
         unique: true,
@@ -39,7 +39,7 @@ const college_schema = new mongoose.Schema({
 function validate_college(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
-        email: Joi.string().email().required(), 
+        // email: Joi.string().email().required(), 
         logo: Joi.string(),
         phone: Joi.string().max(15).required(),
         location: Joi.string().required(), // regex needed

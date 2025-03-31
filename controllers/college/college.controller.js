@@ -253,9 +253,11 @@ router.post('/', async (req, res) => {
 
     // check if the name or email were not used
     let college = await findDocument(College, {
-      $or: [{
-        email: req.body.email
-      }, {
+      $or: [
+      //   {
+      //   email: req.body.email
+      // },
+       {
         name: req.body.name
       }, {
         phone: req.body.phone
@@ -271,7 +273,7 @@ router.post('/', async (req, res) => {
 
     let result = await createDocument(College, {
       name: req.body.name,
-      email: req.body.email,
+      // email: req.body.email,
       location: req.body.location,
       phone: req.body.phone
     })
