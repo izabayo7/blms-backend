@@ -62,6 +62,7 @@ const router = express.Router()
  *         format: date
  *       gender:
  *         type: string
+ *         enum: ['male', 'female']
  *       phone:
  *         type: string
  *       email:
@@ -579,7 +580,30 @@ router.post('/login', async (req, res) => {
  *          in: body
  *          required: true
  *          schema:
- *            $ref: '#/definitions/User'
+ *            sur_name:
+ *              type: string
+ *            other_names:
+ *              type: string
+ *            user_name:
+ *              type: string
+ *            national_id:
+ *              type: string
+ *            date_of_birth:
+ *              type: string
+ *              format: date
+ *            gender:
+ *              type: string
+ *              enum: ['male', 'female']
+ *            phone:
+ *              type: string
+ *            email:
+ *              type: string
+ *            college:
+ *              type: string
+ *            category:
+ *              type: string
+ *            password:
+ *              type: string
  *     responses:
  *       201:
  *         description: Created

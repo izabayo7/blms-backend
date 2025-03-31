@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
+        enum: ['male', 'female'],
         required: true
     },
     password: {
@@ -79,7 +80,7 @@ exports.validate_user = (credentials, method = 'create') => {
         other_names: Joi.string().min(3).max(100).required(),
         user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100).required(), // regex needed
         national_id: Joi.string().length(16).required(), // regex needed
-        gender: Joi.string().min(4).max(6).required(), // regex needed
+        gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().min(8),
         phone: Joi.string().max(10).min(10).required(), // regex needed
         email: Joi.string().email().required(),
@@ -93,15 +94,10 @@ exports.validate_user = (credentials, method = 'create') => {
             other_names: Joi.string().min(3).max(100).required(),
             user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100).required(), // regex needed
             national_id: Joi.string().length(16).required(), // regex needed
-            gender: Joi.string().min(4).max(6).required(), // regex needed
-            // password: Joi.string().min(8),
+            gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
             phone: Joi.string().max(10).min(10).required(), // regex needed
             email: Joi.string().email().required(),
-            // profile: Joi.string(), // regex needed
-            date_of_birth: Joi.date(),
-            // college: Joi.ObjectId(),
-            // category: Joi.ObjectId().required(),
-            // status: Joi.object({disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required()})
+            date_of_birth: Joi.date()
         }
     return Joi.validate(credentials, schema)
 }
