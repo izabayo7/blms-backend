@@ -35,7 +35,7 @@ const account_confirmation_schema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'CONFIRMED'],
+        enum: ['PENDING', 'ACCEPTED', 'CONFIRMED'],
         default: 'PENDING',
 
     },

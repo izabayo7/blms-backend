@@ -227,7 +227,7 @@ exports.submission_email = ({
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
-                                href="https://elearning.rw/verify_account?token=${token}"
+                                href="https://apis.kurious.rw/user/accept/${token}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                         >

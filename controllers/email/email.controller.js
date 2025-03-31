@@ -3,6 +3,7 @@ const Mailgen = require('mailgen');
 const {formatResult} = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
+const {confirm_account} = require("../../utils/emailGenerator");
 const {submission_email} = require("../../utils/emailGenerator");
 const {
     invitationToSystem,
@@ -150,6 +151,29 @@ exports.sendConfirmEmail = async ({user_name, institution_name, institution_emai
             from: process.env.EMAIL,
             to: email,
             subject: 'Account creation succeeded.',
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(_message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendCollegeAccepted = async ({user_name, token}) => {
+    try {
+
+        const mail = confirm_account({user_name, token})
+        const _message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Submission accepted.',
             html: mail,
         };
 

@@ -1,4 +1,6 @@
 // import dependencies
+const {AcceptCollege} = require("../account_confirmations/account_confirmations.controller");
+const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
 const {createAccountConfirmation} = require("../account_confirmations/account_confirmations.controller");
 const {sendSubmissionEmail} = require("../email/email.controller");
 const {calculateAmount} = require("../../utils/imports");
@@ -1201,7 +1203,7 @@ router.post('/admin', async (req, res) => {
             institution_name: req.body.college,
             institution_email: req.body.college_email,
             subscription: "TRIAL",
-            token: confirmation.token,
+            token: confirmation._id.toString(),
         });
 
         return res.send(formatResult(201, 'Account was successfully created, check your email.'));
@@ -1209,6 +1211,29 @@ router.post('/admin', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /user/confirm/{token}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: confirm user account
+ *     parameters:
+ *       - name: token
+ *         description: confirmation token
+ *         in: path
+ *         type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/confirm/:token', confirmAccount)
+
+router.get('/accept/:token', AcceptCollege)
 
 /**
  * @swagger
