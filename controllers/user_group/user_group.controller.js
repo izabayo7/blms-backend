@@ -156,7 +156,8 @@ router.get('/college/:faculty', filterUsers(["ADMIN"]), async (req, res) => {
 
         for (const i in faculties) {
             let user_groups = await User_group.find({
-                faculty: faculties[i]._id
+                faculty: faculties[i]._id,
+                status: "ACTIVE"
             }).populate('faculty').lean()
 
             for (const item of user_groups) {
