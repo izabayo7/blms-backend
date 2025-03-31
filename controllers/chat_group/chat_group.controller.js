@@ -510,7 +510,7 @@ router.post('/', auth, async (req, res) => {
     })
 
     // ndanareba uko nahita menyesha abantu thinking about exporting socket for global usage
-    const m = await Create_or_update_message('SYSTEM', result.data.code, `This group was created by __user__${creator._id} at __time__${new Date().toISOString()}`, u, creator._id)
+    const m = await Create_or_update_message('SYSTEM', Number(result.data.code), `This group was created by __user__${creator._id} at __time__${new Date().toISOString()}`, u, creator._id)
 
     return res.send(result)
   } catch (error) {
