@@ -47,6 +47,8 @@ const router = express.Router()
  *     tags:
  *       - Live_session
  *     description: Get all live_sessions
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK

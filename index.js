@@ -122,8 +122,8 @@ app.use(`${basePath}/notification`, auth, notification_controller)
 app.use(`${basePath}/user_notification`, auth, user_notification_controller)
 app.use(`${basePath}/chat_group`, auth, chat_group_controller)
 app.use(`${basePath}/message`, auth, message_controller)
-// ejo hera aha wlh
 app.use(`${basePath}/comment`, auth, comment_controller)
+// ejo hera aha wlh
 app.use(`${basePath}/live_session`, auth, live_session_controller)
 
 // start the server
