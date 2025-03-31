@@ -1,5 +1,7 @@
 // import dependencies
-const { Types } = require('mongoose')
+const {
+    Types
+} = require('mongoose')
 const {
     mongoose,
     Joi
@@ -49,12 +51,18 @@ const faculty_schema = new mongoose.Schema({
         ref: 'user',
         required: true
     },
+    isPublic: {
+        type: Boolean,
+        default: false
+    },
     status: {
         type: String,
         default: 'ACTIVE',
         enum: ['ACTIVE', 'INACTIVE']
     },
-}, { timestamps: true })
+}, {
+    timestamps: true
+})
 
 faculty_schema.plugin(paginate)
 
@@ -62,7 +70,7 @@ faculty_schema.plugin(paginate)
 function validate_faculty(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
-        // college: Joi.string().required(),
+        isPublic: Joi.boolean(),
         description: Joi.string()
     }
     return Joi.validate(credentials, schema)
