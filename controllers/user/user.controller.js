@@ -188,7 +188,7 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
- * /user/faculty/{id}:
+ * /user/faculty/{id}/{category}:
  *   get:
  *     tags:
  *       - User
@@ -201,6 +201,12 @@ router.get('/college/:id', async (req, res) => {
  *         in: path
  *         required: true
  *         type: string
+ *       - name: category
+ *         description: User type
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ['STUDENT','INSTRUCTOR']
  *     responses:
  *       200:
  *         description: OK
@@ -209,13 +215,16 @@ router.get('/college/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/faculty/:id', auth, async (req, res) => {
+router.get('/faculty/:id/:category', auth, async (req, res) => {
   try {
     const {
       error
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
+
+    if (!['STUDENT', 'INSTRUCTOR'].includes(req.params.category))
+      return res.send(formatResult(400, "Invalid category"))
 
     let faculty = await findDocument(Faculty, {
       _id: req.params.id
@@ -228,7 +237,7 @@ router.get('/faculty/:id', auth, async (req, res) => {
     })
 
     let user_category = await findDocument(User_category, {
-      name: 'STUDENT'
+      name: req.params.category
     })
 
     const result = []
