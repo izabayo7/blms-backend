@@ -577,6 +577,7 @@ router.put('/:id', async (req, res) => {
     quiz.total_marks = req.body.total_marks
     quiz.user = user._id
     quiz.published = req.body.published
+    quiz.passMarks = req.body.passMarks
 
     await quiz.save()
 
