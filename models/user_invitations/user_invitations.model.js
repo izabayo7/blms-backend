@@ -5,6 +5,36 @@ const {
     timestamps
 } = require('../../utils/imports')
 
+/**
+ * @swagger
+ * definitions:
+ *   User_invitation:
+ *     properties:
+ *       email:
+ *         type: string
+ *         description: email of the invited user
+ *       user:
+ *         type: string
+ *         description: inviters id
+ *       college:
+ *         type: string
+ *       category:
+ *         type: string
+ *       token:
+ *         type: string
+ *       expiration_date:
+ *         type: string
+ *       status:
+ *         type: string
+ *         enum: ['PENDING', 'ACCEPTED', 'DENIED', 'EXPIRED']
+ *     required:
+ *       - email
+ *       - user
+ *       - category
+ *       - token
+ *       - expiration_date
+ */
+
 const user_invitation_schema = new mongoose.Schema({
     user: {
         type: mongoose.Types.ObjectId,
@@ -36,7 +66,7 @@ const user_invitation_schema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['PENDING', 'ACCEPTED', 'DENIED', 'EXPIRED'],
-        default: 0,
+        default: 'PENDING',
 
     },
 }, { timestamps: true })
