@@ -116,7 +116,7 @@ router.route('/:id')
      *       200:
      *         description: Success
      */
-    .post([auth, updatePost])
+    .put([auth, updatePost])
 
 router.route('/:id/:action')
     /**
