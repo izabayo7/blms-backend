@@ -9,7 +9,6 @@ const {
     Exam,
     User,
     date,
-    validate_submission,
     validateObjectId,
     addAttachmentMediaPaths,
     injectUser,
@@ -41,7 +40,7 @@ const {
     addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {filterUsers} = require("../../middlewares/auth.middleware");
-const {Exam_submission} = require("../../models/exam_submission/exam_submission.model");
+const {Exam_submission, validate_exam_submission} = require("../../models/exam_submission/exam_submission.model");
 const {Exam} = require("../../models/exams/exam.model");
 
 // create router
@@ -316,11 +315,11 @@ router.get('/exam/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
 
 /**
  * @swagger
- * /submission/user/{user_name}/{quiz_name}:
+ * /submission/user/{user_name}/{exam_id}:
  *   get:
  *     tags:
  *       - Exam_submission
- *     description: Returns submission of the specified user with the specified name
+ *     description: Returns submission of the specified user with the specified user_name
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -342,7 +341,7 @@ router.get('/exam/:id', auth,filterUsers(['INSTRUCTOR']), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
+router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
     try {
 
         // check if user exist
@@ -353,7 +352,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
             return res.send(formatResult(404, 'user not found'))
 
         let exam = await findDocument(Exam, {
-            name: req.params.quiz_name
+            _id: req.params.exam_id
         })
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
@@ -364,6 +363,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
         })
         if (!result)
             return res.send(formatResult(404, 'submission not found'))
+
         result = simplifyObject(result)
         result = simplifyObject(await injectExam([result]))
         result = await injectUserFeedback(result)
@@ -388,7 +388,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
  *   get:
  *     tags:
  *       - Exam_submission
- *     description: Returns or download the files attached to the specified submission
+ *     description: Returns or download the files attached to the specified submission attachment
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -560,10 +560,8 @@ router.get('/statistics/submitted', async (req, res) => {
 router.get('/statistics/user', async (req, res) => {
     try {
         let courses = await Course.find({user: req.user._id}, {_id: 1})
-        let chapters = await Chapter.find({course: {$in: courses.map(x => x._id.toString())}}, {_id: 1})
         let exam = await Exam.find({
-            "target.type": "chapter",
-            "target.id": {$in: chapters.map(x => x._id.toString())}
+            "course": {$in: courses.map(x => x._id.toString())}
         }, {_id: 1, passMarks: 1, total_marks: 1})
 
         const result = await Exam_submission.find({exam: {$in: exam.map(x => x._id.toString())}}).populate('user',
@@ -628,15 +626,9 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         req.body.user = req.user.user_name
         let {
             error
-        } = validate_submission(req.body)
+        } = validate_exam_submission(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
-
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
 
         if (req.user.registration_number !== undefined) {
             let paid = await checkCollegePayment({
@@ -647,29 +639,19 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
                 return res.send(formatResult(403, 'user must pay the college to be able to create a submission'))
         }
 
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-
-        if (user_category.name !== 'STUDENT')
-            return res.send(formatResult(403, 'user is not allowed to do this exam'))
-
-        let exam = await findDocument(Exam, {
-            _id: req.body.exam
-        })
+        let exam = await Exam.findOne({
+            _id: req.body.exam,
+        }).populate('course')
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
-        if (!exam.target.id)
+        if (exam.status !== 'PUBLISHED')
             return res.send(formatResult(404, 'exam is not available'))
-
-        const faculty_college_year = await get_faculty_college_year(req.body.exam)
-
-        let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
-            faculty_college_year: faculty_college_year._id
+        let user_user_group = await findDocument(User_user_group, {
+            user: req.user._id,
+            user_group: exam.course.user_group
         })
-        if (!user_faculty_college_year)
+        if (!user_user_group)
             return res.send(formatResult(403, 'user is not allowed to do this exam'))
 
         const valid_submision = validateSubmittedAnswers(exam.questions, req.body.answers, 'anwsering')
@@ -678,7 +660,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
 
         // check if submissions exist
         let submission = await findDocument(Exam_submission, {
-            user: user._id,
+            user: req.user._id,
             exam: req.body.exam
         })
         if (submission)
@@ -687,7 +669,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(exam.questions, req.body.answers)
 
         let result = await createDocument(Exam_submission, {
-            user: user._id,
+            user: req.user._id,
             exam: req.body.exam,
             answers: answers,
             used_time: req.body.used_time,
@@ -747,7 +729,7 @@ router.put('/:id', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        error = validate_submission(req.body)
+        error = validate_exam_submission(req.body)
         error = error.error
         if (error)
             return res.send(formatResult(400, error.details[0].message))
