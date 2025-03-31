@@ -1084,8 +1084,10 @@ router.put('/updateCollegeLogo/:id', async (req, res) => {
             }, {
                 new: true
             })
-            if (updateDocument)
+            if (updateDocument) {
+                updateDocument.coverPicture = `http://${process.env.HOST}/kurious/file/collegeLogo/${req.params.id}/${updateDocument.logo}`
                 return res.status(201).send(updateDocument)
+            }
             return res.status(500).send("Error ocurred")
         })
 
@@ -1530,7 +1532,7 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
 
             if (chapter.mainVideo) {
                 fs.unlink(`${req.kuriousStorageData.dir}/${chapter.mainVideo}`, (err) => {
-                    if (err){
+                    if (err) {
                         console.log(err)
                         return res.status(500).send(err)
                     }
