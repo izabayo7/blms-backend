@@ -478,7 +478,7 @@ exports.confirmation_email = ({
                         </div>
                     </div>
                     <div style="
-                        font-family: Inter;
+                        font-family: 'Inter', sans-serif;
                         font-style: normal;
                         font-weight: normal;
                         font-size: 15px;
