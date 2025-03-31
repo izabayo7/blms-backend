@@ -490,6 +490,126 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
+ * /user/admin:
+ *   post:
+ *     tags:
+ *       - User
+ *     description: Create Admin
+ *     parameters:
+ *       - name: body
+ *         description: Fields for an User
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/User'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/admin', async (req, res) => {
+  try {
+    const {
+      error
+    } = validate_user(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if the name or email were not used
+    let user = await findDocument(User, {
+      email: req.body.email
+    })
+
+    if (user)
+      return res.send(formatResult(400, `User with same email arleady exist`))
+
+
+    // avoid user_name === group name
+    let chat_group = await findDocument(Chat_group, {
+      name: req.body.user_name
+    })
+    if (chat_group)
+      return res.send(formatResult(403, 'user_name was taken'))
+
+    let user_category = await findDocument(User_category, {
+      name: req.body.category
+    })
+    if (!user_category)
+      return res.send(formatResult(404, 'category not found'))
+
+    if (!req.body.college) {
+      return res.send(formatResult(400, `${user_category.name.toLowerCase()} must have a college`))
+    }
+
+
+    const {
+      error
+    } = validate_college(req.body)
+    if (error)
+      return res.send(formatResult(404, error.details[0].message))
+
+    // check if the name or email were not used
+    let college = await findDocument(College, {
+      name: req.body.name
+    })
+
+    if (college) {
+      // const phoneFound = req.body.phone == college.phone
+      const phoneFound = false
+      const nameFound = req.body.name == college.name
+      // const emailFound = req.body.email == college.email
+      const emailFound = false
+      return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
+    }
+
+    let result = await createDocument(College, {
+      name: req.body.name,
+      maximum_users: req.body.maximum_users
+    })
+
+    college = result.data
+
+    if (user_category.name === 'ADMIN') {
+      const find_admin = await findDocument(User, {
+        category: user_category._id,
+        college: college._id
+      })
+
+      if (find_admin)
+        return res.send(formatResult(404, `College ${college.name} can't have more than one admin`))
+    }
+
+
+    let result = await createDocument(User, {
+      user_name: await random_user_name(),
+      sur_name: req.body.sur_name,
+      other_names: req.body.other_names,
+      national_id: req.body.national_id,
+      phone: req.body.phone,
+      gender: req.body.gender,
+      email: req.body.email,
+      phone: req.body.phone,
+      password: await hashPassword(req.body.password),
+      college: req.body.college,
+      category: req.body.category,
+      date_of_birth: req.body.date_of_birth
+    })
+
+    // result = await add_user_details([result])
+    // result = result[0]
+    return res.status(201).send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /user/login:
  *   post:
  *     tags:

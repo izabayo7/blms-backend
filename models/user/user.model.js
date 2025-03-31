@@ -101,7 +101,7 @@ exports.validate_user = (credentials, method = 'create') => {
             date_of_birth: Joi.date()
         }
     return Joi.validate(credentials, schema)
-}
+}z
 
 exports.validateUserPasswordUpdate = (data) => {
     const schema = {
