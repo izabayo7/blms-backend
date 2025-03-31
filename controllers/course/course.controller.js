@@ -18,7 +18,7 @@ const {
   removeDocumentVersion,
   injectUser,
   simplifyObject,
-  injectStudentProgress,
+  injecUserProgress,
   findDocuments,
   formatResult,
   findDocument,
@@ -232,20 +232,30 @@ router.get('/user/:id', async (req, res) => {
     if (!user_faculty_college_year.data)
       return res.send(formatResult(404, 'courses not found'))
 
-    let courses = await findDocuments(Course, {
+    let result = await findDocuments(Course, {
       faculty_college_year: user_faculty_college_year.data.faculty_college_year
     })
 
     // ******* while adding permissions remember to filter data according to the user requesting *******
 
-    if (courses.data.length === 0)
+    if (result.data.length === 0)
       return res.send(formatResult(404, 'courses not found'))
 
-    // courses = await injectChapters(courses)
-    // course = await injectFaculty_college_year(courses)
-    // courses = await injectChapters(courses)
+    result.data = simplifyObject(result.data)
 
-    return res.send(courses)
+
+    result.data = await injectChapters(result.data)
+    result.data = await injectFaculty_college_year(result.data)
+    let user_category = await findDocument(User_category, {
+      _id: user.data.category
+    })
+
+    if (user_category.data.name == 'STUDENT') {
+      result.data = await injecUserProgress(result.data, user.data._id)
+      result.data = await injectUser(result.data, 'user')
+    }
+
+    return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -309,9 +319,20 @@ router.get('/user/:userId/:courseName', async (req, res) => {
     if (!course.data)
       return res.send(formatResult(404, 'course not found'))
 
-    // course.data = await injectChapters([course.data])
-    // course.data = await injectFaculty_college_year(course.data)
-    // course.data = course.data[0]
+    course.data = simplifyObject(course.data)
+    course.data = await injectChapters([course.data])
+    course.data = await injectFaculty_college_year(course.data)
+
+    let user_category = await findDocument(User_category, {
+      _id: user.data.category
+    })
+
+    if (user_category.data.name == 'STUDENT') {
+      course.data = await injecUserProgress(course.data, user.data._id)
+      course.data = await injectUser(course.data, 'user')
+    }
+
+    course.data = course.data[0]
 
     return res.status(200).send(course)
   } catch (error) {

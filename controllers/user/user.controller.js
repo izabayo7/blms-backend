@@ -520,7 +520,10 @@ router.post('/login', async (req, res) => {
     })
     user.data = simplifyObject(user.data)
     user.data.category = _.pick(user_category.data, 'name')
-console.log(user.data)
+    if (user.data.profile) {
+      user.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.data.user_name}/profile/${user.data.profile}`
+    }
+
     // return token
     return res.send(formatResult(u, u, await generateAuthToken(user.data)))
   } catch (error) {

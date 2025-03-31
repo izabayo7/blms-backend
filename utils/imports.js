@@ -340,7 +340,6 @@ module.exports.findFileType = async (file_name) => {
     const extension = file_name.split('.')[file_name.split('.').length - 1]
 
     let file_type = file_types.filter(type => type.extensions.includes(extension.toLowerCase()))
-    console.log(file_type)
     return file_type.length ? file_type[0].name : null
 }
 
@@ -533,7 +532,7 @@ module.exports.formatContacts = async (messages, userId) => {
             })
             id = message.group
             name = group.name
-            image = group.profile ? `http://${process.env.HOST}/kurious/file/groupProfilePicture/${group._id}/${group.profile}` : undefined
+            image = group.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/file/groupProfilePicture/${group._id}/${group.profile}` : undefined
 
             unreadMessagesLength = await Message.find({
                 group: message.group,
@@ -548,7 +547,7 @@ module.exports.formatContacts = async (messages, userId) => {
             const user = await this.findDocument(this.User, message.sender == userId ? message.receivers[0].id : message.sender)
             id = user._id
             name = `${user.surName} ${user.otherNames}`
-            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}` : undefined
+            image = user.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}` : undefined
 
             unreadMessagesLength = await Message.find({
                 sender: user._id,
@@ -587,7 +586,7 @@ module.exports.formatMessages = async (messages, userId) => {
                     })
                     from = `${user.surName} ${user.otherNames}`
                     if (user.profile) {
-                        image = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
+                        image = `http://${process.env.HOST}${process.env.BASE_PATH}/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
                     }
                 }
                 let relatedMessages = messagesCopy.filter(m => m.sender == message.sender)
@@ -761,7 +760,7 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
                 for (const j in quizes[i].questions[k].options.choices) {
                     if (quizes[i].questions[k].options.choices[j].src) {
                         if (!quizes[i].questions[k].options.choices[j].src.includes('http')) {
-                            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
+                            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}${process.env.BASE_PATH}/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
                         }
 
                     }
@@ -816,36 +815,34 @@ module.exports.injectChapters = async (courses) => {
     for (const i in courses) {
         courses[i].assignmentsLength = 0
         // add course cover picture media path
-        if (courses[i].coverPicture && !courses[i].coverPicture.includes('http')) {
-            courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${courses[i].coverPicture}`
+        if (courses[i].cover_picture && !courses[i].cover_picture.includes('http')) {
+            courses[i].cover_picture = `http://${process.env.HOST}${process.env.BASE_PATH}/course/${courses[i].name}/cover_picture/${courses[i].cover_picture}`
         }
         let chapters = await this.findDocuments(this.Chapter, {
             course: courses[i]._id
         })
         // simplify 
-        courses[i].chapters = chapters.data
+        courses[i].chapters = this.simplifyObject(chapters.data)
         for (const k in courses[i].chapters) {
             // remove course and documentVersion
             courses[i].chapters[k].course = undefined
             courses[i].chapters[k].__v = undefined
 
             // add media path of the content
-            courses[i].chapters[k].mainDocument = `http://${process.env.HOST}/kurious/file/chapterDocument/${courses[i].chapters[k]._id}`
+            courses[i].chapters[k].document = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/document`
             // add media path of the video
-            if (courses[i].chapters[k].mainVideo) {
-                courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}/${courses[i].chapters[k].mainVideo}`
+            if (courses[i].chapters[k].uploaded_video) {
+                courses[i].chapters[k].uploaded_video = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
             }
-            // add attachments
-            const attachments = await this.findDocuments(this.Attachment, {
-                chapter: courses[i].chapters[k]._id
-            })
-            courses[i].chapters[k].attachments = attachments
+
+
 
             // add assignments attached to chapters
             const chapterQuiz = await this.findDocuments(this.Quiz, {
                 "target.type": "chapter",
                 "target.id": courses[i].chapters[k]._id
             })
+            console.log(chapterQuiz)
             courses[i].chapters[k].quiz = chapterQuiz.data
             courses[i].assignmentsLength += chapterQuiz.data.length
         }
@@ -874,9 +871,9 @@ module.exports.injectUser = async (array, property, newProperty) => {
             _id: array[i][`${property}`]
         })
 
-        array[i][`${name}`] = this._.pick(user.data, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
+        array[i][`${name}`] = this._.pick(user.data, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile"])
         if (array[i][`${name}`].profile) {
-            array[i][`${name}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user.data._id}/${user.data.profile}`
+            array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.data.user_name}/profile/${user.data.profile}`
         }
     }
     return array
@@ -903,18 +900,18 @@ module.exports.injectNotification = async (array) => {
 }
 
 // add student progress
-module.exports.injectStudentProgress = async (courses, studentId) => {
+module.exports.injecUserProgress =  async (courses, userId) => {
     for (const i in courses) {
-        const studentProgress = await StudentProgress.findOne({
+        const result = await this.findDocument(this.User_progress, {
             course: courses[i]._id,
-            student: studentId
+            user: userId
         })
 
-        courses[i].progress = studentProgress ? {
-            id: studentProgress._id,
-            progress: studentProgress.progress,
-            dateStarted: studentProgress.createdAt,
-            lastUpdated: studentProgress.updatedAt
+        courses[i].progress = result.data ? {
+            id: result.data._id,
+            progress: result.data.progress,
+            dateStarted: result.data.createdAt,
+            lastUpdated: result.data.updatedAt
         } : undefined
     }
     return courses
@@ -957,7 +954,6 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
 // send resized Image
 module.exports.sendResizedImage = async (req, res, path) => {
     this.fs.exists(path, (exists) => {
-        console.log(path)
         if (!exists) {
             return res.send(this.formatResult(404, 'file not found'))
         } else {

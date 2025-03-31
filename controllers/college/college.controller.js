@@ -408,7 +408,7 @@ router.delete('/:id', async (req, res) => {
 async function injectLogoMediaPaths(colleges) {
   for (const i in colleges) {
     if (colleges[i].logo) {
-      colleges[i].logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${colleges[i]._id}/${colleges[i].logo}`
+      colleges[i].logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${colleges[i].name}/logo/${colleges[i].logo}`
     }
   }
   return colleges
