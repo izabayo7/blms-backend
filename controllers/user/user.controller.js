@@ -8,7 +8,7 @@ const {AcceptCollege} = require("../account_confirmations/account_confirmations.
 const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
 const {createAccountConfirmation} = require("../account_confirmations/account_confirmations.controller");
 const {sendSubmissionEmail} = require("../email/email.controller");
-const {calculateAmount} = require("../../utils/imports");
+const {calculateAmount, checkCollegePayment} = require("../../utils/imports");
 const {Account_payments} = require("../../models/account_payments/account_payments.model");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {User_attendance} = require("../../models/user_attendance/user_attendance.model");
@@ -17,7 +17,11 @@ const {Chapter} = require("../../utils/imports");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
-const {validateUserPasswordUpdate, validate_admin, validateUserPaymentVerification} = require('../../models/user/user.model')
+const {
+    validateUserPasswordUpdate,
+    validate_admin,
+    validateUserPaymentVerification
+} = require('../../models/user/user.model')
 const {User_group} = require('../../models/user_group/user_group.model')
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
@@ -164,7 +168,7 @@ router.post('/reg_number/', async (req, res) => {
         // you can validate the request
         const {error} = validateUserPaymentVerification(req.body)
         // if you find errors return the response with status 400 and the error
-        if(error)
+        if (error)
             return res.status(400).send(error.details[0].message)
 
         // fetch users with registration_numbers in the ones that were given in body
@@ -193,7 +197,7 @@ router.post('/reg_number/', async (req, res) => {
         // Add the payment status to the given users
         for (const i in req.body.users) {
             for (const j in test_users) {
-                if(req.body.users[i].registration_number === test_users[j].regNumber){
+                if (req.body.users[i].registration_number === test_users[j].regNumber) {
                     req.body.users[i].paid = test_users[j].paid
                     break
                 }
@@ -400,6 +404,14 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
 
         users = await add_user_details(users)
 
+        if (req.params.category !== "INSTRUCTOR") {
+            const college = await College.findOne({_id: req.user.college})
+            if (college.users_verification_link)
+                users = await checkCollegePayment({
+                    users,
+                    link: college.users_verification_link
+                })
+        }
         return res.send(formatResult(u, u, users))
     } catch (error) {
         return res.send(formatResult(500, error))
