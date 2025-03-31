@@ -121,7 +121,7 @@ app.use(`${basePath}/notification`, notification_controller)
 app.use(`${basePath}/user_notification`, user_notification_controller)
 app.use(`${basePath}/chat_group`, auth, chat_group_controller)
 app.use(`${basePath}/message`, auth, message_controller)
-app.use(`${basePath}/comment`, auth, comment_controller)
+app.use(`${basePath}/comment`, comment_controller)
 
 // start the server
 server.listen(port, () => {
