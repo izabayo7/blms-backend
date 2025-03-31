@@ -990,6 +990,104 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /quiz_submission/feedback/{id}/{answer}/{file_name}:
+ *   delete:
+ *     tags:
+ *       - Quiz_submission
+ *     description: Delete quiz submission feedback attacments
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz_submission id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: answer
+ *         description: Answer id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, "invalid quiz_submission id"))
+
+        error = validateObjectId(req.params.answer)
+        error = error.error
+        if (error)
+            return res.send(formatResult(400, "invalid question id"))
+
+        const quiz_submission = await findDocument(Quiz_submission, {
+            _id: req.params.id
+        })
+        if (!quiz_submission)
+            return res.send(formatResult(404, 'quiz_submission not found'))
+
+        const answer = quiz_submission.answers.filter(e => e._id == req.params.answer)
+        if (!answer.length)
+            return res.send(formatResult(404, 'answer not found'))
+
+        if (answer[0].feedback_src != req.params.file_name)
+            return res.send(formatResult(404, 'File not found'))
+
+        const quiz = await findDocument(Quiz, {
+            _id: quiz_submission.quiz
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
+
+        const user = await findDocument(User, {
+            _id: quiz.user
+        })
+
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}/${req.file.file_name}`)
+
+        req.kuriousStorageData = {
+            dir: path,
+        }
+
+        const file_found = await fs.exists(path)
+        if (!file_found)
+            return res.send(formatResult(400, 'File not found'))
+
+        fs.unlink(path, (err) => {
+            if (err)
+                return res.send(formatResult(500, err))
+        })
+
+        quiz_submission.answers[quiz_submission.answers.indexOf(answer[0])].feedback_src = undefined
+
+        await updateDocument(Quiz_submission, req.params.id, {
+            answers: quiz_submission.answers
+        })
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /quiz_submission/{id}:
  *   delete:
  *     tags:
