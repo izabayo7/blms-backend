@@ -145,6 +145,53 @@ router.get('/:type/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /live_session/{id}:
+ *   get:
+ *     tags:
+ *       - Live_session
+ *     description: Returns a specific live_session
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Live_session id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id', async (req, res) => {
+  try {
+
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const result = await Live_session.find({
+      _id: req.params.type
+    })
+
+    const chapter = await Chapter.findById(result.target.id)
+
+    result.course = await Course.findById(chapter.course)
+
+    return res.send(formatResult(u, u, result))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+
+/**
+ * @swagger
  * /live_session:
  *   post:
  *     tags:
