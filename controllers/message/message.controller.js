@@ -161,6 +161,8 @@ router.get('/user/:user_name/:type', async (req, res) => {
  *     tags:
  *       - Message
  *     description: Send a message
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a message
