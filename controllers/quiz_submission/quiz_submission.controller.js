@@ -966,7 +966,6 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
             dir: path,
         }
 
-
         const file_found = await fs.exists(`${path}/${answer[0].feedback_src}`)
         if (file_found)
             return res.send(formatResult(400, 'feedback for this answer was already uploaded'))
@@ -974,6 +973,9 @@ router.post('/feedback/:id/:answer', auth, async (req, res) => {
         upload_single(req, res, async (err) => {
             if (err)
                 return res.send(formatResult(500, err.message))
+
+            quiz_submission.answers[quiz_submission.answers.indexOf(answer[0])].feedback_src = req.file.filename
+            await quiz_submission.save()
 
             return res.send(formatResult(u, 'Feedback attachment was successfuly uploaded'))
         })
