@@ -581,15 +581,21 @@ router.put('/:id/document', async (req, res) => {
  *   put:
  *     tags:
  *       - Chapter
- *     description: Update chapter video (video upload using swagger is still under construction)
+ *     description: Update chapter video
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: Chapter id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: course coverpicture to upload.
  *     responses:
  *       201:
  *         description: Created
