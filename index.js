@@ -129,6 +129,8 @@ app.use(`${basePath}/posts`, Post_routes)
 app.use(`${basePath}/feedback`, User_feedback_routes)
 app.use(`${basePath}/reset_password`, Reset_password_routes)
 
+// change faculty to faculty college
+
 // serve assets
 app.use(
     "/assets",
