@@ -543,15 +543,15 @@ router.get('/user', async (req, res) => {
                 return res.send(formatResult(200, undefined, []))
 
             result = await findDocuments(Course, {
-                faculty_college_year: user_user_group.user_group,
+                user_group: user_user_group.user_group,
                 published: true
             })
             result = simplifyObject(result)
-            result = await injectUserProgress(result, user._id + '')
+            result = await injectUserProgress(result, req.user._id + '')
             result = await injectUser(result, 'user')
         } else {
             result = await findDocuments(Course, {
-                user: user._id
+                user: req.user._id
             })
             result = simplifyObject(result)
         }
