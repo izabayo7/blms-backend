@@ -35,45 +35,6 @@ const router = express.Router()
  */
 
 
-
-// add quiz attached images
-router.post('/quizAttachedFiles/:quiz', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.quiz)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        let quiz = await Quiz.findOne({
-            _id: req.params.quiz
-        }).lean()
-        if (!quiz)
-            return res.send(formatResult(404, `Quiz with code ${req.params.quiz} doens't exist`))
-
-        const instructor = await Instructor.findOne({
-            _id: quiz.instructor
-        })
-
-        req.kuriousStorageData = {
-            dir: `./uploads/colleges/${instructor.college}/assignments/${req.params.quiz}`,
-        }
-
-        uploadPlus(req, res, async (err) => {
-            if (err)
-                return res.send(formatResult(500, err.message))
-
-            quiz = await addAttachmentMediaPaths([quiz])
-
-            return res.status(201).send(quiz[0])
-        })
-
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
 // add quiz attached images
 router.post('/submissionAttachedFiles/:submission', async (req, res) => {
     try {
