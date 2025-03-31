@@ -17,7 +17,11 @@ const {Chapter} = require("../../utils/imports");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
 const {compare, hash} = require('bcryptjs')
-const {validateUserPasswordUpdate, validate_admin, validateUserPaymentVerification} = require('../../models/user/user.model')
+const {
+    validateUserPasswordUpdate,
+    validate_admin,
+    validateUserPaymentVerification
+} = require('../../models/user/user.model')
 const {User_group} = require('../../models/user_group/user_group.model')
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
@@ -164,7 +168,7 @@ router.post('/reg_number/', async (req, res) => {
         // you can validate the request
         const {error} = validateUserPaymentVerification(req.body)
         // if you find errors return the response with status 400 and the error
-        if(error)
+        if (error)
             return res.status(400).send(error.details[0].message)
 
         // fetch users with registration_numbers in the ones that were given in body
@@ -193,7 +197,7 @@ router.post('/reg_number/', async (req, res) => {
         // Add the payment status to the given users
         for (const i in req.body.users) {
             for (const j in test_users) {
-                if(req.body.users[i].registration_number === test_users[j].regNumber){
+                if (req.body.users[i].registration_number === test_users[j].regNumber) {
                     req.body.users[i].paid = test_users[j].paid
                     break
                 }
@@ -557,9 +561,33 @@ router.get('/search', auth, async (req, res) => {
         if (error)
             return res.send(formatResult(400, error))
 
+
         data = simplifyObject(data)
 
         data.results = await add_user_details(data.results)
+
+        let obj = await Search(Chat_group, {
+            "members.id": req.user._id,
+            name: {
+                $regex: req.query.data,
+                $options: '$i'
+            }
+        }, {
+            name: 1,
+            code: 1
+        }, req.query.page, req.query.limit)
+
+        if (obj.data && obj.data.results.length) {
+            for (const i in obj.data.results) {
+                data.results.push({
+                    user_name: obj.data.results[i].code,
+                    sur_name: obj.data.results[i].name,
+                    other_names: '',
+                    profile: obj.data.results[i].profile ? `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${obj.data.results[i].code}/profile/${obj.data.results[i].profile}` : undefined,
+                    category: ''
+                })
+            }
+        }
 
         res.send(formatResult(u, u, data))
     } catch (error) {

@@ -491,20 +491,20 @@ exports.getConversationMessages = async ({
                 code: conversation_id
             })
             conversation_id = group._id
-            messages = lastMessage ? await this.findDocuments(this.Message, {
+            messages = lastMessage ? await this.Message.find({
                 _id: {
                     $lt: lastMessage
                 },
                 group: group._id
             }, {
                 receivers: 0
-            }, limit) : await this.findDocuments(this.Message, {
+            }).limit(limit).sort({_id: -1}) : await this.Message.find({
                 group: group._id
             }, {
                 receivers: 0
-            }, limit)
-
-        } else {
+            }).sort({_id: -1}).limit(limit)
+        }
+        else {
             const user = await this.findDocument(this.User, {
                 user_name: conversation_id
             })
