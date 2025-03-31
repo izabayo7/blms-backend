@@ -84,7 +84,10 @@ exports.getFaculties = async (req, res) => {
         } else {
             faculties = await findDocuments(Faculty, req.user.category.name == "ADMIN" ? {
                     college: req.user.college
-                } : {},
+                } : {
+                    college: req.user.college,
+                    isPublic: true
+                },
                 u, u, u, true, u, {
                     _id: -1
                 })

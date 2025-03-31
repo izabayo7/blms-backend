@@ -1,7 +1,17 @@
 const express = require('express')
-const {filterUsers} = require("../../middlewares/auth.middleware");
-const {getUserFaculties} = require("../../controllers/faculty/faculty.controller");
-const { getFacultyStatistics, createFaculty, updateFaculty, deleteFaculty, getFaculties } = require('../../controllers/faculty/faculty.controller')
+const {
+    filterUsers
+} = require("../../middlewares/auth.middleware");
+const {
+    getUserFaculties
+} = require("../../controllers/faculty/faculty.controller");
+const {
+    getFacultyStatistics,
+    createFaculty,
+    updateFaculty,
+    deleteFaculty,
+    getFaculties
+} = require('../../controllers/faculty/faculty.controller')
 const router = express.Router()
 
 router.route('/')
@@ -58,7 +68,7 @@ router.route('/statistics')
      *       500:
      *         description: Internal Server error
      */
-    .get(filterUsers('ADMIN'),getFacultyStatistics)
+    .get(filterUsers(['ADMIN']), getFacultyStatistics)
 
 router.route('/user')
     /**
@@ -78,7 +88,7 @@ router.route('/user')
      *       500:
      *         description: Internal Server error
      */
-    .get(filterUsers('INSTRUCTOR','STUDENT'),getUserFaculties)
+    .get(filterUsers(['INSTRUCTOR', 'STUDENT']), getUserFaculties)
 
 router.route('/:faculty_id')
     /**
@@ -104,7 +114,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .get(filterUsers('ADMIN','SUPERADMIN'),getFaculties)
+    .get(filterUsers(['ADMIN', 'SUPERADMIN', 'INSTRUCTOR']), getFaculties)
     /**
      * @swagger
      * /faculty/{faculty_id}:
@@ -142,7 +152,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .put(filterUsers('ADMIN'),updateFaculty)
+    .put(filterUsers(['ADMIN']), updateFaculty)
     /**
      * @swagger
      * /faculty/{faculty_id}:
@@ -168,5 +178,5 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .delete(filterUsers('ADMIN'),deleteFaculty)
+    .delete(filterUsers(['ADMIN']), deleteFaculty)
 exports.Faculty_Routes = router
