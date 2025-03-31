@@ -547,7 +547,8 @@ router.get('/user_group/:id/:category', [auth, filterUsers(["ADMIN"])], async (r
             let user_user_groups = await User_user_group.find({
                 user_group: user_groups[k]._id,
                 status: "ACTIVE"
-            }).populate('user').lean()
+            }).populate('user')
+            user_user_groups = await simplifyObject(user_user_groups)
             for (const j in user_user_groups) {
                 if (!user_category || user_user_groups[j].user.category === user_category._id.toString()) {
                     user_user_groups[j].user.user_user_group_id = user_user_groups[j]._id
