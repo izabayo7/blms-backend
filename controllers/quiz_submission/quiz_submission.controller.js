@@ -583,7 +583,7 @@ router.put('/:id', async (req, res) => {
       return res.send(formatResult(404, 'quiz_submission not found'))
 
     let user = await findDocument(User, {
-      user_name: req.body.user_name
+      user_name: req.body.user
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
