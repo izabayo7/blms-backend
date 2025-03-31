@@ -903,6 +903,17 @@ exports.getStudentAssignments = async (user_id, undone = false) => {
         status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
     }).sort({_id: -1}).lean()
 }
+exports.getStudentExams = async (user_id, undone = false) => {
+    const user_user_groups = await User_user_group.find({user: user_id})
+    const courses = await this.Course.find({
+        user_group: {$in: user_user_groups.map(x => x.user_group)}
+    })
+    const ids = courses.map(x => x._id.toString())
+    return Exam.find({
+        "target.id": {$in: ids},
+        status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
+    }).sort({_id: -1}).lean()
+}
 exports.injectAttachementsMediaPath = (message) => {
     for (const j in message.attachments) {
         message.attachments[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/message/${message._id}/attachment/${message.attachments[j].src}`
@@ -1736,6 +1747,7 @@ const {Announcement} = require('../models/announcements/announcements.model');
 const https = require("http");
 const {Exam_submission} = require("../models/exam_submission/exam_submission.model");
 const {parseInt} = require("lodash");
+const {Exam} = require("../models/exams/exam.model");
 
 exports.auth = auth
 
