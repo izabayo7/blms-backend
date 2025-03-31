@@ -599,6 +599,8 @@ router.put('/:code', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Upload chat_group profile (file upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         description: Chat_group code
