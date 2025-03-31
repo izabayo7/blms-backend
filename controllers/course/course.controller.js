@@ -601,7 +601,7 @@ router.get('/user', async (req, res) => {
             result = await findDocuments(Course, {
                 user_group: user_user_group.user_group,
                 published: true
-            })
+            }).sort({createdAt: -1})
             result = simplifyObject(result)
             result = await injectUserProgress(result, req.user._id + '')
             result = await injectUser(result, 'user')
