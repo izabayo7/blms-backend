@@ -21,7 +21,9 @@ const chapterSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-
+    mainVideo: {
+        type: String,
+    },
     liveVideo: {
         type: String,
     }

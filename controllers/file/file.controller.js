@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const { model } = req.kuriousStorageData
-        cb(null, `${model}-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length-1]}`)
+        cb(null, `${model}-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
     }
 })
 
@@ -26,11 +26,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: {
-        fileSize: 1024 * 1024 * 5
-    },
-    fileFilter: fileFilter
+    // limits: {
+    //     fileSize: 1024 * 1024 * 5
+    // },
+    // fileFilter: fileFilter
 }).single('file')
+
 
 // for multiple filies
 const uploadPlus = multer({
@@ -48,10 +49,10 @@ router.get('/collegeLogo/:id', async (req, res) => {
         // check if college exist
         const college = await College.findOne({ _id: req.params.id })
         if (!college)
-            return res.send(`College with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`College with code ${req.params.id} doens't exist`)
 
         if (!college.logo)
-            return res.send(`College ${req.params.id} have not yet uploaded their logo`)
+            return res.status(404).send(`College ${req.params.id} have not yet uploaded their logo`)
 
         filepath = `./uploads/colleges/${req.params.id}/${college.logo}`
         const pic = fs.readFileSync(filepath)
@@ -72,10 +73,10 @@ router.get('/superAdminProfile/:id', async (req, res) => {
         // check if superAdmin exist
         const superAdmin = await SuperAdmin.findOne({ _id: req.params.id })
         if (!superAdmin)
-            return res.send(`SuperAdmin with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`SuperAdmin with code ${req.params.id} doens't exist`)
 
         if (!superAdmin.profile)
-            return res.send(`SuperAdmin ${req.params.id} have not yet uploaded ${superAdmin.gender === 'Male' ? 'his' : 'her'} profile`)
+            return res.status(404).send(`SuperAdmin ${req.params.id} have not yet uploaded ${superAdmin.gender === 'Male' ? 'his' : 'her'} profile`)
 
         filepath = `./uploads/system/superAdmin/${superAdmin.profile}`
         const pic = fs.readFileSync(filepath)
@@ -95,10 +96,10 @@ router.get('/adminProfile/:id', async (req, res) => {
         // check if admin exist
         const admin = await Admin.findOne({ _id: req.params.id })
         if (!admin)
-            return res.send(`Admin with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Admin with code ${req.params.id} doens't exist`)
 
         if (!admin.profile)
-            return res.send(`Admin ${req.params.id} have not yet uploaded ${admin.gender === 'Male' ? 'his' : 'her'} profile`)
+            return res.status(404).send(`Admin ${req.params.id} have not yet uploaded ${admin.gender === 'Male' ? 'his' : 'her'} profile`)
 
         filepath = `./uploads/colleges/${admin.college}/users/admin/${admin.profile}`
         const pic = fs.readFileSync(filepath)
@@ -119,10 +120,10 @@ router.get('/instructorProfile/:id', async (req, res) => {
         // check if instructor exist
         const instructor = await Instructor.findOne({ _id: req.params.id })
         if (!instructor)
-            return res.send(`Instructor with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Instructor with code ${req.params.id} doens't exist`)
 
         if (!instructor.profile)
-            return res.send(`Instructor ${req.params.id} have not yet uploaded ${instructor.gender === 'Male' ? 'his' : 'her'} profile`)
+            return res.status(404).send(`Instructor ${req.params.id} have not yet uploaded ${instructor.gender === 'Male' ? 'his' : 'her'} profile`)
 
         filepath = `./uploads/colleges/${instructor.college}/users/instructors/${instructor.profile}`
         const pic = fs.readFileSync(filepath)
@@ -143,10 +144,10 @@ router.get('/studentProfile/:id', async (req, res) => {
         // check if student exist
         const student = await Student.findOne({ _id: req.params.id })
         if (!student)
-            return res.send(`Student with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Student with code ${req.params.id} doens't exist`)
 
         if (!student.profile)
-            return res.send(`Student ${req.params.id} have not yet uploaded ${student.gender === 'Male' ? 'his' : 'her'} profile`)
+            return res.status(404).send(`Student ${req.params.id} have not yet uploaded ${student.gender === 'Male' ? 'his' : 'her'} profile`)
 
         filepath = `./uploads/colleges/${student.college}/users/students/${student.profile}`
         const pic = fs.readFileSync(filepath)
@@ -167,10 +168,10 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
         // check if course exist
         const course = await Course.findOne({ _id: req.params.id })
         if (!course)
-            return res.send(`Course with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
 
         if (!course.coverPicture)
-            return res.send(`Course ${req.params.id} does not have a cover picture`)
+            return res.status(404).send(`Course ${req.params.id} does not have a cover picture`)
 
         const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
         const facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
@@ -183,6 +184,7 @@ router.get('/courseCoverPicture/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
+
 // get chapter main document
 router.get('/chapterDocument/:id', async (req, res) => {
     try {
@@ -194,7 +196,7 @@ router.get('/chapterDocument/:id', async (req, res) => {
         // check if chapter exist
         const chapter = await Chapter.findOne({ _id: req.params.id })
         if (!chapter)
-            return res.send(`Chapter with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Chapter with code ${req.params.id} doens't exist`)
 
         const course = await Course.findOne({ _id: chapter.course })
         const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
@@ -203,6 +205,70 @@ router.get('/chapterDocument/:id', async (req, res) => {
         filepath = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/mainContent/index.html`
         const content = fs.readFileSync(filepath)
         return res.status(200).send(content)
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
+// get chapter main document
+router.get('/chapterMainVideo/:id', async (req, res) => {
+    try {
+
+        const { error } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        // check if chapter exist
+        const chapter = await Chapter.findOne({ _id: req.params.id })
+        if (!chapter)
+            return res.status(404).send(`Chapter with code ${req.params.id} doens't exist`)
+
+        if (!chapter.mainVideo)
+            return res.status(404).send(`Chapter ${chapter.name} doesn't have a mainVideo`)
+
+        const course = await Course.findOne({ _id: chapter.course })
+        const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
+        const facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
+
+        path = `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.id}/video/${chapter.mainVideo}`
+
+        fs.stat(path, (err, stat) => {
+
+            // Handle file not found
+            if (err !== null && err.code === 'ENOENT') {
+                res.sendStatus(404);
+            }
+
+            const fileSize = stat.size
+            const range = req.headers.range
+            if (range) {
+
+                const parts = range.replace(/bytes=/, "").split("-");
+
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+                const chunksize = (end - start) + 1;
+                const file = fs.createReadStream(path, { start, end });
+                const head = {
+                    'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                    'Accept-Ranges': 'bytes',
+                    'Content-Length': chunksize,
+                    'Content-Type': 'video/mp4',
+                }
+
+                res.writeHead(206, head);
+                file.pipe(res);
+            } else {
+                const head = {
+                    'Content-Length': fileSize,
+                    'Content-Type': 'video/mp4',
+                }
+
+                res.writeHead(200, head);
+                fs.createReadStream(path).pipe(res);
+            }
+        });
     } catch (error) {
         return res.status(500).send(error)
     }
@@ -219,12 +285,12 @@ router.get('/getAttachments/:id', async (req, res) => {
         // check if chapter exist
         const chapter = await Chapter.findOne({ _id: req.params.id })
         if (!chapter)
-            return res.send(`Chapter with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Chapter with code ${req.params.id} doens't exist`)
 
         // fetch chapter attachments
         const attachments = await Attachment.find({ chapter: req.params.id })
         if (attachments.length < 1)
-            return res.send(`Chapter ${chapter.name} don't have attachmets`)
+            return res.status(404).send(`Chapter ${chapter.name} don't have attachmets`)
 
         return res.status(200).send(attachments)
     } catch (error) {
@@ -243,7 +309,7 @@ router.get('/getAttachment/:id', async (req, res) => {
         // check if attachment exist
         const attachment = await Attachment.findOne({ _id: req.params.id })
         if (!attachment)
-            return res.send(`Attachment with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Attachment with code ${req.params.id} doens't exist`)
 
         const chapter = await Chapter.findOne({ _id: attachment.chapter })
         const course = await Course.findOne({ _id: chapter.course })
@@ -281,17 +347,10 @@ router.get('/downloadAttachment/:id', async (req, res) => {
         // res.setHeader('Content-Disposition', 'attachment')
         return res.download(filepath)
     } catch (error) {
-        console.log(error)
         return res.status(500).send(error)
     }
 })
-// kuraho shit
-router.get('/video/:name', async (req, res) => {
-    filepath = './uploads/video/' + req.params.name
-    let pic = fs.readFileSync(filepath)
-    res.contentType('video/mp4')
-    return res.status(200).send(pic)
-})
+
 // updated a college logo
 router.put('/updateCollegeLogo/:id', async (req, res) => {
     try {
@@ -301,7 +360,7 @@ router.put('/updateCollegeLogo/:id', async (req, res) => {
 
         const college = await College.findOne({ _id: req.params.id })
         if (!college)
-            return res.send(`College with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`College with code ${req.params.id} doens't exist`)
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${req.params.id}`,
@@ -337,7 +396,7 @@ router.put('/updateSuperAdminProfile/:id', async (req, res) => {
 
         const superAdmin = await SuperAdmin.findOne({ _id: req.params.id })
         if (!superAdmin)
-            return res.send(`SuperAdmin with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`SuperAdmin with code ${req.params.id} doens't exist`)
 
         req.kuriousStorageData = {
             dir: './uploads/system/superAdmin',
@@ -373,7 +432,7 @@ router.put('/updateAdminProfile/:id', async (req, res) => {
 
         const admin = await Admin.findOne({ _id: req.params.id })
         if (!admin)
-            return res.send(`Admin with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Admin with code ${req.params.id} doens't exist`)
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${admin.college}/users/admin`,
@@ -409,7 +468,7 @@ router.put('/updateInstructorProfile/:id', async (req, res) => {
 
         const instructor = await Instructor.findOne({ _id: req.params.id })
         if (!instructor)
-            return res.send(`Instructor with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Instructor with code ${req.params.id} doens't exist`)
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${instructor.college}/users/instructors`,
@@ -445,7 +504,7 @@ router.put('/updateStudentProfile/:id', async (req, res) => {
 
         const student = await Student.findOne({ _id: req.params.id })
         if (!student)
-            return res.send(`Student with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Student with code ${req.params.id} doens't exist`)
 
         req.kuriousStorageData = {
             dir: `./uploads/colleges/${student.college}/users/students`,
@@ -481,7 +540,7 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
 
         const course = await Course.findOne({ _id: req.params.id })
         if (!course)
-            return res.send(`Course with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
         const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
         const facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
 
@@ -518,7 +577,7 @@ router.post('/updateChapterContent/:id', async (req, res) => {
 
         const chapter = await Chapter.findOne({ _id: req.params.id })
         if (!chapter)
-            return res.send(`Chapter with code ${req.params.id} doens't exist`)
+            return res.status(404).send(`Chapter with code ${req.params.id} doens't exist`)
 
         const course = await Course.findOne({ _id: chapter.course })
         const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
@@ -534,6 +593,36 @@ router.post('/updateChapterContent/:id', async (req, res) => {
                     return res.status(500).send(err)
                 return res.status(201).send('Content was successfully saved')
             })
+        })
+
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
+// add a mainVideo to chapter
+router.post('/addMainVideo/:chapter', async (req, res) => {
+    try {
+        const { error } = validateObjectId(req.params.chapter)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        const chapter = await Chapter.findOne({ _id: req.params.chapter })
+        const course = await Course.findOne({ _id: chapter.course })
+        const facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: course.facilityCollegeYear })
+        const facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
+
+        req.kuriousStorageData = {
+            dir: `./uploads/colleges/${facilityCollege.college}/courses/${chapter.course}/chapters/${req.params.chapter}/video`,
+            model: 'mainVideo'
+        }
+        upload(req, res, async (err) => {
+            if (err)
+                return res.status(500).send(err.message)
+            const updateDocument = await Chapter.findOneAndUpdate({ _id: req.params.chapter }, { mainVideo: req.file.filename }, { new: true })
+            if (updateDocument)
+                return res.status(201).send('Chapter Main Video was successfully uploaded')
+            return res.status(500).send("Error ocurred")
         })
 
     } catch (error) {
@@ -568,12 +657,12 @@ router.post('/AddAttachments/:chapter', async (req, res) => {
                 })
 
                 const saveDocument = await newDocument.save()
-                if (!saveDocument){
+                if (!saveDocument) {
                     status = false
-                    return res.status(400).send({message: 'Erro occured', index: i})
+                    return res.status(400).send({ message: 'Erro occured', index: i })
                 }
             }
-            return res.status(201).send({message: 'All attachments were successfully uploaded'})
+            return res.status(201).send({ message: 'All attachments were successfully uploaded' })
         })
 
     } catch (error) {
