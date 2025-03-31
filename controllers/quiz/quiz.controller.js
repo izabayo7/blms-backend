@@ -7,6 +7,7 @@ const {
     Chapter,
     Course,
     validate_quiz,
+    path,
     Faculty_college_year,
     validateObjectId,
     _,
@@ -394,7 +395,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
         })
 
         const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`)
-        console.log(file_path)
+
         const file_type = await findFileType(req.params.file_name)
 
         if (file_type === 'image') {
@@ -849,7 +850,7 @@ router.delete('/:id/target', async (req, res) => {
  *   post:
  *     tags:
  *       - Quiz
- *     description: Upload quiz attacments (file upload using swagger is still under construction)
+ *     description: Upload quiz attacments
  *     security:
  *       - bearerAuth: -[]
  *     parameters:

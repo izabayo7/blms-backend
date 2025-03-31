@@ -1,16 +1,22 @@
 // import dependencies
+const {streamVideo} = require("../../utils/imports");
+const {sendResizedImage} = require("../../utils/imports");
+const {findFileType} = require("../../utils/imports");
+const {upload_multiple} = require("../../utils/imports");
+const {addStorageDirectoryToPath} = require("../../utils/imports");
 const {
-  express,
-  Message,
-  validate_message,
-  validateObjectId,
-  formatResult,
-  findDocument,
-  User,
-  findDocuments,
-  u,
-  Create_or_update_message,
-  deleteDocument
+    express,
+    Message,
+    validate_message,
+    validateObjectId,
+    path,
+    formatResult,
+    findDocument,
+    User,
+    findDocuments,
+    u,
+    Create_or_update_message,
+    deleteDocument
 } = require('../../utils/imports')
 
 // create router
@@ -67,15 +73,15 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  try {
-    const result = await findDocuments(Message)
-    if (!result.length)
-      return res.send(formatResult(404, 'Message list is empty'))
+    try {
+        const result = await findDocuments(Message)
+        if (!result.length)
+            return res.send(formatResult(404, 'Message list is empty'))
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -107,51 +113,51 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/user/:user_name/:type', async (req, res) => {
-  try {
+    try {
 
-    let user = await findDocument(User, {
-      user_name: req.params.user_name
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
+        let user = await findDocument(User, {
+            user_name: req.params.user_name
+        })
+        if (!user)
+            return res.send(formatResult(404, 'user not found'))
 
-    req.params.type = req.params.type.toLocaleLowerCase()
+        req.params.type = req.params.type.toLocaleLowerCase()
 
-    if (req.params.type != 'sent' && req.params.type != 'received' && req.params.type != 'all')
-      return res.send(formatResult(400, 'invalid type'))
+        if (req.params.type != 'sent' && req.params.type != 'received' && req.params.type != 'all')
+            return res.send(formatResult(400, 'invalid type'))
 
-    let sent, received, result = []
+        let sent, received, result = []
 
-    if (req.params.type == 'sent' || req.params.type == 'all') {
-      sent = await findDocuments(Message, {
-        sender: user._id
-      })
+        if (req.params.type == 'sent' || req.params.type == 'all') {
+            sent = await findDocuments(Message, {
+                sender: user._id
+            })
 
-      if (sent.length) {
-        for (const i in sent) {
-          result.push(sent[i])
+            if (sent.length) {
+                for (const i in sent) {
+                    result.push(sent[i])
+                }
+            }
         }
-      }
+        if (req.params.type == 'received' || req.params.type == 'all') {
+            received = await findDocuments(Message, {
+                receivers: {
+                    $elemMatch: {
+                        id: user._id
+                    }
+                }
+            })
+
+            if (received.length) {
+                for (const i in received) {
+                    result.push(received[i])
+                }
+            }
+        }
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-    if (req.params.type == 'received' || req.params.type == 'all') {
-      received = await findDocuments(Message, {
-        receivers: {
-          $elemMatch: {
-            id: user._id
-          }
-        }
-      })
-
-      if (received.length) {
-        for (const i in received) {
-          result.push(received[i])
-        }
-      }
-    }
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -181,24 +187,67 @@ router.get('/user/:user_name/:type', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  try {
-    const {
-      error
-    } = validate_message(req.body)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validate_message(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
+        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
  * @swagger
- * /message/{id}:
+ * /message:
+ *   post:
+ *     tags:
+ *       - Message
+ *     description: Send a message
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a message
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Message'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/', async (req, res) => {
+    try {
+        const {
+            error
+        } = validate_message(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
+
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
+ * /message/{id}/attachments:
  *   put:
  *     tags:
  *       - Message
@@ -226,25 +275,49 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', async (req, res) => {
-  try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
-    error = validate_message(req.body)
-    error = error.error
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+router.put('/:id/attachements', async (req, res) => {
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, "invalid id"))
 
-    const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content, req.params.id)
+        const msg = await findDocument(Message, {
+            _id: req.params.id,
+            sender: req.user._id
+        })
+        if (!msg)
+            return res.send(formatResult(404, 'message not found'))
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+
+        req.kuriousStorageData = {
+            dir: path,
+        }
+
+        let file_missing = false
+
+        for (const i in msg.attachments) {
+            const file_found = await fs.exists(`${path}/${msg.attachments[i].src}`)
+            if (!file_found) {
+                file_missing = true
+            }
+        }
+        if (!file_missing)
+            return res.send(formatResult(400, 'all attachments for this message were already uploaded'))
+
+        upload_multiple(req, res, async (err) => {
+            if (err)
+                return res.send(formatResult(500, err.message))
+
+            return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
+        })
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
+
 
 /**
  * @swagger
@@ -272,27 +345,27 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    let message = await findDocument(Message, {
-      _id: req.params.id
-    })
-    if (!message)
-      return res.send(formatResult(404, 'message not found'))
+        let message = await findDocument(Message, {
+            _id: req.params.id
+        })
+        if (!message)
+            return res.send(formatResult(404, 'message not found'))
 
-    // need to delete all attachments
+        // need to delete all attachments
 
-    const result = await deleteDocument(Message, req.params.id)
+        const result = await deleteDocument(Message, req.params.id)
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 // export the router
