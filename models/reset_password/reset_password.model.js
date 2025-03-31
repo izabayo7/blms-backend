@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { PasswordRegex } = require('../user/user.model');
 
 const resetPassword = mongoose.Schema({
     user: {
@@ -25,7 +26,7 @@ exports.validatePasswordReset = (data, action = 'create') => {
     const schema = action == 'create' ? Joi.object({
         email: Joi.string().email().required(),
     }) : Joi.object({
-        password: Joi.string().min(8).required(),
+        password: Joi.string().min(8).regex(PasswordRegex).required(),
         email: Joi.string().email().required(),
         token: Joi.string().required()
     })
