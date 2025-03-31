@@ -466,7 +466,8 @@ module.exports.getConversationMessages = async ({
 // check if the receivers are the same
 function receiversMatch(receiver_g1, receiver_g2) {
   for (const i in receiver_g1) {
-    let receiver_found = receiver_g2.filter(r => r.id == receiver_g1[i].id)
+    let receiver_found = receiver_g2
+      .filter(r => r.id == receiver_g1[i].id)
     if (!receiver_found.length) return false
   }
   return true
@@ -498,6 +499,7 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
       }
     }
   }
+
   if (messagesToDelete[0].length > 0) {
     for (const index of messagesToDelete[0]) {
       sentMessages.splice(index, 1)
@@ -749,8 +751,19 @@ module.exports.getLatestMessages = async (user_id) => {
 
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
+
   for (const message of receivedMessages) {
-    latestMessages.push(message)
+    if (!latestMessages.includes(message)) {
+      for (const k in receivedMessages) {
+        if (receivedMessages[k]._id !== message._id) {
+          const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
+          const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
+          if (await receiversMatch(minorMessage.receivers, majorMessage.receivers)) {
+            latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
+          }
+        }
+      }
+    }
   }
 
   for (const message of sentMessages) {

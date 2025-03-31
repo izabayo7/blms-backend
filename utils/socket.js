@@ -92,6 +92,7 @@ module.exports.listen = (app) => {
       receiver,
       content
     }) => {
+      console.log(receiver)
       const receiver_type = typeof receiver
 
       const { error } = validate_message({ sender: user_name, receiver: receiver_type === 'string' ? receiver : receiver.toString(), content: content })
@@ -113,6 +114,7 @@ module.exports.listen = (app) => {
         const group = await findDocument(Chat_group, { _id: result.data.group })
         result.data.group = group.code
       }
+      // remove receivers
 
       result.data.receivers.forEach(reciever => {
         // send the message
