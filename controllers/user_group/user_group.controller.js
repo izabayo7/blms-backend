@@ -140,21 +140,30 @@ router.get('/', async (req, res) => {
 router.get('/college/:faculty', async (req, res) => {
     try {
         const fetch_all_faculties = req.params.faculty === "ALL"
-        if (!fetch_all_faculties) {
-            const faculty = await findDocument(Faculty, {
-                _id: req.params.faculty
-            })
-            if (!faculty)
-                return res.send(formatResult(404, 'faculty not found'))
-        }
-        let user_groups = await findDocuments(User_group, fetch_all_faculties ? {
 
+        const faculties = await findDocuments(Faculty, fetch_all_faculties ? {
+            college: req.user.college
         } : {
-            college: req.user.college, faculty: req.params.faculty
+            _id: req.params.faculty,
+            college: req.user.college
         })
+
+        if (!faculties.length && !fetch_all_faculties)
+            return res.send(formatResult(404, 'faculty not found'))
+
         let foundUser_groups = []
 
-        const result = await injectDetails(user_groups)
+        for (const i in faculties) {
+            let user_groups = await User_group.find({
+                faculty: faculties[i]._id
+            }).populate('faculty').lean()
+            
+            for (const item of user_groups) {
+                foundUser_groups.push(item)
+            }
+        }
+
+        const result = await injectDetails(foundUser_groups)
 
         return res.send(formatResult(u, u, result))
     } catch (error) {

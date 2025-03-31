@@ -12,6 +12,7 @@ const status_enum = ['ACTIVE', 'INACTIVE']
 const user_group_schema = new mongoose.Schema({
     faculty: {
         type: String,
+        ref: 'faculty',
         required: true
     },
     name: {
