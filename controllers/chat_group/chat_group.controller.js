@@ -461,8 +461,8 @@ router.post('/', async (req, res) => {
       members.push({ id: user._id, isAdmin: user._id === creator._id })
     }
 
-    if (!members.includes({ id: req.user._id, isAdmin: true }))
-      members.push({ id: req.user._id, isAdmin: true })
+    if (!members.includes({ id: creator._id, isAdmin: true }))
+      members.push({ id: creator._id, isAdmin: true })
 
     let result = await createDocument(Chat_group, {
       name: req.body.name,
@@ -472,6 +472,7 @@ router.post('/', async (req, res) => {
       members: members,
       college: req.body.college,
     })
+
     // ndanareba uko nahita menyesha abantu thinking about exporting socket for global usage
     await Create_or_update_message('SYSTEM', result.data.name, `This channel was created by __user__${user._id} at __time__${new Date().toISOString()}`, u, user._id)
 
