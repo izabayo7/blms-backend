@@ -45,7 +45,7 @@ course_schema.plugin(timestamps)
 // validate course
 function validate_course(credentials) {
     const schema = {
-        name: Joi.string().min(3).required(),
+        name: Joi.string().min(3).max(100).required(),
         user: Joi.ObjectId().required(),
         faculty_college_year: Joi.ObjectId().required(),
         description: Joi.string().max(1000).min(10),

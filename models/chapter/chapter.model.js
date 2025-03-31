@@ -46,7 +46,7 @@ function validate_chapter(credentials, document = false) {
     const schema = document ?{
         content: Joi.string().required()
     } : {
-        name: Joi.string().min(3).required(),
+        name: Joi.string().min(3).max(100).required(),
         number: Joi.number().min(1),
         course: Joi.ObjectId().required(),
         description: Joi.string().max(1000).min(10),
