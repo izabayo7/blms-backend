@@ -27,7 +27,8 @@ const {
   streamVideo,
   u,
   upload_multiple_images,
-  addQuizTarget
+  addQuizTarget,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {
   parseInt
@@ -392,7 +393,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
       _id: quiz.user
     })
 
-    const file_path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`)
     console.log(file_path)
     const file_type = await findFileType(req.params.file_name)
 
@@ -599,7 +600,7 @@ router.put('/:id', async (req, res) => {
             }
           }
           if (deletePicture) {
-            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`)
             fs.exists(path, (exists) => {
               if (exists) {
                 fs.unlink(path)
@@ -774,7 +775,7 @@ router.post('/:id/attachment', async (req, res) => {
       _id: quiz.user
     })
 
-    const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`, temp_path = `./uploads/colleges/${user.college}/temp`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
 
     req.kuriousStorageData = {
       dir: path,
@@ -875,7 +876,7 @@ router.delete('/:id', async (req, res) => {
 
       let result = await deleteDocument(Quiz, req.params.id)
 
-      const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)

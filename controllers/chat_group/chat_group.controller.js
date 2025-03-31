@@ -26,7 +26,8 @@ const {
   validateChat_group_code,
   savedecodedBase64Image,
   validate_chat_group_profile_udpate,
-  auth
+  auth,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -250,7 +251,7 @@ router.get('/:code/profile/:file_name', async (req, res) => {
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    path = `./uploads/colleges/${group.college}/chat/groups/${group._id}/${group.profile}`
+    path = addStorageDirectoryToPath(`./uploads/colleges/${group.college}/chat/groups/${group._id}/${group.profile}`)
     sendResizedImage(req, res, path)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -648,7 +649,7 @@ router.put('/:code/profile', auth, async (req, res) => {
     if (!chat_group)
       return res.send(formatResult(404, 'chat_group not found'))
 
-    const path = `./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`)
 
     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
@@ -902,6 +903,63 @@ router.put('/:code/remove_member/:member_user_name', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /chat_group/{code}/profile/{file_name}:
+ *   delete:
+ *     tags:
+ *       - Chat_group
+ *     description: remove Chat_group profile
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: code
+ *         in: path
+ *         type: string
+ *         description: Chat_group's code
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:code/profile/:file_name', auth, async (req, res) => {
+  try {
+
+    // check if user exist
+    let chat_group = await findDocument(Chat_group, {
+      code: req.params.code
+    }, u, false)
+    if (!chat_group)
+      return res.send(formatResult(404, 'chat_group not found'))
+
+    if (!chat_group.profile || chat_group.profile !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}/${chat_group.profile}`)
+
+    fs.unlink(path, (err) => {
+      if (err)
+        return res.send(formatResult(500, err))
+    })
+    chat_group.profile = u
+    await chat_group.save()
+
+    return res.send(formatResult(200, 'DELETED'))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /chat_group/{code}:
  *   delete:
  *     tags:
@@ -956,7 +1014,7 @@ router.delete('/:code', auth, async (req, res) => {
       const result = await deleteDocument(Chat_group, chat_group._id)
 
       // make the design of the chat storage
-      const path = `./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)

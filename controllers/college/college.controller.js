@@ -15,7 +15,8 @@ const {
   validateObjectId,
   sendResizedImage,
   u,
-  upload_single_image
+  upload_single_image,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -209,7 +210,7 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
     if (!college.logo || (college.logo !== req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    const path = `./uploads/colleges/${college._id}/${college.logo}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${college._id}/${college.logo}`)
 
     sendResizedImage(req, res, path)
   } catch (error) {
@@ -403,7 +404,7 @@ router.put('/:id/logo', async (req, res) => {
     if (!college)
       return res.send(formatResult(404, 'college not found'))
 
-    const path = `./uploads/colleges/${req.params.id}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
     req.kuriousStorageData = {
       dir: path,
     }
@@ -477,7 +478,7 @@ router.delete('/:id/logo/:file_name', async (req, res) => {
     if (!college.logo || college.logo !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
-    const path = `./uploads/colleges/${req.params.id}/${college.logo}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}/${college.logo}`)
 
     fs.unlink(path, (err) => {
       if (err)
@@ -530,7 +531,7 @@ router.delete('/:id', async (req, res) => {
       const result = await deleteDocument(College, req.params.id)
 
       // delete files if available
-      const path = `./uploads/colleges/${req.params.id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)

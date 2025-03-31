@@ -40,7 +40,8 @@ const {
   Quiz,
   auth,
   validate_chat_group_profile_udpate,
-  savedecodedBase64Image
+  savedecodedBase64Image,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -361,13 +362,7 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
     if (!user.profile || (user.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    let path
-
-    if (user.college) {
-      path = `./uploads/colleges/${user.college}/user_profiles/${user.profile}`
-    } else {
-      path = `./uploads/system/user_profiles/${user.profile}`
-    }
+    let path = addStorageDirectoryToPath(user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`)
 
     sendResizedImage(req, res, path)
   } catch (error) {
@@ -748,8 +743,7 @@ router.put('/profile', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    const path = req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`
-
+    const path = addStorageDirectoryToPath(req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`)
     const { filename } = await savedecodedBase64Image(req.body.profile, path)
 
     if (req.user.profile) {
@@ -782,8 +776,8 @@ router.put('/profile', auth, async (req, res) => {
  *     tags:
  *       - User
  *     description: remove User profile
- *     security:
- *       - bearerAuth: -[]
+  *     security:
+  *       - bearerAuth: -[]
  *     parameters:
  *       - name: file_name
  *         description: File name
@@ -813,7 +807,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
     if (!user.profile || user.profile !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
-    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`
+    const path = addStorageDirectoryToPath(user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`)
 
     fs.unlink(path, (err) => {
       if (err)
@@ -912,7 +906,7 @@ router.delete('/:id', auth, async (req, res) => {
 
       if (!user.profile) {
         // delete the profile
-        const path = `./uploads/colleges/${user.college}/users/${user.profile}`
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/users/${user.profile}`)
         fs.exists(path, (exists) => {
           if (exists)
             fs.unlink(path)

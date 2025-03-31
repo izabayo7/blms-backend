@@ -28,7 +28,8 @@ const {
     Chapter,
     sendResizedImage,
     upload_single_image,
-    injectFaculty_college_year
+    injectFaculty_college_year,
+    addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -444,7 +445,7 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
             _id: faculty_college_year.faculty_college
         })
 
-        const path = `./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`)
 
         sendResizedImage(req, res, path)
     } catch (error) {
@@ -721,7 +722,7 @@ router.put('/:id/cover_picture', async (req, res) => {
         let faculty_college = await findDocument(Faculty_college, {
             _id: faculty_college_year.faculty_college
         })
-        const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`)
         req.kuriousStorageData = {
             dir: path,
         }
@@ -798,7 +799,7 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
             _id: faculty_college_year.faculty_college
         })
 
-        const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`)
 
 
         fs.unlink(`${path}/${course.cover_picture}`, (err) => {
@@ -818,75 +819,6 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
     }
 })
 
-/**
- * @swagger
- * /course/{id}/cover_picture/{file_name}:
- *   delete:
- *     tags:
- *       - Course
- *     description: remove Course cover_picture
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Chapter id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: File name
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.delete('/:id/cover_picture/:file_name', async (req, res) => {
-    try {
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        // check if college exist
-        const course = await findDocument(Course, {
-            _id: req.params.id
-        }, u, false)
-        if (!course)
-            return res.send(formatResult(404, 'course not found'))
-
-        if (!course.cover_picture || course.cover_picture !== req.params.file_name)
-            return res.send(formatResult(404, 'file not found'))
-
-        let faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: course.faculty_college_year
-        })
-
-        let faculty_college = await findDocument(Faculty_college, {
-            _id: faculty_college_year.faculty_college
-        })
-        const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}/${course.cover_picture}`
-
-        fs.unlink(path, (err) => {
-            if (err)
-                return res.send(formatResult(500, err))
-        })
-        course.cover_picture = u
-        await course.save()
-        return res.send(formatResult(u, u, course))
-
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
 
 /**
  * @swagger
@@ -962,7 +894,7 @@ router.delete('/:id', async (req, res) => {
                 _id: faculty_college_year.faculty_college
             })
 
-            const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`)
             fs.exists(path, (exists) => {
                 if (exists) {
                     fs.remove(path)

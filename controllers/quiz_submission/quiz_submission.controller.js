@@ -33,7 +33,8 @@ const {
   upload_multiple,
   Comment,
   addQuizTarget,
-  auth
+  auth,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -480,7 +481,7 @@ router.get('/:id/attachment/:file_name', auth, async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const file_path = `./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`)
 
     const file_type = await findFileType(req.params.file_name)
 
@@ -796,7 +797,7 @@ router.post('/:id/attachment', auth, async (req, res) => {
       _id: quiz.user
     })
 
-    const path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
 
     req.kuriousStorageData = {
       dir: path,
@@ -878,7 +879,7 @@ router.delete('/:id', auth, async (req, res) => {
         _id: faculty_college_year.faculty_college
       })
 
-      const path = `./uploads/colleges/${faculty_college.college}/assignments/${quiz._id}/submissions/${req.params.id}`
+      const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/assignments/${quiz._id}/submissions/${req.params.id}`)
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)
