@@ -234,7 +234,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
         const {
             error
@@ -244,14 +244,10 @@ router.get('/:id', auth, async (req, res) => {
 
         let result = await findDocument(Assignment_submission, {
             _id: req.params.id
-        })
+        }).populate('assignment')
         if (!result)
             return res.send(formatResult(404, 'assignment_submission not found'))
-
-        // result = await injectUser([result], 'user')
-        // result = await injectAssignment(result)
-        // result = result[0]
-
+        result = await injectUser([result], 'user')
         return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
