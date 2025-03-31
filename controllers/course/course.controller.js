@@ -28,7 +28,8 @@ const {
     Chapter,
     sendResizedImage,
     upload_single_image,
-    injectFaculty_college_year
+    injectFaculty_college_year,
+    addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -444,7 +445,7 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
             _id: faculty_college_year.faculty_college
         })
 
-        const path = `./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`)
 
         sendResizedImage(req, res, path)
     } catch (error) {
