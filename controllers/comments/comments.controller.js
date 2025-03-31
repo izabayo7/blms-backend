@@ -83,6 +83,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Comment
  *     description: Returns comments in the specified target
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: target
  *         description: target type
