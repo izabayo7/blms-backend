@@ -471,6 +471,61 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
+ * /kurious/course/tooglePublishment/{id}:
+ *   put:
+ *     tags:
+ *       - Course
+ *     description: Publish or unPublish a course
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/tooglePublishment/:id', async (req, res) => {
+  let {
+    error
+  } = validateObjectId(req.params.id)
+  if (error)
+    return res.status(400).send(error.details[0].message)
+
+  // check if course exist
+  let course = await Course.findOne({
+    _id: req.params.id
+  })
+  if (!course)
+    return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
+
+    const now = new Date()
+
+  const updateObject = {
+    published: !course.published,
+    publishedOn: !course.published ? now : undefined
+  }
+
+  const updateDocument = await Course.findOneAndUpdate({
+    _id: req.params.id
+  }, updateObject, {
+    new: true
+  })
+  if (updateDocument)
+    return res.status(201).send(updateDocument)
+  return res.status(500).send("Error ocurred")
+
+})
+
+/**
+ * @swagger
  * /kurious/course/{id}:
  *   put:
  *     tags:
@@ -654,7 +709,7 @@ async function injectStudentProgress(courses, studentId) {
     const studentProgress = await StudentProgress.findOne({
       course: courses[i]._id, student: studentId
     })
-    
+
     courses[i].progress = studentProgress ? { progress: studentProgress.progress, dateStarted: studentProgress.createdAt } : undefined
   }
   return courses

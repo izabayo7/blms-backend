@@ -1,3 +1,4 @@
+const { date } = require('joi')
 // import dependencies
 const {
     mongoose,
@@ -28,6 +29,9 @@ const courseSchema = new mongoose.Schema({
     published: {
         type: Boolean,
         default: false
+    },
+    publishedOn: {
+        type: Date
     }
 })
 
