@@ -69,7 +69,7 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
         //     username: process.env.EMAIL,
         //     password: process.env.PASSWORD
         // })
-console.log(message)
+
         return {
             sent: await transporter.sendMail(message)
             // sent: await transporter.sendEmail(message)
