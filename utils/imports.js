@@ -226,7 +226,7 @@ module.exports.hashPassword = async (password) => {
  */
 module.exports.validateUserLogin = (credentials) => {
     const schema = {
-        email: Joi.string().email().required(),
+        email_user_name_or_phone: Joi.string().required(),
         password: Joi.string().min(3).max(255).required()
     }
     return Joi.validate(credentials, schema)
@@ -947,7 +947,7 @@ module.exports.injectNotification = async (array) => {
                 _id: array[i].notifications[k].id
             }).lean()
             notification = await this.injectDoer(notification)
-            array[i].notifications[k].id = undefined
+            array[i].notifications[k].id = undefinedzzzzzzz
             array[i].notifications[k].notification = notification
         }
     }
@@ -1078,9 +1078,7 @@ module.exports.streamVideo = async (req, res, path) => {
 }
 
 // generateAuthToken on user login
-module.exports.generateAuthToken = async ({
-    user
-}) => {
+module.exports.generateAuthToken = async (user) => {
     const ONE_DAY = 60 * 60 * 24
     return this.jwt.sign({
         _id: user._id,
@@ -1139,7 +1137,8 @@ module.exports._student = student
 module.exports._instructor = instructor
 
 // constant lobal variables
-module.exports.defaulPassword = `Kurious@${new Date().getFullYear()}`
+module.exports.default_password = `Kurious@${new Date().getFullYear()}`
+module.exports.random_user_name = `user_${Math.round(Math.random() * 1000000)}`
 
 // proper way to define user roles
 // proper way to use jwt

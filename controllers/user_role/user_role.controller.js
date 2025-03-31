@@ -2,6 +2,9 @@
 const {
   express,
   User_role,
+  User,
+  User_category,
+  u,
   validate_user_role,
   formatResult,
   validateObjectId,
@@ -10,8 +13,7 @@ const {
   deleteDocument,
   findDocument,
   findDocuments,
-  User,
-  u
+
 } = require('../../utils/imports')
 
 // create router
@@ -241,14 +243,14 @@ router.delete('/:id', async (req, res) => {
       return res.send(formatResult(404, `User_role of Code ${req.params.id} Not Found`))
 
     // check if the user_role is never used
-    const user = await findDocument(User, {
-      roles: {
+    const category = await findDocument(User_category, {
+      user_roles: {
         $elemMatch: {
           id: req.params.id
         }
       }
     })
-    if (!user.data) {
+    if (!category.data) {
       const result = await deleteDocument(User_role, req.params.id)
       return res.send(result)
     }

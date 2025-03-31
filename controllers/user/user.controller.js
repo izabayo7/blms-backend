@@ -1,8 +1,8 @@
 // import dependencies
 const {
-  express,
-  Student,
-  Search
+    express,
+    Student,
+    Search
 } = require('../../utils/imports')
 
 
@@ -22,12 +22,12 @@ const router = express.Router()
  *         in: query
  *         required: true
  *         type: string
-  *       - name: limit
+ *       - name: limit
  *         description: limit number
  *         in: query
  *         required: true
  *         type: string
-   *       - name: query
+ *       - name: query
  *         description: the search query
  *         in: body
  *         required: true
@@ -41,28 +41,36 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.post('/search', async (req, res) => {
-  try {
+    try {
 
-    const { data, error } = await Search(Student, {
-      $or: [{
-        surName: {
-          $regex: req.body.query,
-          $options: '$i'
-        }
-      }, {
-        otherNames: {
-          $regex: req.body.query,
-          $options: '$i'
-        }
-      }]
-    }, { surName: 1, otherNames: 1, profile: 1, email: 1 }, req.query.page, req.query.limit)
-    if (error)
-      return res.status(400).send(error)
+        const {
+            data,
+            error
+        } = await Search(Student, {
+            $or: [{
+                surName: {
+                    $regex: req.body.query,
+                    $options: '$i'
+                }
+            }, {
+                otherNames: {
+                    $regex: req.body.query,
+                    $options: '$i'
+                }
+            }]
+        }, {
+            surName: 1,
+            otherNames: 1,
+            profile: 1,
+            email: 1
+        }, req.query.page, req.query.limit)
+        if (error)
+            return res.status(400).send(error)
 
-    res.status(200).send(data)
-  } catch (error) {
-    console.log(erro)
-  }
+        res.status(200).send(data)
+    } catch (error) {
+        console.log(erro)
+    }
 })
 
 // export the router

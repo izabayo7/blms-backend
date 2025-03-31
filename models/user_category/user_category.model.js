@@ -8,7 +8,6 @@ const {
 const role_schema = new mongoose.Schema({
     id: {
         type: String,
-        unique: true,
         required: true
     },
     // role status 1(active) 0(inactive)
@@ -17,7 +16,6 @@ const role_schema = new mongoose.Schema({
         default: 1
     },
 })
-role_schema.plugin(timestamps)
 
 const user_category_schema = new mongoose.Schema({
     name: {

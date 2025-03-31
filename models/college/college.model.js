@@ -39,7 +39,7 @@ const college_schema = new mongoose.Schema({
 function validate_college(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
-        email: Joi.string().required(), 
+        email: Joi.string().email().required(), 
         logo: Joi.string(),
         phone: Joi.string().max(15).required(),
         location: Joi.string().required(), // regex needed

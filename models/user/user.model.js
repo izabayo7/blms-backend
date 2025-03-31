@@ -51,8 +51,7 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     college: {
-        type: String,
-        required: true
+        type: String
     },
     status: {
         stillMember: {
@@ -71,19 +70,19 @@ const userSchema = new mongoose.Schema({
 userSchema.plugin(timestamps)
 
 // validate user
-function validate_user(credentials) {
+function validate_user(credentials, method = 'create') {
     const schema = {
         sur_name: Joi.string().min(3).required(),
         other_names: Joi.string().min(3).required(),
-        user_name: Joi.string().min(3).required(), // regex needed
+        user_name: method == 'create' ? Joi.string().min(3) : Joi.string().min(3).required(), // regex needed
         national_id: Joi.string().length(16).required(), // regex needed
         gender: Joi.string().min(4).max(6).required(), // regex needed
         password: Joi.string().min(8),
         phone: Joi.string().max(10).min(10).required(), // regex needed
-        email: Joi.string().required(), // regex needed
+        email: Joi.string().email().required(),
         profile: Joi.string(), // regex needed
-        date_of_birth: Joi.date().required(),
-        college: Joi.ObjectId().required(),
+        date_of_birth: Joi.date(),
+        college: Joi.ObjectId(),
         category: Joi.ObjectId().required(),
     }
     return Joi.validate(credentials, schema)

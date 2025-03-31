@@ -2,11 +2,27 @@
 const {
   express,
   User,
+  User_category,
+  College,
+  u,
+  User_faculty_college_year,
+  fs,
+  bcrypt,
+  default_password,
+  random_user_name,
   validate_user,
   formatResult,
   findDocument,
   findDocuments,
-  u
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  hashPassword,
+  validateObjectId,
+  validateUserLogin,
+  generateAuthToken,
+  Search,
+
 } = require('../../utils/imports')
 
 // create router
@@ -39,16 +55,6 @@ const router = express.Router()
  *         type: string
  *       password:
  *         type: string
- *       roles  :
- *         type: array
- *         items:
- *            type: object
- *            properties:
- *              id:
- *                type: string
- *              status:
- *                type: number
- *                default: 1
  *       status:
  *         type: object
  *         properties:
@@ -66,7 +72,6 @@ const router = express.Router()
  *       - phone
  *       - email
  *       - category
- *       - roles
  */
 
 /**
@@ -91,12 +96,12 @@ router.get('/', async (req, res) => {
     if (result.data.length === 0)
       return res.send(formatResult(404, 'User list is empty'))
 
-    // users = await injectDetails(users)
+    // result.data = await injectDetails([result.data])
+    // result.data = result.data[0]
 
     return res.send(result)
   } catch (error) {
-    console.log(error)
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -127,23 +132,27 @@ router.get('/college/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
-    let college = await College.findOne({
+      return res.send(formatResult(400, error.details[0].message))
+
+    let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college)
-      return res.status(404).send(`College ${req.params.id} Not Found`)
-    let users = await User.find({
-      college: req.params.id
-    }).lean()
+    if (!college.data)
+      return res.send(formatResult(404, `College ${req.params.id} Not Found`))
 
-    if (users.length === 0)
-      return res.status(404).send(`${college.name} user list is empty`)
-    users = await injectDetails(users)
-    return res.send(users)
+    let result = await findDocuments(User, {
+      college: req.params.id
+    })
+
+    if (result.data.length === 0)
+      return res.send(formatResult(404, `${college.data.name} user list is empty`))
+
+    // result.data = await injectDetails([result.data])
+    // result.data = result.data[0]
+
+    return res.send(result)
   } catch (error) {
-    console.log(error)
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -174,17 +183,95 @@ router.get('/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
-    let user = await User.findOne({
+      return res.send(formatResult(400, error.details[0].message))
+    let result = await findDocument(User, {
       _id: req.params.id
-    }).lean()
+    })
 
-    if (!user)
-      return res.status(404).send(`User ${req.params.id} Not Found`)
-    user = await injectDetails([user])
-    return res.send(user[0])
+    if (!result.data)
+      return res.send(formatResult(404, `User ${req.params.id} Not Found`))
+
+    // result.data = await injectDetails([result.data])
+    // result.data = result.data[0]
+
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/search:
+ *   post:
+ *     tags:
+ *       - User
+ *     description: Search users
+ *     parameters:
+ *       - name: page
+ *         description: page number
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: limit
+ *         description: limit number
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: query
+ *         description: the search query
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/search', async (req, res) => {
+  try {
+    const {
+      data,
+      error
+    } = await Search(User, {
+      $or: [{
+        sur_name: {
+          $regex: req.body.query,
+          $options: '$i'
+        }
+      }, {
+        other_names: {
+          $regex: req.body.query,
+          $options: '$i'
+        }
+      }, {
+        user_name: {
+          $regex: req.body.query,
+          $options: '$i'
+        }
+      }, {
+        email: {
+          $regex: req.body.query,
+          $options: '$i'
+        }
+      }]
+    }, {
+      sur_name: 1,
+      other_names: 1,
+      user_name: 1,
+      profile: 1,
+      email: 1
+    }, req.query.page, req.query.limit)
+
+    if (error)
+      return res.send(formatResult(400, error))
+
+    res.send(formatResult(u, u, data))
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -213,34 +300,65 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  const {
-    error
-  } = validate_user(req.body)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      error
+    } = validate_user(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  const status = await checkRequirements('User', req.body)
-  if (status !== 'alright')
-    return res.status(400).send(status)
+    // check if the name or email were not used
+    let user = await findDocument(User, {
+      $or: [{
+        email: req.body.email
+      }, {
+        national_id: req.body.national_id
+      }, {
+        phone: req.body.phone
+      }],
+    })
 
-  let newDocument = new User({
-    surName: req.body.surName,
-    otherNames: req.body.otherNames,
-    nationalId: req.body.nationalId,
-    phone: req.body.phone,
-    gender: req.body.gender,
-    email: req.body.email,
-    phone: req.body.phone,
-    password: defaulPassword,
-    college: req.body.college,
-    DOB: req.body.DOB
-  })
+    if (user.data) {
+      const phoneFound = req.body.phone == user.data.phone
+      const national_idFound = req.body.national_id == user.data.national_id
+      const emailFound = req.body.email == user.data.email
+      return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : ''} arleady exist`))
+    }
 
-  newDocument.password = await hashPassword(newDocument.password)
-  let saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.status(201).send(saveDocument)
-  return res.status(500).send('New User not Registered')
+    let user_category = await findDocument(User_category, {
+      _id: req.body.category
+    })
+    if (!user_category.data)
+      return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
+
+    if (req.body.college) {
+      let college = await findDocument(College, {
+        _id: req.body.college
+      })
+      if (!college.data)
+        return res.send(formatResult(404, `College with code ${req.body.college} Not Found`))
+    }
+    let result = await createDocument(User, {
+      user_name: random_user_name,
+      sur_name: req.body.sur_name,
+      other_names: req.body.other_names,
+      national_id: req.body.national_id,
+      phone: req.body.phone,
+      gender: req.body.gender,
+      email: req.body.email,
+      phone: req.body.phone,
+      password: await hashPassword(default_password),
+      college: req.body.college,
+      category: req.body.category,
+      date_of_birth: req.body.date_of_birth
+    })
+
+    // result.data = await injectDetails([result.data])
+    // result.data = result.data[0]
+    return res.status(201).send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -273,26 +391,39 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/login', async (req, res) => {
-  const {
-    error
-  } = validate_userLogin(req.body)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      error
+    } = validateUserLogin(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // find user
-  let user = await User.findOne({
-    email: req.body.email
-  })
-  if (!user)
-    return res.status(400).send('Invalid Email or Password')
+    // find user
+    let user = await findDocument(User, {
+      $or: [{
+        email: req.body.email_user_name_or_phone
+      }, {
+        user_name: req.body.email_user_name_or_phone
+      }, {
+        phone: req.body.email_user_name_or_phone
+      }]
+    })
 
-  // check if passed password is valid
-  const validPassword = await bcrypt.compare(req.body.password, user.password)
+    const erroMessage = 'Invalid email, user_name, phone or password'
 
-  if (!validPassword)
-    return res.status(400).send('Invalid Email or Password')
-  // return token
-  return res.send(user.generateAuthToken())
+    if (!user.data)
+      return res.send(formatResult(400, erroMessage))
+
+    // check if passed password is valid
+    const validPassword = await bcrypt.compare(req.body.password, user.data.password)
+
+    if (!validPassword)
+      return res.send(formatResult(400, erroMessage))
+    // return token
+    return res.send(formatResult(u, u, await generateAuthToken(user.data)))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -324,37 +455,73 @@ router.post('/login', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  error = validate_user(req.body)
-  error = error.error
-  if (error)
-    return res.status(400).send(error.details[0].message)
+    error = validate_user(req.body, 'update')
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if user exist
-  let user = await User.findOne({
-    _id: req.params.id
-  })
-  if (!user)
-    return res.status(404).send(`User with code ${req.params.id} doens't exist`)
+    // check if user exist
+    let user = await findDocument(User, {
+      _id: req.params.id
+    })
+    if (!user.data)
+      return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 
-  if (req.body.password)
-    req.body.password = await hashPassword(req.body.password)
-  let updateDocument = await User.findOneAndUpdate({
-    _id: req.params.id
-  }, req.body, {
-    new: true
-  })
-  if (updateDocument) {
-    updateDocument = await injectDetails([updateDocument])
-    return res.status(201).send(updateDocument[0])
+    // check if the name or email were not used
+    user = await findDocument(User, {
+      _id: {
+        $ne: req.params.id
+      },
+      $or: [{
+        email: req.body.email
+      }, {
+        national_id: req.body.national_id
+      }, {
+        user_name: req.body.user_name
+      }, {
+        phone: req.body.phone
+      }],
+    })
+
+    if (user.data) {
+      const phoneFound = req.body.phone == user.data.phone
+      const national_idFound = req.body.national_id == user.data.national_id
+      const emailFound = req.body.email == user.data.email
+      const user_nameFound = req.body.user_name == user.data.user_name
+      return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+    }
+
+    let user_category = await findDocument(User_category, {
+      _id: req.body.category
+    })
+    if (!user_category.data)
+      return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
+
+    if (req.body.college) {
+      let college = await findDocument(College, {
+        _id: req.body.college
+      })
+      if (!college.data)
+        return res.send(formatResult(404, `College with code ${req.body.college} Not Found`))
+    }
+
+    if (req.body.password)
+      req.body.password = await hashPassword(req.body.password)
+    let result = await updateDocument(User, req.params.id, req.body)
+
+    // result.data = await injectDetails([result.data])
+    // result.data = result.data[0]
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
-  return res.status(500).send("Error ocurred")
-
 })
 
 /**
@@ -381,28 +548,48 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let user = await User.findOne({
-    _id: req.params.id
-  })
-  if (!user)
-    return res.status(404).send(`User of Code ${req.params.id} Not Found`)
-  let deleteDocument = await User.findOneAndDelete({
-    _id: req.params.id
-  })
-  if (!deleteDocument)
-    return res.status(500).send('User Not Deleted')
-  if (user.profile) {
-    fs.unlink(`./uploads/colleges/${user.college}/users/users/${user.profile}`, (err) => {
-      if (err)
-        return res.status(500).send(err)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if user exist
+    let user = await findDocument(User, {
+      _id: req.params.id
     })
+    if (!user.data)
+      return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
+
+    // check if the user is never used
+    const user_found = await findDocument(User_faculty_college_year, {
+      user: req.params.id
+    })
+    if (!user_found.data) {
+
+      const result = await deleteDocument(User, req.params.id)
+
+      if (!user.data.profile) {
+        // delete the profile
+        const path = `./uploads/colleges/${user.data.college}/users/${user.data.profile}`
+        fs.exists(path, (exists) => {
+          if (exists)
+            fs.unlink(path, {
+              recursive: true
+            })
+        })
+      }
+      return res.send(result)
+    }
+
+    const update_user = await updateDocument(User, req.params.id, {
+      "status.stillMember": false
+    })
+    return res.send(formatResult(200, `User ${update_user.data.user_name} couldn't be deleted because it was used, instead it was disabled`))
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
-  return res.send(`${user.surName} ${user.otherNames} was successfully deleted`)
 })
 
 // link the user with his/her current college
