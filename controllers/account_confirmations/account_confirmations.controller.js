@@ -59,7 +59,7 @@ exports.AcceptCollege = async (req, res) => {
 
         let {token} = req.params
 
-        const confirmation = await Account_confirmation.findById(token).populate('user');
+        const confirmation = await Account_confirmation.findOne({_id: token, status: "PENDING"}).populate('user');
         if (!confirmation)
             return res.send(formatResult(400, 'Bad request'));
 
