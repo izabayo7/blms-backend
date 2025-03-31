@@ -1,4 +1,6 @@
 // import dependencies
+const {add_user_details} = require("../../utils/imports");
+const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_group} = require('../../models/user_group/user_group.model')
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
@@ -180,14 +182,14 @@ router.get('/statistics/user', async (req, res) => {
                 "target.type": 'chapter',
                 "target.id": {$in: chapters.map(x => x._id.toString())}
             }).populate('sender',
-                {sur_name: 1, other_names: 1, user_name: 1,_id:0}
+                {sur_name: 1, other_names: 1, user_name: 1, _id: 0}
             ).sort({_id: -1}).limit(4)
 
             comments = simplifyObject(comments)
 
             for (const i in comments) {
                 for (const iKey in chapters) {
-                    if(chapters[iKey]._id.toString() === comments[i].target.id){
+                    if (chapters[iKey]._id.toString() === comments[i].target.id) {
                         comments[i].chapter = chapters[iKey].name
                         break
                     }
@@ -200,6 +202,70 @@ router.get('/statistics/user', async (req, res) => {
                 latestComments: comments
             }))
         }
+    } catch
+        (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /course/statistics/course/{id}:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get Courses statistics for students in a course
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Course id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
+    try {
+        let course = await Course.findOne({user: req.user._id, _id: req.params.id})
+        if (!course)
+            return res.send(formatResult(404, 'course not found'))
+
+        let students_progress = await User_progress.find({course: req.params.id})
+
+        let students = await User.find({_id: {$in: students_progress.map(x => x.user.toString())}})
+        students = await add_user_details(students)
+
+
+
+        let chapters = await Chapter.find({course: req.params.id}, {_id: 1, name: 1})
+
+        // let comments = await Comment.find({
+        //     "target.type": 'chapter',
+        //     "target.id": {$in: chapters.map(x => x._id.toString())}
+        // }).populate('sender',
+        //     {sur_name: 1, other_names: 1, user_name: 1, _id: 0}
+        // ).sort({_id: -1}).limit(4)
+
+
+        for (const i in students) {
+            for (const iKey in students_progress) {
+                if (students_progress[iKey].user.toString() === students[i]._id.toString()) {
+                    students[i].progress = students_progress[iKey].progress
+                    break
+                }
+            }
+        }
+
+        return res.send(formatResult(u, u, {
+            students: students,
+        }))
     } catch
         (error) {
         return res.send(formatResult(500, error))
