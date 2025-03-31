@@ -111,6 +111,10 @@ module.exports.listen = (app) => {
                 })
             }
 
+            if (name === `conversation_created_${user._id}`) {
+                socket.emit('res/message/conversation_created', data)
+            }
+
             if (name === `join_group_${id}`) {
                 const contacts = await formatContacts([data], user)
                 socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})

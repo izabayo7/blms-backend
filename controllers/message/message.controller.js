@@ -235,9 +235,18 @@ router.post('/:receiver/forward/:message_id', async (req, res) => {
         if (!isGroup) {
             const Receiver = await findDocument(User, {user_name: receiver})
             const _content = `This is the begining of conversation between __user__${req.user._id} and __user__${Receiver._id}`
-            const conversation_found = await Message.findOne({content: content})
-            if (!conversation_found)
-                await Create_or_update_message('SYSTEM', receiver, content, u, req.user._id)
+            const conversation_found = await Message.findOne({content: _content})
+            if (!conversation_found) {
+                await Create_or_update_message('SYSTEM', receiver, _content, u, req.user._id)
+                MyEmitter.emit('socket_event', {
+                    name: `conversation_created_${req.user._id}`,
+                    data: receiver
+                });
+                MyEmitter.emit('socket_event', {
+                    name: `conversation_created_${Receiver._id}`,
+                    data: req.user.user_name
+                });
+            }
         }
 
         let result = await Create_or_update_message(req.user.user_name, isGroup ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, undefined, true)
