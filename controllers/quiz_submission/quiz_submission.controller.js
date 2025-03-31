@@ -400,7 +400,7 @@ router.post('/', async (req, res) => {
     })
 
     if (user_category.data.name != 'STUDENT')
-      return res.send(formatResult(404, 'user is not allowed to do this quiz'))
+      return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
     let quiz = await findDocument(Quiz, {
       _id: req.body.quiz
@@ -418,7 +418,7 @@ router.post('/', async (req, res) => {
       faculty_college_year: faculty_college_year.data._id
     })
     if (!user_faculty_college_year.data)
-      return res.send(formatResult(404, 'user is not allowed to do this quiz'))
+      return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
     const valid_submision = validateSubmittedAnswers(quiz.data.questions, req.body.answers, 'anwsering')
     if (valid_submision.status !== true)
@@ -505,7 +505,7 @@ router.put('/:id', async (req, res) => {
     })
 
     if (user_category.data.name != 'STUDENT')
-      return res.send(formatResult(404, 'user is not allowed to do this quiz'))
+      return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
     let quiz = await findDocument(Quiz, {
       _id: req.body.quiz
@@ -523,7 +523,7 @@ router.put('/:id', async (req, res) => {
       faculty_college_year: faculty_college_year.data._id
     })
     if (!user_faculty_college_year.data)
-      return res.send(formatResult(404, 'user is not allowed to do this quiz'))
+      return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
     const valid_submision = validateSubmittedAnswers(quiz.data.questions, req.body.answers, 'marking')
     if (valid_submision.status !== true)

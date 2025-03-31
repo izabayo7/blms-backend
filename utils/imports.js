@@ -532,7 +532,7 @@ module.exports.formatContacts = async (messages, userId) => {
                 }
             }).countDocuments()
         } else {
-            const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
+            const user = await this.findDocument(this.User, message.sender == userId ? message.receivers[0].id : message.sender)
             id = user._id
             name = `${user.surName} ${user.otherNames}`
             image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}` : undefined
@@ -569,7 +569,7 @@ module.exports.formatMessages = async (messages, userId) => {
                 let image = undefined
                 let matchingMessages = []
                 if (message.sender != userId) {
-                    const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
+                    const user = await this.findDocument(this.User, { _id: message.sender == userId ? message.receivers[0].id : message.sender })
                     from = `${user.surName} ${user.otherNames}`
                     if (user.profile) {
                         image = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
@@ -720,26 +720,6 @@ module.exports.getLatestMessages = async (userId) => {
     }
 }
 
-// find a specific user (remove personal info)
-module.exports.returnUser = async (id) => {
-    let user = await Admin.findOne({
-        _id: id
-    })
-    if (user)
-        return user
-    user = await Instructor.findOne({
-        _id: id
-    })
-    if (user)
-        return user
-    user = await Student.findOne({
-        _id: id
-    })
-    if (user)
-        return user
-    return null
-}
-
 const fs = require('fs')
 const sharp = require('sharp')
 
@@ -824,10 +804,11 @@ module.exports.injectChapters = async (courses) => {
         if (courses[i].coverPicture && !courses[i].coverPicture.includes('http')) {
             courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}/${courses[i].coverPicture}`
         }
-        let chapters = await this.Chapter.find({
+        let chapters = await this.findDocuments(this.Chapter, {
             course: courses[i]._id
-        }).lean()
-        courses[i].chapters = chapters
+        })
+        // simplify 
+        courses[i].chapters = chapters.data
         for (const k in courses[i].chapters) {
             // remove course and documentVersion
             courses[i].chapters[k].course = undefined
@@ -840,32 +821,32 @@ module.exports.injectChapters = async (courses) => {
                 courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}/${courses[i].chapters[k].mainVideo}`
             }
             // add attachments
-            const attachments = await this.Attachment.find({
+            const attachments = await this.findDocuments(this.Attachment, {
                 chapter: courses[i].chapters[k]._id
             })
             courses[i].chapters[k].attachments = attachments
 
             // add assignments attached to chapters
-            const chapterQuiz = await this.Quiz.find({
+            const chapterQuiz = await this.findDocuments(this.Quiz, {
                 "target.type": "chapter",
                 "target.id": courses[i].chapters[k]._id
             })
-            courses[i].chapters[k].quiz = chapterQuiz
-            courses[i].assignmentsLength += chapterQuiz.length
+            courses[i].chapters[k].quiz = chapterQuiz.data
+            courses[i].assignmentsLength += chapterQuiz.data.length
         }
 
         // add assignments attached to course
-        const courseQuiz = await this.Quiz.find({
+        const courseQuiz = await this.findDocuments(this.Quiz, {
             "target.type": 'course',
             "target.id": courses[i]._id
         })
-        courses[i].quiz = courseQuiz
-        courses[i].assignmentsLength += courseQuiz.length
+        courses[i].quiz = courseQuiz.data
+        courses[i].assignmentsLength += courseQuiz.data.length
 
         // add the students that started the course
-        courses[i].attendedStudents = await this.StudentProgress.find({
+        courses[i].attendedStudents = await this.countDocuments(this.User_progress, {
             course: courses[i]._id
-        }).countDocuments()
+        })
     }
     return courses
 }
@@ -874,11 +855,11 @@ module.exports.injectChapters = async (courses) => {
 module.exports.injectUser = async (array, property, newProperty) => {
     let name = newProperty ? newProperty : property
     for (const i in array) {
-        const user = await this.returnUser(array[i][`${property}`])
+        const user = await this.findDocument(this.User, { _id: array[i][`${property}`] })
 
-        array[i][`${name}`] = this._.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
+        array[i][`${name}`] = this._.pick(user.data, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
         if (array[i][`${name}`].profile) {
-            array[i][`${name}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user._id}/${user.profile}`
+            array[i][`${name}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user.data._id}/${user.data.profile}`
         }
     }
     return array

@@ -1,12 +1,20 @@
 // import dependencies
 const {
   express,
-  Student,
-  StudentProgress,
+  User,
+  User_progress,
   Course,
   Chapter,
-  validateStudentProgress,
-  validateObjectId
+  validate_user_progress,
+  validateObjectId,
+  findDocuments,
+  formatResult,
+  findDocument,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  User_category,
+  User_faculty_college_year
 } = require('../../utils/imports')
 
 // create router
@@ -15,28 +23,26 @@ const router = express.Router()
 /**
  * @swagger
  * definitions:
- *   StudentProgress:
+ *   User_progress:
  *     properties:
- *       _id:
- *         type: string
- *       student:
+ *       user:
  *         type: string
  *       course:
  *         type: string
  *       progress:
  *         type: number
  *     required:
- *       - student
+ *       - user
  *       - course
  */
 
 /**
  * @swagger
- * /studentProgress:
+ * /user_progress:
  *   get:
  *     tags:
- *       - StudentProgress
- *     description: Get all studentProgresses
+ *       - User_progress
+ *     description: Get all user_progresses
  *     responses:
  *       200:
  *         description: OK
@@ -46,26 +52,27 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  const studentProgress = await StudentProgress.find()
   try {
-    if (studentProgress.length === 0)
-      return res.status(404).send('StudentProgress list is empty')
-    return res.status(200).send(studentProgress)
+    const result = await findDocuments(User_progress)
+    if (!result.data.length)
+      return res.send(formatResult(404, 'User_progress list is empty'))
+
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
 /**
  * @swagger
- * /studentProgress/{id}:
+ * /user_progress/{id}:
  *   get:
  *     tags:
- *       - StudentProgress
- *     description: Returns a specified studentProgress
+ *       - User_progress
+ *     description: Returns a specified user_progress
  *     parameters:
  *       - name: id
- *         description: studentProgress's id
+ *         description: user_progress's id
  *         in: path
  *         required: true
  *         type: string
@@ -78,33 +85,35 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  const studentProgress = await StudentProgress.findOne({
-    _id: req.params.id
-  })
   try {
-    if (!studentProgress)
-      return res.status(404).send(`StudentProgress ${req.params.id} Not Found`)
-    return res.status(200).send(studentProgress)
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const result = await findDocument(User_progress, {
+      _id: req.params.id
+    })
+    if (!result.data)
+      return res.send(formatResult(404, 'user_progress not found'))
+
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
 /**
  * @swagger
- * /faculty-college-year/{student}/{course}:
+ * /user_progress/user/{user_id}/{course_id}:
  *   get:
  *     tags:
- *       - StudentProgress
- *     description: Returns studentProgress of a given student in a specified course
+ *       - User_progress
+ *     description: Returns user_progress of a given user in a specified course
  *     parameters:
- *       - name: student
- *         description: Student's id
+ *       - name: user
+ *         description: User's id
  *         in: path
  *         required: true
  *         type: string
@@ -121,59 +130,61 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:student/:course', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.student)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-
-  error = validateObjectId(req.params.course)
-  error = error.error
-  if (error)
-    return res.status(400).send(error.details[0].message)
-
-  // check if student exist
-  let student = await Student.findOne({
-    _id: req.params.student
-  })
-  if (!student)
-    return res.status(404).send(`Student with code ${req.params.student} doens't exist`)
-
-  // check if course exist
-  let course = await Course.findOne({
-    _id: req.params.course
-  })
-  if (!course)
-    return res.status(404).send(`Course with code ${req.params.course} doens't exist`)
-
-  const studentProgress = await StudentProgress.findOne({
-    student: req.params.student,
-    course: req.params.course
-  })
+router.get('/user/:user_id/:course_id', async (req, res) => {
   try {
-    if (!studentProgress)
-      return res.status(404).send(`StudentProgress Was Not Found`)
-    return res.status(200).send(studentProgress)
+    let {
+      error
+    } = validateObjectId(req.params.user_id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    error = validateObjectId(req.params.course_id)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if user exist
+    let user = await findDocument(User, {
+      _id: req.params.user_id
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
+
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.params.course_id
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
+
+    const user_progress = await findDocument(User_progress, {
+      user: req.params.user_id,
+      course: req.params.course_id
+    })
+
+    if (!user_progress.data)
+      return res.send(formatResult(404, 'user_progress not found'))
+
+    return res.send(user_progress)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
 /**
  * @swagger
- * /studentProgress:
+ * /user_progress:
  *   post:
  *     tags:
- *       - StudentProgress
- *     description: Create studentProgress
+ *       - User_progress
+ *     description: Create user_progress
  *     parameters:
  *       - name: body
- *         description: Fields for a studentProgress
+ *         description: Fields for a user_progress
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/StudentProgress'
+ *           $ref: '#/definitions/User_progress'
  *     responses:
  *       201:
  *         description: Created
@@ -185,65 +196,73 @@ router.get('/:student/:course', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  const {
-    error
-  } = validateStudentProgress(req.body, 'post')
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      error
+    } = validate_user_progress(req.body, 'post')
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if student exist
-  let student = await Student.findOne({
-    _id: req.body.student
-  })
-  if (!student)
-    return res.status(404).send(`Student with code ${req.body.student} doens't exist`)
+    // check if user exist
+    let user = await findDocument(User, {
+      _id: req.body.user
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-  // check if course exist
-  let course = await Course.findOne({
-    _id: req.body.course
-  })
-  if (!course)
-    return res.status(404).send(`Course with code ${req.body.course} doens't exist`)
+    let user_category = await findDocument(User_category, {
+      _id: user.data.category
+    })
 
-  // check if studentProgress exist
-  let studentProgress = await StudentProgress.findOne({
-    student: req.body.student,
-    course: req.body.course
-  })
-  if (studentProgress)
-    return res.status(400).send(`StudentProgress arleady exist`)
+    if (user_category.data.name != 'STUDENT')
+      return res.send(formatResult(403, 'user is not allowed to have a progress'))
 
-  let newDocument = new StudentProgress({
-    student: req.body.student,
-    course: req.body.course,
-    progress: 0,
-  })
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.body.course
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
-  const saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.status(201).send(saveDocument)
-  return res.status(500).send('New StudentProgress not Registered')
+    // check if user_progress exist
+    let user_progress = await findDocument(User_progress, {
+      user: req.body.user,
+      course: req.body.course
+    })
+    if (user_progress.data)
+      return res.send(formatResult(400, 'User_progress arleady exist'))
+
+    let result = await createDocument(User_progress, {
+      user: req.body.user,
+      course: req.body.course,
+      progress: 0,
+    })
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
  * @swagger
- * /studentProgress/{id}:
+ * /user_progress/{id}:
  *   put:
  *     tags:
- *       - StudentProgress
- *     description: Create studentProgress
+ *       - User_progress
+ *     description: Create user_progress
  *     parameters:
  *       - name: id
- *         description: studentProgress id
+ *         description: user_progress id
  *         in: path
  *         required: true
  *         type: string
  *       - name: body
- *         description: Fields for a studentProgress
+ *         description: Fields for a user_progress
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/StudentProgress'
+ *           $ref: '#/definitions/User_progress'
  *     responses:
  *       201:
  *         description: Created
@@ -255,88 +274,147 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  error = validateStudentProgress(req.body)
-  error = error.error
-  if (error)
-    return res.status(400).send(error.details[0].message)
+    error = validate_user_progress(req.body)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if studentProgress exist
-  let studentProgress = await StudentProgress.findOne({
-    _id: req.params.id
-  })
-  if (!studentProgress)
-    return res.status(404).send(`StudentProgress with code ${req.params.id} doens't exist`)
+    // check if user_progress exist
+    let user_progress = await findDocument(User_progress, {
+      _id: req.params.id
+    })
+    if (!user_progress.data)
+      return res.send(formatResult(404, 'User_progress not found'))
 
-  // check if student exist
-  let student = await Student.findOne({
-    _id: req.body.student
-  })
-  if (!student)
-    return res.status(404).send(`Student with code ${req.body.student} doens't exist`)
+    // check if user exist
+    let user = await findDocument(User, {
+      _id: req.body.user
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-  // check if course exist
-  let course = await Course.findOne({
-    _id: req.body.course
-  })
-  if (!course)
-    return res.status(404).send(`Course with code ${req.body.course} doens't exist`)
+    let user_category = await findDocument(User_category, {
+      _id: user.data.category
+    })
 
-  // check if chapter exist
-  let chapter = await Chapter.findOne({
-    _id: req.body.chapter
-  })
-  if (!chapter)
-    return res.status(404).send(`Chapter with code ${req.body.chapter} doens't exist`)
-  if (chapter.course !== req.body.course)
-    return res.status(403).send(`${chapter.name} doesn't belong in ${course.name}`)
+    if (user_category.data.name != 'STUDENT')
+      return res.send(formatResult(403, 'user is not allowed to have a progress'))
 
-  if (findFinishedChapter(studentProgress.finishedChapters, req.body.chapter))
-    return res.status(400).send('Progress arleady exists')
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.body.course
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
-  studentProgress.finishedChapters.push({ id: req.body.chapter })
+    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+      user: user.data._id,
+      status: 1
+    })
+    if (course.faculty_college_year != user_faculty_college_year.data.faculty_college_year)
+      return res.send(formatResult(403, 'user is not allowed to study this course'))
 
-  const chapters = await Chapter.find({
-    course: req.body.course
-  })
+    // check if chapter exist
+    let chapter = await findDocument(Chapter, {
+      _id: req.body.chapter
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
 
-  let finishedChapters = 0
+    if (chapter.data.course !== req.body.course)
+      return res.send(formatResult(400, 'chapter don\'t belong to the course'))
 
-  for (const i in chapters) {
-    if (findFinishedChapter(studentProgress.finishedChapters, chapters[i]._id)) {
-      finishedChapters++
+    if (findFinishedChapter(user_progress.finished_chapters, req.body.chapter))
+      return res.send(formatResult(400, 'progress already exists'))
+
+    user_progress.data.finished_chapters.push({ id: req.body.chapter })
+
+    const chapters = await findDocuments(Chapter, {
+      course: req.body.course
+    })
+
+    let finished_chapters = 0
+
+    for (const i in chapters.data) {
+      if (findFinishedChapter(user_progress.data.finished_chapters, chapters.data[i]._id)) {
+        finished_chapters++
+      }
     }
+
+    const progress = (finished_chapters / chapters.data.length) * 100
+
+    let updateObject = {
+      user: req.body.user,
+      course: req.body.course,
+      progress: progress,
+      finished_chapters: user_progress.data.finished_chapters
+    }
+
+    const result = await updateDocument(User_progress, req.params.id, updateObject)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
+})
 
-  const progress = (finishedChapters / chapters.length) * 100
+/**
+ * @swagger
+ * /user_progress/{id}:
+ *   delete:
+ *     tags:
+ *       - User_progress
+ *     description: Delete a user_progress
+ *     parameters:
+ *       - name: id
+ *         description: User_progress id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  let updateObject = {
-    student: req.body.student,
-    course: req.body.course,
-    progress: progress,
-    finishedChapters: studentProgress.finishedChapters
+    // check if user_progress exist
+    let user_progress = await findDocument(User_progress, {
+      _id: req.params.id
+    })
+    if (!user_progress.data)
+      return res.send(formatResult(404, 'User_progress not found'))
+
+    const result = await deleteDocument(User_progress, req.params.id)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
-
-  const updateDocument = await StudentProgress.findOneAndUpdate({
-    _id: req.params.id
-  }, updateObject, {
-    new: true
-  })
-  if (updateDocument)
-    return res.status(201).send(updateDocument)
-  return res.status(500).send("Error ocurred")
-
 })
 
 // find if the id is arleady in finished chapters
-function findFinishedChapter(finishedChapters, id) {
-  for (const k in finishedChapters) {
-    if (finishedChapters[k].id == id) {
+function findFinishedChapter(finished_chapters, id) {
+  for (const k in finished_chapters) {
+    if (finished_chapters[k].id == id) {
       return true
     }
   }

@@ -82,8 +82,9 @@ router.get('/', async (req, res) => {
     if (result.data.length === 0)
       return res.send(formatResult(404, 'Course list is empty'))
 
-    // result.data = await injectUser(result.data, 'user')
-    // result.data = await injectChapters(result.data)
+    result.data = simplifyObject(result.data)
+    result.data = await injectUser(result.data, 'user')
+    result.data = await injectChapters(result.data)
 
     return res.send(result)
   } catch (error) {
