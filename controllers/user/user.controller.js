@@ -362,13 +362,7 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
     if (!user.profile || (user.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    let path
-
-    if (user.college) {
-      path = `./uploads/colleges/${user.college}/user_profiles/${user.profile}`
-    } else {
-      path = `./uploads/system/user_profiles/${user.profile}`
-    }
+    let path = addStorageDirectoryToPath(user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`)
 
     sendResizedImage(req, res, path)
   } catch (error) {
