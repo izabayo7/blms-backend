@@ -30,6 +30,13 @@ const college_schema = new mongoose.Schema({
     logo: {
         type: String,
     },
+    banner: {
+        type: String,
+    },
+    abbreviation: {
+        type: String,
+        unique: true,
+    },
     users_verification_link: {
         type: String,
     },
@@ -46,6 +53,7 @@ function validate_college(credentials) {
         name: Joi.string().min(3),
         email: Joi.string().email(),
         motto: Joi.string(),
+        abbreviation: Joi.string(),
         phone: Joi.string().max(15),
         location: Joi.string(),
         users_verification_link: Joi.string().regex(urlRegex)
