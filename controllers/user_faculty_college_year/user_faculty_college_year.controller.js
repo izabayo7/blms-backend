@@ -143,14 +143,14 @@ router.post('/', async (req, res) => {
             _id: req.body.faculty_college_year
         })
         if (!faculty_college_year)
-            return res.send(formatResult(404, `Faculty_college_year with code ${req.body.faculty_college_year} doens't exist`))
+            return res.send(formatResult(404, 'faculty_college_year not found'))
 
         // check if user exist
         let user = await findDocument(User, {
             user_name: req.body.user
         })
         if (!user)
-            return res.send(formatResult(404, `User with code ${req.body.user} doens't exist`))
+            return res.send(formatResult(404, 'user not found'))
 
         let user_category = await findDocument(User_category, {
             _id: user.category
