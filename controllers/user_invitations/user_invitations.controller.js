@@ -140,6 +140,13 @@ exports.createUserInvitation = async (req, res) => {
 exports.acceptOrDenyInvitation = async (req, res) => {
   try {
 
+    let { action, token } = req.params
+
+    action = action.toLowerCase()
+
+    if (action !== 'accept' && action !== 'deny')
+      return res.send(formatResult(400, 'invalid action'))
+
     if (!(uuidValidate(req.params.token))) return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
     const invitation = await User_invitation.findOne({ token: req.params.token, status: { $ne: 'PENDING' } });
