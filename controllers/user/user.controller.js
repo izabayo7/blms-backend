@@ -326,18 +326,15 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
 
-    if (!user.data.profile)
-      return res.send(formatResult(404, 'file not found'))
-
-    if (user.data.profile !== req.params.file_name)
+    if (!user.data.profile || (user.data.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
     let path
 
     if (user.data.college) {
-      path = `./uploads/colleges/${user.data.data}/users/${user.data.profile}`
+      path = `./uploads/colleges/${user.data.college}/user_profiles/${user.data.profile}`
     } else {
-      path = `./uploads/colleges/system/users/${user.data.profile}`
+      path = `./uploads/colleges/system/user_profiles/${user.data.profile}`
     }
 
     sendResizedImage(req, res, path)

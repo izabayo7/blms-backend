@@ -21,10 +21,10 @@ const chapter_schema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    mainVideo: {
+    uploaded_video: {
         type: String,
     },
-    liveVideo: {
+    recorded_video: {
         type: String,
     },
     status: {

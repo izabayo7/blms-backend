@@ -196,10 +196,7 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
     if (!college.data)
       return res.send(formatResult(404, 'college not found'))
 
-    if (!college.data.logo)
-      return res.send(formatResult(404, 'file not found'))
-
-    if (college.data.logo !== req.params.file_name)
+    if (!college.data.logo || (college.data.logo !== req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
     const path = `./uploads/colleges/${college.data._id}/${college.data.logo}`

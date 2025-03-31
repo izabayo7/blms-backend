@@ -16,10 +16,18 @@ const {
   Faculty_college_year,
   User_progress,
   Quiz,
+  u,
+  path,
+  streamVideo,
 } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
+
+/**
+ * remove script staff in chapter document to avoid hacking
+ */
+
 
 /**
  * @swagger
@@ -34,7 +42,7 @@ const router = express.Router()
  *         type: string
  *       number:
  *         type: string
- *       mainVideo:
+ *       uploaded_video:
  *         type: string
  *       liveVideo:
  *         type: string
@@ -42,6 +50,123 @@ const router = express.Router()
  *       - name
  *       - course
  */
+
+/**
+ * @swagger
+ * /chapter/{id}/document:
+ *   get:
+ *     tags:
+ *       - Chapter
+ *     description: Returns the mainContent of a specified Chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/document', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(404, error.details[0].message))
+
+    // check if chapter exist
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.data.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.data.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.data.faculty_college
+    })
+
+    file_path = `uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/main_content/index.html`
+    return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+* @swagger
+* /chapter/{id}/video/{file_name}:
+*   get:
+*     tags:
+*       - Chapter
+*     description: Returns the uploaded_video of a specified Chapter
+*     parameters:
+*       - name: id
+*         description: Chapter's id
+*         in: path
+*         required: true
+*         type: string
+*       - name: file_name
+*         description: Chapter's video filename
+*         in: path
+*         required: true
+*         type: string
+*     responses:
+*       200:
+*         description: OK
+*       404:
+*         description: Not found
+*       500:
+*         description: Internal Server error
+*/
+router.get('/:id/video/:file_name', async (req, res) => {
+  try {
+
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(404, error.details[0].message))
+
+    // check if chapter exist
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    if (!chapter.data.uploaded_video || (chapter.data.uploaded_video !== req.params.file_name))
+      return res.send(formatResult(404, 'file not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.data.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.data.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.data.faculty_college
+    })
+
+    file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/video/${chapter.data.uploaded_video}`
+
+    streamVideo(req, res, file_path)
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
 
 /**
  * @swagger

@@ -940,8 +940,9 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
 // send resized Image
 module.exports.sendResizedImage = async (req, res, path) => {
     this.fs.exists(path, (exists) => {
+        console.log(path)
         if (!exists) {
-            return res.status(404).send(`${req.params.file_name} was not found`)
+            return res.send(this.formatResult(404, 'file not found'))
         } else {
             const widthString = req.query.width
             const heightString = req.query.height
@@ -970,7 +971,7 @@ module.exports.streamVideo = async (req, res, path) => {
 
         // Handle file not found
         if (err !== null && err.code === 'ENOENT') {
-            res.sendStatus(404);
+            res.send(this.formatResul(404, 'file not found'));
         }
 
         const fileSize = stat.size
