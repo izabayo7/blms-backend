@@ -968,6 +968,11 @@ exports.injectChapters = async (courses) => {
       })
       courses[i].chapters[k].quiz = chapterQuiz
       courses[i].assignmentsLength += chapterQuiz.length
+      courses[i].chapters[k].commentsLength = await this.countDocuments(this.Comment, {
+        "target.type": 'chapter',
+        "target.id": courses[i].chapters[k]._id,
+        reply: undefined
+      })
     }
 
     // add assignments attached to course
