@@ -237,7 +237,7 @@ router.get('/statistics', auth, async (req, res) => {
  */
 router.get('/statistics/user_joins', auth, async (req, res) => {
   try {
-    const {start_date, end_date} = req.query
+    const { start_date, end_date } = req.query
     const result = await User.aggregate([
       { "$match": { createdAt: { $gt: date(start_date), $lte: date(end_date) } } },
       { "$match": { college: req.user.college } },
@@ -1023,15 +1023,20 @@ router.put('/password', auth, async (req, res) => {
     const validPassword = await compare(req.body.current_password, req.user.password);
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
-    const hashedPassword = await hashPassword(req.body.new_password);
-    await updateDocument(User, req.user._id, {
-      password: hashedPassword
-    });
+    this.update_password({ password: req.body.new_password, user_id: req.user._id })
+
     return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
 })
+
+exports.update_password = async ({ password, user_id }) => {
+  const hashedPassword = await hashPassword(req.body.new_password);
+  await updateDocument(User, user._id, {
+    password: hashedPassword
+  });
+}
 
 /**
  * @swagger
