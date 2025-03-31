@@ -186,6 +186,7 @@ router.get('/:id', async (req, res) => {
         const chapter = await Chapter.findById(result.target.id)
 
         result.course = await Course.findById(chapter.course)
+        result.chapter = chapter
 
         return res.send(formatResult(u, u, result))
     } catch (error) {
@@ -350,7 +351,7 @@ router.put('/:id', async (req, res) => {
  *       - name: status
  *         in: path
  *         type: string
- *         enum: ["PENDING","LIVE","FINISHED"]
+     *         enum: ["PENDING","LIVE","FINISHED"]
  *         description: Live_session's Id
  *     responses:
  *       201:
