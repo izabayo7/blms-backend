@@ -1330,7 +1330,9 @@ router.put('/', auth, async (req, res) => {
         })
         result = simplifyObject(result)
         result.data.category = _.pick(user_category, 'name')
-
+        if (result.data.profile) {
+            result.data.profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${result.data.user_name}/profile/${result.data.profile}`
+        }
         return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result.data)))
     } catch (error) {
         return res.send(formatResult(500, error))
