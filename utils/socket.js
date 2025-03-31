@@ -49,7 +49,7 @@ module.exports.listen = (app) => {
         let user
 
         const token = socket.handshake.query.token
-        try{
+        try {
             const decoded = jwt.verify(token, config.get('auth_key'))
             user = await User.findOne({user_name: decoded.user_name}).populate('category')
         } catch (e) {
@@ -289,8 +289,8 @@ module.exports.listen = (app) => {
 
                 const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
                 result.data = await replaceUserIds([result.data], Receiver._id.toString())
-                result.data = result.data[0]
-                socket.broadcast.to(Receiver._id).emit('res/message/new', result.data)
+                result.data = await formatContacts(result.data, Receiver._id.toString())
+                socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', {contact: result.data[0]})
             }
 
             // send success mesage
