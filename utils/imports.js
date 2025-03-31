@@ -1069,9 +1069,9 @@ exports.injectNotification = async (array) => {
             let notification = await this.findDocument(this.Notification, {
                 _id: array[i].notifications[k].id
             })
-            notification = await this.injectUser(notification, 'user')
+            notification = await this.injectUser([notification], 'user')
             array[i].notifications[k].id = undefined
-            array[i].notifications[k].notification = notification
+            array[i].notifications[k].notification = notification[0]
         }
     }
     return array
