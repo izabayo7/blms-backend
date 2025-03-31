@@ -90,13 +90,13 @@ exports.validate_user = (credentials, method = 'create') => {
         category: Joi.ObjectId().required(),
         status: Joi.object({ disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required() })
     } : {
-            sur_name: Joi.string().min(3).max(100).required(),
-            other_names: Joi.string().min(3).max(100).required(),
-            user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100).required(), // regex needed
-            national_id: Joi.string().length(16).required(), // regex needed
-            gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
-            phone: Joi.string().max(10).min(10).required(), // regex needed
-            email: Joi.string().email().required(),
+            sur_name: Joi.string().min(3).max(100),
+            other_names: Joi.string().min(3).max(100),
+            user_name: method == 'create' ? Joi.string().min(3).max(100) : Joi.string().min(3).max(100), // regex needed
+            national_id: Joi.string().length(16), // regex needed
+            gender: Joi.string().min(4).max(6).valid('male', 'female'),
+            phone: Joi.string().max(10).min(10), // regex needed
+            email: Joi.string().email(),
             date_of_birth: Joi.date()
         }
     return Joi.validate(credentials, schema)

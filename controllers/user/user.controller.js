@@ -580,24 +580,25 @@ router.post('/login', async (req, res) => {
  *          in: body
  *          required: true
  *          schema:
- *            sur_name:
- *              type: string
- *            other_names:
- *              type: string
- *            user_name:
- *              type: string
- *            national_id:
- *              type: string
- *            date_of_birth:
- *              type: string
- *              format: date
- *            gender:
- *              type: string
- *              enum: ['male', 'female']
- *            phone:
- *              type: string
- *            email:
- *              type: string
+ *            properties:
+ *              sur_name:
+ *                type: string
+ *              other_names:
+ *               type: string
+ *              user_name:
+ *                type: string
+ *              national_id:
+ *                type: string
+ *              date_of_birth:
+ *                type: string
+ *                format: date
+ *              gender:
+ *                type: string
+ *                enum: ['male', 'female']
+ *              phone:
+ *                type: string
+ *              email:
+ *                type: string
  *     responses:
  *       201:
  *         description: Created
@@ -658,18 +659,9 @@ router.put('/:user_name', auth, async (req, res) => {
     if (chat_group)
       return res.send(formatResult(403, 'user_name was taken'))
 
-    let user_category = await findDocument(User_category, {
-      _id: req.body.category
-    })
-    if (!user_category)
-      return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
 
-    if (req.body.password)
-      req.body.password = await hashPassword(req.body.password)
-    let result = await updateDocument(User, req.params.id, req.body)
+    let result = await updateDocument(User, user._id, req.body)
 
-    // result = await add_user_details([result])
-    // result = result[0]
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
