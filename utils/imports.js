@@ -922,10 +922,10 @@ exports.getStudentExams = async (user_id, undone = false) => {
         user_group: {$in: user_user_groups.map(x => x.user_group)}
     })
     const ids = courses.map(x => x._id.toString())
-    const exams = undone ? Exam.find({
+    const exams = undone ? await Exam.find({
         "course": {$in: ids},
         status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
-    }).sort({_id: -1}) : Exam.find({
+    }).sort({_id: -1}) : await Exam.find({
         "course": {$in: ids},
         status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
     }).sort({_id: -1}).populate('course').lean()
@@ -1936,10 +1936,6 @@ exports.addQuizTarget = async (quizes) => {
             }
     }
     return quizes
-}
-
-exports.handleChunk = async (chunk, id) => {
-    console.log("id: " + id + "\n\nchunk: " + chunk)
 }
 
 exports.makeCode = (length) => {
