@@ -138,26 +138,25 @@ router.get('/statistics/course_access', async (req, res) => {
 
         const student = await User_category.findOne({name: "STUDENT"});
         const users = await User.find({college: req.user.college, category: student._id}, {_id: 1})
-        console.log(users.map(x => x._id.toString()))
+
         const result = await User_logs.aggregate([
-            // {"$match": {"logs.createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
-            // {"$match": {user: {$in: users.map(x => x._id.toString())}}},
-            // {"$unwind": {path: "$logs"}},
-            {$project: {accessed_courses: {"$size": "$logs.accessed_course"}}},
+            {"$match": {"createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {user: {$in: users.map(x => x._id.toString())}}},
+            {"$project": {createdAt: 1, accessed_course: { $size: "$accessed_course" }}},
             {
                 "$group": {
                     "_id": {
                         "$subtract": [
-                            "$logs.createdAt",
+                            "$createdAt",
                             {
                                 "$mod": [
-                                    {"$subtract": ["$logs.createdAt", date("1970-01-01T00:00:00.000Z")]},
+                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
                                     1000 * 60 * 60 * 24
                                 ]
                             }
                         ]
                     },
-                    "total_users": {"$sum": "accessed_courses"}
+                    "total_users": {"$sum": "$accessed_course"}
                 }
             },
             {"$sort": {"_id": 1}}
