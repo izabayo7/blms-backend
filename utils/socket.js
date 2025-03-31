@@ -240,7 +240,8 @@ module.exports.listen = (app) => {
                                                attachments
                                            }) => {
             const receiver_type = typeof receiver
-
+            if (content === "")
+                content = undefined
             const {error} = validate_message({
                 sender: user.user_name,
                 receiver: receiver_type === 'string' ? receiver : receiver.toString(),
@@ -253,7 +254,7 @@ module.exports.listen = (app) => {
                 return
             }
 
-            let result = await Create_or_update_message(user.user_name, receiver, content,undefined,undefined,attachments)
+            let result = await Create_or_update_message(user.user_name, receiver, content, undefined, undefined, attachments)
 
             result = simplifyObject(result)
 

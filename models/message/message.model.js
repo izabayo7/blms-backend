@@ -39,10 +39,16 @@ message_schema.plugin(timestamps)
 
 // validate message
 function validate_message(credentials) {
+    let requireContent = true
+
+    if (credentials.attachments)
+        if (credentials.attachments.length)
+            requireContent = false
+console.log(requireContent)
     const schema = {
         sender: Joi.string().required(),
         receiver: Joi.string().required(),
-        content: credentials.attachments && credentials.attachments.length ? Joi.string().max(9000) : Joi.string().max(9000).required(),
+        content: requireContent ? Joi.string().max(9000).required() : Joi.string().max(9000),
         attachments: Joi.array().min(1).items({src: Joi.string().required()}),
         read: Joi.boolean(),
     }

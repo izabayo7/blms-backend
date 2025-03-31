@@ -634,7 +634,12 @@ exports.formatMessages = async (messages, user_id) => {
     }
     return formatedMessages
 }
-
+exports.injectAttachementsMediaPath = (message) => {
+    for (const j in message.attachments) {
+        message.attachments[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/message/${message._id}/attachment/${message.attachments[j].src}`
+    }
+    return message
+}
 exports.replaceUserIds = async (messages, userId) => {
     for (const messagesKey in messages) {
         if (messages[messagesKey].sender === 'SYSTEM') {
@@ -652,6 +657,8 @@ exports.replaceUserIds = async (messages, userId) => {
             }
             messages[messagesKey].content = messageSegments.join(" ")
         }
+        if (messages[messagesKey].attachments.length)
+            messages[messagesKey] = this.injectAttachementsMediaPath(messages[messagesKey])
     }
     return messages
 }
@@ -1298,7 +1305,7 @@ exports.decodeAuthToken = async ({
 // all regex expressions
 exports.base64EncodedImage = /^data:([A-Za-z-+\/]+);base64,(.+)$/;
 
-    exports.add_user_details = async (users) => {
+exports.add_user_details = async (users) => {
     for (const i in users) {
         const category = await this.findDocument(this.User_category, {_id: users[i].category})
         users[i].category = category.name

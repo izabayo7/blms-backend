@@ -1,4 +1,5 @@
 // import dependencies
+const {fs} = require("../../utils/imports");
 const {streamVideo} = require("../../utils/imports");
 const {sendResizedImage} = require("../../utils/imports");
 const {findFileType} = require("../../utils/imports");
@@ -290,7 +291,7 @@ router.put('/:id/attachements', async (req, res) => {
         if (!msg)
             return res.send(formatResult(404, 'message not found'))
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
 
         req.kuriousStorageData = {
             dir: path,
