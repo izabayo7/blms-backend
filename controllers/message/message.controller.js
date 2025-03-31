@@ -1,4 +1,6 @@
 // import dependencies
+const {upload_audio} = require("../../utils/imports");
+const {upload_single} = require("../../utils/imports");
 const {fs} = require("../../utils/imports");
 const {streamVideo} = require("../../utils/imports");
 const {sendResizedImage} = require("../../utils/imports");
@@ -318,6 +320,68 @@ router.put('/:id/attachements', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /message/voiceNote/{receiver}:
+ *   put:
+ *     tags:
+ *       - Message
+ *     description: Upload a voicenote
+ *     security:
+ *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
+ *     parameters:
+ *       - name: receiver
+ *         in: path
+ *         type: string
+ *         description: Message receiver
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: attachment to upload
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/voiceNote/:receiver', async (req, res) => {
+    try {
+
+        const name = `voice_${req.params.receiver}_${new Date().getTime()}`
+
+        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u,u,u,[{src: name}])
+
+        if(result.status !== 404)
+        {
+            const msg = result.data
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+
+            req.kuriousStorageData = {
+                dir: path,
+                name
+            }
+
+            upload_audio(req, res, async (err) => {
+                if (err)
+                    return res.send(formatResult(500, err.message))
+
+                return res.send(formatResult(u, 'Happy test bro'))
+            })
+        } else {
+            return res.send(result)
+        }
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 
 /**
  * @swagger

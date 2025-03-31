@@ -1174,6 +1174,15 @@ const imageFilter = function (req, file, cb) {
     cb(null, true);
 };
 
+const audioFilter = function (req, file, cb) {
+    // Accept auddios only
+    if (!file.originalname.match(/\.(MP3|mp3|wav|WAV)$/)) {
+        req.fileValidationError = 'file type not allowed';
+        return cb(new Error(req.fileValidationError), false);
+    }
+    cb(null, true);
+};
+
 // upload sing file
 exports.upload_single = this.multer({
     storage: this.dynamic_storage,
@@ -1181,6 +1190,11 @@ exports.upload_single = this.multer({
     //     fileSize: 1024 * 1024 * 5
     // },
     // fileFilter: fileFilter
+}).single('file')
+
+exports.upload_audio = this.multer({
+    storage: this.dynamic_storage,
+    fileFilter: audioFilter
 }).single('file')
 
 // upload single image
