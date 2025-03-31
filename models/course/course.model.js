@@ -44,6 +44,20 @@ const course_schema = new mongoose.Schema({
         type: Number,
         default: 1
     },
+    haveCertificate: {
+        type: Boolean,
+        default: false
+    },
+    isPublic: {
+        type: Boolean,
+        default: false
+    },
+    price: {
+        type: Number,
+    },
+    duration: {
+        type: Number,
+    },
 })
 
 course_schema.plugin(timestamps)
@@ -58,7 +72,11 @@ function validate_course(credentials) {
         maximum_marks: Joi.number().min(1).required(),
         cover_picture: Joi.string(),
         published: Joi.boolean(),
-        status: Joi.number().min(0).max(1)
+        status: Joi.number().min(0).max(1),
+        haveCertificate: Joi.boolean(),
+        isPublic: Joi.boolean(),
+        price: Joi.number().min(0),
+        duration: Joi.number().min(0).max(12),
     }
     return Joi.validate(credentials, schema)
 }
