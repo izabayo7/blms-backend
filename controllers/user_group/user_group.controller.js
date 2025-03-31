@@ -1,7 +1,7 @@
 // import dependencies
 const {filterUsers} = require("../../middlewares/auth.middleware");
-const { User_group, validate_user_group } = require('../../models/user_group/user_group.model')
-const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
+const {User_group, validate_user_group} = require('../../models/user_group/user_group.model')
+const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     Faculty_college,
@@ -73,13 +73,13 @@ router.get('/statistics', async (req, res) => {
             total_student_groups = await countDocuments(User_group)
         } else {
 
-            let faculties = await findDocuments(Faculty, { college: req.user.college })
+            let faculties = await findDocuments(Faculty, {college: req.user.college})
             for (const i in faculties) {
-                let user_groups = await countDocuments(User_group, { faculty: faculties[i]._id })
+                let user_groups = await countDocuments(User_group, {faculty: faculties[i]._id})
                 total_student_groups += user_groups
             }
         }
-        return res.send(formatResult(u, u, { total_student_groups }))
+        return res.send(formatResult(u, u, {total_student_groups}))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -102,7 +102,7 @@ router.get('/statistics', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/',filterUsers(["SUPERADMIN"]), async (req, res) => {
+router.get('/', filterUsers(["SUPERADMIN"]), async (req, res) => {
     // need improvement
     try {
         let result = await findDocuments(User_group)
@@ -138,7 +138,7 @@ router.get('/',filterUsers(["SUPERADMIN"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:faculty',filterUsers(["ADMIN"]), async (req, res) => {
+router.get('/college/:faculty', filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const fetch_all_faculties = req.params.faculty === "ALL"
 
@@ -158,7 +158,7 @@ router.get('/college/:faculty',filterUsers(["ADMIN"]), async (req, res) => {
             let user_groups = await User_group.find({
                 faculty: faculties[i]._id
             }).populate('faculty').lean()
-            
+
             for (const item of user_groups) {
                 foundUser_groups.push(item)
             }
@@ -190,7 +190,7 @@ router.get('/college/:faculty',filterUsers(["ADMIN"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user',filterUsers(["INSTRUCTOR"]), async (req, res) => {
+router.get('/user', filterUsers(["INSTRUCTOR"]), async (req, res) => {
     try {
 
         let user_user_groups = await findDocuments(User_user_group, {
@@ -252,7 +252,7 @@ router.get('/user',filterUsers(["INSTRUCTOR"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/',filterUsers(["ADMIN"]), async (req, res) => {
+router.post('/', filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
@@ -291,6 +291,76 @@ router.post('/',filterUsers(["ADMIN"]), async (req, res) => {
 /**
  * @swagger
  * /user_groups/{id}:
+ *   put:
+ *     tags:
+ *       - User_group
+ *     description: Create user_groups
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: user_groups's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Fields for a user_groups
+ *         in: body
+ *         required: true
+ *         schema:
+ *           properties:
+ *             name:
+ *               type: string
+ *           required:
+ *             - name
+ *             - faculty
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/:id', filterUsers(["ADMIN"]), async (req, res) => {
+    try {
+        const {
+            error
+        } = validate_user_group(req.body, true)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        // check if faculty exist
+        let faculty = await findDocument(User_group, {
+            _id: req.params.id
+        })
+        if (!faculty)
+            return res.send(formatResult(404, `Faculty with code ${req.body.faculty} doens't exist`))
+
+
+        let dupplicate = await findDocument(User_group, {
+            _id: {
+                $ne: req.params.id
+            },
+            name: req.body.name
+        })
+        if (dupplicate)
+            return res.send(formatResult(400, `Please use a different name`))
+
+        let result = await updateDocument(User_group, req.params.id, {
+            name: req.body.name
+        })
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /user_groups/{id}:
  *   delete:
  *     tags:
  *       - User_group
@@ -313,7 +383,7 @@ router.post('/',filterUsers(["ADMIN"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id',filterUsers(["ADMIN"]), async (req, res) => {
+router.delete('/:id', filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
@@ -348,8 +418,8 @@ router.delete('/:id',filterUsers(["ADMIN"]), async (req, res) => {
 
 // link the student with his/her current college
 async function injectDetails(user_groups) {
-    const student_category = await findDocument(User_category, { name: "STUDENT" })
-    const instructor_category = await findDocument(User_category, { name: "INSTRUCTOR" })
+    const student_category = await findDocument(User_category, {name: "STUDENT"})
+    const instructor_category = await findDocument(User_category, {name: "INSTRUCTOR"})
     for (const i in user_groups) {
 
         const total_courses = await countDocuments(Course, {

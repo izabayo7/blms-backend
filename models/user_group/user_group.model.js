@@ -24,13 +24,15 @@ const user_group_schema = new mongoose.Schema({
         default: 'ACTIVE',
         enum: status_enum
     },
-}, { timestamps: true })
+}, {timestamps: true})
 
 user_group_schema.plugin(paginate)
 
 // validate faculty-college_year
-function validate_user_group(credentials) {
-    const schema = {
+function validate_user_group(credentials, isEditing = false) {
+    const schema = isEditing ? {
+        name: Joi.string().required()
+    } : {
         faculty: Joi.ObjectId().required(),
         name: Joi.string().required()
     }
