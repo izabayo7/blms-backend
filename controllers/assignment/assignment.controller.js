@@ -1,4 +1,7 @@
 // import dependencies
+const {sendAssignmentExpirationEmail} = require("../email/email.controller");
+const {scheduleEvent} = require("../../utils/imports");
+const {User_notification} = require("../../utils/imports");
 const {MyEmitter} = require("../../utils/imports");
 const {countDocuments} = require("../../utils/imports");
 const {getStudentAssignments} = require("../../utils/imports");
@@ -15,6 +18,7 @@ const {updateDocument} = require("../../utils/imports");
 const {
     express,
     fs,
+    Notification,
     Chapter,
     Course,
     validateObjectId,
@@ -496,35 +500,94 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
 
         if (req.params.status === "RELEASED") {
             const date = new Date(assignment.dueDate)
-            console.log(date)
-            date.setHours(date.setHours() - 2)
-            console.log(new Date(date))
+            date.setHours(date.getHours() - 2)
 
             let callback = function () {
-                MyEmitter.emit('socket_event', {
-                    name: `upcoming_livesession_${req.user._id}`, data: {user_group: target.course.user_group}
-                });
+                sendLiveNotifications({instructor_category: req.user.category._id.toString(), id: req.params.id})
             }
 
-            // const submissions = await Assignment_submission.find({assignment: req.params.id}).populate('user')
-            // for (const i in submissions) {
-            //     if (submissions[i].user.email) {
-            //         await sendReleaseMarskEmail({
-            //             email: submissions[i].user.email,
-            //             user_names: `Mr${submissions[i].user.gender === 'female' ? 's' : ''} ${submissions[i].user.sur_name} ${submissions[i].user.other_names}`,
-            //             instructor_names: req.user.sur_name + ' ' + req.user.other_names,
-            //             assignment_name: assignment.name,
-            //             assignment_type: 'assignment',
-            //             link: `https://${process.env.FRONTEND_HOST}/assignments/${assignment.name}/${submissions[i].user.user_name}`
-            //         })
-            //     }
-            // }
+            scheduleEvent(date, callback)
+
         }
         return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
+
+async function sendLiveNotifications({instructor_category, id}) {
+    let assignment = await Assignment.find({_id: id})
+    assignment = await addAssignmentTarget(assignment)
+    assignment = assignment[0]
+
+    let user_user_groups = await User_user_group.find({
+        user_group: assignment.target.course.user_group._id.toString(),
+    }).populate('user')
+    user_user_groups = user_user_groups.filter(x => x.user.category !== instructor_category)
+    const user_ids = user_user_groups.map(x => x.user._id.toString())
+
+    const today = new Date()
+    const scheduled = new Date(assignment.dueDate)
+
+    if (today.getDate() !== scheduled.getDate() || today.getMonth() !== scheduled.getMonth() || today.getFullYear() !== scheduled.getFullYear())
+        return
+
+    let newDocument = new Notification({
+            link: `/assignments/${id}`,
+            content: `Assingment '${assignment.title}' is ending in 2 hours`
+        }
+    )
+    const savedDocument = await newDocument.save()
+    if (savedDocument) {
+
+        for (const i in user_ids) {
+
+            // create notification for user
+            let userNotification = await User_notification.findOne({
+                user: user_ids[i]
+            })
+            if (!userNotification) {
+                userNotification = new User_notification({
+                    user: user_ids[i],
+                    notifications: [{
+                        id: newDocument._id
+                    }]
+                })
+
+            } else {
+                userNotification.notifications.push({
+                    id: newDocument._id
+                })
+            }
+
+            let _newDocument = await userNotification.save()
+
+            if (_newDocument) {
+                let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                notification.id = undefined
+                notification.notification = newDocument
+
+                // send the notification
+                MyEmitter.emit('socket_event', {
+                    name: `upcoming_livesession_${user_ids[i]}`, data: notification
+                });
+
+
+                await sendAssignmentExpirationEmail({
+                    email: user_user_groups[i].user.email,
+                    user_names: `Mr${user_user_groups[i].user.gender === 'female' ? 's' : ''} ${user_user_groups[i].user.sur_name} ${user_user_groups[i].user.other_names}`,
+                    assignment_name: assignment.title,
+                    link: `https://${process.env.FRONTEND_HOST}/assignments/${assignment._id}`
+                })
+
+
+            }
+
+        }
+
+
+    }
+}
 
 /**
  * @swagger

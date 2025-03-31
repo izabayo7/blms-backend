@@ -3,6 +3,7 @@ const Mailgen = require('mailgen');
 const {formatResult} = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
+const {assingment_expiration} = require("../../utils/emailGenerator");
 const {announcement_email} = require("../../utils/emailGenerator");
 const {live_scheduled_email} = require("../../utils/emailGenerator");
 const {marks_release_email} = require("../../utils/emailGenerator");
@@ -231,6 +232,33 @@ exports.sendReleaseMarskEmail = async ({
             from: process.env.EMAIL,
             to: email,
             subject: 'Marks Released.',
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(_message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendAssignmentExpirationEmail = async ({
+                                           email,
+                                           user_names,
+                                           assignment_name,
+                                           link
+                                       }) => {
+    try {
+
+        const mail = assingment_expiration({user_names, assignment_name, link})
+        const _message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: `Assignment ${assignment_name} is expiring in 2 hours`,
             html: mail,
         };
 
