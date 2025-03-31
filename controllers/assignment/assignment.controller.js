@@ -1,4 +1,5 @@
 // import dependencies
+const {simplifyObject} = require("../../utils/imports");
 const {upload_multiple} = require("../../utils/imports");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
 const {validate_assignment} = require("../../models/assignments/assignments.model");
@@ -392,7 +393,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
             return res.send(formatResult(400, 'name was taken'))
 
         assignment = _copy
-        // _copy = simplifyObject(assignment)
+        _copy = simplifyObject(assignment)
 
         assignment.title = req.body.title
         assignment.details = req.body.details
@@ -404,7 +405,32 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         assignment.total_marks = req.body.total_marks
         assignment.user = req.user._id
 
+
+        // delete removed files
+        for (const i in _copy.attachments) {
+            let deleteFile = true
+            for (const j in req.body.attachments) {
+                if (_copy.attachments[i].src === req.body.attachments[j].src) {
+                    deleteFile = false
+                    break
+                }
+            }
+            if (deleteFile) {
+                const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${req.params.id}/${_copy.attachments[i].src}`)
+                fs.exists(path, (exists) => {
+                    if (exists) {
+                        fs.unlink(path)
+                    }
+                })
+            }
+        }
+
+        assignment.attachments = req.body.attachments
+
         await assignment.save()
+
+        assignment = await addAssignmentTarget([assignment])
+        assignment = assignment[0]
 
         return res.send(formatResult(200, 'UPDATED', assignment))
     } catch (error) {
