@@ -111,6 +111,7 @@ exports.validate_account_payments = (credentials, type = 'payment') => {
         startingDate: Joi.date().required()
     } : {
         periodType: Joi.string().valid(periods).required(),
+        total_users: Joi.number(),
         periodValue: Joi.number().min(1).required(),
     }
 

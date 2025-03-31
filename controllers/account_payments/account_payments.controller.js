@@ -199,11 +199,12 @@ async function getTotalBills(req, res) {
 
         if (college.plan !== 'HUGUKA') {
             const total_users = await countDocuments(User, {college: college.college})
-            if (req.body.total_students < total_users)
+
+            if (req.body.total_users < total_users)
                 return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total students in your college)`));
         }
 
-        let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_students)
+        let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_users)
 
         const payment = await Account_payments.findOne({user: req.user._id, status: 'ACTIVE'})
 
@@ -216,8 +217,7 @@ async function getTotalBills(req, res) {
     }
 }
 
-async function calculateAmount(collegePlan, periodType, periodValue, total_students) {
-    let amount = 0
+async function calculateAmount(collegePlan, periodType, periodValue, total_users) {
 
     switch (collegePlan.plan) {
         case 'HUGUKA': {
@@ -229,30 +229,30 @@ async function calculateAmount(collegePlan, periodType, periodValue, total_stude
             break;
         case 'JIJUKA': {
             if (periodType === 'MONTH')
-                return 2500 * periodValue * total_students
+                return 2500 * periodValue * total_users
             else if (periodType === 'YEAR')
-                return ((2500 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+                return ((2500 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_users
         }
             break;
         case 'MINUZA_STARTER': {
             if (periodType === 'MONTH')
-                return 2299 * periodValue * total_students
+                return 2299 * periodValue * 200
             else if (periodType === 'YEAR')
-                return ((2299 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+                return ((2299 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * 200
         }
             break;
         case 'MINUZA_GROWTH': {
             if (periodType === 'MONTH')
-                return 1899 * periodValue * total_students
+                return 1899 * periodValue * 600
             else if (periodType === 'YEAR')
-                return ((1899 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+                return ((1899 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * 600
         }
             break;
         case 'MINUZA_ACCELERATE': {
             if (periodType === 'MONTH')
-                return 1599 * periodValue * total_students
+                return 1599 * periodValue * total_users
             else if (periodType === 'YEAR')
-                return ((1599 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+                return ((1599 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_users
         }
             break;
     }
