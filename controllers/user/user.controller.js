@@ -1317,7 +1317,7 @@ router.put('/status/:username/:value', [auth, filterUsers(["ADMIN"])], async (re
         if (!user)
             return res.send(formatResult(400, `User not found`))
 
-        const update_user = await updateDocument(User, req.params.id, {
+        const update_user = await updateDocument(User, user._id, {
             "status.disabled": req.params.value === 'hold' ? 1 : 0
         })
         return res.send(formatResult(200, 'User account is now ' + req.params.value))
