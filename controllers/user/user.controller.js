@@ -1,6 +1,6 @@
 // import dependencies
 const { compare, hash } = require('bcryptjs')
-const { validateUserPasswordUpdate } = require('../../models/user/user.model')
+const { validateUserPasswordUpdate, validate_admin } = require('../../models/user/user.model')
 const {
   express,
   User,
@@ -573,17 +573,18 @@ router.post('/admin', async (req, res) => {
 
     // check if the name or email were not used
     let college = await findDocument(College, {
-      name: req.body.name
+      name: req.body.college
     })
     if (college)
       return res.send(formatResult(403, `College with same name is arleady registered`))
 
 
-    let { data } = await createDocument(College, {
-      name: req.body.name,
+    let saved_college = await createDocument(College, {
+      name: req.body.college,
       maximum_users: req.body.maximum_users
     })
 
+    console.log(saved_college)
 
     let result = await createDocument(User, {
       user_name: req.body.user_name,
@@ -592,8 +593,8 @@ router.post('/admin', async (req, res) => {
       gender: req.body.gender,
       email: req.body.email,
       password: await hashPassword(req.body.password),
-      college: data._id,
-      category: category._id
+      college: saved_college.data._id,
+      category: user_category._id
     })
 
     return res.status(201).send(result)
