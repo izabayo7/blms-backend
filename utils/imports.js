@@ -482,7 +482,7 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
     for (const k in receivedMessages) {
       if (
         (sentMessages[i].sender == receivedMessages[k].receivers[0].id && receivedMessages[k].sender == sentMessages[i].receivers[0].id) ||
-        (receivedMessages[k].sender == 'SYSTEM' && receiversMatch(receivedMessages[k].receivers, sentMessages[i].receivers))) {
+        (receivedMessages[k].sender == 'SYSTEM' && receiversMatch(sentMessages[i].receivers, receivedMessages[k].receivers))) {
         if (sentMessages[i].realId > receivedMessages[k].realId) {
           messagesToDelete[1].push(k)
         } else {
