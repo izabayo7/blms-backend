@@ -449,6 +449,7 @@ async function injectDetails(faculties, faculty_colleges) {
     faculties[i].total_student_groups = faculty_collegeYears.length
     faculties[i].total_students = all_attendants
     faculties[i].total_courses = total_courses
+    // faculties[i].description = total_courses
     faculties[i].attendants = all_attendants
   }
   return faculties
