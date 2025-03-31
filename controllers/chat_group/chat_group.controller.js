@@ -908,9 +908,13 @@ router.put('/:code/remove_member/:member_user_name', auth, async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: remove Chat_group profile
-  *     security:
-  *       - bearerAuth: -[]
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
+ *       - name: code
+ *         in: path
+ *         type: string
+ *         description: Chat_group's code
  *       - name: file_name
  *         description: File name
  *         in: path
