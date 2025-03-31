@@ -1155,10 +1155,19 @@ router.post('/admin', async (req, res) => {
                 `Institution ${emailFound ? 'email' : phoneFound ? 'phone' : ''} was arleady used`))
         }
 
+        const {sent, err} = await sendConfirmEmail({
+            email: req.body.email,
+            user_name: req.body.sur_name + ' ' + req.body.other_names,
+            institution_name: req.body.college,
+            subscription: "TRIAL"
+        });
+        if (err)
+            return res.send(formatResult(500, err));
 
         let saved_college = await createDocument(College, {
             name: req.body.college,
             email: req.body.college,
+            phone: req.body.college_phone,
             maximum_users: req.body.maximum_users
         })
 
@@ -1173,14 +1182,11 @@ router.post('/admin', async (req, res) => {
             category: user_category._id
         })
 
-        const {sent, err} = await sendConfirmEmail({
-            email: result.data.email,
-            user_name: req.body.sur_name + ' ' + req.body.other_names,
-            institution_name: req.body.college,
-            subscription: "trial"
-        });
-        if (err)
-            return res.send(formatResult(500, err));
+        if (result)
+            await createDocument(College_payment_plans, {
+                college: saved_college.data._id,
+                plan: 'TRIAL'
+            })
 
         return res.send(formatResult(201, 'Account was successfully created, check your email to confirm your email.'));
     } catch (error) {
