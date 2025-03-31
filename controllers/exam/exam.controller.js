@@ -75,6 +75,7 @@ router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
             exam = await Exam.find({
                 user: req.user._id
             }).sort({_id: -1}).populate('course').lean()
+            exam = await addExamUsages(exam)
         } else {
             const user_user_groups = await User_user_group.find({user: req.user._id})
             const courses = await Course.find({
@@ -90,11 +91,11 @@ router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
                     exam: exam[i]._id,
                     user: req.user._id
                 })
+                exam[i].questions = undefined
             }
         }
 
-        exam = await addAttachmentMediaPaths(exam)
-        exam = await addExamUsages(exam)
+        exam = await addAttachmentMediaPaths(exam,req.user.category.name === 'STUDENT',true)
 
         return res.send(formatResult(u, u, exam))
     } catch (error) {
@@ -140,7 +141,7 @@ router.get('/:id', async (req, res) => {
             if (exam.status === 'DRAFT' || !user_user_group)
                 return res.send(formatResult(404, 'exam not available'))
         }
-        exam = await addAttachmentMediaPaths([exam])
+        exam = await addAttachmentMediaPaths([exam],req.user.category.name === 'STUDENT',true)
         exam = exam[0]
         return res.send(formatResult(u, u, exam))
     } catch (error) {
