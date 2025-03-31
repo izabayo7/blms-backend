@@ -284,6 +284,57 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /live_session/{id}/status/{status}:
+ *   put:
+ *     tags:
+ *       - Live_session
+ *     description: Update a live_session
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: Live_session's Id
+ *       - name: status
+ *         in: path
+ *         type: string
+ *         enum: enum: ["PENDING","LIVE","FINISHED"],
+ *         description: Live_session's Id
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/status/:status', async (req, res) => {
+  try {
+    const allowed_statuses = ["PENDING","LIVE","FINISHED"]
+    if (!allowed_statuses.includes(req.params.status))
+      return res.send(formatResult(400, "Invalid status"))
+
+    let live_session = await findDocument(Live_session, {
+      _id: req.params.id
+    })
+    if (!live_session)
+      return res.send(formatResult(404, 'live_session not found'))
+
+
+    const result = await updateDocument(Live_session, req.params.id, {status: req.params.status})
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+
+/**
+ * @swagger
  * /live_session/{id}:
  *   delete:
  *     tags:
