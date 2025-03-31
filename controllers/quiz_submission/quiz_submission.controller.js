@@ -698,12 +698,6 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
         if (req.user.registration_number !== undefined) {
             let paid = await checkCollegePayment({
                 registration_number: req.user.registration_number,
@@ -713,12 +707,6 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
                 return res.send(formatResult(403, 'user must pay the college to be able to create a submission'))
         }
 
-        let user_category = await findDocument(User_category, {
-            _id: user.category
-        })
-
-        if (user_category.name !== 'STUDENT')
-            return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
         let quiz = await findDocument(Quiz, {
             _id: req.body.quiz
@@ -732,7 +720,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         const faculty_college_year = await get_faculty_college_year(req.body.quiz)
 
         let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-            user: user._id,
+            user: req.user._id,
             faculty_college_year: faculty_college_year._id
         })
         if (!user_faculty_college_year)
@@ -744,7 +732,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
 
         // check if quiz_submissions exist
         let quiz_submission = await findDocument(Quiz_submission, {
-            user: user._id,
+            user: req.user._id,
             quiz: req.body.quiz
         })
         if (quiz_submission)
@@ -753,7 +741,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(quiz.questions, req.body.answers)
 
         let result = await createDocument(Quiz_submission, {
-            user: user._id,
+            user: req.user._id,
             quiz: req.body.quiz,
             answers: answers,
             used_time: req.body.used_time,
