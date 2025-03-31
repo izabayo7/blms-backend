@@ -1,4 +1,5 @@
 // import dependencies
+const {sendReleaseMarskEmail} = require("../email/email.controller");
 const {updateDocument} = require("../../utils/imports");
 const {
     express,
@@ -664,10 +665,24 @@ router.put('/release_marks/:id', async (req, res) => {
 
 
         let result = await updateDocument(Quiz, req.params.id,
-        {
-            status: quiz.status == 1 ? 2 : 1
-        })
-
+            {
+                status: quiz.status == 1 ? 2 : 1
+            })
+        if (quiz.status === 1) {
+            const submissions = await Quiz_submission.find({quiz: req.params.id}).populate('user')
+            for (const i in submissions) {
+                if (submissions[i].user.email) {
+                    await sendReleaseMarskEmail({
+                        email: submissions[i].user.email,
+                        user_names: `Mr${submissions[i].user.gender === 'female' ? 's' : ''} ${submissions[i].user.sur_name} ${submissions[i].user.other_names}`,
+                        instructor_names: req.user.sur_name + ' ' + req.user.other_names,
+                        assignment_name: quiz.name,
+                        assignment_type: 'quiz',
+                        link: `https://${process.env.FRONTEND_HOST}/quiz/${quiz.name}/${submissions[i].user.user_name}`
+                    })
+                }
+            }
+        }
         return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))

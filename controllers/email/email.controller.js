@@ -3,6 +3,7 @@ const Mailgen = require('mailgen');
 const {formatResult} = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
+const {marks_release_email} = require("../../utils/emailGenerator");
 const {confirm_email} = require("../../utils/emailGenerator");
 const {confirm_account} = require("../../utils/emailGenerator");
 const {submission_email} = require("../../utils/emailGenerator");
@@ -204,6 +205,28 @@ exports.sendEmailConfirmation = async ({email, user_name, token}) => {
         return {
             sent: await transporter.sendMail(_message)
             // sent: await transporter.sendEmail(message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendReleaseMarskEmail = async ({ email, user_names, instructor_names, assignment_name, assignment_type, link }) => {
+    try {
+
+        const mail = marks_release_email({user_names, instructor_names, assignment_name, assignment_type, link})
+        const _message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Marks Released.',
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(_message)
         }
 
     } catch (err) {
