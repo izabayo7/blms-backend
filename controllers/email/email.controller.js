@@ -143,7 +143,7 @@ exports.sendResetPasswordEmail = async ({email, token, user_name, institution_na
     }
 };
 
-exports.sendConfirmEmail = async ({user_name, institution_name, institution_email, subscription}) => {
+exports.sendConfirmEmail = async ({email, user_name, institution_name, institution_email, subscription}) => {
     try {
 
         const mail = confirmation_email({user_name, institution_name, institution_email, subscription})
@@ -166,7 +166,7 @@ exports.sendConfirmEmail = async ({user_name, institution_name, institution_emai
     }
 };
 
-exports.sendCollegeAccepted = async ({user_name, token}) => {
+exports.sendCollegeAccepted = async ({email, user_name, token}) => {
     try {
 
         const mail = confirm_account({user_name, token})
@@ -213,7 +213,7 @@ exports.sendSubmissionEmail = async ({
         })
         const _message = {
             from: process.env.EMAIL,
-            to: email,
+            to: process.env.COMMUNICATION_TEAM_EMAIL,
             subject: 'New college registered.',
             html: mail,
         };

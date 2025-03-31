@@ -1167,11 +1167,12 @@ router.post('/admin', async (req, res) => {
         }
 
         const {sent, err} = await sendConfirmEmail({
+            email: req.body.email,
             institution_email: req.body.college_email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
             institution_name: req.body.college,
             subscription: "TRIAL"
-        });
+        })
         if (err)
             return res.send(formatResult(500, err));
 

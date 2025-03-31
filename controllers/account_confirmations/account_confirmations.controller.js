@@ -64,6 +64,7 @@ exports.AcceptCollege = async (req, res) => {
             return res.send(formatResult(400, 'Bad request'));
 
         const {sent, err} = await sendCollegeAccepted({
+            email: confirmation.user.email,
             user_name: confirmation.user.sur_name + ' ' + confirmation.user.other_names,
             token: confirmation.token,
         });
@@ -112,8 +113,7 @@ exports.confirmAccount = async (req, res) => {
 
         _confirmation.status = "CONFIRMED"
 
-        const result = await _confirmation.save()
-
+        await _confirmation.save()
 
         return res.redirect(`https://elearning.rw?institution=${_confirmation.user.college.name}`)
 
