@@ -130,6 +130,14 @@ module.exports.Message = message
 module.exports.validate_message = validate_message
 
 const {
+  comment,
+  validate_comment
+} = require('../models/comments/comments.model')
+
+module.exports.Comment = comment
+module.exports.validate_comment = validate_comment
+
+const {
   quiz,
   validate_quiz
 } = require('../models/quiz/quiz.model')
