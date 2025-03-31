@@ -1,22 +1,41 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
-const {formatResult} = require('../../utils/imports');
-const {createTransport} = require('nodemailer')
+const {
+    formatResult
+} = require('../../utils/imports');
+const {
+    createTransport
+} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
-const {assingment_expiration} = require("../../utils/emailGenerator");
-const {announcement_email} = require("../../utils/emailGenerator");
-const {live_scheduled_email} = require("../../utils/emailGenerator");
-const {marks_release_email} = require("../../utils/emailGenerator");
-const {confirm_email} = require("../../utils/emailGenerator");
-const {confirm_account} = require("../../utils/emailGenerator");
-const {submission_email} = require("../../utils/emailGenerator");
+const {
+    assingment_expiration
+} = require("../../utils/emailGenerator");
+const {
+    announcement_email
+} = require("../../utils/emailGenerator");
+const {
+    live_scheduled_email
+} = require("../../utils/emailGenerator");
+const {
+    marks_release_email
+} = require("../../utils/emailGenerator");
+const {
+    confirm_email
+} = require("../../utils/emailGenerator");
+const {
+    confirm_account
+} = require("../../utils/emailGenerator");
+const {
+    submission_email
+} = require("../../utils/emailGenerator");
 const {
     invitationToSystem,
     contactUs,
     requestCallback,
     reset_password,
     confirmation_email,
-    invitationToUserGroup
+    invitationToUserGroup,
+    userCourseEnroll
 } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
@@ -55,10 +74,11 @@ const transporter = createTransport(smtpTransport({
 
 exports.sendUserGroupInvitationMail = async ({
     names,
-                                        email, user_names,
-                                        user_group_name,
-                                        user_type,
-                                    }) => {
+    email,
+    user_names,
+    user_group_name,
+    user_type,
+}) => {
     try {
 
         const mail = invitationToUserGroup({
@@ -76,7 +96,6 @@ exports.sendUserGroupInvitationMail = async ({
 
         return {
             sent: await transporter.sendMail(message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -85,10 +104,52 @@ exports.sendUserGroupInvitationMail = async ({
         }
     }
 };
-exports.sendInvitationMail = async ({email, token, names, institution, user_group}) => {
+exports.sendUserCourseEnrollMail = async ({
+    email,
+    user_names,
+    course_name,
+    link,
+}) => {
     try {
 
-        const mail = invitationToSystem({inviter: names, institution, token, user_group})
+        const mail = userCourseEnroll({
+            user_names,
+            course_name,
+            link
+        })
+
+        const message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Kurious Course Enroll - ' + course_name,
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+exports.sendInvitationMail = async ({
+    email,
+    token,
+    names,
+    institution,
+    user_group
+}) => {
+    try {
+
+        const mail = invitationToSystem({
+            inviter: names,
+            institution,
+            token,
+            user_group
+        })
 
         const message = {
             from: process.env.EMAIL,
@@ -99,7 +160,6 @@ exports.sendInvitationMail = async ({email, token, names, institution, user_grou
 
         return {
             sent: await transporter.sendMail(message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -109,10 +169,18 @@ exports.sendInvitationMail = async ({email, token, names, institution, user_grou
     }
 };
 
-exports.sendContactUsEmail = async ({user_name, user_email, message}) => {
+exports.sendContactUsEmail = async ({
+    user_name,
+    user_email,
+    message
+}) => {
     try {
 
-        const mail = contactUs({user_name, user_email, message})
+        const mail = contactUs({
+            user_name,
+            user_email,
+            message
+        })
 
         const _message = {
             from: process.env.EMAIL,
@@ -123,7 +191,6 @@ exports.sendContactUsEmail = async ({user_name, user_email, message}) => {
 
         return {
             sent: await transporter.sendMail(_message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -133,10 +200,20 @@ exports.sendContactUsEmail = async ({user_name, user_email, message}) => {
     }
 };
 
-exports.sendRequestCallback = async ({user_name, institution_name, role_at_institution, phone_number}) => {
+exports.sendRequestCallback = async ({
+    user_name,
+    institution_name,
+    role_at_institution,
+    phone_number
+}) => {
     try {
 
-        const mail = requestCallback({user_name, institution_name, role_at_institution, phone_number})
+        const mail = requestCallback({
+            user_name,
+            institution_name,
+            role_at_institution,
+            phone_number
+        })
 
         const message = {
             from: process.env.EMAIL,
@@ -147,7 +224,6 @@ exports.sendRequestCallback = async ({user_name, institution_name, role_at_insti
 
         return {
             sent: await transporter.sendMail(message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -157,10 +233,19 @@ exports.sendRequestCallback = async ({user_name, institution_name, role_at_insti
     }
 };
 
-exports.sendResetPasswordEmail = async ({email, token, user_name, institution_name}) => {
+exports.sendResetPasswordEmail = async ({
+    email,
+    token,
+    user_name,
+    institution_name
+}) => {
     try {
 
-        const mail = reset_password({user_name, institution_name, token})
+        const mail = reset_password({
+            user_name,
+            institution_name,
+            token
+        })
 
         const message = {
             from: process.env.EMAIL,
@@ -171,7 +256,6 @@ exports.sendResetPasswordEmail = async ({email, token, user_name, institution_na
 
         return {
             sent: await transporter.sendMail(message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -181,10 +265,21 @@ exports.sendResetPasswordEmail = async ({email, token, user_name, institution_na
     }
 };
 
-exports.sendConfirmEmail = async ({email, user_name, institution_name, institution_email, subscription}) => {
+exports.sendConfirmEmail = async ({
+    email,
+    user_name,
+    institution_name,
+    institution_email,
+    subscription
+}) => {
     try {
 
-        const mail = confirmation_email({user_name, institution_name, institution_email, subscription})
+        const mail = confirmation_email({
+            user_name,
+            institution_name,
+            institution_email,
+            subscription
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -194,7 +289,6 @@ exports.sendConfirmEmail = async ({email, user_name, institution_name, instituti
 
         return {
             sent: await transporter.sendMail(_message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -204,10 +298,17 @@ exports.sendConfirmEmail = async ({email, user_name, institution_name, instituti
     }
 };
 
-exports.sendCollegeAccepted = async ({email, user_name, token}) => {
+exports.sendCollegeAccepted = async ({
+    email,
+    user_name,
+    token
+}) => {
     try {
 
-        const mail = confirm_account({user_name, token})
+        const mail = confirm_account({
+            user_name,
+            token
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -217,7 +318,6 @@ exports.sendCollegeAccepted = async ({email, user_name, token}) => {
 
         return {
             sent: await transporter.sendMail(_message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -227,10 +327,17 @@ exports.sendCollegeAccepted = async ({email, user_name, token}) => {
     }
 };
 
-exports.sendEmailConfirmation = async ({email, user_name, token}) => {
+exports.sendEmailConfirmation = async ({
+    email,
+    user_name,
+    token
+}) => {
     try {
 
-        const mail = confirm_email({user_name, token})
+        const mail = confirm_email({
+            user_name,
+            token
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -240,7 +347,6 @@ exports.sendEmailConfirmation = async ({email, user_name, token}) => {
 
         return {
             sent: await transporter.sendMail(_message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {
@@ -251,16 +357,22 @@ exports.sendEmailConfirmation = async ({email, user_name, token}) => {
 };
 
 exports.sendReleaseMarskEmail = async ({
-                                           email,
-                                           user_names,
-                                           instructor_names,
-                                           assignment_name,
-                                           assignment_type,
-                                           link
-                                       }) => {
+    email,
+    user_names,
+    instructor_names,
+    assignment_name,
+    assignment_type,
+    link
+}) => {
     try {
 
-        const mail = marks_release_email({user_names, instructor_names, assignment_name, assignment_type, link})
+        const mail = marks_release_email({
+            user_names,
+            instructor_names,
+            assignment_name,
+            assignment_type,
+            link
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -280,14 +392,18 @@ exports.sendReleaseMarskEmail = async ({
 };
 
 exports.sendAssignmentExpirationEmail = async ({
-                                                   email,
-                                                   user_names,
-                                                   assignment_name,
-                                                   link
-                                               }) => {
+    email,
+    user_names,
+    assignment_name,
+    link
+}) => {
     try {
 
-        const mail = assingment_expiration({user_names, assignment_name, link})
+        const mail = assingment_expiration({
+            user_names,
+            assignment_name,
+            link
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -307,17 +423,24 @@ exports.sendAssignmentExpirationEmail = async ({
 };
 
 exports.sendLiveScheduledEmail = async ({
-                                            email,
-                                            user_names,
-                                            instructor_names,
-                                            course_name,
-                                            chapter_name,
-                                            date,
-                                            time
-                                        }) => {
+    email,
+    user_names,
+    instructor_names,
+    course_name,
+    chapter_name,
+    date,
+    time
+}) => {
     try {
 
-        const mail = live_scheduled_email({user_names, instructor_names, course_name, chapter_name, date, time})
+        const mail = live_scheduled_email({
+            user_names,
+            instructor_names,
+            course_name,
+            chapter_name,
+            date,
+            time
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -337,14 +460,18 @@ exports.sendLiveScheduledEmail = async ({
 };
 
 exports.sendAnnouncementEmail = async ({
-                                           email,
-                                           user_names,
-                                           announcer,
-                                           link,
-                                       }) => {
+    email,
+    user_names,
+    announcer,
+    link,
+}) => {
     try {
 
-        const mail = announcement_email({user_names, announcer, link})
+        const mail = announcement_email({
+            user_names,
+            announcer,
+            link
+        })
         const _message = {
             from: process.env.EMAIL,
             to: email,
@@ -365,15 +492,15 @@ exports.sendAnnouncementEmail = async ({
 
 
 exports.sendSubmissionEmail = async ({
-                                         user_name,
-                                         institution_name,
-                                         institution_email,
-                                         subscription,
-                                         token,
-                                         user_email,
-                                         user_phone,
-                                         max_users,
-                                     }) => {
+    user_name,
+    institution_name,
+    institution_email,
+    subscription,
+    token,
+    user_email,
+    user_phone,
+    max_users,
+}) => {
     try {
 
         const mail = submission_email({
@@ -395,7 +522,6 @@ exports.sendSubmissionEmail = async ({
 
         return {
             sent: await transporter.sendMail(_message)
-            // sent: await transporter.sendEmail(message)
         }
 
     } catch (err) {

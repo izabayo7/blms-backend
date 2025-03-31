@@ -101,7 +101,8 @@ exports.validate_user = (credentials, method = 'create') => {
             active: Joi.number().min(0).max(2).required()
         })
     } : method === 'create_from_course' ? {
-        names: Joi.string().min(3).max(100).required(),
+        sur_name: Joi.string().min(3).max(100).required(),
+        other_names: Joi.string().min(3).max(100).required(),
         user_name: Joi.string().min(3).max(100).required(), // regex needed
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().max(100).regex(this.PasswordRegex).required(),

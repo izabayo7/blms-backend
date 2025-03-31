@@ -9,7 +9,8 @@ const {
     getEmailConfirmation
 } = require("../account_confirmations/account_confirmations.controller");
 const {
-    sendEmailConfirmation
+    sendEmailConfirmation,
+    sendUserCourseEnrollMail
 } = require("../email/email.controller");
 const {
     Account_confirmation
@@ -1727,13 +1728,14 @@ router.post('/fromCourse', async (req, res) => {
 
         let result = await createDocument(User, {
             user_name: req.body.user_name,
-            sur_name: req.body.names.split(' ')[0],
-            other_names: req.body.names.split(' ')[1],
+            sur_name: req.body.sur_name,
+            other_names: req.body.other_names,
             phone: req.body.phone,
             gender: req.body.gender,
             phone: req.body.phone,
             email: req.body.email,
             address: req.body.address,
+            date_of_birth: req.body.date_of_birth,
             password: await hashPassword(req.body.password),
             college: course.user_group.faculty.college._id,
             category: user_category._id,
@@ -1744,6 +1746,14 @@ router.post('/fromCourse', async (req, res) => {
             user_group: course.user_group._id,
             user: result.data._id
         })
+
+        sendUserCourseEnrollMail({
+            email: req.body.email,
+            user_name: req.body.sur_name + ' ' + req.body.other_names,
+            course_name: course.name,
+            link: `https://${process.env.FRONTEND_HOST}/login?institution=${course.user_group.faculty.college.name}`
+        });
+
 
         // notify the admin that a new user joined
         MyEmitter.emit('socket_event', {
