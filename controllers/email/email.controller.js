@@ -15,7 +15,8 @@ const {
     contactUs,
     requestCallback,
     reset_password,
-    confirmation_email
+    confirmation_email,
+    invitationToUserGroup
 } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
