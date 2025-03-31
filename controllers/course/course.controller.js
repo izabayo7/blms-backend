@@ -503,7 +503,7 @@ router.get('/:id/attendants', async (req, res) => {
             createdAt: 1
         }).populate({
             path: 'user',
-            select: {'sur_name': 1, 'other_names': 1, 'gender': 1}
+            select: {'sur_name': 1, 'other_names': 1, 'gender': 1,'user_name': 1}
         })
 
         return res.send(formatResult(u, u, attendants))
