@@ -118,8 +118,15 @@ router.get('/statistics', async (req, res) => {
 router.get('/college/:faculty', async (req, res) => {
   try {
 
-    let foundFaculties = [],
+    let foundFaculties = []
     const fetch_all_faculties = req.params.faculty === "ALL"
+    const faculty_colleges = await findDocuments(Faculty_college, fetch_all_faculties ? {
+      college: req.user.college
+    } : {
+        college: req.user.college,
+        faculty: req.params.faculty
+      }
+    );
     if (!fetch_all_faculties) {
       const {
         error
@@ -134,23 +141,6 @@ router.get('/college/:faculty', async (req, res) => {
         return res.send(formatResult(404, 'faculty not found'))
       foundFaculties.push(faculty)
     }
-
-    const faculty_colleges = await findDocuments(Faculty_college, fetch_all_faculties ? {
-      college: req.user.college
-    } : {
-        college: req.user.college,
-        faculty: req.params.faculty
-      }
-    );
-
-    // let faculty_college_years = await findDocuments(Faculty_college, fetch_all_faculties ? {
-    //   college: req.user.college
-    // } : {
-    //     college: req.user.college, faculty: req.params.faculty
-    //   })
-
-    // let foundFaculty_college_years = []
-
     else {
       if (!faculty_colleges.length)
         return res.send(formatResult(404, `College ${college.name} has no faculties`))
@@ -165,8 +155,9 @@ router.get('/college/:faculty', async (req, res) => {
       }
 
     }
+
     foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
-    return res.send(formatResult(u, u, foundFaculties.lenght ? fetch_all_faculties ? foundFaculties[0] : foundFaculties : []))
+    return res.send(formatResult(u, u, foundFaculties.length ? fetch_all_faculties ? foundFaculties : foundFaculties[0] : []))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
