@@ -28,8 +28,8 @@ const { Course, validateCourse } = require('../models/course/course.model')
 const { Chapter, validateChapter } = require('../models/chapter/chapter.model')
 const { Message, validateMessage } = require('../models/message/message.model')
 const { Attachment, validateAttachment } = require('../models/attachments/attachments.model')
-const { studentFacilityCollegeYear, validateStudentFacilityCollegeYear} = require('../models/student-facility-college-year/student-facility-college-year.model')
-const { StudentProgress, validateStudentProgress} = require('../models/studentProgress/studentProgress.model')
+const { studentFacilityCollegeYear, validateStudentFacilityCollegeYear } = require('../models/student-facility-college-year/student-facility-college-year.model')
+const { StudentProgress, validateStudentProgress } = require('../models/studentProgress/studentProgress.model')
 const { Quiz, validateQuiz } = require('../models/quiz/quiz.model')
 const { QuizAnswers, validateQuizAnswers } = require('../models/quizAnswers/quizAnswers.model')
 const { fileFilter } = require('./multer/fileFilter')
@@ -135,6 +135,24 @@ module.exports.getCollege = async (id, type) => {
 module.exports.getCourse = async (id) => {
     let chapter = await Chapter.findOne({ _id: id })
     return chapter.course
+}
+
+const fs = require('fs')
+const sharp = require('sharp')
+
+module.exports.resizeImage = function resize(path, format, width, height) {
+    const readStream = fs.createReadStream(path)
+    let transform = sharp()
+
+    if (format) {
+        transform = transform.toFormat(format)
+    }
+
+    if (width || height) {
+        transform = transform.resize(width, height)
+    }
+
+    return readStream.pipe(transform)
 }
 
 // authentication middlewares

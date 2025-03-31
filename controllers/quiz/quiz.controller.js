@@ -1,5 +1,6 @@
 // import dependencies
 const { express, fs, Quiz, getCollege, Chapter, Course, Instructor, validateQuiz, FacilityCollegeYear, auth, _instructor, validateObjectId, _student } = require('../../utils/imports')
+const { parseInt } = require('lodash')
 
 // create router
 const router = express.Router()
@@ -40,9 +41,9 @@ router.post('/', async (req, res) => {
     if (error)
       return res.status(400).send(error.details[0].message)
 
-    let instructor = await Instructor.findOne({ _id: req.body.instructor })
-    if (!instructor)
-      return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+    // let instructor = await Instructor.findOne({ _id: req.body.instructor })
+    // if (!instructor)
+    //   return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
     if (req.body.target) {
       req.body.target.type = req.body.target.type.toLowerCase()
@@ -53,7 +54,7 @@ router.post('/', async (req, res) => {
         return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
 
 
-      error = validateObjectId(req.body.target.id)
+      error = validateObjectId(req.body.target.id, 'POST')
       error = error.error
       if (error)
         return res.status(400).send(error.details[0].message)
@@ -88,7 +89,7 @@ router.post('/', async (req, res) => {
       name: req.body.name,
       target: req.body.target,
       duration: req.body.duration,
-      description: req.body.description,
+      instructions: req.body.instructions,
       instructor: req.body.instructor,
       questions: req.body.questions,
       totalMarks: validQuestions.totalMarks
@@ -122,39 +123,42 @@ router.put('/:id', async (req, res) => {
   if (!instructor)
     return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
-  req.body.target.type = req.body.target.type.toLowerCase()
+  if (req.body.target) {
+    req.body.target.type = req.body.target.type.toLowerCase()
 
-  const allowedTargets = ['chapter', 'course', 'facilitycollegeyear']
+    const allowedTargets = ['chapter', 'course', 'facilitycollegeyear']
 
-  if (!allowedTargets.includes(req.body.target.type))
-    return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
+    if (!allowedTargets.includes(req.body.target.type))
+      return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
 
-  let Target
+    let Target
 
-  switch (req.body.target.type) {
-    case 'chapter':
-      Target = await Chapter.find({ _id: req.body.target.id })
-      break;
+    switch (req.body.target.type) {
+      case 'chapter':
+        Target = await Chapter.find({ _id: req.body.target.id })
+        break;
 
-    case 'course':
-      Target = await Course.find({ _id: req.body.target.id })
-      break;
+      case 'course':
+        Target = await Course.find({ _id: req.body.target.id })
+        break;
 
-    case 'facilitycollegeyear':
-      Target = await FacilityCollegeYear.find({ _id: req.body.target.id })
-      break;
+      case 'facilitycollegeyear':
+        Target = await FacilityCollegeYear.find({ _id: req.body.target.id })
+        break;
 
-    default:
-      break;
+      default:
+        break;
+    }
+
+    if (!Target)
+      return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
   }
 
-  if (!Target)
-    return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
-
-  const validQuestions = validateQuestions(req.body.questions)
+  const validQuestions = validateQuestions(req.body.questions, 'PUT')
   if (validQuestions.status !== true)
     return res.status(400).send(validQuestions.error)
 
+  req.body.totalMarks = validQuestions.totalMarks
 
   const updateDocument = await Quiz.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
@@ -177,35 +181,35 @@ router.delete('/:id', async (req, res) => {
   return res.status(200).send(`Quiz ${deletedQuiz._id} Successfully deleted`)
 })
 
-function validateQuestions(questions) {
-  const allowedQuestionTypes = ['open-ended', 'single-select', 'multi-select', 'file-select', 'file-upload']
+function validateQuestions(questions, method) {
+  const allowedQuestionTypes = ['open-ended', 'single-text-select', 'multi-text-select', 'single-file-select', 'multi-file-select', 'file-upload']
   let message = ''
   let marks = 0
-  for (const i in questions) {
+  for (let i in questions) {
+    i = parseInt(i)
     if (!allowedQuestionTypes.includes(questions[i].type)) {
-      message = `${questions[i].type} is not supported`
-      break;
-    }
-    if (!questions[i].details) {
-      message = `question ${i + 1} must have details`
-      break;
-    }
-    if (!questions[i].marks) {
-      message = `question ${i + 1} must have marks`
+      message = `question type "${questions[i].type}" is not supported`
       break;
     }
     if (questions[i].type.includes('select')) {
       if (!questions[i].options) {
-        message = `question ${i + 1} must have select options`
+        message = `question ${i + 1} must have selection options`
         break;
       } else {
-        // if (!questions[i].options.listStyleType) {
-        //   message = `question ${i + 1} must have select a list style type`
-        //   break;
-        // }
-        if (!questions[i].options) {
-          message = `question ${i + 1} must have options`
+        if (!questions[i].options.choices && !questions[i].type.includes('file')) {
+          message = `question ${i + 1} must have selection choices`
           break;
+        }
+        for (let k in questions[i].options.choices) {
+          k = parseInt(k)
+          if ((questions[i].type === 'single-text-select' || questions[i].type === 'multi-text-select') && !questions[i].options.choices[k].text) {
+            message = `choice ${k + 1} in question ${i + 1} must have text`
+            break;
+          }
+          if ((questions[i].type === 'single-file-select' || questions[i].type === 'multi-file-select') && !questions[i].options.choices[k].src) {
+            message = `choice ${k + 1} in question ${i + 1} must have attachment src`
+            break;
+          }
         }
       }
     }

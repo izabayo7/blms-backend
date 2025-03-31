@@ -10,6 +10,9 @@ const QuizSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    instructions: {
+        type: String
+    },
     target: {
         type: {
             type: String,
@@ -19,13 +22,18 @@ const QuizSchema = new mongoose.Schema({
         }
     },
     duration: {
-        type: Object,
+        type: Number,
         required: true
     },
-    questions: {
-        type: Array,
-        required: true
-    },
+    questions: [{
+        type: { type: String, required: true },
+        marks: { type: Number, required: true },
+        details: { type: String, require: true },
+        options: {
+            list_style_type: { type: String, default: 'A-Z' },
+            choices: [{ text: { type: String }, src: { type: String } }],
+        },
+    }],
     totalMarks: {
         type: Number,
         required: true
@@ -42,17 +50,28 @@ const QuizSchema = new mongoose.Schema({
 QuizSchema.plugin(timestamps);
 
 // validate Quiz
-function validateQuiz(credentials) {
+function validateQuiz(body) {
     const schema = {
         name: Joi.string().min(3).required(),
-        target: Joi.object(),
-        // target: Joi.object().required(),
-        duration: Joi.object().required(),
-        questions: Joi.array().min(1).required(),
+        instructions: Joi.string().min(3),
+        target: Joi.object({
+            type: Joi.string().required(),
+            id: Joi.ObjectId().required()
+        }),
+        duration: Joi.number().min(1).required(),
+        questions: Joi.array().min(1).items(Joi.object({
+            type: Joi.string().required(),
+            marks: Joi.number().required(),
+            details: Joi.string().min(5).required(),
+            options: {
+                list_style_type: Joi.string(),
+                choices: Joi.array().min(1).items(Joi.object({ text: Joi.string(), src: Joi.string() })).required(),
+            },
+        })).required(),
         instructor: Joi.ObjectId().required(),
         published: Joi.boolean()
     }
-    return Joi.validate(credentials, schema)
+    return Joi.validate(body, schema)
 }
 
 // create Quizs model

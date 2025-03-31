@@ -1,5 +1,5 @@
 // import dependencies
-const { express, fs, multer, fileFilter, validateObjectId, FacilityCollegeYear, FacilityCollege, normaliseDate, Attachment, Chapter, Course, SuperAdmin, Admin, Instructor, Student, College } = require('../../utils/imports')
+const { express, fs, multer, fileFilter, validateObjectId, FacilityCollegeYear, FacilityCollege, normaliseDate, Attachment, Chapter, Course, SuperAdmin, Admin, Instructor, Student, College, Quiz, resizeImage } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -125,7 +125,7 @@ router.get('/instructorProfile/:id', async (req, res) => {
         if (!instructor.profile)
             return res.status(404).send(`Instructor ${req.params.id} have not yet uploaded ${instructor.gender === 'Male' ? 'his' : 'her'} profile`)
 
-        filepath = `./uploads/colleges/${instructor.college}/users/instructors/${instructor.profile}`
+        filepath = `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}/${instructor.profile}`
         const pic = fs.readFileSync(filepath)
         res.contentType('image/jpeg')
         return res.status(200).send(pic)
@@ -273,6 +273,46 @@ router.get('/chapterMainVideo/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
+
+// get quiz attached images
+router.get('/quizAttachedFiles/:quiz/:picture', async (req, res) => {
+    try {
+
+        const { error } = validateObjectId(req.params.quiz)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        const quiz = await Quiz.findOne({ _id: req.params.quiz })
+        if (!quiz)
+            return res.status(404).send(`Quiz with code ${req.params.quiz} doens't exist`)
+
+        const instructor = await Student.findOne({ _id: quiz.instructor })
+
+        path = `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.quiz}/${req.params.picture}`
+
+        const widthString = req.query.width
+        const heightString = req.query.height
+        const format = req.query.format
+
+        // Parse to integer if possible
+        let width, height
+        if (widthString) {
+            width = parseInt(widthString)
+        }
+        if (heightString) {
+            height = parseInt(heightString)
+        }
+        // Set the content-type of the response
+        res.type(`image/${format || 'png'}`)
+
+        // Get the resized image
+        resizeImage(path, format, width, height).pipe(res)
+
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
 
 // get attachments
 router.get('/getAttachments/:id', async (req, res) => {
@@ -471,7 +511,7 @@ router.put('/updateInstructorProfile/:id', async (req, res) => {
             return res.status(404).send(`Instructor with code ${req.params.id} doens't exist`)
 
         req.kuriousStorageData = {
-            dir: `./uploads/colleges/${instructor.college}/users/instructors`,
+            dir: `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}`,
             model: 'instructor'
         }
 
@@ -485,6 +525,52 @@ router.put('/updateInstructorProfile/:id', async (req, res) => {
                 })
             }
             const updateDocument = await Instructor.findOneAndUpdate({ _id: req.params.id }, { profile: req.file.filename }, { new: true })
+            if (updateDocument)
+                return res.status(201).send(updateDocument)
+            return res.status(500).send("Error ocurred")
+        })
+
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
+// add quiz attached images
+router.post('/quizAttachedFiles/:quiz', async (req, res) => {
+    try {
+
+        const { error } = validateObjectId(req.params.quiz)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        const quiz = await Quiz.findOne({ _id: req.params.quiz })
+        if (!quiz)
+            return res.status(404).send(`Quiz with code ${req.params.quiz} doens't exist`)
+
+        const instructor = await Student.findOne({ _id: quiz.instructor })
+
+        req.kuriousStorageData = {
+            dir: `./uploads/colleges/${instructor.college}/users/instructors/${quiz.instructor}/unpublishedQuizAttachments/${req.params.quiz}`,
+            model: 'quizAttachment'
+        }
+
+        uploadPlus(req, res, async (err) => {
+            if (err)
+                return res.status(500).send(err.message)
+            const questions = []
+            for (const question of quiz.questions) {
+                if (
+                    question.type.includes("file") &&
+                    question.options.choices.length > 0
+                ) {
+                    for (const index in question.options.choices) {
+                        question.options.choices[index].src = req.files[index].filename
+                    }
+                }
+                questions.push(question);
+            }
+
+            const updateDocument = await Quiz.findOneAndUpdate({ _id: req.params.quiz }, { questions: questions }, { new: true })
             if (updateDocument)
                 return res.status(201).send(updateDocument)
             return res.status(500).send("Error ocurred")
