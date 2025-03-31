@@ -598,21 +598,10 @@ router.get('/user', async (req, res) => {
             if (!user_user_group)
                 return res.send(formatResult(200, undefined, []))
 
-            // result = await Course.find({
-            //     user_group: user_user_group.user_group,
-            //     published: true
-            // }).sort({createdAt: -1})
-
-
-            result = await Course.aggregate([
-                {$lookup:
-                        { from: "quiz_submision",
-                            localField: "_id",
-                            foreignField: "user", as: "studentData"
-                        }
-                }, { $addFields: {studentCount: {$size: "$studentData"}}
-                }
-            ])
+            result = await Course.find({
+                user_group: user_user_group.user_group,
+                published: true
+            }).sort({createdAt: -1})
 
             result = simplifyObject(result)
             result = await injectUserProgress(result, req.user._id + '')
@@ -626,7 +615,7 @@ router.get('/user', async (req, res) => {
         // ******* while adding permissions remember to filter data according to the user requesting *******
 
 
-        result = await injectChapters(result)
+        result = await injectChapters(result, req.user.category.name == 'STUDENT' ? req.user._id : undefined)
         result = await injectFaculty_college_year(result)
 
         return res.send(formatResult(u, u, result))

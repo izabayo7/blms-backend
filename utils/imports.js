@@ -946,7 +946,7 @@ exports.addAttachedCourse = async (quizes) => {
     return quizes
 }
 // add chapters in their parent courses
-exports.injectChapters = async (courses) => {
+exports.injectChapters = async (courses, user_id) => {
     for (const i in courses) {
         courses[i].assignmentsLength = 0
         // add course cover picture media path
@@ -956,6 +956,8 @@ exports.injectChapters = async (courses) => {
         let chapters = await this.findDocuments(this.Chapter, {
             course: courses[i]._id
         })
+        let total_required_marks = 0;
+        let total_got_marks = 0;
         // simplify
         courses[i].chapters = this.simplifyObject(chapters)
         for (const k in courses[i].chapters) {
@@ -996,7 +998,26 @@ exports.injectChapters = async (courses) => {
                 "target.id": courses[i].chapters[k]._id
             })
             courses[i].chapters[k].live_sessions = live_sessions;
+
+            if (user_id) {
+                // get submissions to add marks
+                for (const i in chapterQuiz) {
+                    const submission = await this.Quiz_submission.findOne({
+                        "user": user_id,
+                        quiz: chapterQuiz[i]._id
+                    }, {
+                        total_marks: 1
+                    })
+                    if(submission) {
+                        total_got_marks += submission.total_marks
+                        total_required_marks += chapterQuiz[i].total_marks
+                    }
+                }
+            }
         }
+
+        if (total_got_marks || total_required_marks)
+            courses[i].score = (total_got_marks / total_required_marks) * 100
 
         // add assignments attached to course
         const courseQuiz = await this.findDocuments(this.Quiz, {
@@ -1409,7 +1430,6 @@ exports.savedecodedBase64Image = (dataString, dir) => {
 
     fs.exists(dir, exist => {
         if (!exist) {
-            console.log('creating dir')
             fs.mkdirSync(dir, {
                 recursive: true
             })
@@ -1453,7 +1473,7 @@ exports.addQuizTarget = async (quizes) => {
 }
 
 exports.handleChunk = async (chunk, id) => {
-    console.log("id: "+id+"\n\nchunk: "+ chunk)
+    console.log("id: " + id + "\n\nchunk: " + chunk)
 }
 
 // proper way to define user roles
