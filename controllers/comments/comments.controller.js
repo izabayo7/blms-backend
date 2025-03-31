@@ -61,7 +61,7 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(Comment)
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
