@@ -390,13 +390,14 @@ module.exports.formatContacts = async (messages, userId) => {
         let id = ''
         let name = ""
         let image = ''
-        let last_message = { time: message.createdAt, content: message.content }
+        let last_message = { time: message.createdAt, content: message.content, sender: message.sender }
         let unreadMessagesLength = 0
         if (message.group) {
             const group = await chatGroup.findOne({ _id: message.group })
             id = message.group
             name = group.name
-            image = group.profile ? group.profile : ''
+            image = group.profile ? `http://${process.env.HOST}/kurious/file/groupProfilePicture/${group._id}/${group.profile}` : undefined
+
             unreadMessagesLength = await Message.find({
                 group: message.group,
                 receivers: {
@@ -410,7 +411,8 @@ module.exports.formatContacts = async (messages, userId) => {
             const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
             id = user._id
             name = `${user.surName} ${user.otherNames}`
-            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}` : ''
+            image = user.profile ? `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}` : undefined
+
             unreadMessagesLength = await Message.find({
                 sender: user._id,
                 receivers: {
@@ -440,10 +442,14 @@ module.exports.formatMessages = async (messages, userId) => {
         for (const i in messagesCopy) {
             if (message._id == messagesCopy[i]._id) {
                 let from = 'Me'
+                let image = undefined
                 let matchingMessages = []
                 if (message.sender != userId) {
                     const user = await this.returnUser(message.sender == userId ? message.receivers[0].id : message.sender)
                     from = `${user.surName} ${user.otherNames}`
+                    if (user.profile) {
+                        image = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
+                    }
                 }
                 let relatedMessages = messagesCopy.filter(m => m.sender == message.sender)
                 for (const i in relatedMessages) {
@@ -462,6 +468,7 @@ module.exports.formatMessages = async (messages, userId) => {
                 }
                 formatedMessages.push({
                     from: from,
+                    image: image,
                     messages: matchingMessages
                 })
                 break

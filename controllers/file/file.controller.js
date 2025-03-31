@@ -18,7 +18,8 @@ const {
     QuizSubmission,
     College,
     Quiz,
-    resizeImage
+    resizeImage,
+    ChatGroup
 } = require('../../utils/imports')
 
 // create router
@@ -538,6 +539,84 @@ router.get('/courseCoverPicture/:id/:file_name', async (req, res) => {
         return res.status(500).send(error)
     }
 })
+
+/**
+ * @swagger
+ * /kurious/file/groupProfilePicture/{id}/{file_name}:
+ *   get:
+ *     tags:
+ *       - FileUploading
+ *     description: Returns the profilePicture of a specified Course
+ *     parameters:
+ *       - name: id
+ *         description: Group's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Groups's profilePicture filename
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/groupProfilePicture/:id/:file_name', async (req, res) => {
+    try {
+
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        // check if course exist
+        const group = await ChatGroup.findOne({
+            _id: req.params.id
+        })
+        if (!group)
+            return res.status(404).send(`Group with code ${req.params.id} doens't exist`)
+
+        if (!group.profile)
+            return res.status(404).send(`Group ${req.params.id} does not have a profile picture`)
+
+        if (group.profile !== req.params.file_name)
+            return res.status(404).send(`${req.params.file_name} was not found`)
+
+        path = `./uploads/colleges/${group.college}/chat/${req.params.id}/${group.profile}`
+        fs.exists(path, (exists) => {
+            if (!exists) {
+                return res.status(404).send(`${req.params.file_name} was not found`)
+            } else {
+                const widthString = req.query.width
+                const heightString = req.query.height
+                const format = req.query.format
+
+                // Parse to integer if possible
+                let width, height
+                if (widthString) {
+                    width = parseInt(widthString)
+                }
+                if (heightString) {
+                    height = parseInt(heightString)
+                }
+                // Set the content-type of the response
+                res.type(`image/${format || 'png'}`)
+
+                // Get the resized image
+                resizeImage(path, format, width, height).pipe(res)
+            }
+        })
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
 
 /**
  * @swagger
@@ -1382,6 +1461,55 @@ router.put('/updateCourseCoverPicture/:id', async (req, res) => {
         return res.status(500).send(error)
     }
 })
+
+// updated a course profiles
+router.put('/updateGroupProfilePicture/:id', async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.status(400).send(error.details[0].message)
+
+        // check if course exist
+        const group = await ChatGroup.findOne({
+            _id: req.params.id
+        })
+        if (!group)
+            return res.status(404).send(`Group with code ${req.params.id} doens't exist`)
+
+        req.kuriousStorageData = {
+            dir: `./uploads/colleges/${group.college}/chat/${req.params.id}`,
+            model: 'group'
+        }
+        upload(req, res, async (err) => {
+            if (err)
+                return res.status(500).send(err.message)
+            if (group.profile) {
+                fs.unlink(`${req.kuriousStorageData.dir}/${group.profile}`, (err) => {
+                    if (err)
+                        return res.status(500).send(err)
+                })
+            }
+            const updateDocument = await ChatGroup.findOneAndUpdate({
+                _id: req.params.id
+            }, {
+                profile: req.file.filename
+            }, {
+                new: true
+            })
+            if (updateDocument) {
+                updateDocument.profile = `http://${process.env.HOST}/kurious/file/groupProfilePicture/${req.params.id}/${updateDocument.profile}`
+                return res.status(201).send(updateDocument)
+            }
+            return res.status(500).send("Error ocurred")
+        })
+
+    } catch (error) {
+        return res.status(500).send(error)
+    }
+})
+
 
 // updated a chapter content
 router.put('/updateChapterContent/:id', async (req, res) => {

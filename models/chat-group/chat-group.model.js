@@ -32,6 +32,10 @@ const chatGroupSchema = new mongoose.Schema({
     profile: {
         type: String
     },
+    college: {
+        type: String,
+        required: true
+    },
     status: {
         type: Boolean,
         default: true
@@ -46,6 +50,7 @@ function validatechatGroup(credentials) {
         name: Joi.string().required(),
         members: Joi.array().min(1).items({ id: Joi.ObjectId().required() }),
         desctiption: Joi.string(),
+        college: Joi.ObjectId().required(),
         private: Joi.boolean().required()
     }
     return Joi.validate(credentials, schema)

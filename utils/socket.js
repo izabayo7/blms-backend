@@ -15,6 +15,7 @@ const {
     formatContacts,
     getConversationMessages,
     formatMessages,
+    _
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -216,8 +217,13 @@ module.exports.listen = (app) => {
             if (saveDocument) {
                 newDocument = JSON.parse(JSON.stringify(newDocument))
                 // inject sender Info
-                newDocument.sender = await returnUser(newDocument.sender)
+                const user = await returnUser(newDocument.sender)
 
+                newDocument.sender = _.pick(user, ['_id', 'surName', 'otherNames', 'phone', 'email', 'category', 'profile'])
+                if (user.profile) {
+                    newDocument.sender.profile = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
+                }
+                
                 recipients.forEach(recipient => {
                     // send the message
                     socket.broadcast.to(recipient.id).emit('receive-message', newDocument)

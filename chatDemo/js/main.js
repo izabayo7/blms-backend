@@ -43,7 +43,7 @@ socket.on('receive_user_contacts', ({
 });
 
 // get messages new style
-socket.emit('request_conversation',{ contactId: '5f53da54d143be03eb33291e'});
+socket.emit('request_conversation',{ contactId: '5f29143034d5ef2e7020ce78'});
 
 // Get messages new style
 socket.on('receive_conversation', ({
