@@ -10,6 +10,7 @@ const {
     User,
     findDocuments,
     u,
+    Quiz,
     Course,
     Create_or_update_live_session,
     deleteDocument,
