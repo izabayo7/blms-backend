@@ -82,11 +82,11 @@ router.get('/open', async (req, res) => {
   try {
     const user_categories = await findDocuments(User_category, {
       $and: [
-        {
-          name: {
-            $ne: 'ADMIN'
-          }
-        },
+        // {
+        //   name: {
+        //     $ne: 'ADMIN'
+        //   }
+        // },
         {
           name: {
             $ne: 'SUPER_ADMIN'
