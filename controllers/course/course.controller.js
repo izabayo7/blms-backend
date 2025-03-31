@@ -950,7 +950,7 @@ router.put('/:id', async (req, res) => {
         })
         if (course)
             return res.send(formatResult(403, 'name was taken'))
-        req.body.user = user._id
+        req.body.user = req.user._id
         const result = await updateDocument(Course, req.params.id, req.body)
 
         return res.send(result)
