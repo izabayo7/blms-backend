@@ -171,49 +171,7 @@ router.post('/', async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
-
-        return res.send(result)
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
- * /message:
- *   post:
- *     tags:
- *       - Message
- *     description: Send a message
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: body
- *         description: Fields for a message
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/Message'
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.post('/', async (req, res) => {
-    try {
-        const {
-            error
-        } = validate_message(req.body)
-        if (error)
-            return res.send(formatResult(400, error.details[0].message))
-
-        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
+        const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content,u,u,u,req.body.reply)
 
         return res.send(result)
     } catch (error) {
@@ -253,7 +211,7 @@ router.post('/', async (req, res) => {
 router.put('/:receiver/attachements', async (req, res) => {
     try {
 
-        let {content, attachments} = req.query
+        let {content, attachments,reply} = req.query
         const {receiver} = req.params
 
         if (!attachments || !attachments.length)
@@ -273,14 +231,15 @@ router.put('/:receiver/attachements', async (req, res) => {
             sender: req.user.user_name,
             receiver: receiver,
             content: content,
-            attachments
+            attachments,
+            reply
         })
 
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
 
-        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments)
+        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments,reply)
 
         result = simplifyObject(result)
 
@@ -347,10 +306,10 @@ router.put('/:receiver/attachements', async (req, res) => {
  */
 router.put('/voiceNote/:receiver', async (req, res) => {
     try {
-
+        const {reply} = req.query
         const name = `voice_${req.params.receiver}_${new Date().getTime()}.mp3`
 
-        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}])
+        const result = await Create_or_update_message(req.user.user_name, req.params.receiver, u, u, u, [{src: name}],reply)
 
         if (result.status !== 404) {
             let msg = result.data

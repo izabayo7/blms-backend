@@ -233,7 +233,8 @@ module.exports.listen = (app) => {
         // save and deriver new messages
         socket.on('message/create', async ({
                                                receiver,
-                                               content
+                                               content,
+                                                reply
                                            }) => {
             const receiver_type = typeof receiver
             if (content === "")
@@ -242,7 +243,8 @@ module.exports.listen = (app) => {
             const {error} = validate_message({
                 sender: user.user_name,
                 receiver: receiver_type === 'string' ? receiver : receiver.toString(),
-                content: content
+                content: content,
+                reply
             })
 
             if (error) {
@@ -250,7 +252,7 @@ module.exports.listen = (app) => {
                 return
             }
 
-            let result = await Create_or_update_message(user.user_name, receiver, content)
+            let result = await Create_or_update_message(user.user_name, receiver, content,u,u,u,reply)
 
             result = simplifyObject(result)
 

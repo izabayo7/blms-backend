@@ -27,6 +27,10 @@ const message_schema = new mongoose.Schema({
     group: {
         type: String,
     },
+    reply: {
+        type: String,
+        ref: 'message'
+    },
     attachments: [{
         src: {
             type: String,
@@ -51,6 +55,7 @@ function validate_message(credentials) {
         content: requireContent ? Joi.string().max(9000).required() : Joi.string().max(9000),
         attachments: Joi.array().min(1).items({src: Joi.string().required()}),
         read: Joi.boolean(),
+        reply: Joi.ObjectId()
     }
     return Joi.validate(credentials, schema)
 }
