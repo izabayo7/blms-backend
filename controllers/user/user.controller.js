@@ -496,6 +496,75 @@ router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req,
 
 /**
  * @swagger
+ * /user/user_group/{id}/{category}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: Returns users in a specified user_group in your college depending on who you are
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: User_group's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: category
+ *         description: User category
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ['STUDENT','INSTRUCTOR','ALL']
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/user_group/:id/:category', [auth, filterUsers(["ADMIN"])], async (req, res) => {
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        if (!['STUDENT', 'INSTRUCTOR', 'ALL'].includes(req.params.category))
+            return res.send(formatResult(400, "Invalid category"))
+
+        let user_category = await findDocument(User_category, {
+            name: req.params.category
+        })
+
+        const result = []
+
+        let user_groups = await findDocument(User_group, {
+            _id: req.params.id
+        })
+        for (const k in user_groups) {
+            let user_user_groups = await User_user_group.find({
+                user_group: user_groups[k]._id,
+                status: "ACTIVE"
+            }).populate('user')
+            for (const j in user_user_groups) {
+                if (!user_category || user_user_groups[j].user.category === user_category._id.toString())
+                    result.push(user_user_groups[j].user)
+            }
+        }
+
+
+        users = await add_user_details(result)
+
+        return res.send(formatResult(u, u, users))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
  * /user/search:
  *   get:
  *     tags:
