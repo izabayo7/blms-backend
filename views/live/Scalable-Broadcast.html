@@ -229,7 +229,10 @@
             };
 
             connection.getSocket(function (socket) {
+                console.log('aha', new Date())
                 socket.emit('check-broadcast-presence', broadcastId, function (isBroadcastExists) {
+                    console.log('ahwiiiiiiiiii', new Date())
+                    console.log(isBroadcastExists, socket)
                     if (!isBroadcastExists) {
                         // the first person (i.e. real-broadcaster) MUST set his user-id
                         connection.userid = broadcastId;

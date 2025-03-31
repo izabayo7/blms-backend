@@ -27,6 +27,10 @@ const chat_group_schema = new mongoose.Schema({
         type: String,
         required: true
     },
+    code: {
+        type: Number,
+        required: true
+    },
     description: {
         type: String,
         required: false
@@ -51,6 +55,7 @@ chat_group_schema.plugin(timestamps)
 function validate_chat_group(credentials, method = 'create') {
     const schema = method == 'create' ? {
         name: Joi.string().required(), // regex needed
+        id: Joi.number(),
         members: Joi.array().min(3).items({
             _id: Joi.ObjectId(),
             isCreator: Joi.boolean(),
@@ -70,10 +75,10 @@ function validate_chat_group(credentials, method = 'create') {
             user_name: Joi.string().required()
         }).required()
     } : {
-                name: Joi.string().required(), // regex needed
-                desctiption: Joi.string(),
-                status: Joi.number(),
-            }
+        name: Joi.string().required(), // regex needed
+        desctiption: Joi.string(),
+        status: Joi.number(),
+    }
     return Joi.validate(credentials, schema)
 }
 

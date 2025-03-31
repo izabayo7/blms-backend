@@ -1230,7 +1230,7 @@ module.exports.streamVideo = async (req, res, path) => {
 module.exports.generateAuthToken = async (user) => {
   const ONE_DAY = 60 * 60 * 24
   return this.jwt.sign({
-    _id: user._id,
+    // _id: user._id,
     sur_name: user.sur_name,
     other_names: user.other_names,
     user_name: user.user_name,
@@ -1363,6 +1363,16 @@ module.exports.random_user_name = async () => {
     if (!user) user_name_available = true
   }
   return user_name
+}
+// make a new group identifier so that names can be re used in colleges
+module.exports.generateGroupCode = async () => {
+  let groupCodeAvailable = false, code
+  while (!groupIdAvailable) {
+    code = Math.round(Math.random() * 1000000000)
+    const group = await this.findDocument(this.Chat_group, { code: code })
+    if (!group) groupCodeAvailable = true
+  }
+  return code
 }
 
 // proper way to define user roles

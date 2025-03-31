@@ -464,6 +464,10 @@ router.post('/', async (req, res) => {
     if (user)
       return res.send(formatResult(403, 'name was taken'))
 
+    const creator = await findDocument(User, {
+      user_name: req.user.user_name
+    })
+
     let members = []
 
     for (const i in req.body.members) {
@@ -480,7 +484,7 @@ router.post('/', async (req, res) => {
       if (user.college != college._id)
         return res.send(formatResult(403, `member ${parseInt(i) + 1} can't join this group`))
 
-      members.push({ id: user._id })
+      members.push({ id: user._id, isAdmin: user._id === creator._id })
     }
 
     user = await findDocument(User, {
