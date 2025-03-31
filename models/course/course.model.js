@@ -15,10 +15,12 @@ const course_schema = new mongoose.Schema({
     },
     user: {
         type: String,
+        ref: 'user',
         required: true
     },
-    faculty_college_year: {
+    user_group: {
         type: String,
+        ref: 'user_group',
         required: true
     },
     description: {
@@ -51,7 +53,7 @@ function validate_course(credentials) {
     const schema = {
         name: Joi.string().min(3).max(100).required(),
         user: Joi.string().min(3).max(100).required(),
-        faculty_college_year: Joi.ObjectId().required(),
+        user_group: Joi.ObjectId().required(),
         description: Joi.string().max(1000).min(10),
         maximum_marks: Joi.number().min(1),
         cover_picture: Joi.string(),
