@@ -91,7 +91,7 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     let result = await findDocuments(Chat_group)
 
@@ -129,7 +129,7 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/college/:name', async (req, res) => {
+router.get('/college/:name', auth, async (req, res) => {
   try {
     let college = await findDocument(College, {
       name: req.params.name
@@ -170,7 +170,7 @@ router.get('/college/:name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name', async (req, res) => {
+router.get('/user/:user_name', auth, async (req, res) => {
   try {
     let user = await findDocument(User, {
       user_name: req.params.user_name
@@ -200,8 +200,6 @@ router.get('/user/:user_name', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Returns the profile_picture of a specified Chat_group
- *     security:
- *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         description: Group's code
@@ -297,7 +295,7 @@ router.get('/:code/profile/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:code/search_members', async (req, res) => {
+router.get('/:code/search_members', auth, async (req, res) => {
   try {
     req.params.code = parseInt(req.params.code)
     let _error = validateChat_group_code(req.params.code)
@@ -389,7 +387,7 @@ router.get('/:code/search_members', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/:code', async (req, res) => {
+router.get('/:code', auth, async (req, res) => {
   try {
 
     let {
@@ -452,7 +450,7 @@ router.get('/:code', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
 
     const {
@@ -553,7 +551,7 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:code', async (req, res) => {
+router.put('/:code', auth, async (req, res) => {
   try {
 
     let {
@@ -600,7 +598,7 @@ router.put('/:code', async (req, res) => {
  *   put:
  *     tags:
  *       - Chat_group
- *     description: Upload chat_group profile (file upload using swagger is still under construction)
+ *     description: Upload chat_group profile
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
@@ -627,7 +625,7 @@ router.put('/:code', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:code/profile', async (req, res) => {
+router.put('/:code/profile', auth, async (req, res) => {
   try {
 
     let {
@@ -708,7 +706,7 @@ router.put('/:code/profile', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:code/add_members', async (req, res) => {
+router.put('/:code/add_members', auth, async (req, res) => {
   try {
 
     let {
@@ -788,7 +786,7 @@ router.put('/:code/add_members', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
+router.put('/:code/toogle_isAdmin/:member_user_name', auth, async (req, res) => {
   try {
 
     let {
@@ -862,7 +860,7 @@ router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:code/remove_member/:member_user_name', async (req, res) => {
+router.put('/:code/remove_member/:member_user_name', auth, async (req, res) => {
   try {
 
     let {
@@ -927,7 +925,7 @@ router.put('/:code/remove_member/:member_user_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:code', async (req, res) => {
+router.delete('/:code', auth, async (req, res) => {
   try {
 
     let {
