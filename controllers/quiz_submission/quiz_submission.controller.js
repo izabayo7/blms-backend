@@ -275,14 +275,15 @@ router.get('/user/:user_name', async (req, res) => {
         })
         if (quiz_submission.length) {
           quiz_submission = await injectUser(quiz_submission, 'user')
-          quiz_submission = await injectQuiz(quiz_submission)
+          // quiz_submission = await injectQuiz(quiz_submission)
           quiz_submission = await injectUserFeedback(quiz_submission)
 
           for (const k in quiz_submission) {
             quiz_submission[k].quiz = await addAttachmentMediaPaths([quiz_submission[k].quiz])
             quiz_submission[k].quiz = quiz_submission[k].quiz[0]
-            foundSubmissions.push(quiz_submission[k])
           }
+          quizes[i].submissions = quiz_submission
+          foundSubmissions.push(quiz_submission[k])
         }
       }
 
