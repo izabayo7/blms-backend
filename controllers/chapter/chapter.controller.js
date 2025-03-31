@@ -658,6 +658,8 @@ router.put('/:id/video', async (req, res) => {
  *     tags:
  *       - Chapter
  *     description: Upload chapter attacments (file upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
