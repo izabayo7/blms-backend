@@ -586,8 +586,8 @@ router.post('/', auth, async (req, res) => {
     })
 
     result = simplifyObject(result)
-    result = await injectQuiz([result])
-    result = result[0]
+    result.data = await injectQuiz([result.data])
+    result.data = result.data[0]
 
     return res.send(formatResult(result))
   } catch (error) {
