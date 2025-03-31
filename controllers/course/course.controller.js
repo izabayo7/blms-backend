@@ -174,7 +174,7 @@ router.get('/statistics/user', async (req, res) => {
             const course_ids = courses.map(x => x._id.toString())
             let students = await User_progress.distinct('user', {course: {$in: course_ids}})
 
-            let chapters = await Chapter.find({course: {$in: course_ids}}, {_id: 1})
+            let chapters = await Chapter.find({course: {$in: course_ids}}, {_id: 1, name: 1})
 
             let comments = await Comment.find({
                 "target.type": 'chapter',
@@ -182,6 +182,17 @@ router.get('/statistics/user', async (req, res) => {
             }).populate('sender',
                 {sur_name: 1, other_names: 1, user_name: 1,_id:0}
             ).sort({_id: -1}).limit(4)
+
+            comments = simplifyObject(comments)
+
+            for (const i in comments) {
+                for (const iKey in chapters) {
+                    if(chapters[iKey]._id.toString() === comments[i].target.id){
+                        comments[i].chapter = chapters[iKey].name
+                        break
+                    }
+                }
+            }
 
             return res.send(formatResult(u, u, {
                 total_courses: courses.length,
