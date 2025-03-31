@@ -37,7 +37,7 @@ exports.confirm_email = ({
               <div
                 class="message"
                 style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-style: normal;
                   font-weight: normal;
                   font-size: 15px;
@@ -64,7 +64,7 @@ exports.confirm_email = ({
               >
                 <div
                   style="
-                    font-family: Inter;
+                    font-family: 'Inter', sans-serif;
                     font-style: normal;
                     font-weight: bold;
                     font-size: 15px;
@@ -77,7 +77,7 @@ exports.confirm_email = ({
                 <div>
                   <span
                     style="
-                      font-family: Inter;
+                      font-family: 'Inter', sans-serif;
                       font-style: normal;
                       font-weight: normal;
                       font-size: 14px;
@@ -89,7 +89,7 @@ exports.confirm_email = ({
                   :
                   <span
                     style="
-                      font-family: Inter;
+                      font-family: 'Inter', sans-serif;
                       font-style: normal;
                       font-weight: normal;
                       font-size: 14px;
@@ -103,7 +103,7 @@ exports.confirm_email = ({
                   <span
                     style="
                       margin-right: 65px;
-                      font-family: Inter;
+                      font-family: 'Inter', sans-serif;
                       font-style: normal;
                       font-weight: normal;
                       font-size: 14px;
@@ -115,7 +115,7 @@ exports.confirm_email = ({
                   :
                   <span
                     style="
-                      font-family: Inter;
+                      font-family: 'Inter', sans-serif;
                       font-style: normal;
                       font-weight: normal;
                       font-size: 14px;
@@ -156,7 +156,7 @@ exports.confirm_email = ({
               <div
                 class="thanks"
                 style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -178,7 +178,7 @@ exports.confirm_email = ({
                 style="
                   padding: 12px;
                   text-align: center;
-                  font-family: Helvetica;
+                  font-family: 'Helvetica';
                   font-style: normal;
                   font-weight: 300;
                   font-size: 10px;
@@ -300,7 +300,7 @@ exports.reset_password = ({
             <div
               class="message"
               style="
-                font-family: Inter;
+                font-family: 'Inter', sans-serif;
                 font-style: normal;
                 font-weight: normal;
                 font-size: 20px;
@@ -313,7 +313,7 @@ exports.reset_password = ({
             </div>
             <div
               style="
-                font-family: Inter;
+                font-family: 'Inter', sans-serif;
                 font-style: normal;
                 font-weight: normal;
                 font-size: 15px;
@@ -349,7 +349,7 @@ exports.reset_password = ({
             <div
               class="thanks"
               style="
-                font-family: Inter;
+                font-family: 'Inter', sans-serif;
                 font-size: 15px;
                 font-style: normal;
                 font-weight: 400;
@@ -475,7 +475,7 @@ exports.requestCallback = ({
                 align-self: center;
               ">
             <div class="message" style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -510,7 +510,7 @@ exports.requestCallback = ({
                 </div>
             </div>
             <div class="thanks" style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -605,7 +605,7 @@ exports.contactUs = ({
                 align-self: center;
               ">
             <div class="message" style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -621,7 +621,7 @@ exports.contactUs = ({
               through <a href="https://kurious.rw">Kurious home page</a>.
             </div>
             <div class="message" style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -655,7 +655,7 @@ exports.contactUs = ({
               </a>
             </div>
             <div class="thanks" style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -757,7 +757,7 @@ exports.invitationToSystem = ({
               <div
                 class="message"
                 style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
@@ -804,7 +804,7 @@ exports.invitationToSystem = ({
               <div
                 class="thanks"
                 style="
-                  font-family: Inter;
+                  font-family: 'Inter', sans-serif;
                   font-size: 15px;
                   font-style: normal;
                   font-weight: 400;
