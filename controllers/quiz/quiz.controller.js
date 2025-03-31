@@ -322,6 +322,8 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
  *     tags:
  *       - Quiz
  *     description: Returns the files attached to a specified quiz ( use format height and width only when the attachment is a picture)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz's id
