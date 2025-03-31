@@ -106,7 +106,7 @@ app.use('/kurious/chapter', chapterController)
 app.use('/kurious/message', messageController)
 app.use('/kurious/file', fileController)
 app.use('/kurious/quiz', quizController)
-app.use('/kurious/quizSubmission', quizSubmissionController)
+app.use('/kurious/quiz-submission', quizSubmissionController)
 
 // start the server
 server.listen(port, () => console.log(`Kurious Server activated on port...${port}`))

@@ -73,7 +73,7 @@ router.get('/quiz/:id', async (req, res) => {
 
     if (quizSubmissions.length < 1)
       return res.status(404).send(`Ther are no submissions for quiz ${quiz.name}`)
-      quizSubmissions = await injectStudent(quizSubmissions)
+    quizSubmissions = await injectStudent(quizSubmissions)
     return res.status(200).send(quizSubmissions)
   } catch (error) {
     return res.status(500).send(error)
@@ -102,14 +102,53 @@ router.get('/student/:id', async (req, res) => {
 
     if (quizSubmissions.length < 1)
       return res.status(404).send(`Ther are no submissions for ${student.surName} ${student.otherNames}`)
-      quizSubmissions = await injectQuiz(quizSubmissions)
+    quizSubmissions = await injectQuiz(quizSubmissions)
     return res.status(200).send(quizSubmissions)
   } catch (error) {
     return res.status(500).send(error)
   }
 })
 
-// Get specified submissions of a specified student
+// Get specified submission for student by student name and quiz name
+router.get('/student/:student_name/:quiz_name', async (req, res) => {
+  try {
+    const surName = req.params.student_name.split('_')[0]
+    const otherNames = req.params.student_name.split('_')[1]
+
+    // check if student exist
+    let student = await Student.findOne({
+      surName: surName,
+      otherNames: otherNames
+    })
+    if (!student)
+      return res.status(404).send(`Sudent ${surName} ${otherNames} doens't exist`)
+
+    let quiz = await Quiz.findOne({
+      name: req.params.quiz_name
+    }).lean()
+    if (!quiz)
+      return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
+
+    let quizSubmission = await QuizSubmission.findOne({
+      student: student._id,
+      quiz: quiz._id
+    }).lean()
+
+    if (!quizSubmission)
+      return res.status(404).send(`The submission of ${surName} ${otherNames} in ${req.params.quiz_name} was not found`)
+
+    quiz = await addAttachmentMediaPaths([quiz])
+
+    quizSubmission.quiz = quiz[0]
+    quizSubmission = await injectStudent([quizSubmission])
+
+    return res.status(200).send(quizSubmission[0])
+  } catch (error) {
+    return res.status(500).send(error)
+  }
+})
+
+// Get specified submissions of a specified instructor
 router.get('/instructor/:id', async (req, res) => {
   try {
     const {
@@ -324,10 +363,14 @@ function validateSubmittedAnswers(questions, answers, mode) {
 // replace student id by the student information
 async function injectStudent(submissions) {
   for (const i in submissions) {
-    const instructor = await Student.findOne({
+    const student = await Student.findOne({
       _id: submissions[i].student
     })
-    submissions[i].student = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
+    submissions[i].student = _.pick(student, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
+    // add student profile media path
+    if (submissions[i].student.profile) {
+      submissions[i].student.profile = `http://${process.env.HOST}/kurious/file/studentProfile/${student._id}/${student.profile}`
+    }
   }
   return submissions
 }
@@ -341,6 +384,21 @@ async function injectQuiz(submissions) {
     submissions[i].quiz = quiz
   }
   return submissions
+}
+
+async function addAttachmentMediaPaths(quizes) {
+  for (const i in quizes) {
+    for (const k in quizes[i].questions) {
+      if (quizes[i].questions[k].options) {
+        for (const j in quizes[i].questions[k].options.choices) {
+          if (quizes[i].questions[k].options.choices[j].src && !quizes[i].questions[k].options.choices[j].src.includes('http')) {
+            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}/kurious/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
+          }
+        }
+      }
+    }
+  }
+  return quizes
 }
 
 // export the router

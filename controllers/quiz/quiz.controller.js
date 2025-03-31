@@ -9,6 +9,7 @@ const {
   validateQuiz,
   FacilityCollegeYear,
   validateObjectId,
+  Student,
   _,
   StudentFacultyCollegeYear
 } = require('../../utils/imports')
@@ -179,12 +180,12 @@ router.get('/student/:id/:quiz_name', async (req, res) => {
     if (!student)
       return res.status(404).send(`Student with Code ${req.params.id} Not Found`)
 
-    let quiz = await Quiz.find({
-      name: req.params.quiz_name,
-      published: true
+    let quiz = await Quiz.findOne({
+      name: req.params.quiz_name
     }).lean()
+  
 
-    if (!quiz)
+    if (!quiz.target)
       return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
 
     let facultycollegeyear = ''
@@ -232,55 +233,19 @@ router.post('/', async (req, res) => {
     if (!instructor)
       return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
 
-    if (req.body.target) {
-      req.body.target.type = req.body.target.type.toLowerCase()
+    // check if quizname exist
+    let quiz = await Quiz.findOne({
+      name: req.body.name
+    })
+    if (quiz)
+      return res.status(400).send(`Quiz ${req.body.name} arleady exist try another name`)
 
-      const allowedTargets = ['chapter', 'course', 'facultycollegeyear']
-
-      if (!allowedTargets.includes(req.body.target.type))
-        return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
-
-
-      error = validateObjectId(req.body.target.id, 'POST')
-      error = error.error
-      if (error)
-        return res.status(400).send(error.details[0].message)
-
-      let Target = undefined
-
-      switch (req.body.target.type) {
-        case 'chapter':
-          Target = await Chapter.findOne({
-            _id: req.body.target.id
-          })
-          break;
-
-        case 'course':
-          Target = await Course.findOne({
-            _id: req.body.target.id
-          })
-          break;
-
-        case 'facultycollegeyear':
-          Target = await FacilityCollegeYear.findOne({
-            _id: req.body.target.id
-          })
-          break;
-
-        default:
-          break;
-      }
-
-      if (!Target)
-        return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
-    }
     const validQuestions = validateQuestions(req.body.questions)
     if (validQuestions.status !== true)
       return res.status(400).send(validQuestions.error)
 
     let newDocument = new Quiz({
       name: req.body.name,
-      target: req.body.target,
       duration: req.body.duration,
       instructions: req.body.instructions,
       instructor: req.body.instructor,
@@ -293,7 +258,6 @@ router.post('/', async (req, res) => {
       return res.status(201).send(saveDocument)
     return res.status(500).send('New Quiz not Registered')
   } catch (error) {
-    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -322,6 +286,125 @@ router.put('/:id', async (req, res) => {
   })
   if (!instructor)
     return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+
+  // // check if quizname exist
+  // let _quiz = await Quiz.findOne({
+  //   // use id not equal
+  //   name: req.body.name
+  // })
+  // if (_quiz && _quiz._id !== quiz._id)
+  //   return res.status(404).send(`Quiz ${req.body.name} arleady exist try another name`)
+
+  if (req.body.target) {
+
+    req.body.target.type = req.body.target.type.toLowerCase()
+
+    const allowedTargets = ['chapter', 'course', 'facultycollegeyear']
+
+    if (!allowedTargets.includes(req.body.target.type))
+      return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
+
+    let Target
+
+    switch (req.body.target.type) {
+      case 'chapter':
+        Target = await Chapter.find({
+          _id: req.body.target.id
+        })
+        break;
+
+      case 'course':
+        Target = await Course.find({
+          _id: req.body.target.id
+        })
+        break;
+
+      case 'facultycollegeyear':
+        Target = await FacilityCollegeYear.find({
+          _id: req.body.target.id
+        })
+        break;
+
+      default:
+        break;
+    }
+
+    if (!Target)
+      return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
+
+    const latesTargetedQuiz = await Quiz.findOne({ target: req.body.target })
+    if (latesTargetedQuiz) {
+      latesTargetedQuiz.target = undefined
+      latesTargetedQuiz.save()
+    }
+  }
+  const validQuestions = validateQuestions(req.body.questions)
+  if (validQuestions.status !== true)
+    return res.status(400).send(validQuestions.error)
+
+  req.body.totalMarks = validQuestions.totalMarks
+  const updateDocument = await Quiz.findOneAndUpdate({
+    _id: req.params.id
+  }, req.body, {
+    new: true
+  })
+  if (!updateDocument)
+    return res.status(500).send("Error ocurred")
+
+  // delete removed files
+  for (const i in quiz.questions) {
+    if (
+      quiz.questions[i].type.includes("file-select") &&
+      quiz.questions[i].options.choices.length > 0
+    ) {
+      let deleteAll = false
+      if (!req.body.questions[i].type.includes('file-select')) {
+        deleteAll = true
+      }
+      for (const j in quiz.questions[i].options.choices) {
+        let deletePicture = true
+        if (req.body.questions[i].type.includes('file-select')) {
+          for (const k in req.body.questions[i].options.choices) {
+            if (quiz.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
+              deletePicture = false
+            }
+          }
+        }
+        if (deleteAll || deletePicture) {
+          const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
+          fs.exists(path, (exists) => {
+            if (exists) {
+              fs.unlink(path, (err) => {
+                if (err) {
+                  return res.status(500).send(err)
+                }
+              })
+            }
+          })
+        }
+      }
+    }
+  }
+
+  return res.status(201).send(updateDocument)
+
+})
+
+// updated the quiz target
+router.put('/quiz_target/:id', async (req, res) => {
+  let {
+    error
+  } = validateObjectId(req.params.id)
+  if (error)
+    return res.status(400).send(error.details[0].message)
+
+  // check if quiz exist
+  let quiz = await Quiz.findOne({
+    _id: req.params.id
+  })
+  if (!quiz)
+    return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
+
 
   if (req.body.target) {
 
@@ -367,11 +450,6 @@ router.put('/:id', async (req, res) => {
     }
   }
 
-  const validQuestions = validateQuestions(req.body.questions)
-  if (validQuestions.status !== true)
-    return res.status(400).send(validQuestions.error)
-
-  req.body.totalMarks = validQuestions.totalMarks
 
   const updateDocument = await Quiz.findOneAndUpdate({
     _id: req.params.id
@@ -420,6 +498,7 @@ router.put('/:id', async (req, res) => {
 
 })
 
+
 // delete a quiz
 router.delete('/:id', async (req, res) => {
   try {
@@ -452,6 +531,7 @@ router.delete('/:id', async (req, res) => {
     const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}`
     fs.exists(path, (exists) => {
       if (exists) {
+        // error kbx
         fs.rmdir(path, { recursive: true }, (err) => {
           if (err) {
             err = err

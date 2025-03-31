@@ -315,8 +315,6 @@ router.put('/:id', async (req, res) => {
 
   const progress = (finishedChapters / chapters.length) * 100
 
-  console.log(finishedChapters)
-
   let updateObject = {
     student: req.body.student,
     course: req.body.course,
