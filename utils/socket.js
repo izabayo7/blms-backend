@@ -57,6 +57,7 @@ module.exports.listen = (app) => {
     socket.on('message/contacts', async () => {
       // get the latest conversations
       const latestMessages = await getLatestMessages(id)
+      // console.log(latestMessages)
       // format the contacts
       const contacts = await formatContacts(latestMessages, id)
       // send the contacts

@@ -398,6 +398,7 @@ router.get('/user/:user_name/:quiz_name', auth, async (req, res) => {
     result = simplifyObject(result)
     result = simplifyObject(await injectQuiz([result]))
     result = await injectUserFeedback(result)
+    result = await injectUser(result, 'user')
     result = result[0]
     result.quiz = await addQuizTarget([result.quiz])
     result.quiz = await addAttachmentMediaPaths(result.quiz)
@@ -582,7 +583,8 @@ router.post('/', auth, async (req, res) => {
       answers: answers,
       used_time: req.body.used_time,
       auto_submitted: req.body.auto_submitted,
-      total_marks: total_marks
+      total_marks: total_marks,
+      marked: is_selection_only
     })
 
     result = simplifyObject(result)
@@ -592,7 +594,7 @@ router.post('/', auth, async (req, res) => {
       is_selection_only: is_selection_only
     }
 
-    return res.send(formatResult(result))
+    return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
   }
