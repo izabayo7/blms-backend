@@ -650,7 +650,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
             if (!req.user.registration_number)
                 return res.send(formatResult(403, 'user must have a registration number (since the college is verifying your college payment status)'))
 
-            let paid = await checkCollegePayment({
+            let {paid} = await checkCollegePayment({
                 registration_number: req.user.registration_number,
                 link: college.users_verification_link
             })
