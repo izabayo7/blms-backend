@@ -1492,9 +1492,6 @@ exports.addQuizTarget = async (quizes) => {
         _id: chapter ? chapter.course : quiz.target.id
       }).populate('user_group')
 
-      course = await this.injectFaculty_college_year([course])
-      course = course[0]
-
       quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt'])
       quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
       quizes[i].target.user_group = course.user_group
