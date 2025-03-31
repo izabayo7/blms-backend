@@ -75,7 +75,7 @@ const schema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["DRAFT","PUBLISHED","RELEASED"],
+        enum: ["DRAFT","PUBLISHED","RELEASED","DELETED"],
         default: "DRAFT"
     },
 }, {timestamps: true})
