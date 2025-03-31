@@ -64,6 +64,57 @@ module.exports.listen = (app) => {
                 });
             });
 
+        } else if (user.category.name == "INSTRUCTOR") {
+            // tell users that live session is near
+            MyEmitter.on(`upcoming_livesession_${user._id}`, async(user_group) => {
+                console.log('birabaye shn ', user_group, ' at ', new Date())
+                let newDocument = new Notification({
+                    content: "you have a live class in 5 minutes",
+                })
+                const saveDocument = await newDocument.save()
+                if (saveDocument) {
+
+                    const user_user_groups = await User_user_group.find({
+                        user_group: user_group
+                    })
+
+                    user_user_groups.forEach(async _doc => {
+                        if (_doc.user != id) {
+                            // create notification for user
+                            let userNotification = await User_notification.findOne({
+                                user: _doc.user
+                            })
+                            if (!userNotification) {
+                                userNotification = new User_notification({
+                                    user: _doc.user,
+                                    notifications: [{
+                                        id: newDocument._id
+                                    }]
+                                })
+
+                            } else {
+                                userNotification.notifications.push({
+                                    id: newDocument._id
+                                })
+                            }
+
+                            let _newDocument = await userNotification.save()
+
+                            if (_newDocument) {
+                                let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+                                notification.id = undefined
+                                notification.notification = newDocument
+                                // send the notification
+                                socket.broadcast.to(_doc.user).emit('new-notification', {
+                                    notification: notification
+                                })
+                            }
+                        }
+                    })
+
+                }
+
+            });
         }
         socket.on('message/contacts', async () => {
             // get the latest conversations
@@ -463,10 +514,10 @@ module.exports.listen = (app) => {
 
         // tell user that someone replied his or her comment
         socket.on('chapter-comment', async ({
-                                        userName,
-                                        route,
-                                        content
-                                    }) => {
+                                                userName,
+                                                route,
+                                                content
+                                            }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -518,10 +569,10 @@ module.exports.listen = (app) => {
 
         // tell user that marks were released
         socket.on('marksReleased', async ({
-                                                route,
-                                                user_group,
-                                                content
-                                            }) => {
+                                              route,
+                                              user_group,
+                                              content
+                                          }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -580,10 +631,10 @@ module.exports.listen = (app) => {
 
         // tell instructor that student submitted
         socket.on('student-submitted', async ({
-                                                userId,
-                                                route,
-                                                content
-                                            }) => {
+                                                  userId,
+                                                  route,
+                                                  content
+                                              }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -633,9 +684,9 @@ module.exports.listen = (app) => {
 
         // tell users that there is a scheduled live session
         socket.on('live-session', async ({
-                                              user_group,
-                                              content
-                                          }) => {
+                                             user_group,
+                                             content
+                                         }) => {
 
             let newDocument = new Notification({
                 user: id,

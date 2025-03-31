@@ -1,4 +1,6 @@
 // import dependencies
+const {MyEmitter} = require("../../utils/imports");
+const {scheduleEvent} = require("../../utils/imports");
 const {handleChunk} = require("../../utils/imports");
 const {
     express,
@@ -184,7 +186,7 @@ router.get('/:id', async (req, res) => {
             _id: req.params.id
         }).lean()
 
-        if(!result)
+        if (!result)
             return res.send(formatResult(404, 'live_session target not found'))
 
         const chapter = await Chapter.findById(result.target.id)
@@ -192,7 +194,7 @@ router.get('/:id', async (req, res) => {
         result.course = await Course.findById(chapter.course)
         result.chapter = chapter
 
-        if(req.user.category.name == "INSTRUCTOR") {
+        if (req.user.category.name == "INSTRUCTOR") {
             result.quiz = await Quiz.findOne({
                 "target.type": 'live_session',
                 "target.id": result._id
@@ -253,9 +255,9 @@ router.post('/', async (req, res) => {
 
         switch (req.body.target.type) {
             case 'chapter':
-                target = await findDocument(Chapter, {
+                target = await Chapter.findOne({
                     _id: req.body.target.id
-                })
+                }).populate('course')
                 break;
             default:
                 break;
@@ -266,14 +268,14 @@ router.post('/', async (req, res) => {
 
         let quiz
 
-        if(req.body.quiz){
+        if (req.body.quiz) {
             quiz = await Quiz.findOne({
                 _id: req.body.quiz
             })
             if (!quiz)
                 return res.send(formatResult(404, 'quiz not found'))
 
-            if(quiz.target.id){
+            if (quiz.target.id) {
                 return res.send(formatResult(404, 'quiz already taken'))
             }
 
@@ -281,7 +283,20 @@ router.post('/', async (req, res) => {
 
         const result = await createDocument(Live_session, req.body)
 
-        if(quiz){
+        const givenDate = new Date(req.body.date)
+        const time = req.body.time.split(':')
+
+        const date = new Date(givenDate.getFullYear(), givenDate.getMonth(), givenDate.getDate(), parseInt(time[0]), parseInt(time[1]), 0);
+        date.setMinutes(date.getMinutes() - 1)
+
+        const callback = function () {
+            MyEmitter.emit(`upcoming_livesession_${req.user._id}`, target.course.user_group);
+        }
+
+
+        scheduleEvent(date,callback)
+
+        if (quiz) {
             quiz.target = {
                 type: 'live_session',
                 id: result.data._id
@@ -339,7 +354,7 @@ router.put('/record/:id', async (req, res) => {
             return res.send(formatResult(404, 'live_session not found'))
 
 
-        for await (const chunk of req){
+        for await (const chunk of req) {
             await handleChunk(chunk, req.params.id);
         }
 
@@ -441,7 +456,7 @@ router.put('/:id', async (req, res) => {
  *       - name: status
  *         in: path
  *         type: string
-     *         enum: ["PENDING","LIVE","FINISHED"]
+ *         enum: ["PENDING","LIVE","FINISHED"]
  *         description: Live_session's Id
  *     responses:
  *       201:
