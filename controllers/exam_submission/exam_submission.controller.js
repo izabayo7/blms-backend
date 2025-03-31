@@ -42,6 +42,8 @@ const {
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {Exam_submission, validate_exam_submission} = require("../../models/exam_submission/exam_submission.model");
 const {Exam} = require("../../models/exams/exam.model");
+const {Faculty} = require("../../models/faculty/faculty.model");
+const {User_group} = require("../../models/user_group/user_group.model");
 
 // create router
 const router = express.Router()
@@ -1129,17 +1131,17 @@ router.delete('/:id', auth, async (req, res) => {
 
         const result = await deleteDocument(Exam_submission, req.params.id)
 
-        let exam = await findDocument(Exam, {
+        let exam = await Exam.findOne({
             _id: submission.exam
-        })
+        }).populate('course')
         if (!exam.target.id) {
-            let faculty_college_year = await get_faculty_college_year(exam._id)
+            let user_group = await User_group.findOne({_id: exam.course.user_group})
 
-            let faculty_college = await findDocument(Faculty_college, {
-                _id: faculty_college_year.faculty_college
+            let faculty = await findDocument(Faculty, {
+                _id: user_group.faculty
             })
 
-            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/assignments/${exam._id}/submissions/${req.params.id}`)
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty.college}/assignments/${exam._id}/submissions/${req.params.id}`)
             fs.exists(path, (exists) => {
                 if (exists) {
                     fs.remove(path)
