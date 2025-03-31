@@ -22,7 +22,10 @@ const {
   Chat_group,
   findDocuments,
   validate_message,
-  RTCMultiConnectionServer
+  RTCMultiConnectionServer,
+  validate_comment,
+  Chapter,
+  Live_session
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -273,6 +276,61 @@ module.exports.listen = (app) => {
       })
     })
 
+
+    /**
+     * comments 
+     */
+
+    // add a comment in live_session
+    socket.on('comment/new', async ({
+      comment,
+      receivers
+    }) => {
+      // set sender as current user
+      comment.sender = id
+
+      const {
+        error
+      } = validate_comment(comment)
+      if (error)
+        return socket.error(formatResult(400, error.details[0].message))
+
+      comment.target.type = comment.target.type.toLowerCase()
+
+      const allowedTargets = ['live_session']
+
+      if (!allowedTargets.includes(comment.target.type))
+        return socket.error(formatResult(400, 'invalid comment target_type'))
+
+      let target
+
+      switch (comment.target.type) {
+        case 'live_session':
+          target = await findDocument(Live_session, {
+            _id: comment.target.id
+          })
+          break;
+
+        default:
+          break;
+      }
+
+      if (!target)
+        return socket.error(formatResult(404, 'comment target not found'))
+
+
+      let result = await createDocument(Comment, comment)
+
+      result = await injectUser([result], 'sender')
+      result = result[0]
+
+      receivers.forEach(receiver => {
+        socket.broadcast.to(receiver.id).emit('commit/new', result)
+      })
+
+      // send success mesage
+      socket.emit('res/comment/new', result)
+    })
 
     /**
      * notifications
