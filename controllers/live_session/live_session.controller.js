@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
     if (!result.length)
       return res.send(formatResult(404, 'Live_session list is empty'))
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
