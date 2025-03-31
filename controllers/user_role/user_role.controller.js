@@ -49,10 +49,11 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    const result = await findDocuments(User_role)
-    if (result.data.length === 0)
+    const user_roles = await findDocuments(User_role)
+    if (!user_roles.length)
       return res.send(formatResult(404, 'User_role list is empty'))
-    return res.send(result)
+
+    return res.send(formatResult(u, u, user_roles))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -87,12 +88,14 @@ router.get('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    const result = await findDocument(User_role, {
+
+    const user_role = await findDocument(User_role, {
       _id: req.params.id
     })
-    if (!result.data)
-      return res.send(formatResult(404, `User_role ${req.params.id} Not Found`))
-    return res.send(result)
+    if (!user_role)
+      return res.send(formatResult(404, 'User_role not found'))
+
+    return res.send(formatResult(u, u, user_role))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -134,8 +137,8 @@ router.post('/', async (req, res) => {
     let user_role = await findDocument(User_role, {
       name: req.body.name
     })
-    if (user_role.data)
-      return res.send(formatResult(400, `User_role ${req.body.name} arleady exist`))
+    if (user_role)
+      return res.send(formatResult(400, 'User_role arleady exist'))
 
     let result = await createDocument(User_role, {
       name: req.body.name,
@@ -188,15 +191,15 @@ router.put('/:id', async (req, res) => {
     let user_role = await findDocument(User_role, {
       _id: req.params.id
     })
-    if (!user_role.data)
-      return res.send(formatResult(404, `User_role with code ${req.params.id} doens't exist`))
+    if (!user_role)
+      return res.send(formatResult(404, 'User_role doens\'t exist'))
 
     // check if user_role name is available
     user_role = await findDocument(User_role, {
       _id: { $ne: req.params.id },
       name: req.body.name
     })
-    if (user_role.data)
+    if (user_role)
       return res.send(formatResult(400, `User_role ${req.body.name} arleady exist`))
 
     const result = await updateDocument(User_role, req.params.id, req.body)
@@ -250,7 +253,7 @@ router.delete('/:id', async (req, res) => {
         }
       }
     })
-    if (!category.data) {
+    if (!category) {
       const result = await deleteDocument(User_role, req.params.id)
       return res.send(result)
     }
@@ -258,7 +261,7 @@ router.delete('/:id', async (req, res) => {
     const update_role = await updateDocument(User_role, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, `User_role ${user_role.name} couldn't be deleted because it was used, instead it was disabled`,update_role.data))
+    return res.send(formatResult(200, `User_role ${user_role.name} couldn't be deleted because it was used, instead it was disabled`, update_role))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

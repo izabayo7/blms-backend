@@ -286,9 +286,9 @@ module.exports.deleteDocument = async (model, id) => {
  * @param {Number} startIndex Specifies the startingIndex
  * @returns formattedResult
  */
-module.exports.findDocuments = async (model, query, fields, limit, startIndex, formatted = true) => {
+module.exports.findDocuments = async (model, query, fields, limit, startIndex, lean = true, formatted = false) => {
     try {
-        const documents = await model.find(query, fields).limit(limit).skip(startIndex).exec()
+        const documents = await model.find(query, fields).lean(lean).limit(limit).skip(startIndex).exec()
         return formatted ? this.formatResult(200, 'OK', documents) : documents
     } catch (error) {
         return this.formatResult(500, error)
@@ -303,7 +303,7 @@ module.exports.findDocuments = async (model, query, fields, limit, startIndex, f
  * @param {Object} fields Specifies the needed fields
  * @returns formattedResult
  */
-module.exports.findDocument = async (model, query, fields, lean = false, formatted = true) => {
+module.exports.findDocument = async (model, query, fields, lean = true, formatted = false) => {
     try {
         const document = await model.findOne(query, fields).lean(lean).exec()
         return formatted ? this.formatResult(200, 'OK', document) : document
@@ -820,7 +820,7 @@ module.exports.injectChapters = async (courses) => {
             course: courses[i]._id
         })
         // simplify 
-        courses[i].chapters = this.simplifyObject(chapters.data)
+        courses[i].chapters = this.simplifyObject(chapters)
         for (const k in courses[i].chapters) {
             // remove course and documentVersion
             courses[i].chapters[k].course = undefined
@@ -842,8 +842,8 @@ module.exports.injectChapters = async (courses) => {
                 "target.type": "chapter",
                 "target.id": courses[i].chapters[k]._id
             })
-            courses[i].chapters[k].quiz = chapterQuiz.data
-            courses[i].assignmentsLength += chapterQuiz.data.length
+            courses[i].chapters[k].quiz = chapterQuiz
+            courses[i].assignmentsLength += chapterQuiz.length
         }
 
         // add assignments attached to course
@@ -851,8 +851,8 @@ module.exports.injectChapters = async (courses) => {
             "target.type": 'course',
             "target.id": courses[i]._id
         })
-        courses[i].quiz = courseQuiz.data
-        courses[i].assignmentsLength += courseQuiz.data.length
+        courses[i].quiz = courseQuiz
+        courses[i].assignmentsLength += courseQuiz.length
 
         // add the students that started the course
         courses[i].attendedStudents = await this.countDocuments(this.User_progress, {
@@ -864,15 +864,14 @@ module.exports.injectChapters = async (courses) => {
 
 // replace user id by the user information
 module.exports.injectUser = async (array, property, newProperty) => {
-
     let name = newProperty ? newProperty : property
     for (const i in array) {
         const user = await this.findDocument(this.User, {
             _id: array[i][`${property}`]
         })
-        array[i][`${name}`] = this._.pick(user.data, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
+        array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
         if (array[i][`${name}`].profile) {
-            array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.data.user_name}/profile/${user.data.profile}`
+            array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
         }
     }
     return array
@@ -906,11 +905,11 @@ module.exports.injecUserProgress = async (courses, userId) => {
             user: userId
         })
 
-        courses[i].progress = result.data ? {
-            id: result.data._id,
-            progress: result.data.progress,
-            dateStarted: result.data.createdAt,
-            lastUpdated: result.data.updatedAt
+        courses[i].progress = result ? {
+            id: result._id,
+            progress: result.progress,
+            dateStarted: result.createdAt,
+            lastUpdated: result.updatedAt
         } : undefined
     }
     return courses

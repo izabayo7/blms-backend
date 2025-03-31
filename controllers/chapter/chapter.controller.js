@@ -85,20 +85,20 @@ router.get('/:id/document', async (req, res) => {
     const chapter = await findDocument(Chapter, {
       _id: req.params.id
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
     const course = await findDocument(Course, {
-      _id: chapter.data.course
+      _id: chapter.course
     })
     const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
     const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.data.faculty_college
+      _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/main_content/index.html`
+    const file_path = `uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/main_content/index.html`
 
     const exists = await fs.exists(file_path)
     if (!exists)
@@ -150,23 +150,23 @@ router.get('/:id/video/:file_name', async (req, res) => {
     const chapter = await findDocument(Chapter, {
       _id: req.params.id
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
-    if (!chapter.data.uploaded_video || (chapter.data.uploaded_video !== req.params.file_name))
+    if (!chapter.uploaded_video || (chapter.uploaded_video !== req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
     const course = await findDocument(Course, {
-      _id: chapter.data.course
+      _id: chapter.course
     })
     const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
     const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.data.faculty_college
+      _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/video/${chapter.data.uploaded_video}`
+    const file_path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/video/${chapter.uploaded_video}`
     const exists = await fs.exists(file_path)
     if (!exists)
       return res.send(formatResult(404, 'file not found'))
@@ -228,13 +228,13 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
     const chapter = await findDocument(Chapter, {
       _id: req.params.id
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
     let file_found = false
 
-    for (const i in chapter.data.attachments) {
-      if (chapter.data.attachments[i].src == req.params.file_name) {
+    for (const i in chapter.attachments) {
+      if (chapter.attachments[i].src == req.params.file_name) {
         file_found = true
         break
       }
@@ -243,16 +243,16 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
       return res.send(formatResult(404, 'file not found'))
 
     const course = await findDocument(Course, {
-      _id: chapter.data.course
+      _id: chapter.course
     })
     const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
     const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.data.faculty_college
+      _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/attachments/${req.params.file_name}`
+    const file_path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`
 
     const file_type = await findFileType(req.params.file_name)
 
@@ -307,13 +307,13 @@ router.get('/:id/attachment/:file_name/download', async (req, res) => {
     const chapter = await findDocument(Chapter, {
       _id: req.params.id
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
     let file_found = false
 
-    for (const i in chapter.data.attachments) {
-      if (chapter.data.attachments[i].src == req.params.file_name) {
+    for (const i in chapter.attachments) {
+      if (chapter.attachments[i].src == req.params.file_name) {
         file_found = true
         break
       }
@@ -322,16 +322,16 @@ router.get('/:id/attachment/:file_name/download', async (req, res) => {
       return res.send(formatResult(404, 'file not found'))
 
     const course = await findDocument(Course, {
-      _id: chapter.data.course
+      _id: chapter.course
     })
     const faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
     const faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.data.faculty_college
+      _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/attachments/${req.params.file_name}`
+    const file_path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`
 
     return res.download(file_path)
 
@@ -376,7 +376,7 @@ router.post('/', async (req, res) => {
     let course = await findDocument(Course, {
       _id: req.body.course
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     // avoid chapters with same names in the same course
@@ -384,7 +384,7 @@ router.post('/', async (req, res) => {
       course: req.body.course,
       name: req.body.name
     })
-    if (chapter.data)
+    if (chapter)
       return res.send(formatResult(403, 'name was taken'))
 
     const number = await countDocuments(Chapter, {
@@ -451,14 +451,14 @@ router.put('/:id', async (req, res) => {
     let chapter = await findDocument(Chapter, {
       _id: req.params.id
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
     // check if course exist
     let course = await findDocument(Course, {
       _id: req.body.course
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     // avoid chapters with same names in the same course
@@ -469,7 +469,7 @@ router.put('/:id', async (req, res) => {
       course: req.body.course,
       name: req.body.name
     })
-    if (chapter.data)
+    if (chapter)
       return res.send(formatResult(403, 'name was taken'))
 
     const result = await updateDocument(Chapter, req.params.id, req.body)
@@ -513,7 +513,7 @@ router.delete('/:id', async (req, res) => {
     let chapter = await findDocument(Chapter, {
       _id: req.params.id
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
     // check if the course is never used
@@ -522,13 +522,13 @@ router.delete('/:id', async (req, res) => {
     const progress = await findDocument(User_progress, {
       "finished_chapters.id": req.params.id
     })
-    if (progress.data)
+    if (progress)
       chapter_used = true
 
     const quiz = await findDocument(Quiz, {
       "target.id": req.params.id
     })
-    if (quiz.data)
+    if (quiz)
       chapter_used = true
 
     if (!chapter_used) {
@@ -537,18 +537,18 @@ router.delete('/:id', async (req, res) => {
 
       // check if course exist
       let course = await findDocument(Course, {
-        _id: chapter.data.course
+        _id: chapter.course
       })
 
       let faculty_college_year = await findDocument(Faculty_college_year, {
-        _id: course.data.faculty_college_year
+        _id: course.faculty_college_year
       })
 
       let faculty_college = await findDocument(Faculty_college, {
-        _id: faculty_college_year.data.faculty_college
+        _id: faculty_college_year.faculty_college
       })
 
-      const path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${req.params.id}`
+      const path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}`
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path, {

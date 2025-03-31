@@ -13,7 +13,8 @@ const {
   updateDocument,
   deleteDocument,
   validateObjectId,
-  sendResizedImage
+  sendResizedImage,
+  u
 } = require('../../utils/imports')
 
 // create router
@@ -60,11 +61,11 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    let result = await findDocuments(College)
-    if (result.data.length === 0)
+    let colleges = await findDocuments(College)
+    if (!colleges.length)
       return res.send(formatResult(404, 'College list is empty'))
-    result.data = await injectLogoMediaPaths(result.data)
-    return res.send(result)
+    colleges = await injectLogoMediaPaths(colleges)
+    return res.send(formatResult(u, u, colleges))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -93,14 +94,14 @@ router.get('/', async (req, res) => {
  */
 router.get('/name/:name', async (req, res) => {
   try {
-    let result = await findDocument(College, {
+    let college = await findDocument(College, {
       name: req.params.name
     })
-    if (!result.data)
-      return res.send(formatResult(404, `College ${req.params.name} Not Found`))
-    result.data = await injectLogoMediaPaths([result.data])
-    result.data = result.data[0]
-    return res.send(result)
+    if (!college)
+      return res.send(formatResult(404, 'College not found'))
+    college = await injectLogoMediaPaths([college])
+    college = college[0]
+    return res.send(formatResult(u, u, college))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -135,14 +136,14 @@ router.get('/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let result = await findDocument(College, {
+    let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!result.data)
+    if (!college)
       return res.status(404).send(`College ${req.params.id} Not Found`)
-    result.data = await injectLogoMediaPaths([result.data])
-    result.data = result.data[0]
-    return res.send(result)
+    college = await injectLogoMediaPaths([college])
+    college = college[0]
+    return res.send(formatResult(u, u, college))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -193,13 +194,13 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
     const college = await findDocument(College, {
       name: req.params.college_name
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, 'college not found'))
 
-    if (!college.data.logo || (college.data.logo !== req.params.file_name))
+    if (!college.logo || (college.logo !== req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    const path = `./uploads/colleges/${college.data._id}/${college.data.logo}`
+    const path = `./uploads/colleges/${college._id}/${college.logo}`
 
     sendResizedImage(req, res, path)
   } catch (error) {
@@ -249,10 +250,10 @@ router.post('/', async (req, res) => {
       }]
     })
 
-    if (college.data) {
-      const phoneFound = req.body.phone == college.data.phone
-      const nameFound = req.body.name == college.data.name
-      const emailFound = req.body.email == college.data.email
+    if (college) {
+      const phoneFound = req.body.phone == college.phone
+      const nameFound = req.body.name == college.name
+      const emailFound = req.body.email == college.email
       return res.send(formatResult(400, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
 
@@ -263,8 +264,8 @@ router.post('/', async (req, res) => {
       phone: req.body.phone
     })
 
-    result.data = await injectLogoMediaPaths([result.data])
-    result.data = result.data[0]
+    result = await injectLogoMediaPaths([result])
+    result = result[0]
     return res.send(result)
 
   } catch (error) {
@@ -316,7 +317,7 @@ router.put('/:id', async (req, res) => {
 
     // check if college exist
     let college = await findDocument(College, { _id: req.params.id })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College with code ${req.params.id} doens't exist`))
 
     // check if the name or email were not used
@@ -333,16 +334,16 @@ router.put('/:id', async (req, res) => {
       }]
     })
 
-    if (college.data) {
-      const phoneFound = req.body.phone == college.data.phone
-      const nameFound = req.body.name == college.data.name
-      const emailFound = req.body.email == college.data.email
+    if (college) {
+      const phoneFound = req.body.phone == college.phone
+      const nameFound = req.body.name == college.name
+      const emailFound = req.body.email == college.email
       return res.send(formatResult(400, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
 
-    const result = await updateDocument(College, req.params.id, req.body)
-    result.data = await injectLogoMediaPaths([result.data])
-    result.data = result.data[0]
+    let result = await updateDocument(College, req.params.id, req.body)
+    result = await injectLogoMediaPaths([result])
+    result = result[0]
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -376,13 +377,13 @@ router.delete('/:id', async (req, res) => {
   try {
 
     let college = await findDocument(College, { _id: req.params.id })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College with code ${req.params.id} Not Found`))
     // check if the college is never used
     const user = await findDocument(User, {
       college: req.params.id
     })
-    if (!user.data) {
+    if (!user) {
       const result = await deleteDocument(College, req.params.id)
 
       // delete files if available

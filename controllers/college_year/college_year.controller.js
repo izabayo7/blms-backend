@@ -44,7 +44,7 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(College_year)
-    if (result.data.length === 0)
+    if (result.length === 0)
       return res.send(formatResult(404, 'College_year list is empty'))
     return res.send(result)
   } catch (error) {
@@ -85,7 +85,7 @@ router.get('/:id', async (req, res) => {
       _id: req.params.id
     })
 
-    if (!result.data)
+    if (!result)
       return res.send(formatResult(404, `College_year ${req.params.id} Not Found`))
 
     return res.send(result)
@@ -130,7 +130,7 @@ router.post('/', async (req, res) => {
     let college_year = await findDocument(College_year, {
       digit: req.body.digit
     })
-    if (college_year.data)
+    if (college_year)
       return res.send(formatResult(404, `College_year ${req.body.digit} arleady exist`))
 
     let result = await createDocument(College_year, {
@@ -177,14 +177,14 @@ router.delete('/:id', async (req, res) => {
     let college_year = await findDocument(College_year, {
       _id: req.params.id
     })
-    if (!college_year.data)
+    if (!college_year)
       return res.send(formatResult(404, `College_year of Code ${req.params.id} Not Found`))
 
     // check if the college_year is never used
     const year_found = await findDocument(Faculty_college_year, {
       college_year: req.params.id
     })
-    if (!year_found.data) {
+    if (!year_found) {
       let result = await deleteDocument(College_year, req.params.id)
       return res.send(result)
     }

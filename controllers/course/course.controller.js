@@ -80,12 +80,12 @@ router.get('/', async (req, res) => {
 
     let result = await findDocuments(Course)
 
-    if (result.data.length === 0)
+    if (result.length === 0)
       return res.send(formatResult(404, 'Course list is empty'))
 
-    result.data = simplifyObject(result.data)
-    result.data = await injectUser(result.data, 'user')
-    result.data = await injectChapters(result.data)
+    result = simplifyObject(result)
+    result = await injectUser(result, 'user')
+    result = await injectChapters(result)
 
     return res.send(result)
   } catch (error) {
@@ -125,7 +125,7 @@ router.get('/college/:id', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, 'college not found'))
     /*
         let user_category = await findDocument(User_category, {
@@ -134,19 +134,19 @@ router.get('/college/:id', async (req, res) => {
     
         let users = await findDocuments(User, {
           college: req.params.id,
-          category: user_category.data._id
+          category: user_category._id
         })
-        if (!users.data.length)
-          return res.send(formatResult(4040, `${college.data.name} course list is empty`))
+        if (!users.length)
+          return res.send(formatResult(4040, `${college.name} course list is empty`))
     
         let foundCourses = []
     
-        for (const user of users.data) {
+        for (const user of users) {
           let courses = await findDocuments(Course, {
             user: user._id
           })
-          if (courses.data.length > 0) {
-            for (const course of courses.data) {
+          if (courses.length > 0) {
+            for (const course of courses) {
               foundCourses.push(course)
             }
           }
@@ -156,22 +156,22 @@ router.get('/college/:id', async (req, res) => {
     let foundCourses = []
 
     let faculty_college = await findDocuments(Faculty_college, { college: req.params.id })
-    if (!faculty_college.data.length)
+    if (!faculty_college.length)
       return res.send(formatResult(404, 'courses not found'))
 
-    for (const i in faculty_college.data) {
-      let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college.data[i]._id })
-      if (!faculty_college_year.data.length)
+    for (const i in faculty_college) {
+      let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college[i]._id })
+      if (!faculty_college_year.length)
         continue
 
-      for (const k in faculty_college_year.data) {
+      for (const k in faculty_college_year) {
         let courses = await findDocuments(Course, {
-          faculty_college_year: faculty_college_year.data[i]._id
+          faculty_college_year: faculty_college_year[i]._id
         })
-        if (!courses.data.length)
+        if (!courses.length)
           continue
 
-        for (const course of courses.data) {
+        for (const course of courses) {
           foundCourses.push(course)
         }
       }
@@ -179,7 +179,7 @@ router.get('/college/:id', async (req, res) => {
     }
 
     if (foundCourses.length === 0)
-      return res.send(formatResult(404, `${college.data.name} course list is empty`))
+      return res.send(formatResult(404, `${college.name} course list is empty`))
 
     // foundCourses = await injectUser(foundCourses, 'user')
     // foundCourses = await injectChapters(foundCourses)
@@ -222,39 +222,40 @@ router.get('/user/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: user.data._id,
+      user: user._id,
       status: 1
     })
-    if (!user_faculty_college_year.data)
+    if (!user_faculty_college_year)
       return res.send(formatResult(404, 'courses not found'))
 
     let result = await findDocuments(Course, {
-      faculty_college_year: user_faculty_college_year.data.faculty_college_year
+      faculty_college_year: user_faculty_college_year.faculty_college_year
     })
 
     // ******* while adding permissions remember to filter data according to the user requesting *******
 
-    if (result.data.length === 0)
+    if (!result.length)
       return res.send(formatResult(404, 'courses not found'))
 
-    result.data = simplifyObject(result.data)
+    result = simplifyObject(result)
 
-
-    result.data = await injectChapters(result.data)
-    result.data = await injectFaculty_college_year(result.data)
+    result = await injectChapters(result)
+    console.log(result)
+    result = await injectFaculty_college_year(result)
+    // console.log(result)
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name == 'STUDENT') {
-      result.data = await injecUserProgress(result.data, user.data._id)
-      result.data = await injectUser(result.data, 'user')
+    if (user_category.name == 'STUDENT') {
+      result = await injecUserProgress(result, user._id)
+      result = await injectUser(result, 'user')
     }
-
+console.log(result)
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -299,40 +300,40 @@ router.get('/user/:userId/:courseName', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.userId
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: user.data._id,
+      user: user._id,
       status: 1
     })
-    if (!user_faculty_college_year.data)
+    if (!user_faculty_college_year)
       return res.send(formatResult(404, 'course not found'))
 
     let course = await findDocument(Course, {
-      faculty_college_year: user_faculty_college_year.data.faculty_college_year,
+      faculty_college_year: user_faculty_college_year.faculty_college_year,
       name: req.params.courseName
     })
 
     // ******* while adding permissions remember to filter data according to the user requesting *******
 
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
-    course.data = simplifyObject(course.data)
-    course.data = await injectChapters([course.data])
-    course.data = await injectFaculty_college_year(course.data)
+    course = simplifyObject(course)
+    course = await injectChapters([course])
+    course = await injectFaculty_college_year(course)
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name == 'STUDENT') {
-      course.data = await injecUserProgress(course.data, user.data._id)
-      course.data = await injectUser(course.data, 'user')
+    if (user_category.name == 'STUDENT') {
+      course = await injecUserProgress(course, user._id)
+      course = await injectUser(course, 'user')
     }
 
-    course.data = course.data[0]
+    course = course[0]
 
     return res.status(200).send(course)
   } catch (error) {
@@ -373,12 +374,12 @@ router.get('/:id', async (req, res) => {
       _id: req.params.id
     })
 
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
-    // course.data = await injectUser([course.data], 'user')
-    // course.data = await injectChapters(course.data)
-    // course.data = course.data[0]
+    // course = await injectUser([course], 'user')
+    // course = await injectChapters(course)
+    // course = course[0]
 
     return res.send(course)
   } catch (error) {
@@ -431,24 +432,24 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
     const course = await findDocument(Course, {
       name: req.params.course_name
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
-    if (!course.data.cover_picture)
+    if (!course.cover_picture)
       return res.send(formatResult(404, 'file not found'))
 
-    if (course.data.cover_picture !== req.params.file_name)
+    if (course.cover_picture !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
     let faculty_college_year = await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
 
     let faculty_college = await findDocument(Faculty_college, {
-      _id: faculty_college_year.data.faculty_college
+      _id: faculty_college_year.faculty_college
     })
 
-    const path = `./uploads/colleges/${faculty_college.data.college}/courses/${course.data._id}/${course.data.cover_picture}`
+    const path = `./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`
 
     sendResizedImage(req, res, path)
   } catch (error) {
@@ -491,7 +492,7 @@ router.post('/', async (req, res) => {
     let faculty_college_year = await findDocument(Faculty_college_year, {
       _id: req.body.faculty_college_year
     })
-    if (!faculty_college_year.data)
+    if (!faculty_college_year)
       return res.send(formatResult(404, 'faculty_college_year not found'))
 
     let user_category = await findDocument(User_category, {
@@ -501,16 +502,16 @@ router.post('/', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category != user_category.data._id)
+    if (user.category != user_category._id)
       return res.send(formatResult(404, 'user can\'t create course'))
 
     let course = await findDocument(Course, {
       name: req.body.name
     })
-    if (course.data)
+    if (course)
       return res.send(formatResult(403, 'name was taken'))
 
     let result = await createDocument(Course, {
@@ -520,9 +521,9 @@ router.post('/', async (req, res) => {
       description: req.body.description
     })
 
-    // result.data = simplifyObject(result.data)
-    // result.data = await injectChapters([result.data])
-    // result.data = await injectFaculty_college_year(result.data)
+    // result = simplifyObject(result)
+    // result = await injectChapters([result])
+    // result = await injectFaculty_college_year(result)
 
     return res.send(result)
   } catch (error) {
@@ -565,20 +566,20 @@ router.put('/toogle_publishment_status/:id', async (req, res) => {
     let course = await findDocument(Course, {
       _id: req.params.id
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     const now = new Date()
 
     const updateObject = {
-      published: !course.data.published,
-      publishedOn: !course.data.published ? now : undefined
+      published: !course.published,
+      publishedOn: !course.published ? now : undefined
     }
 
     let result = await updateDocument(Course, req.params.id, updateObject)
 
-    // result.data = await injectFaculty_college_year([result.data])
-    // result.data = result.data[0]
+    // result = await injectFaculty_college_year([result])
+    // result = result[0]
 
     return res.send(result)
   } catch (error) {
@@ -635,10 +636,10 @@ router.put('/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category != user_category.data._id)
+    if (user.category != user_category._id)
       return res.send(formatResult(404, 'user can\'t create course'))
 
     // check if course exist
@@ -646,7 +647,7 @@ router.put('/:id', async (req, res) => {
       _id: req.params.id,
       user: req.body.user
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     course = await findDocument(Course, {
@@ -655,7 +656,7 @@ router.put('/:id', async (req, res) => {
       },
       name: req.body.name
     })
-    if (course.data)
+    if (course)
       return res.send(formatResult(403, 'name was taken'))
 
     const result = await updateDocument(Course, req.params.id, req.body)
@@ -700,7 +701,7 @@ router.delete('/:id', async (req, res) => {
     let course = await findDocument(Course, {
       _id: req.params.id
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     // check if the course is never used
@@ -709,36 +710,36 @@ router.delete('/:id', async (req, res) => {
     const progress = await findDocument(User_progress, {
       course: req.params.id
     })
-    if (progress.data)
+    if (progress)
       course_used = true
 
     const quiz = await findDocument(Quiz, {
       "target.id": req.params.id
     })
-    if (quiz.data)
+    if (quiz)
       course_used = true
 
     if (!course_used) {
 
       const chapters = await findDocuments(Chapter, { course: req.params.id })
 
-      if (chapters.data.length) {
-        for (const i in chapters.data) {
-          await deleteDocument(Chapter, chapters.data[i]._id)
+      if (chapters.length) {
+        for (const i in chapters) {
+          await deleteDocument(Chapter, chapters[i]._id)
         }
       }
 
       const result = await deleteDocument(Course, req.params.id)
 
       let faculty_college_year = await findDocument(Faculty_college_year, {
-        _id: course.data.faculty_college_year
+        _id: course.faculty_college_year
       })
 
       let faculty_college = await findDocument(Faculty_college, {
-        _id: faculty_college_year.data.faculty_college
+        _id: faculty_college_year.faculty_college
       })
 
-      const path = `./uploads/colleges/${faculty_college.data.college}/courses/${req.params.id}`
+      const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)
@@ -762,30 +763,30 @@ async function injectFaculty_college_year(courses) {
   for (const i in courses) {
     const faculty_college_year = await findDocument(Faculty_college_year, {
       _id: courses[i].faculty_college_year
-    }, { _v: 0 }, true)
-console.log(faculty_college_year)
-    courses[i].faculty_college_year = removeDocumentVersion(faculty_college_year)
+    }, { _v: 0 }, true, false)
 
-    const collegeYear = await College_year.findOne({
+    courses[i].faculty_college_year = faculty_college_year
+
+    const collegeYear = await findDocument(College_year, {
       _id: faculty_college_year.college_year
-    }).lean()
-    courses[i].faculty_college_year.college_year = removeDocumentVersion(collegeYear)
+    }, { _v: 0 }, true, false)
+    courses[i].faculty_college_year.college_year = collegeYear
 
-    const faculty_college = await Faculty_college.findOne({
+    const faculty_college = await findDocument(Faculty_college, {
       _id: faculty_college_year.faculty_college
-    }).lean()
-    courses[i].faculty_college_year.faculty_college = removeDocumentVersion(faculty_college)
+    }, { _v: 0 }, true, false)
+    courses[i].faculty_college_year.faculty_college = faculty_college
 
-    const faculty = await Faculty.findOne({
+    const faculty = await findDocument(Faculty, {
       _id: faculty_college.faculty
-    }).lean()
-    courses[i].faculty_college_year.faculty_college.faculty = removeDocumentVersion(faculty)
+    }, { _v: 0 }, true, false)
+    courses[i].faculty_college_year.faculty_college.faculty = faculty
 
-    const college = await College.findOne({
+    const college = await findDocument(College, {
       _id: faculty_college.college
-    }).lean()
+    }, { _v: 0 }, true, false)
 
-    courses[i].faculty_college_year.faculty_college.college = removeDocumentVersion(college)
+    courses[i].faculty_college_year.faculty_college.college = college
     if (courses[i].faculty_college_year.faculty_college.college.logo) {
       courses[i].faculty_college_year.faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }

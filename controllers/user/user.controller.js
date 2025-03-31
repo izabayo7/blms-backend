@@ -27,7 +27,11 @@ const {
   Quiz_submission,
   sendResizedImage,
   simplifyObject,
-  _
+  _,
+  College_year,
+  Faculty_college,
+  Faculty,
+  Faculty_college_year
 } = require('../../utils/imports')
 
 // create router
@@ -96,15 +100,14 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    let result = await findDocuments(User)
+    let users = await findDocuments(User)
 
-    if (result.data.length === 0)
+    if (!users.length)
       return res.send(formatResult(404, 'User list is empty'))
 
-    // result.data = await injectDetails([result.data])
-    // result.data = result.data[0]
+    users = await injectDetails(users)
 
-    return res.send(result)
+    return res.send(formatResult(u, u, users))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -142,20 +145,19 @@ router.get('/college/:id', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College ${req.params.id} Not Found`))
 
-    let result = await findDocuments(User, {
+    let users = await findDocuments(User, {
       college: req.params.id
     })
 
-    if (result.data.length === 0)
-      return res.send(formatResult(404, `${college.data.name} user list is empty`))
+    if (!users.length)
+      return res.send(formatResult(404, `${college.name} user list is empty`))
 
-    // result.data = await injectDetails([result.data])
-    // result.data = result.data[0]
+    users = await injectDetails(users)
 
-    return res.send(result)
+    return res.send(formatResult(u, u, users))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -189,17 +191,18 @@ router.get('/:id', async (req, res) => {
     } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-    let result = await findDocument(User, {
+
+    let user = await findDocument(User, {
       _id: req.params.id
     })
 
-    if (!result.data)
+    if (!user)
       return res.send(formatResult(404, `User ${req.params.id} Not Found`))
 
-    // result.data = await injectDetails([result.data])
-    // result.data = result.data[0]
+    user = await injectDetails([user])
+    user = user[0]
 
-    return res.send(result)
+    return res.send(formatResult(u, u, user))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -325,18 +328,18 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
     const user = await findDocument(User, {
       user_name: req.params.user_name
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    if (!user.data.profile || (user.data.profile != req.params.file_name))
+    if (!user.profile || (user.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
     let path
 
-    if (user.data.college) {
-      path = `./uploads/colleges/${user.data.college}/user_profiles/${user.data.profile}`
+    if (user.college) {
+      path = `./uploads/colleges/${user.college}/user_profiles/${user.profile}`
     } else {
-      path = `./uploads/colleges/system/user_profiles/${user.data.profile}`
+      path = `./uploads/colleges/system/user_profiles/${user.profile}`
     }
 
     sendResizedImage(req, res, path)
@@ -388,48 +391,48 @@ router.post('/', async (req, res) => {
       }],
     })
 
-    if (user.data) {
-      const phoneFound = req.body.phone == user.data.phone
-      const national_idFound = req.body.national_id == user.data.national_id
-      const emailFound = req.body.email == user.data.email
+    if (user) {
+      const phoneFound = req.body.phone == user.phone
+      const national_idFound = req.body.national_id == user.national_id
+      const emailFound = req.body.email == user.email
       return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : ''} arleady exist`))
     }
 
     let user_category = await findDocument(User_category, {
       _id: req.body.category
     })
-    if (!user_category.data)
+    if (!user_category)
       return res.send(formatResult(404, 'category not found'))
 
-    if (user_category.data.name !== 'SUPER_ADMIN') {
+    if (user_category.name !== 'SUPER_ADMIN') {
       if (!req.body.college) {
-        return res.send(formatResult(400, `${user_category.data.name.toLowerCase()} must have a college`))
+        return res.send(formatResult(400, `${user_category.name.toLowerCase()} must have a college`))
       }
 
       let college = await findDocument(College, {
         _id: req.body.college
       })
-      if (!college.data)
+      if (!college)
         return res.send(formatResult(404, `College with code ${req.body.college} Not Found`))
 
-      if (user_category.data.name === 'ADMIN') {
+      if (user_category.name === 'ADMIN') {
         const find_admin = await findDocument(User, {
           _id: {
             $ne: req.params.id
           },
-          category: user_category.data._id,
+          category: user_category._id,
           college: req.body.college
         })
 
-        if (find_admin.data)
-          return res.send(formatResult(404, `College ${college.data.name} can't have more than one admin`))
+        if (find_admin)
+          return res.send(formatResult(404, `College ${college.name} can't have more than one admin`))
       }
     } else {
       const find_super_admin = await findDocument(User, {
         category: req.body.category
       })
 
-      if (find_super_admin.data)
+      if (find_super_admin)
         return res.send(formatResult(404, `System can't have more than one super_admin`))
     }
 
@@ -448,8 +451,8 @@ router.post('/', async (req, res) => {
       date_of_birth: req.body.date_of_birth
     })
 
-    // result.data = await injectDetails([result.data])
-    // result.data = result.data[0]
+    // result = await injectDetails([result])
+    // result = result[0]
     return res.status(201).send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -506,26 +509,26 @@ router.post('/login', async (req, res) => {
 
     const erroMessage = 'invalid credentials'
 
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(400, erroMessage))
 
     // check if passed password is valid
-    const validPassword = await bcrypt.compare(req.body.password, user.data.password)
+    const validPassword = await bcrypt.compare(req.body.password, user.password)
 
     if (!validPassword)
       return res.send(formatResult(400, erroMessage))
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
-    user.data = simplifyObject(user.data)
-    user.data.category = _.pick(user_category.data, 'name')
-    if (user.data.profile) {
-      user.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.data.user_name}/profile/${user.data.profile}`
+    user = simplifyObject(user)
+    user.category = _.pick(user_category, 'name')
+    if (user.profile) {
+      user.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
     }
 
     // return token
-    return res.send(formatResult(u, u, await generateAuthToken(user.data)))
+    return res.send(formatResult(u, u, await generateAuthToken(user)))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -576,7 +579,7 @@ router.put('/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 
     // check if the name or email were not used
@@ -595,26 +598,26 @@ router.put('/:id', async (req, res) => {
       }],
     })
 
-    if (user.data) {
-      const phoneFound = req.body.phone == user.data.phone
-      const national_idFound = req.body.national_id == user.data.national_id
-      const emailFound = req.body.email == user.data.email
-      const user_nameFound = req.body.user_name == user.data.user_name
+    if (user) {
+      const phoneFound = req.body.phone == user.phone
+      const national_idFound = req.body.national_id == user.national_id
+      const emailFound = req.body.email == user.email
+      const user_nameFound = req.body.user_name == user.user_name
       return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
     }
 
     let user_category = await findDocument(User_category, {
       _id: req.body.category
     })
-    if (!user_category.data)
+    if (!user_category)
       return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
 
     if (req.body.password)
       req.body.password = await hashPassword(req.body.password)
     let result = await updateDocument(User, req.params.id, req.body)
 
-    // result.data = await injectDetails([result.data])
-    // result.data = result.data[0]
+    // result = await injectDetails([result])
+    // result = result[0]
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -656,7 +659,7 @@ router.delete('/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(400, `User with code ${req.params.id} doens't exist`))
 
     // check if the user is never used
@@ -665,40 +668,40 @@ router.delete('/:id', async (req, res) => {
     const user_faculty_college_year = await findDocument(User_faculty_college_year, {
       user: req.params.id
     })
-    if (user_faculty_college_year.data)
+    if (user_faculty_college_year)
       user_used = true
 
     const course = await findDocument(Course, {
       user: req.params.id
     })
-    if (course.data)
+    if (course)
       user_used = true
 
     const quiz = await findDocument(Quiz, {
       user: req.params.id
     })
-    if (quiz.data)
+    if (quiz)
       user_used = true
 
     const progress = await findDocument(User_progress, {
       user: req.params.id
     })
-    if (progress.data)
+    if (progress)
       user_used = true
 
     const submission = await findDocument(Quiz_submission, {
       user: req.params.id
     })
-    if (submission.data)
+    if (submission)
       user_used = true
 
     if (!user_used) {
 
       const result = await deleteDocument(User, req.params.id)
 
-      if (!user.data.profile) {
+      if (!user.profile) {
         // delete the profile
-        const path = `./uploads/colleges/${user.data.college}/users/${user.data.profile}`
+        const path = `./uploads/colleges/${user.college}/users/${user.profile}`
         fs.exists(path, (exists) => {
           if (exists)
             fs.unlink(path)
@@ -710,7 +713,7 @@ router.delete('/:id', async (req, res) => {
     const update_user = await updateDocument(User, req.params.id, {
       "status.disabled": 1
     })
-    return res.send(formatResult(200, `User ${update_user.data.user_name} couldn't be deleted because it was used, instead it was disabled`, update_user.data))
+    return res.send(formatResult(200, 'User couldn\'t be deleted because it was used, instead it was disabled', update_user.data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -719,42 +722,66 @@ router.delete('/:id', async (req, res) => {
 // link the user with his/her current college
 async function injectDetails(users) {
   for (const i in users) {
-    const userFacultyCollegeYear = await UserFacultyCollegeYear.findOne({
+    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
       user: users[i]._id,
       status: 1
-    }).lean()
-    users[i].userFacultyCollegeYear = removeDocumentVersion(userFacultyCollegeYear)
+    }, {
+      _v: 0
+    })
 
-    const facultyCollegeYear = await FacultyCollegeYear.findOne({
-      _id: userFacultyCollegeYear.facultyCollegeYear
-    }).lean()
-    users[i].userFacultyCollegeYear.facultyCollegeYear = removeDocumentVersion(facultyCollegeYear)
+    if (user_faculty_college_year) {
+      const faculty_college_year = await findDocument(Faculty_college_year, {
+        _id: user_faculty_college_year.faculty_college_year
+      }, {
+        _v: 0
+      })
 
-    const collegeYear = await CollegeYear.findOne({
-      _id: facultyCollegeYear.collegeYear
-    }).lean()
-    users[i].userFacultyCollegeYear.facultyCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+      users[i].faculty_college_year = faculty_college_year
 
-    const facultyCollege = await FacultyCollege.findOne({
-      _id: facultyCollegeYear.facultyCollege
-    }).lean()
-    users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege = removeDocumentVersion(facultyCollege)
+      const collegeYear = await findDocument(College_year, {
+        _id: faculty_college_year.college_year
+      }, {
+        _v: 0
+      })
+      users[i].faculty_college_year.college_year = collegeYear
 
-    const faculty = await Faculty.findOne({
-      _id: facultyCollege.faculty
-    }).lean()
-    users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.faculty = removeDocumentVersion(faculty)
+      const faculty_college = await findDocument(Faculty_college, {
+        _id: faculty_college_year.faculty_college
+      }, {
+        _v: 0
+      })
+      users[i].faculty_college_year.faculty_college = faculty_college
 
-    const college = await College.findOne({
-      _id: facultyCollege.college
-    }).lean()
-    users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
-    if (users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo) {
-      users[i].userFacultyCollegeYear.facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+      const faculty = await findDocument(Faculty, {
+        _id: faculty_college.faculty
+      }, {
+        _v: 0
+      })
+      users[i].faculty_college_year.faculty_college.faculty = faculty
     }
+    if (users[i].college) {
+      const college = await findDocument(College, {
+        _id: users[i].college
+      }, {
+        _v: 0
+      })
+
+      users[i].college = college
+      if (users[i].college.logo) {
+        users[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+      }
+    }
+    // add user category
+    const category = await findDocument(User_category, {
+      _id: users[i].category
+    }, {
+      _v: 0
+    })
+    users[i].category = category
+
     // add user profile media path
     if (users[i].profile) {
-      users[i] = `http://${process.env.HOST}/kurious/file/userProfile/${users[i]._id}/${user.profile}`
+      users[i].profile = `http://${process.env.HOST}/kurious/file/userProfile/${users[i]._id}/${users[i].profile}`
     }
   }
   return users

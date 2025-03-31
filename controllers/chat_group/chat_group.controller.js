@@ -1,7 +1,3 @@
-const {
-  College
-} = require('../../models/college/college.model')
-// coming mukanya
 // import dependencies
 const {
   express,
@@ -18,8 +14,10 @@ const {
   updateDocument,
   Message,
   User,
+  College,
   deleteDocument,
-  sendResizedImage
+  sendResizedImage,
+  u
 } = require('../../utils/imports')
 
 // create router
@@ -82,12 +80,12 @@ router.get('/', async (req, res) => {
   try {
     let result = await findDocuments(Chat_group)
 
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'Chat_group list is empty'))
 
-    // chat_groups = await injectDetails(chat_groups)
+    result = await injectDetails(result)
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -125,14 +123,14 @@ router.get('/college/:id', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, 'college not found'))
 
     const result = await findDocuments(Chat_group, {
       college: req.params.id
     })
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -170,7 +168,7 @@ router.get('/user/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     const result = await findDocuments(Chat_group, {
@@ -182,7 +180,7 @@ router.get('/user/:id', async (req, res) => {
       }
     })
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -239,13 +237,13 @@ router.get('/:id/profile/:file_name', async (req, res) => {
     const group = await findDocument(Chat_group, {
       _id: req.params.id
     })
-    if (!group.data)
+    if (!group)
       return res.send(formatResult(404, 'group not found'))
-console.log(group.data.profile)
-    if (!group.data.profile || (group.data.profile != req.params.file_name))
+    console.log(group.profile)
+    if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
-    path = `./uploads/colleges/${group.data.college}/chat/groups/${req.params.id}/${group.data.profile}`
+    path = `./uploads/colleges/${group.college}/chat/groups/${req.params.id}/${group.profile}`
     sendResizedImage(req, res, path)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -288,21 +286,21 @@ router.post('/', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, 'college not found'))
 
     // check if name was not used
     let chat_group = await findDocument(Chat_group, {
       name: req.body.name
     })
-    if (chat_group.data)
+    if (chat_group)
       return res.send(formatResult(403, 'name was taken'))
 
     for (const i in req.body.members) {
       let user = await findDocument(User, {
         _id: req.body.members[i].id
       })
-      if (!user.data)
+      if (!user)
         return res.send(formatResult(400, `member ${parseInt(i) + 1} not found`))
     }
 
@@ -365,7 +363,7 @@ router.put('/:id', async (req, res) => {
     let chat_group = await findDocument(Chat_group, {
       _id: req.params.id
     })
-    if (!chat_group.data)
+    if (!chat_group)
       return res.send(formatResult(404, 'Chat_group not found'))
 
     // check if name was not used
@@ -375,7 +373,7 @@ router.put('/:id', async (req, res) => {
       },
       name: req.body.name
     })
-    if (chat_group.data)
+    if (chat_group)
       return res.send(formatResult(403, 'name was taken'))
 
     const result = await updateDocument(Chat_group, req.params.id, req.body)
@@ -421,7 +419,7 @@ router.delete('/:id', async (req, res) => {
     let chat_group = await findDocument(Chat_group, {
       _id: req.params.id
     })
-    if (!chat_group.data)
+    if (!chat_group)
       return res.send(formatResult(404, 'Chat_group not found'))
 
     // check if the chat_group is never used
@@ -430,7 +428,7 @@ router.delete('/:id', async (req, res) => {
     const message = await findDocument(Message, {
       "group": req.params.id
     })
-    if (message.data)
+    if (message)
       chat_group_used = true
 
     if (!chat_group_used) {
@@ -438,7 +436,7 @@ router.delete('/:id', async (req, res) => {
       const result = await deleteDocument(Chat_group, req.params.id)
 
       // make the design of the chat storage
-      // const path = `./uploads/colleges/${chat_goup.data.college}/chat_groups/${req.params.id}`
+      // const path = `./uploads/colleges/${chat_goup.college}/chat_groups/${req.params.id}`
       // fs.exists(path, (exists) => {
       //   if (exists) {
       //     fs.remove(path)
@@ -451,7 +449,7 @@ router.delete('/:id', async (req, res) => {
     const updated_chat_group = await updateDocument(Chat_group, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, 'Chat_group couldn\'t be deleted because it was used, instead it was disabled', updated_chat_group.data))
+    return res.send(formatResult(200, 'Chat_group couldn\'t be deleted because it was used, instead it was disabled', updated_chat_group))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -461,24 +459,16 @@ router.delete('/:id', async (req, res) => {
 async function injectDetails(chat_groups) {
   for (const i in chat_groups) {
 
-    const college = await College.findOne({
+    const college = await findDocument(College, {
       _id: chat_groups[i].college
-    }).lean()
-    chat_groups[i].college = removeDocumentVersion(college)
-    if (chat_groups[i].college.logo) {
+    }, {
+      _v: 0
+    })
+    chat_groups[i].college = college
+    if (college.logo) {
       chat_groups[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
     }
-
-    // for (const k in chat_groups[i].members) {
-    //   const member = await returnUser(chat_groups[i].members[k].id)
-    //   chat_groups[i].members[k] = removeDocumentVersion(member)
-    //   // add student profile media path
-    //   if (chat_groups[i].members[k].profile) {
-    //     chat_groups[i].members[k].profile = `http://${process.env.HOST}/kurious/file/studentProfile/${chat_groups[i]._id}/${student.profile}`
-    //   }
-    // }
     chat_groups[i].members = await injectUser(chat_groups[i].members, 'id', 'data')
-
   }
   return chat_groups
 }
