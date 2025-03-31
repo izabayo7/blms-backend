@@ -700,17 +700,11 @@ router.put('/password', auth, async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    let user = await User.findOne({
-      user_name: req.user.user_name
-    })
-    if (!user)
-      return res.send(formatResult(400, `user not found`))
-
-    const validPassword = await compare(req.body.current_password, user.password);
+    const validPassword = await compare(req.body.current_password, req.user.password);
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
     const hashedPassword = await hashPassword(req.body.new_password);
-    await updateDocument(User, user._id, {
+    await updateDocument(User, req.user._id, {
       password: hashedPassword
     });
     return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
