@@ -365,7 +365,7 @@ module.exports.getConversationMessages = async ({
   let messages
 
   const group = await this.findDocument(this.Chat_group, {
-    name: conversation_id
+    code: conversation_id
   })
 
   if (group) {
@@ -374,11 +374,11 @@ module.exports.getConversationMessages = async ({
       _id: {
         $lt: lastMessage
       },
-      group: conversation_id
+      group: group._id
     }, {
       receivers: 0
     }, limit) : await this.findDocuments(this.Message, {
-      group: conversation_id
+      group: group._id
     }, {
       receivers: 0
     }, limit)
