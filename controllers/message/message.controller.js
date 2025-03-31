@@ -230,8 +230,7 @@ router.post('/:receiver/forward/:message_id', async (req, res) => {
 
         const {attachments, content} = message
         const {receiver} = req.params
-        const isGroup = /^[0-9]{7}$/.test(receiver)
-
+        const isGroup = /^[0-9]{9}$/.test(receiver)
         if (!isGroup) {
             const Receiver = await findDocument(User, {user_name: receiver})
             const _content = `This is the begining of conversation between __user__${req.user._id} and __user__${Receiver._id}`
@@ -344,7 +343,7 @@ router.put('/:receiver/attachements', async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
 
-        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{7}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, reply)
+        let result = await Create_or_update_message(req.user.user_name, /^[0-9]{9}$/.test(receiver) ? parseInt(receiver) : receiver, content, undefined, undefined, attachments, reply)
 
         result = simplifyObject(result)
 
