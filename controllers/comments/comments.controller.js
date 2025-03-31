@@ -71,19 +71,19 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /comment/user/{user_name}/:type:
+ * /comment/{target}/{id}:
  *   get:
  *     tags:
  *       - Comment
- *     description: Returns comments to and from a specified user
+ *     description: Returns comments in the specified target
  *     parameters:
- *       - name: user_name
- *         description: Users's user_name
+ *       - name: target
+ *         description: target type
  *         in: path
  *         required: true
  *         type: string
- *       - name: type
- *         description: The type of comments you want (sent, received, all)
+ *       - name: id
+ *         description: target id
  *         in: path
  *         required: true
  *         type: string
@@ -95,49 +95,49 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:type', async (req, res) => {
+router.get('/:target/:id', async (req, res) => {
   try {
 
-    let user = await findDocument(User, {
-      user_name: req.params.user_name
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].comment))
+
+    const allowedTargetTypes = ['chapter', 'live_session']
+
+    if (!allowedTargetTypes.includes(req.params.target)) {
+      return res.send(formatResult(400, 'invalid target type'))
+    }
+
+    let target
+
+    switch (req.params.target) {
+      case 'chapter':
+        target = await findDocument(Chapter, {
+          _id: req.params.id
+        })
+        break;
+
+      case 'live_session':
+        target = await findDocument(Live_session, {
+          _id: req.params.id
+        })
+        break;
+
+      default:
+        break;
+    }
+
+    if (!target)
+      return res.send(formatResult(404, 'comment target not found'))
+
+    const comments = await findDocuments(Comment, {
+      "target.type": req.params.target,
+      "target.id": req.params.id
     })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
 
-    req.params.type = req.params.type.toLocaleLowerCase()
-
-    if (req.params.type != 'sent' && req.params.type != 'received' && req.params.type != 'all')
-      return res.send(formatResult(400, 'invalid type'))
-
-    let sent, received, result = []
-
-    if (req.params.type == 'sent' || req.params.type == 'all') {
-      sent = await findDocuments(Comment, {
-        sender: user._id
-      })
-
-      if (sent.length) {
-        for (const i in sent) {
-          result.push(sent[i])
-        }
-      }
-    }
-    if (req.params.type == 'received' || req.params.type == 'all') {
-      received = await findDocuments(Comment, {
-        receivers: {
-          $elemMatch: {
-            id: user._id
-          }
-        }
-      })
-
-      if (received.length) {
-        for (const i in received) {
-          result.push(received[i])
-        }
-      }
-    }
-    return res.send(formatResult(u, u, result))
+    return res.send(formatResult(u, u, comments))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
