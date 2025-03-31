@@ -27,6 +27,7 @@ function validate_user_faculty_college_year(credentials) {
     const schema = {
         user: Joi.ObjectId().required(),
         faculty_college_year: Joi.ObjectId().required(),
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

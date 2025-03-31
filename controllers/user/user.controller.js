@@ -333,7 +333,7 @@ router.post('/', async (req, res) => {
 
     if (user_category.data.name !== 'SUPER_ADMIN') {
       if (!req.body.college) {
-        return res.send(formatResult(400, `The ${user_category.data.name} requires a college`))
+        return res.send(formatResult(400, `${user_category.data.name.toLowerCase()} must have a college`))
       }
 
       let college = await findDocument(College, {
