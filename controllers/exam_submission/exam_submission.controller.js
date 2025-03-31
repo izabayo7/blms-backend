@@ -1,12 +1,8 @@
 // import dependencies
 const {autoMarkSelectionQuestions, Live_session, checkCollegePayment} = require("../../utils/imports");
-const {
-    exam
-} = require('../../models/exam/exam.model')
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
-    Exam,
     User,
     date,
     validateObjectId,

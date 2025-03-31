@@ -1,6 +1,7 @@
 // import dependencies
 const {sendReleaseMarskEmail, sendAssignmentExpirationEmail} = require("../email/email.controller");
-const {updateDocument, countDocuments, scheduleEvent, addAssignmentTarget, Notification, User_notification, MyEmitter,
+const {
+    updateDocument, countDocuments, scheduleEvent, addAssignmentTarget, Notification, User_notification, MyEmitter,
     Quiz_submission, validateQuestions
 } = require("../../utils/imports");
 const {
@@ -8,7 +9,6 @@ const {
     fs,
     Chapter,
     Course,
-    validate_exam,
     path,
     Faculty_college_year,
     validateObjectId,
@@ -25,7 +25,6 @@ const {
     createDocument,
     deleteDocument,
     simplifyObject,
-    Exam_submission,
     sendResizedImage,
     findFileType,
     streamVideo,
@@ -37,18 +36,18 @@ const {
 const {
     parseInt
 } = require('lodash')
-const {Exam} = require("../../models/exams/exam.model");
+const {Exam, validate_exam} = require("../../models/exams/exam.model");
 const {filterUsers} = require("../../middlewares/auth.middleware");
-const {Exam, Assignment} = require("../../models/assignments/assignments.model");
-const {Exam_submission} = require("../../models/assignment_submission/assignment_submission.model");
+const {Exam_submission} = require("../../models/exam_submission/exam_submission.model");
 const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
+const {Assignment_submission} = require("../../models/assignment_submission/assignment_submission.model");
 
 // create router
 const router = express.Router()
 
 /**
  * @swagger
- * /exam/user/{user_name}:
+ * /exams:
  *   get:
  *     tags:
  *       - Exam
@@ -69,14 +68,30 @@ const router = express.Router()
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name', filterUsers(['INSTRUCTOR']), async (req, res) => {
+router.get('/', filterUsers(['INSTRUCTOR', "STUDENT"]), async (req, res) => {
     try {
-        if (req.user.user_name !== req.params.user_name)
-            return res.send(formatResult(403, 'You don\'t have access'))
-
-        let exam = await Exam.find({
-            user: req.user._id
-        }).sort({_id: -1}).populate('course').lean()
+        let exam
+        if (req.user.category.name === "INSTRUCTOR") {
+            exam = await Exam.find({
+                user: req.user._id
+            }).sort({_id: -1}).populate('course').lean()
+        } else {
+            const user_user_groups = await User_user_group.find({user: req.user._id})
+            const courses = await Course.find({
+                user_group: {$in: user_user_groups.map(x => x.user_group)}
+            })
+            const ids = courses.map(x => x._id.toString())
+            exam = await Exam.find({
+                course: {$in: ids},
+                status: {$ne: 'DRAFT'}
+            }).sort({_id: -1}).populate('course').lean()
+            for (const i in exam) {
+                exam[i].submission = await Exam_submission.findOne({
+                    exam: exam[i]._id,
+                    user: req.user._id
+                })
+            }
+        }
 
         exam = await addAttachmentMediaPaths(exam)
         exam = await addExamUsages(exam)
@@ -89,7 +104,7 @@ router.get('/user/:user_name', filterUsers(['INSTRUCTOR']), async (req, res) => 
 
 /**
  * @swagger
- * /exam/user/{user_name}/{exam_name}:
+ * /exams/user/{id}:
  *   get:
  *     tags:
  *       - Exam
@@ -97,13 +112,8 @@ router.get('/user/:user_name', filterUsers(['INSTRUCTOR']), async (req, res) => 
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *       - name: user_name
- *         description: User_name
- *         in: path
- *         required: true
- *         type: string
- *       - name: exam_name
- *         description: Exam name
+ *       - name: id
+ *         description: Exam id
  *         in: path
  *         required: false
  *         type: string
@@ -115,35 +125,21 @@ router.get('/user/:user_name', filterUsers(['INSTRUCTOR']), async (req, res) => 
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:exam_id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
-        let user = await findDocument(User, {
-            user_name: req.params.user_name
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        let user_category = await findDocument(User_category, {
-            name: 'INSTRUCTOR'
-        })
-
-        const isInstructor = user.category == user_category._id
-
-        let exam = await Exam.findOne(isInstructor ? {
-            _id: req.params.exam_id,
-            user: user._id
-        } : {_id: req.params.exam_id}).populate('course')
+        let exam = await Exam.findOne({_id: req.params.id}).populate('course')
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
-
-        if (exam.status === 'DRAFT' && req.params.user_name !== req.user.user_name)
-            return res.send(formatResult(404, 'exam not found'))
-
-        if (isInstructor) {
-            exam = await addExamUsages(exam)
+        if (exam.user !== req.user._id) {
+            let user_user_group = User_user_group.findOne({
+                user: req.user._id,
+                user_group: exam.course.user_group,
+                status: 'ACTIVE'
+            })
+            if (exam.status === 'DRAFT' || !user_user_group)
+                return res.send(formatResult(404, 'exam not available'))
         }
-
         exam = await addAttachmentMediaPaths([exam])
         exam = exam[0]
         return res.send(formatResult(u, u, exam))
@@ -155,7 +151,7 @@ router.get('/user/:user_name/:exam_id', async (req, res) => {
 
 /**
  * @swagger
- * /exam/{id}/attachment/{file_name}:
+ * /exams/{id}/attachment/{file_name}:
  *   get:
  *     tags:
  *       - Exam
@@ -310,7 +306,7 @@ router.post('/', filterUsers(['INSTRUCTOR']), async (req, res) => {
 
 /**
  * @swagger
- * /exam/{id}:
+ * /exams/{id}:
  *   put:
  *     tags:
  *       - Exam
@@ -408,7 +404,7 @@ router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
                         }
                     }
                     if (deletePicture) {
-                        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}/${exam_copy.questions[i].options.choices[j].src}`)
+                        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${req.params.id}/${exam_copy.questions[i].options.choices[j].src}`)
                         fs.exists(path, (exists) => {
                             if (exists) {
                                 fs.unlink(path)
@@ -418,9 +414,13 @@ router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
                 }
             }
         }
+
+        exam = simplifyObject(exam)
+
         exam = await addExamUsages([exam])
         exam = await addAttachedCourse(exam)
         exam = exam[0]
+        exam.course = course
         return res.send(formatResult(200, 'UPDATED', exam))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -429,7 +429,7 @@ router.put('/:id', filterUsers(['INSTRUCTOR']), async (req, res) => {
 
 /**
  * @swagger
- * /exam/release_marks/{id}:
+ * /exams/release_marks/{id}:
  *   put:
  *     tags:
  *       - Exam
@@ -482,7 +482,7 @@ router.put('/release_marks/:id', async (req, res) => {
                         instructor_names: req.user.sur_name + ' ' + req.user.other_names,
                         assignment_name: exam.name,
                         assignment_type: 'exam',
-                        link: `https://${process.env.FRONTEND_HOST}/exam/${exam.name}/${submissions[i].user.user_name}`
+                        link: `https://${process.env.FRONTEND_HOST}/exams/${exam.name}/${submissions[i].user.user_name}`
                     })
                 }
             }
@@ -496,7 +496,7 @@ router.put('/release_marks/:id', async (req, res) => {
 
 /**
  * @swagger
- * /exam/changeStatus/{id}/{status}:
+ * /exams/changeStatus/{id}/{status}:
  *   put:
  *     tags:
  *       - Exam
@@ -569,7 +569,7 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
                         instructor_names: req.user.sur_name + ' ' + req.user.other_names,
                         assignment_name: exam.name,
                         assignment_type: 'exam',
-                        link: `https://${process.env.FRONTEND_HOST}/exam/${req.params.id}/${submissions[i].user.user_name}`
+                        link: `https://${process.env.FRONTEND_HOST}/exams/${req.params.id}/${submissions[i].user.user_name}`
                     })
                 }
             }
@@ -583,7 +583,7 @@ router.put('/changeStatus/:id/:status', filterUsers(["INSTRUCTOR"]), async (req,
 
 /**
  * @swagger
- * /exam/{id}/attachment:
+ * /exams/{id}/attachment:
  *   post:
  *     tags:
  *       - Exam
@@ -659,7 +659,7 @@ router.post('/:id/attachment', async (req, res) => {
 
 /**
  * @swagger
- * /exam/{id}:
+ * /exams/{id}:
  *   delete:
  *     tags:
  *       - Exam

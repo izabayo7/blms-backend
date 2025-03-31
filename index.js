@@ -54,7 +54,6 @@ require('./models/mongodb')
 // import controllers
 const user_controller = require('./controllers/user/user.controller')
 const user_category_controller = require('./controllers/user_category/user_category.controller')
-const user_role_controller = require('./controllers/user_role/user_role.controller')
 const college_controller = require('./controllers/college/college.controller')
 const user_group_controller = require('./controllers/user_group/user_group.controller')
 const user_faculty_college_year_controller = require('./controllers/user_user_group/user_user_group.controller')
@@ -74,6 +73,8 @@ const {User_invitation_routes} = require('./routes/user_invitations/user_invitat
 const {Post_routes} = require('./routes/posts/posts.route');
 const announcement_controller = require('./controllers/announcements/announcements.controller');
 const payments_controller = require('./controllers/account_payments/account_payments.controller');
+const exam_controller = require('./controllers/exam/exam.controller');
+const exam_submission_controller = require('./controllers/exam_submission/exam_submission.controller');
 const assignments_controller = require('./controllers/assignment/assignment.controller');
 const assignment_submission_controller = require('./controllers/assignment_submission/assignment_submission.controller');
 const college_payment_plans_controller = require('./controllers/college_payment_plans/college_payment_plans.controller');
@@ -106,7 +107,6 @@ app.get("/", express.static(path.join(__dirname, 'views')))
 
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, user_category_controller)
-app.use(`${basePath}/user_role`, auth, user_role_controller)
 app.use(`${basePath}/college`, college_controller)
 app.use(`${basePath}/faculty`, auth, Faculty_Routes)
 app.use(`${basePath}/user_groups`, auth, user_group_controller)
@@ -116,6 +116,8 @@ app.use(`${basePath}/course`, auth, course_controller)
 app.use(`${basePath}/chapter`, auth, chapter_controller)
 app.use(`${basePath}/quiz`, auth, quiz_controller)
 app.use(`${basePath}/quiz_submission`, auth, quiz_submission_controller)
+app.use(`${basePath}/exams`, auth, exam_controller)
+app.use(`${basePath}/exam_submission`, auth, exam_submission_controller)
 app.use(`${basePath}/user_progress`, auth, user_progress_contoller)
 app.use(`${basePath}/notification`, auth, notification_controller)
 app.use(`${basePath}/user_notification`, auth, user_notification_controller)

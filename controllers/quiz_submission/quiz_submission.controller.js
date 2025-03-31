@@ -24,7 +24,6 @@ const {
     createDocument,
     updateDocument,
     Chapter,
-    User_user_group,
     User_group,
     Course,
     deleteDocument,

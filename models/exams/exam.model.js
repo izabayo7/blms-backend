@@ -66,7 +66,7 @@ const {
  */
 
 const statuses = ['DRAFT','PUBLISHED','RELEASED']
-const types = ['Open-book examination','Closed-book examination']
+        const types = ['Open-book examination','Closed-book examination']
 const exam_schema = new mongoose.Schema({
     name: {
         type: String,

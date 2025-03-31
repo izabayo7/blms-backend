@@ -1172,7 +1172,7 @@ exports.addExamUsages = async (exams) => {
             quiz: exams[i]._id
         })
     }
-    return quizes
+    return exams
 }
 
 // add the course to which the quiz is attached
