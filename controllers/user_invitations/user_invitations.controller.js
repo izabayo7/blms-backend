@@ -124,7 +124,7 @@ exports.createUserInvitation = async (req, res) => {
       const token = uuid()
 
 
-      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: token, institutionn: { name: _college.name } });
+      const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: token, institution: { name: _college.name } });
       if (err)
         return res.send(formatResult(500, err));
 

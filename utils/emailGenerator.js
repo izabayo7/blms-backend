@@ -1,6 +1,6 @@
 exports.invitationToSystem = ({ inviter, institution, token }) => {
-    return
-    `
+
+    const result =     `
     <!DOCTYPE html>
     <html lang="en">
     
@@ -203,4 +203,7 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
     
     </html>
     `
+
+    return result
+
 }
