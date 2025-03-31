@@ -280,7 +280,8 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
             faculty: {$in: faculties.map(x => x._id.toString())}
         })
         let user_group_names = user_groups.map(x => x.name)
-        let user_categories = ["ADMIN", "STUDENT", "INSTRUCTOR"]
+        let user_categories = User_category.find();
+        let user_categories_names = ["ADMIN", "STUDENT", "INSTRUCTOR"]
 
 
         const schema = {
@@ -308,8 +309,8 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
             'USER CATEGORY': {
                 prop: 'category',
                 type: (value) => {
-                    if (!user_categories.includes(value)) {
-                        throw new Error(`invalid use (${user_categories})`)
+                    if (!user_categories_names.includes(value)) {
+                        throw new Error(`invalid use (${user_categories_names})`)
                     }
                     return value
                 },
@@ -445,7 +446,8 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
         })
     } catch
         (e) {
-        return res.send(formatResult(500, e))
+        req.res = formatResult(500, e)
+        next()
     }
 }
 
