@@ -213,7 +213,7 @@ exports.date = (date) => {
 }
 
 exports.update_password = async ({ password, user_id }) => {
-  const hashedPassword = await hashPassword(password);
+  const hashedPassword = await this.hashPassword(password);
   await this.updateDocument(this.User, user_id, {
     password: hashedPassword
   });
