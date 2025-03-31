@@ -210,7 +210,7 @@ exports.u = undefined
 exports.formatResult = (status = 200, message = 'OK', data = undefined) => {
   return {
     status: status,
-    message: message.toString(),
+    message: message.toString().split('\"').join(''),
     data: data
   }
 }
