@@ -1012,7 +1012,7 @@ module.exports.injectNotification = async (array) => {
 }
 
 // add student progress
-module.exports.injecUserProgress = async (courses, user_id) => {
+module.exports.injectUserProgress = async (courses, user_id) => {
   for (const i in courses) {
     const result = await this.findDocument(this.User_progress, {
       course: courses[i]._id,
