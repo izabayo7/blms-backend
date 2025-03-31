@@ -78,7 +78,7 @@ router.route('/user')
      *       500:
      *         description: Internal Server error
      */
-    .get(filterUsers('ADMIN','STUDENT'),getUserFaculties)
+    .get(filterUsers('INSTRUCTOR','STUDENT'),getUserFaculties)
 
 router.route('/:faculty_id')
     /**
