@@ -11,3 +11,4 @@ index.js
 config.json
 *.iml
 *.xml
+.vscode

@@ -459,7 +459,7 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Create course
-  *     security:
+ *     security:
  *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
@@ -535,6 +535,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Course
  *     description: Publish or unPublish a course
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Course id
