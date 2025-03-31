@@ -202,7 +202,7 @@ router.get('/college/:id', async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *       - name: id
+ *       - name: user_name
  *         description: User name
  *         in: path
  *         required: true
