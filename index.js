@@ -47,7 +47,7 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
 app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs, false, {docExpansion: "none"}));
-app.use("/", (req,res)=>{
+app.use("/jsdoc", (req,res)=>{
     return res.send(swaggerDocs)
 });
 
