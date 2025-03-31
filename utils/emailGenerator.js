@@ -128,7 +128,7 @@ exports.confirm_email = ({
               </div>
               <div class="text-center" style="text-align: center">
                 <a
-                  href="https://learn.kurious.rw/login?institution=${institution_name}"
+                  href="https://elearning.rw/login?institution=${institution_name}"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -324,7 +324,7 @@ exports.reset_password = ({
               You recently requested to reset your Kurious learn account password.
             </div>
             <div class="text-center" style="text-align: center">
-              <a href="https://learn.kurious.rw/reset_password?token=${token}&institution=${institution_name}" target="_blank" rel="noopener noreferrer">
+              <a href="https://elearning.rw/reset_password?token=${token}&institution=${institution_name}" target="_blank" rel="noopener noreferrer">
                 <button
                   class="confirm"
                   style="

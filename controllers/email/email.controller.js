@@ -30,14 +30,14 @@ const transporter = createTransport(smtpTransport({
 
 // let transporter
 
-const mailGenerator = new Mailgen({
-    theme: 'salted',
-    product: {
-        name: 'Kurious',
-        link: 'https://kurious.rw/',
-        logo: 'https://learn.kurious.rw/online-assets/logo.svg'
-    }
-});
+// const mailGenerator = new Mailgen({
+//     theme: 'salted',
+//     product: {
+//         name: 'Kurious',
+//         link: 'https://kurious.rw/',
+//         logo: 'https://elearning.rw/online-assets/logo.svg'
+//     }
+// });
 
 exports.sendInvitationMail = async ({ email, token, names, institution, user_group }) => {
     try {
