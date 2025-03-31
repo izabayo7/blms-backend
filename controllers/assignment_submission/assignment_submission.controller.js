@@ -5,7 +5,7 @@ const {
     Assignment_submission,
     validate_assignment_submission
 } = require("../../models/assignment_submission/assignment_submission.model");
-const {autoMarkSelectionQuestions} = require("../../utils/imports");
+const {autoMarkSelectionQuestions, checkCollegePayment} = require("../../utils/imports");
 const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
@@ -448,6 +448,15 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
 
         if (new Date() > new Date(assignment.dueDate))
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
+
+        if (req.user.registration_number !== undefined) {
+            let paid = await checkCollegePayment({
+                registration_number: req.user.registration_number,
+                link: 'https://test.apis.kurious.rw/api/user/reg_number/'
+            })
+            if (!paid)
+                return res.send(formatResult(403, 'user must pay the college to be able to create a submission'))
+        }
 
         const user_group = await get_faculty_college_year(assignment)
 

@@ -1,5 +1,5 @@
 // import dependencies
-const {autoMarkSelectionQuestions, Live_session} = require("../../utils/imports");
+const {autoMarkSelectionQuestions, Live_session, checkCollegePayment} = require("../../utils/imports");
 const {
     quiz
 } = require('../../models/quiz/quiz.model')
@@ -737,6 +737,15 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         })
         if (!user)
             return res.send(formatResult(404, 'user not found'))
+
+        if (req.user.registration_number !== undefined) {
+            let paid = await checkCollegePayment({
+                registration_number: req.user.registration_number,
+                link: 'https://test.apis.kurious.rw/api/user/reg_number/'
+            })
+            if (!paid)
+                return res.send(formatResult(403, 'user must pay the college to be able to create a submission'))
+        }
 
         let user_category = await findDocument(User_category, {
             _id: user.category

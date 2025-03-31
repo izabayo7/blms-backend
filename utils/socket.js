@@ -866,6 +866,8 @@ module.exports.listen = (app) => {
                                               end,
                                               questions
                                           }) => {
+            if (!submission_id)
+                return
 
             attempt.user = id
 

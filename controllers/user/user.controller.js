@@ -159,6 +159,22 @@ router.get('/', [auth, filterUsers(["SUPERADMIN"])], async (req, res) => {
     }
 })
 
+router.get('/reg_number/:regnumber', async (req, res) => {
+    try {
+        console.log(req.params.regnumber)
+        // check from db if the given reg_number exists
+        let exists = true, paid = false
+        if (!exists)
+            return res.status(404).send("Reg number is invalid")
+
+        return res.send({
+            paid
+        })
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 /**
  * @swagger
  * /user/statistics:
@@ -1291,6 +1307,27 @@ router.post('/admin', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /user/confirm/{token}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: confirm user account
+ *     parameters:
+ *       - name: token
+ *         description: confirmation token
+ *         in: path
+ *         type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/confirm/:token', confirmAccount)
 
 /**
  * @swagger

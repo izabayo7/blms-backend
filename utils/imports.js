@@ -2,6 +2,7 @@
  * dependencies
  */
 const Joi = require('joi')
+const axios = require('axios');
 const bcrypt = require('bcryptjs')
 const schedule = require('node-schedule');
 Joi.ObjectId = require('joi-objectid')(Joi)
@@ -329,6 +330,23 @@ exports.validateUserLogin = (credentials) => {
         password: Joi.string().min(3).max(255).required()
     }
     return Joi.validate(credentials, schema)
+}
+
+/**
+ *  checks if user payed the school
+ * @param {{registration_number: String,link: string}} arguements
+ */
+exports.checkCollegePayment = async (arguements) => {
+    try {
+        let paid = false
+        const {link, registration_number} = arguements
+        const res = await axios.get(link + registration_number)
+        if (res.data)
+            paid = res.data.paid
+        return paid
+    } catch (e) {
+        return {err: e.response.status}
+    }
 }
 
 /**
@@ -1643,6 +1661,7 @@ const {
     auth
 } = require('../middlewares/auth.middleware');
 const {Announcement} = require('../models/announcements/announcements.model');
+const https = require("http");
 
 exports.auth = auth
 
