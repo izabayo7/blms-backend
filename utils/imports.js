@@ -518,7 +518,6 @@ module.exports.formatContacts = async (messages, user_id) => {
   let formatedContacts = []
   for (const message of messages) {
     let id = '',
-      _id = '',
       name = "",
       image = '',
       is_group = undefined,
@@ -555,12 +554,11 @@ module.exports.formatContacts = async (messages, user_id) => {
         _id: message.group
       })
 
-      id = group.name
+      id = group.code
       is_group = true
-      _id = group._id
       name = group.name
       members = await this.injectUser(group.members.filter(member => member.status == true), 'id', 'data')
-      image = group.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${group._id}/profile/${group.profile}` : undefined
+      image = group.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${group.code}/profile/${group.profile}` : undefined
       unreadMessagesLength = await this.countDocuments(this.Message, {
         group: message.group,
         receivers: {
@@ -591,7 +589,6 @@ module.exports.formatContacts = async (messages, user_id) => {
     }
     formatedContacts.push({
       id: id,
-      _id: _id,
       name: name,
       image: image,
       last_message: last_message,
