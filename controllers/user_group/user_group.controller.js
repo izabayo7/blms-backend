@@ -324,7 +324,7 @@ router.post('/', filterUsers(["ADMIN"]), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/:id', filterUsers(["ADMIN"]), async (req, res) => {
+router.put('/:id', filterUsers(["ADMIN"]), async (req, res) => {
     try {
         const {
             error
