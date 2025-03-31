@@ -478,7 +478,7 @@ router.delete('/:id/logo/:file_name', async (req, res) => {
     if (!college.logo || college.logo !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
-    const path = `./uploads/colleges/${req.params.id}/${college.logo}`
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}/${college.logo}`)
 
     fs.unlink(path, (err) => {
       if (err)
