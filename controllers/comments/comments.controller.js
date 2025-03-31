@@ -266,6 +266,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Comment
  *     description: Update a comment
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         in: path
