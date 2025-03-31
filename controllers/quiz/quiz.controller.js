@@ -165,7 +165,7 @@ router.get('/:id', async (req, res) => {
       return res.send(formatResult(404, 'quiz not found'))
 
     // quiz = await injectInstructor([quiz])
-    // quiz = await addAttachmentMediaPaths(quiz)
+    quiz = await addAttachmentMediaPaths(quiz)
     // quiz = quiz[0]
 
     return res.send(formatResult(u, u, quiz))
@@ -176,13 +176,15 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
- * /quiz/user/{user}:
+ * /quiz/user/{user_name}:
  *   get:
  *     tags:
  *       - Quiz
  *     description: Returns quizes of a specified user
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
- *       - name: user
+ *       - name: user_name
  *         description: User's user_name
  *         in: path
  *         required: true
@@ -195,10 +197,10 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user', async (req, res) => {
+router.get('/user/:user_name', async (req, res) => {
   try {
     let user = await findDocument(User, {
-      user_name: req.params.user
+      user_name: req.params.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
