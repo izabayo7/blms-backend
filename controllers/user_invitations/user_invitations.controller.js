@@ -280,7 +280,7 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
             faculty: {$in: faculties.map(x => x._id.toString())}
         })
         let user_group_names = user_groups.map(x => x.name)
-        let user_categories = User_category.find();
+        let user_categories = await User_category.find();
         let user_categories_names = ["ADMIN", "STUDENT", "INSTRUCTOR"]
 
 
