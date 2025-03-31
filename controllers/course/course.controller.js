@@ -542,8 +542,6 @@ router.get('/:id/attendants', async (req, res) => {
     }
 })
 
-//
-
 /**
  * @swagger
  * /course/user:
@@ -564,17 +562,16 @@ router.get('/:id/attendants', async (req, res) => {
 router.get('/user', async (req, res) => {
     try {
         let result
-
-        if (req.user.category.name == 'STUDENT') {
-            const user_user_group = await findDocument(User_user_group, {
+        if (req.user.category.name === 'STUDENT') {
+            const user_user_group = await findDocuments(User_user_group, {
                 user: req.user._id,
                 status: "ACTIVE"
-            })
-            if (!user_user_group)
+            }, {user_group: 1})
+            if (!user_user_group.length)
                 return res.send(formatResult(200, undefined, []))
 
             result = await Course.find({
-                user_group: user_user_group.user_group,
+                user_group: {$in: user_user_group.map(x => x.user_group.toString())},
                 published: true
             }).sort({createdAt: -1})
 
