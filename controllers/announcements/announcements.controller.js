@@ -76,7 +76,7 @@ router.get('/user', async (req, res) => {
         let announcements = await Announcement.find({
             $or: [
                 {"target.id": {$in: ids}},
-                {user: req.user._id},
+                {sender: req.user._id},
             ]
         }).populate('viewers').sort({_id: -1})
         announcements = await injectUser(announcements, 'sender')
