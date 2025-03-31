@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
-const { invitationToSystem, contactUs, requestCallback, reset_password } = require('../../utils/emailGenerator');
+const { invitationToSystem, contactUs, requestCallback, reset_password, confirm_email } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
 
@@ -174,6 +174,46 @@ exports.sendResetPasswordEmail = async ({ email, token, user_name, institution_n
 
         return {
             sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    }
+    catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendContactUsEmail = async ({ user_name, institution_name, institution_address, subscription }) => {
+    try {
+
+        const mail = confirm_email({ user_name, institution_name, institution_address, subscription })
+
+        const _message = {
+            from: process.env.EMAIL,
+            to: process.env.COMMUNICATION_TEAM_EMAIL,
+            subject: 'Account creation succeeded.',
+            html: mail,
+        };
+
+        /*
+            {
+                "college": "5f8f38ad558d86f96186daf0",
+                "category": "STUDENT",
+                "emails": [
+                    "nadibire08@gmail.com"
+                ]
+            }
+        */
+
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
+
+        return {
+            sent: await transporter.sendMail(_message)
             // sent: await transporter.sendEmail(message)
         }
 
