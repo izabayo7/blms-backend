@@ -256,7 +256,7 @@ router.get('/:id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res)
 
 /**
  * @swagger
- * /assignment_submission/user/{user_name}/{assignment_name}:
+ * /assignment_submission/user/{user_name}/{assignment_id}:
  *   get:
  *     tags:
  *       - Assignment_submission
@@ -269,8 +269,8 @@ router.get('/:id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res)
  *         in: path
  *         required: true
  *         type: string
- *       - name: assignment_name
- *         description: Assignment name
+ *       - name: assignment_id
+ *         description: Assignment id
  *         in: path
  *         required: true
  *         type: string
@@ -282,7 +282,7 @@ router.get('/:id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res)
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:assignment_name', auth, async (req, res) => {
+router.get('/user/:user_name/:assignment_id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
 
         // check if user exist
@@ -292,28 +292,25 @@ router.get('/user/:user_name/:assignment_name', auth, async (req, res) => {
         if (!user)
             return res.send(formatResult(404, 'user not found'))
 
-        let assignment = await findDocument(Assignment, {
-            name: req.params.assignment_name
-        })
+        let assignment = await Assignment.findOne({
+            _id: req.params.assignment_id
+        }).lean()
         if (!assignment)
             return res.send(formatResult(404, 'assignment not found'))
 
-        let result = await findDocument(Assignment_submission, {
+        let result = await Assignment_submission.findOne({
             user: user._id,
             assignment: assignment._id
-        })
+        }).lean()
         if (!result)
             return res.send(formatResult(404, 'assignment_submission not found'))
-        result = simplifyObject(result)
-        result = simplifyObject(await injectAssignment([result]))
+
+        result.assignment = assignment
         result = await injectUserFeedback(result)
         result = await injectUser(result, 'user')
         result = result[0]
         result.assignment = await addAssignmentTarget([result.assignment])
-        result.assignment = await addAttachmentMediaPaths(result.assignment)
-        result.assignment = simplifyObject(result.assignment)
         result.assignment = await injectUser(result.assignment, 'user')
-        // result = await injectUser(result, 'user')
         result.assignment = result.assignment[0]
         result = await injectUserFeedback(result)
         return res.send(formatResult(u, u, result))
