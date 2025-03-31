@@ -1,29 +1,71 @@
 // import dependencies
-const {DeleteSourceFile} = require("../user_invitations/user_invitations.controller");
-const {createMultipleUsers} = require("../user_invitations/user_invitations.controller");
-const {getEmailConfirmation} = require("../account_confirmations/account_confirmations.controller");
-const {sendEmailConfirmation} = require("../email/email.controller");
-const {Account_confirmation} = require("../../models/account_confirmations/account_confirmations.model");
-const {AcceptCollege} = require("../account_confirmations/account_confirmations.controller");
-const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
-const {createAccountConfirmation} = require("../account_confirmations/account_confirmations.controller");
-const {sendSubmissionEmail} = require("../email/email.controller");
-const {calculateAmount, checkCollegePayment} = require("../../utils/imports");
-const {Account_payments} = require("../../models/account_payments/account_payments.model");
-const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
-const {User_attendance} = require("../../models/user_attendance/user_attendance.model");
-const {Live_session} = require("../../utils/imports");
-const {Chapter} = require("../../utils/imports");
-const {filterUsers} = require("../../middlewares/auth.middleware");
-const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
-const {compare, hash} = require('bcryptjs')
+const {
+    DeleteSourceFile
+} = require("../user_invitations/user_invitations.controller");
+const {
+    createMultipleUsers
+} = require("../user_invitations/user_invitations.controller");
+const {
+    getEmailConfirmation
+} = require("../account_confirmations/account_confirmations.controller");
+const {
+    sendEmailConfirmation
+} = require("../email/email.controller");
+const {
+    Account_confirmation
+} = require("../../models/account_confirmations/account_confirmations.model");
+const {
+    AcceptCollege
+} = require("../account_confirmations/account_confirmations.controller");
+const {
+    confirmAccount
+} = require("../account_confirmations/account_confirmations.controller");
+const {
+    createAccountConfirmation
+} = require("../account_confirmations/account_confirmations.controller");
+const {
+    sendSubmissionEmail
+} = require("../email/email.controller");
+const {
+    calculateAmount,
+    checkCollegePayment
+} = require("../../utils/imports");
+const {
+    Account_payments
+} = require("../../models/account_payments/account_payments.model");
+const {
+    College_payment_plans
+} = require("../../models/college_payment_plans/college_payment_plans.model");
+const {
+    User_attendance
+} = require("../../models/user_attendance/user_attendance.model");
+const {
+    Live_session
+} = require("../../utils/imports");
+const {
+    Chapter
+} = require("../../utils/imports");
+const {
+    filterUsers
+} = require("../../middlewares/auth.middleware");
+const {
+    User_invitation
+} = require("../../models/user_invitations/user_invitations.model");
+const {
+    compare,
+    hash
+} = require('bcryptjs')
 const {
     validateUserPasswordUpdate,
     validate_admin,
     validateUserPaymentVerification
 } = require('../../models/user/user.model')
-const {User_group} = require('../../models/user_group/user_group.model')
-const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
+const {
+    User_group
+} = require('../../models/user_group/user_group.model')
+const {
+    User_user_group
+} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     User,
@@ -70,7 +112,9 @@ const {
     MyEmitter,
     update_password
 } = require('../../utils/imports')
-const {sendConfirmEmail} = require('../email/email.controller')
+const {
+    sendConfirmEmail
+} = require('../email/email.controller')
 
 // create router
 const router = express.Router()
@@ -166,33 +210,33 @@ router.post('/reg_number/', async (req, res) => {
     try {
 
         // you can validate the request
-        const {error} = validateUserPaymentVerification(req.body)
+        const {
+            error
+        } = validateUserPaymentVerification(req.body)
         // if you find errors return the response with status 400 and the error
         if (error)
             return res.status(400).send(error.details[0].message)
 
         // fetch users with registration_numbers in the ones that were given in body
-        const test_users = [
-            {
-                regNumber: "ULK-2021-100",
-                paid: false
-            }, {
-                regNumber: "ULK-2021-105",
-                paid: true
-            }, {
-                regNumber: "ULK-2021-110",
-                paid: false
-            }, {
-                regNumber: "ULK-2021-115",
-                paid: true
-            }, {
-                regNumber: "ULK-2021-120",
-                paid: false
-            }, {
-                regNumber: "ULK-2021-125",
-                paid: true
-            },
-        ]
+        const test_users = [{
+            regNumber: "ULK-2021-100",
+            paid: false
+        }, {
+            regNumber: "ULK-2021-105",
+            paid: true
+        }, {
+            regNumber: "ULK-2021-110",
+            paid: false
+        }, {
+            regNumber: "ULK-2021-115",
+            paid: true
+        }, {
+            regNumber: "ULK-2021-120",
+            paid: false
+        }, {
+            regNumber: "ULK-2021-125",
+            paid: true
+        }, ]
 
         // Add the payment status to the given users
         for (const i in req.body.users) {
@@ -232,18 +276,29 @@ router.post('/reg_number/', async (req, res) => {
 router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (req, res) => {
     try {
         let total_users, total_students, total_instructors, total_staff, total_admins;
-        const admin_category = await findDocument(User_category, {name: "ADMIN"})
-        const student_category = await findDocument(User_category, {name: "STUDENT"})
-        const instructor_category = await findDocument(User_category, {name: "INSTRUCTOR"})
+        const admin_category = await findDocument(User_category, {
+            name: "ADMIN"
+        })
+        const student_category = await findDocument(User_category, {
+            name: "STUDENT"
+        })
+        const instructor_category = await findDocument(User_category, {
+            name: "INSTRUCTOR"
+        })
 
         if (req.user.category.name == "SUPERADMIN") {
             total_users = await countDocuments(User)
-            total_students = await countDocuments(User, {category: student_category._id})
-            total_admins = await countDocuments(User, {category: admin_category._id})
-            total_instructors = await countDocuments(User, {category: instructor_category._id})
+            total_students = await countDocuments(User, {
+                category: student_category._id
+            })
+            total_admins = await countDocuments(User, {
+                category: admin_category._id
+            })
+            total_instructors = await countDocuments(User, {
+                category: instructor_category._id
+            })
             total_staff = await countDocuments(User, {
-                $and: [
-                    {
+                $and: [{
                         category: {
                             $ne: student_category._id
                         },
@@ -256,27 +311,39 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
                 ]
             })
         } else {
-            total_users = await countDocuments(User, {college: req.user.college, "status.deleted": {$ne: 1}})
+            total_users = await countDocuments(User, {
+                college: req.user.college,
+                "status.deleted": {
+                    $ne: 1
+                }
+            })
             total_students = await countDocuments(User, {
                 college: req.user.college,
                 category: student_category._id,
-                "status.deleted": {$ne: 1}
+                "status.deleted": {
+                    $ne: 1
+                }
             })
             total_admins = await countDocuments(User, {
                 college: req.user.college,
                 category: admin_category._id,
-                "status.deleted": {$ne: 1}
+                "status.deleted": {
+                    $ne: 1
+                }
             })
             total_instructors = await countDocuments(User, {
                 college: req.user.college,
                 category: instructor_category._id,
-                "status.deleted": {$ne: 1}
+                "status.deleted": {
+                    $ne: 1
+                }
             })
             total_staff = await countDocuments(User, {
                 college: req.user.college,
-                "status.deleted": {$ne: 1},
-                $and: [
-                    {
+                "status.deleted": {
+                    $ne: 1
+                },
+                $and: [{
                         category: {
                             $ne: student_category._id
                         },
@@ -289,7 +356,13 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
                 ]
             })
         }
-        return res.send(formatResult(u, u, {total_users, total_students, total_instructors, total_staff, total_admins}))
+        return res.send(formatResult(u, u, {
+            total_users,
+            total_students,
+            total_instructors,
+            total_staff,
+            total_admins
+        }))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -325,27 +398,47 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
  */
 router.get('/statistics/user_joins', [auth, filterUsers(["ADMIN"])], async (req, res) => {
     try {
-        const {start_date, end_date} = req.query
-        const result = await User.aggregate([
-            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
-            {"$match": {college: req.user.college}},
+        const {
+            start_date,
+            end_date
+        } = req.query
+        const result = await User.aggregate([{
+                "$match": {
+                    createdAt: {
+                        $gt: date(start_date),
+                        $lte: date(end_date)
+                    }
+                }
+            },
+            {
+                "$match": {
+                    college: req.user.college
+                }
+            },
             {
                 "$group": {
                     "_id": {
                         "$subtract": [
                             "$createdAt",
                             {
-                                "$mod": [
-                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
+                                "$mod": [{
+                                        "$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]
+                                    },
                                     1000 * 60 * 60 * 24
                                 ]
                             }
                         ]
                     },
-                    "total_users": {"$sum": 1}
+                    "total_users": {
+                        "$sum": 1
+                    }
                 }
             },
-            {"$sort": {"_id": 1}}
+            {
+                "$sort": {
+                    "_id": 1
+                }
+            }
         ])
         return res.send(formatResult(u, u, result))
     } catch (error) {
@@ -394,18 +487,28 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
 
         let users = await User.find(req.params.category === 'ALL' ? {
             college: req.user.college,
-            _id: {$ne: req.user._id},
-            "status.deleted": {$ne: 1}
+            _id: {
+                $ne: req.user._id
+            },
+            "status.deleted": {
+                $ne: 1
+            }
         } : {
             college: req.user.college,
             category: user_category._id,
-            _id: {$ne: req.user._id}
-        }).sort({category: 1}).lean()
+            _id: {
+                $ne: req.user._id
+            }
+        }).sort({
+            category: 1
+        }).lean()
 
         users = await add_user_details(users)
 
         if (req.params.category !== "INSTRUCTOR") {
-            const college = await College.findOne({_id: req.user.college})
+            const college = await College.findOne({
+                _id: req.user.college
+            })
             if (college.users_verification_link)
                 users = await checkCollegePayment({
                     users,
@@ -850,7 +953,9 @@ router.get('/:user_name', auth, async (req, res) => {
         const user_user_groups = await User_user_group.find({
             user: user._id,
             status: "ACTIVE"
-        }, {user_group: 1}).populate('user_group')
+        }, {
+            user_group: 1
+        }).populate('user_group')
 
         const user_group_names = []
 
@@ -867,19 +972,36 @@ router.get('/:user_name', auth, async (req, res) => {
             }).populate('user_group').lean()
 
             for (const coursesKey in courses) {
-                const chapters = await Chapter.distinct('_id', {course: courses[coursesKey]._id.toString()})
+                const chapters = await Chapter.distinct('_id', {
+                    course: courses[coursesKey]._id.toString()
+                })
 
-                courses[coursesKey].total_students = await User_progress.distinct('user', {course: courses[coursesKey]._id.toString()}).count()
+                courses[coursesKey].total_students = await User_progress.distinct('user', {
+                    course: courses[coursesKey]._id.toString()
+                }).count()
 
                 const quiz = await Quiz.find({
                     "target.type": "chapter",
-                    "target.id": {$in: chapters.map(x => x.toString())},
+                    "target.id": {
+                        $in: chapters.map(x => x.toString())
+                    },
                     status: 2
-                }, {total_marks: 1, status: 1, updatedAt: 1}).sort({_id: -1})
+                }, {
+                    total_marks: 1,
+                    status: 1,
+                    updatedAt: 1
+                }).sort({
+                    _id: -1
+                })
 
                 const submissions = await Quiz_submission.find({
-                    quiz: {$in: quiz.map(x => x._id.toString())}
-                }, {total_marks: 1, quiz: 1})
+                    quiz: {
+                        $in: quiz.map(x => x._id.toString())
+                    }
+                }, {
+                    total_marks: 1,
+                    quiz: 1
+                })
 
                 let total_required = 0
                 let total_got = 0
@@ -914,18 +1036,35 @@ router.get('/:user_name', auth, async (req, res) => {
             }).populate('user_group').lean()
 
             for (const coursesKey in courses) {
-                const chapters = await Chapter.distinct('_id', {course: courses[coursesKey]._id.toString()})
+                const chapters = await Chapter.distinct('_id', {
+                    course: courses[coursesKey]._id.toString()
+                })
 
                 const quiz = await Quiz.find({
                     "target.type": "chapter",
-                    "target.id": {$in: chapters.map(x => x.toString())},
+                    "target.id": {
+                        $in: chapters.map(x => x.toString())
+                    },
                     status: 2
-                }, {total_marks: 1, status: 1, updatedAt: 1}).sort({_id: -1})
+                }, {
+                    total_marks: 1,
+                    status: 1,
+                    updatedAt: 1
+                }).sort({
+                    _id: -1
+                })
 
                 const submissions = await Quiz_submission.find({
                     user: user._id.toString(),
-                    quiz: {$in: quiz.map(x => x._id.toString())}
-                }, {total_marks: 1, quiz: 1}).sort({_id: -1})
+                    quiz: {
+                        $in: quiz.map(x => x._id.toString())
+                    }
+                }, {
+                    total_marks: 1,
+                    quiz: 1
+                }).sort({
+                    _id: -1
+                })
 
                 let total_required = 0
                 let total_got = 0
@@ -958,15 +1097,23 @@ router.get('/:user_name', auth, async (req, res) => {
                 if (req.user.category.name === 'INSTRUCTOR') {
                     let live_sessions = await Live_session.find({
                         "target.type": "chapter",
-                        "target.id": {$in: chapters.map(x => x.toString())}
-                    }, {_id: 1}).sort({_id: -1})
+                        "target.id": {
+                            $in: chapters.map(x => x.toString())
+                        }
+                    }, {
+                        _id: 1
+                    }).sort({
+                        _id: -1
+                    })
 
                     const attendances = await User_attendance.find({
                         user: user._id.toString(),
-                        live_session: {$in: live_sessions.map(x => x._id.toString())}
-                    }).populate('live_session',
-                        {attendance_check: 1}
-                    )
+                        live_session: {
+                            $in: live_sessions.map(x => x._id.toString())
+                        }
+                    }).populate('live_session', {
+                        attendance_check: 1
+                    })
 
                     let student_total_attendance = 0
                     attendances.map(x => {
@@ -1138,7 +1285,9 @@ router.post('/', async (req, res) => {
         let user = await findDocument(User, {
             $or: [{
                 email: req.body.email,
-                "status.deleted": {$ne: 1}
+                "status.deleted": {
+                    $ne: 1
+                }
             }, {
                 user_name: req.body.user_name
             }],
@@ -1184,7 +1333,9 @@ router.post('/', async (req, res) => {
                 if (find_admin.length > 2)
                     return res.send(formatResult(404, `College ${college.name} can't have more than three admin`))
             } else {
-                let user_count = await countDocuments(User, {college: college._id})
+                let user_count = await countDocuments(User, {
+                    college: college._id
+                })
                 if (user_count >= college.maximum_users) {
                     return res.send(formatResult(404, `College ${req.body.college} users limit reached`))
                 } else if (user_count === college.maximum_users - 1) {
@@ -1220,13 +1371,16 @@ router.post('/', async (req, res) => {
 
         // notify the admin that a new user joined
         MyEmitter.emit('socket_event', {
-            name: `new_user_in_${college._id}`, data: result.data
+            name: `new_user_in_${college._id}`,
+            data: result.data
         });
 
         await User_invitation.findOneAndUpdate({
             email: req.body.email,
             college: college._id,
-        }, {status: "ACCEPTED"})
+        }, {
+            status: "ACCEPTED"
+        })
 
         if (user_category !== "ADMIN")
             await addUserBill(college._id, user_category)
@@ -1334,8 +1488,7 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let user = await findDocument(User, {
-            $or: [
-                {
+            $or: [{
                     email: req.body.email,
                 },
                 {
@@ -1349,8 +1502,11 @@ router.post('/admin', async (req, res) => {
                 },
                 {
                     user_name: req.body.user_name
-                }],
-            "status.deleted": {$ne: 1}
+                }
+            ],
+            "status.deleted": {
+                $ne: 1
+            }
         })
 
         if (user) {
@@ -1377,8 +1533,9 @@ router.post('/admin', async (req, res) => {
 
         // check if the name or email were not used
         let college = await findDocument(College, {
-            $or: [
-                {name: req.body.college},
+            $or: [{
+                    name: req.body.college
+                },
                 {
                     email: req.body.email,
                 },
@@ -1400,7 +1557,10 @@ router.post('/admin', async (req, res) => {
                 `Institution ${emailFound ? 'email' : phoneFound ? 'phone' : ''} was arleady used`))
         }
 
-        const {sent, err} = await sendConfirmEmail({
+        const {
+            sent,
+            err
+        } = await sendConfirmEmail({
             email: req.body.email,
             institution_email: req.body.college_email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
@@ -1436,7 +1596,9 @@ router.post('/admin', async (req, res) => {
         })
 
         // create user account confirmation
-        const confirmation = await createAccountConfirmation({user_id: result.data._id})
+        const confirmation = await createAccountConfirmation({
+            user_id: result.data._id
+        })
 
         await sendSubmissionEmail({
             user_email: req.body.email,
@@ -1450,6 +1612,147 @@ router.post('/admin', async (req, res) => {
         });
 
         return res.send(formatResult(201, 'Account was successfully created, check your email.'));
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+/**
+ * @swagger
+ * /user/fromCourse:
+ *   post:
+ *     tags:
+ *       - User
+ *     description: Create User
+ *     parameters:
+ *       - name: body
+ *         description: Fields for an User
+ *         in: body
+ *         required: true
+ *         schema:
+ *           properties:
+ *             names:
+ *               type: string
+ *             user_name:
+ *               type: string
+ *             address:
+ *               type: string
+ *             gender:
+ *               type: string
+ *               enum: [male,female]
+ *             password:
+ *               type: string
+ *             date_of_birth:
+ *               type: string
+ *               format: date
+ *             phone:
+ *               type: string
+ *           required:
+ *             - names
+ *             - user_name
+ *             - address
+ *             - gender
+ *             - password
+ *             - date_of_birth
+ *             - phone
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/fromCourse', async (req, res) => {
+    try {
+        const {
+            error
+        } = validate_user(req.body, 'create_from_course')
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        // check if the name or phone were not used
+        let user = await findDocument(User, {
+            $or: [{
+                phone: req.body.phone,
+                "status.deleted": {
+                    $ne: 1
+                }
+            }, {
+                user_name: req.body.user_name
+            }],
+        })
+
+        if (user) {
+            const phoneFound = req.body.phone == user.phone
+            const user_nameFound = req.body.user_name == user.user_name
+            return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+        }
+        // avoid user_name === group name
+        let chat_group = await findDocument(Chat_group, {
+            name: req.body.user_name
+        })
+        if (chat_group)
+            return res.send(formatResult(403, 'user_name was taken'))
+
+        let user_category = await findDocument(User_category, {
+            name: "STUDENT"
+        })
+        if (!user_category)
+            return res.send(formatResult(404, 'STUDENT category not found'))
+
+        let course = await Course.findOne({
+            id: req.body.course_id,
+            published: true
+        }).populate({
+            path: 'user_group',
+            model: 'user_group',
+            populate: {
+                path: 'faculty',
+                model: 'faculty',
+                populate: {
+                    path: 'college',
+                    model: 'college'
+                }
+            }
+        });
+        if (!course)
+            return res.send(formatResult(404, `Course ${req.body.course_id} Not Found`))
+
+        if (!course.user_group.faculty.isPublic)
+            return res.send(formatResult(404, `Course ${req.body.course_id} is not public`))
+
+
+        let result = await createDocument(User, {
+            user_name: req.body.user_name,
+            sur_name: req.body.names.split(' ')[0],
+            other_names: req.body.names.split(' ')[1],
+            phone: req.body.phone,
+            gender: req.body.gender,
+            phone: req.body.phone,
+            password: await hashPassword(req.body.password),
+            college: course.user_group.faculty.college._id,
+            category: user_category._id,
+            date_of_birth: req.body.date_of_birth
+        })
+
+        await createDocument(User_user_group, {
+            user_group: course.user_group._id,
+            user: result.data._id
+        })
+
+        // notify the admin that a new user joined
+        MyEmitter.emit('socket_event', {
+            name: `new_user_in_${course.user_group.faculty.college._id}`,
+            data: result.data
+        });
+
+        // await addUserBill(college._id, user_category)
+        // send email to user ko byakunze
+
+        return res.status(201).send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -1538,7 +1841,9 @@ router.post('/login', async (req, res) => {
             }, {
                 user_name: req.body.email_or_user_name
             }],
-            "status.deleted": {$ne: 1}
+            "status.deleted": {
+                $ne: 1
+            }
         })
 
         const erroMessage = 'invalid credentials'
@@ -1552,7 +1857,12 @@ router.post('/login', async (req, res) => {
         if (!validPassword)
             return res.send(formatResult(400, erroMessage))
 
-        const confirmation = await Account_confirmation.findOne({user: user._id.toString(), hasEmail: {$ne: true}})
+        const confirmation = await Account_confirmation.findOne({
+            user: user._id.toString(),
+            hasEmail: {
+                $ne: true
+            }
+        })
         if (confirmation) {
             if (confirmation.status === "PENDING")
                 return res.send(formatResult(403, "Your request has not yet been approved."))
@@ -1672,9 +1982,15 @@ router.put('/', auth, async (req, res) => {
 
         if (req.body.email) {
             // create user account confirmation
-            const confirmation = await createAccountConfirmation({user_id: req.user._id, email: req.body.email})
+            const confirmation = await createAccountConfirmation({
+                user_id: req.user._id,
+                email: req.body.email
+            })
             req.body.email = req.user.email
-            const {sent, err} = await sendEmailConfirmation({
+            const {
+                sent,
+                err
+            } = await sendEmailConfirmation({
                 email: confirmation.email,
                 user_name: req.user.sur_name + ' ' + req.user.other_names,
                 token: confirmation.token,
@@ -1741,7 +2057,10 @@ router.put('/password', auth, async (req, res) => {
         const validPassword = await compare(req.body.current_password, req.user.password);
         if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
-        update_password({password: req.body.new_password, user_id: req.user._id})
+        update_password({
+            password: req.body.new_password,
+            user_id: req.user._id
+        })
 
         return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
     } catch (error) {
@@ -1780,12 +2099,16 @@ router.put('/password', auth, async (req, res) => {
 router.put('/profile', auth, async (req, res) => {
     try {
 
-        const {error} = validate_chat_group_profile_udpate(req.body)
+        const {
+            error
+        } = validate_chat_group_profile_udpate(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
         const path = addStorageDirectoryToPath(req.user.college ? `./uploads/colleges/${req.user.college}/user_profiles` : `./uploads/system/user_profiles`)
-        const {filename} = await savedecodedBase64Image(req.body.profile, path)
+        const {
+            filename
+        } = await savedecodedBase64Image(req.body.profile, path)
 
         if (req.user.profile) {
             fs.unlink(`${path}/${req.user.profile}`, (err) => {
@@ -1972,7 +2295,9 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
         await User_user_group.updateMany({
             user: req.params.id,
             status: "ACTIVE"
-        }, {status: "INACTIVE"})
+        }, {
+            status: "INACTIVE"
+        })
 
         if (user.profile) {
             // delete the profile
@@ -1996,13 +2321,26 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
  */
 async function checkEmailExistance(req, res) {
     try {
-        const user = await User.findOne({email: req.params.email, "status.deleted": {$ne: 1}});
-        if (user) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+        const user = await User.findOne({
+            email: req.params.email,
+            "status.deleted": {
+                $ne: 1
+            }
+        });
+        if (user) return res.send(formatResult(200, 'Email Already Taken', {
+            exists: true
+        }));
 
-        const college = await User.findOne({email: req.params.email});
-        if (college) return res.send(formatResult(200, 'Email Already Taken', {exists: true}));
+        const college = await User.findOne({
+            email: req.params.email
+        });
+        if (college) return res.send(formatResult(200, 'Email Already Taken', {
+            exists: true
+        }));
 
-        return res.send(formatResult(200, 'Email Available', {exists: false}));
+        return res.send(formatResult(200, 'Email Available', {
+            exists: false
+        }));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
@@ -2015,13 +2353,26 @@ async function checkEmailExistance(req, res) {
  */
 async function checkPhoneExistance(req, res) {
     try {
-        const user = await User.findOne({phone: req.params.phone, "status.deleted": {$ne: 1}});
-        if (user) return res.send(formatResult(200, 'Phone Already Taken', {exists: true}));
+        const user = await User.findOne({
+            phone: req.params.phone,
+            "status.deleted": {
+                $ne: 1
+            }
+        });
+        if (user) return res.send(formatResult(200, 'Phone Already Taken', {
+            exists: true
+        }));
 
-        const college = await User.findOne({phone: req.params.phone});
-        if (college) return res.send(formatResult(200, 'Phone Already Taken', {exists: true}));
+        const college = await User.findOne({
+            phone: req.params.phone
+        });
+        if (college) return res.send(formatResult(200, 'Phone Already Taken', {
+            exists: true
+        }));
 
-        return res.send(formatResult(200, 'Phone Available', {exists: false}));
+        return res.send(formatResult(200, 'Phone Available', {
+            exists: false
+        }));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
@@ -2034,9 +2385,18 @@ async function checkPhoneExistance(req, res) {
  */
 async function checkUsernameExistence(req, res) {
     try {
-        const user = await User.findOne({user_name: req.params.user_name, "status.deleted": {$ne: 1}});
-        if (user) return res.send(formatResult(200, 'Username Already Taken', {exists: true}));
-        return res.send(formatResult(200, 'Username Available', {exists: false}));
+        const user = await User.findOne({
+            user_name: req.params.user_name,
+            "status.deleted": {
+                $ne: 1
+            }
+        });
+        if (user) return res.send(formatResult(200, 'Username Already Taken', {
+            exists: true
+        }));
+        return res.send(formatResult(200, 'Username Available', {
+            exists: false
+        }));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
@@ -2046,16 +2406,25 @@ async function addUserBill(collegeId, userCategory) {
 
     collegeId = collegeId.toString()
 
-    const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
-// akabazo on minuza package
+    const college = await College_payment_plans.findOne({
+        college: collegeId,
+        status: 'ACTIVE'
+    });
+    // akabazo on minuza package
     if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
 
-        const admin_category = await findDocument(User_category, {name: "ADMIN"})
+        const admin_category = await findDocument(User_category, {
+            name: "ADMIN"
+        })
 
         const obj = {
             college: college.college,
-            category: {$ne: admin_category._id.toString()},
-            "status.deleted": {$ne: 1}
+            category: {
+                $ne: admin_category._id.toString()
+            },
+            "status.deleted": {
+                $ne: 1
+            }
         }
         let currentTotalUsers = await countDocuments(User, obj)
 
@@ -2072,7 +2441,9 @@ async function addUserBill(collegeId, userCategory) {
         // all payments that this user will be valid to
         const payments = await Account_payments.find({
             college: collegeId,
-            endingDate: {$gt: new Date(today).toISOString()}
+            endingDate: {
+                $gt: new Date(today).toISOString()
+            }
         }).populate({
             path: 'collegePaymentPlan'
         })
@@ -2085,7 +2456,9 @@ async function addUserBill(collegeId, userCategory) {
             await Account_payments.updateOne({
                 college: collegeId,
                 status: 'ACTIVE'
-            }, {balance: payment.balance - amount})
+            }, {
+                balance: payment.balance - amount
+            })
     }
 }
 

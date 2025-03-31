@@ -97,6 +97,14 @@ exports.validate_user = (credentials, method = 'create') => {
             disabled: Joi.number().min(0).max(1).required(),
             active: Joi.number().min(0).max(2).required()
         })
+    } : method === 'create_from_course' ? {
+        names: Joi.string().min(3).max(100).required(),
+        user_name: Joi.string().min(3).max(100).required(), // regex needed
+        gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
+        password: Joi.string().max(100).regex(this.PasswordRegex).required(),
+        phone: Joi.string().regex(this.PhoneRegex).required(),
+        date_of_birth: Joi.date().required(),
+        course_id: Joi.ObjectId().required()
     } : {
         sur_name: Joi.string().min(3).max(100),
         registration_number: Joi.string().min(1),
