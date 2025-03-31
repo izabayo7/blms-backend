@@ -100,12 +100,12 @@ const {
 const {
     Notification,
     validateNotification
-} = require('../models/notfification/notification.model')
+} = require('../models/notification/notification.model')
 
 const {
     UserNotification,
     validateUserNotification
-} = require('../models/user_notfification/user_notification.model')
+} = require('../models/user_notification/user_notification.model')
 
 module.exports.Admin = Admin
 module.exports.validateAdmin = validateAdmin
@@ -452,7 +452,7 @@ module.exports.formatContacts = async (messages, userId) => {
 
 // format messages
 module.exports.formatMessages = async (messages, userId) => {
-    let messagesCopy = JSON.parse(JSON.stringify(messages))
+    let messagesCopy = this.simplifyObject(messages)
     let formatedMessages = []
     for (const message of messages) {
         for (const i in messagesCopy) {
@@ -729,6 +729,34 @@ module.exports.injectUser = async (array, property) => {
         array[i][`${property}`] = this._.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
         if (array[i][`${property}`].profile) {
             array[i][`${property}`].profile = `http://${process.env.HOST}/kurious/file/instructorProfile/${user._id}/${user.profile}`
+        }
+    }
+    return array
+}
+
+// remove restrictions in objects
+module.exports.simplifyObject = (obj) => {
+    return JSON.parse(JSON.stringify(obj))
+}
+
+// add doer information to a notification
+module.exports.injectDoer = async (notification) => {
+    notification = await this.injectUser([notification], 'doer_id')
+    console.log(notification)
+    notification = notification[0]
+    notification.doer = notification.doer_id
+    notification.doer_id = undefined
+    return notification
+}
+
+// inject notification
+module.exports.injectNotification = async (array) => {
+    for (const i in array) {
+        for (const k in array[i].notifications) {
+            let notification = await this.Notification.findOne({ _id: array[i].notifications[k].id }).lean()
+            notification = await this.injectDoer(notification)
+            array[i].notifications[k].id = undefined
+            array[i].notifications[k].notification = notification
         }
     }
     return array

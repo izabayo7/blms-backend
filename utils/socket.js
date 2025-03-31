@@ -16,10 +16,14 @@ const {
     getConversationMessages,
     formatMessages,
     injectChapters,
-    injectInstructor,
     StudentFacultyCollegeYear,
+    simplifyObject,
     _,
-    Notification
+    Notification,
+    injectUser,
+    Course,
+    UserNotification,
+    injectDoer
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -219,7 +223,7 @@ module.exports.listen = (app) => {
             const saveDocument = await newDocument.save()
 
             if (saveDocument) {
-                newDocument = JSON.parse(JSON.stringify(newDocument))
+                newDocument = simplifyObject(newDocument)
                 // inject sender Info
                 const user = await returnUser(newDocument.sender)
 
@@ -371,33 +375,54 @@ module.exports.listen = (app) => {
         socket.on('course-published', async ({
             courseId
         }) => {
-
             // get the course
-            const course = await Course.findOne({ _id: courseId, published: true })
+            let course = await Course.findOne({ _id: courseId, published: true }).lean()
 
             // add chapters and instructor
             course = await injectChapters([course])
-            course = await injectInstructor(course)
+            course = await injectUser(course, 'instructor')
             course = course[0]
 
             let newDocument = new Notification({
                 doer_type: "User",
                 doer_id: id,
-                content: `${course.instructor.surName} published ${course.name}`,
+                content: `published ${course.name}`,
                 link: `/courses/preview/${course.name}`,
             })
-
             const saveDocument = await newDocument.save()
             if (saveDocument) {
 
+                newDocument = simplifyObject(newDocument)
+
+                newDocument = await injectDoer(newDocument)
+
                 const studentFaucultyCollegeYears = await StudentFacultyCollegeYear.find({ facultyCollegeYear: course.facultyCollegeYear })
 
-                studentFaucultyCollegeYears.forEach(_doc => {
-                    // send the notification
-                    socket.broadcast.to(_doc.student).emit('new-notification', newDocument)
+                studentFaucultyCollegeYears.forEach( async _doc => {
 
-                    // send the course
-                    socket.broadcast.to(_doc.student).emit('new-course', course)
+                    // create notification for user
+                    let userNotification = await UserNotification.findOne({ user_id: _doc.student })
+                    if (!userNotification) {
+                        userNotification = new UserNotification({
+                            user_id: _doc.student,
+                            notifications: [{ id: newDocument_id }]
+                        })
+
+                    } else {
+                        console.log(userNotification)
+                        userNotification.notifications.push({ id: newDocument._id })
+                    }
+
+                    _newDocument = await userNotification.save()
+
+                    if (_newDocument) {
+
+                        // send the notification
+                        socket.broadcast.to(_doc.student).emit('new-notification', { notification: newDocument })
+
+                        // send the course
+                        socket.broadcast.to(_doc.student).emit('new-course', course)
+                    }
                 })
             }
 
