@@ -1,10 +1,10 @@
 // import dependencies
-const { jwt, config } = require('../utils/imports')
+const { jwt, config, formatResult } = require('../utils/imports')
 
 function auth(req, res, next) {
     const token = req.header('authorization')
     if (!token)
-        return res.send('No Token Found').status(401)
+        return res.send(formatResult(401, 'No Token Found'))
 
     try {
         const decoded = jwt.verify(token, config.get('auth_key'))
@@ -12,7 +12,7 @@ function auth(req, res, next) {
         next()
     }
     catch (err) {
-        res.send('Invalid Token').status(401)
+        res.send(formatResult(401, 'Invalid Token'))
     }
 }
 module.exports.auth = auth

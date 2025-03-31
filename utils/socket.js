@@ -134,16 +134,18 @@ module.exports.listen = (app) => {
 
       if (!conversation_found.length) {
 
-        const content = 'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh'
+        const user = await findDocument(User, { user_name: conversation_id })
 
-        const { error } = validate_message({ sender: user_name, receiver: conversation_id, content: content })
+        const content = `This is the begining of conversation between __user__${id} and __user__${user._id}`
+
+        const { error } = validate_message({ sender: 'SYSTEM', receiver: conversation_id, content: content })
 
         if (error) {
           socket.error(error)
           return
         }
 
-        await Create_or_update_message(user_name, conversation_id, content)
+        await Create_or_update_message('SYSTEM', conversation_id, content, u, id)
       }
 
       // send success mesage

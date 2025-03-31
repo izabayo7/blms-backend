@@ -18,7 +18,8 @@ const {
   u,
   upload_single_image,
   Compress_images,
-  fs
+  fs,
+  Create_or_update_message
 } = require('../../utils/imports')
 
 // create router
@@ -336,6 +337,12 @@ router.post('/', async (req, res) => {
       members.push({ id: user._id })
     }
 
+    user = await findDocument(User, {
+      user_name: req.user.user_name
+    })
+    if (!members.includes({ id: user._id }))
+      members.push({ id: user._id })
+
     let result = await createDocument(Chat_group, {
       name: req.body.name,
       description: req.body.description,
@@ -344,6 +351,8 @@ router.post('/', async (req, res) => {
       college: req.body.college,
     })
 
+    await Create_or_update_message(`SYSTEM`, result.data.name, `This channel was created by __user__${user._id} at __time__${new Date().toISOString()}`)
+    
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))

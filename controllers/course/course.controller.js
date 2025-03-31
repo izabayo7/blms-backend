@@ -31,7 +31,6 @@ const {
   Quiz,
   Chapter,
   sendResizedImage,
-  upload_single,
   upload_single_image,
   Compress_images
 } = require('../../utils/imports')
@@ -216,6 +215,7 @@ router.get('/college/:id', async (req, res) => {
  */
 router.get('/user/:id', async (req, res) => {
   try {
+    console.log(req.user)
     const {
       error
     } = validateObjectId(req.params.id)
