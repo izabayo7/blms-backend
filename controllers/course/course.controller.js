@@ -606,9 +606,9 @@ router.get('/user', async (req, res) => {
             result = await injectUserProgress(result, req.user._id + '')
             result = await injectUser(result, 'user')
         } else {
-            result = await findDocuments(Course, {
+            result = await Course.find({
                 user: req.user._id
-            })
+            }).sort({createdAt: -1})
             result = simplifyObject(result)
         }
         // ******* while adding permissions remember to filter data according to the user requesting *******
