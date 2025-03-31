@@ -290,11 +290,9 @@ router.get('/:code/profile/:file_name', async (req, res) => {
 router.get('/:code/search_members', async (req, res) => {
   try {
 
-    let {
-      error
-    } = validateChat_group_code(req.params.code)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    let _error = validateChat_group_code(req.params.code)
+    if (_error.error)
+      return res.send(formatResult(400, _error.error.details[0].message))
 
     const group = await findDocument(Chat_group, {
       code: req.params.code
