@@ -122,6 +122,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - Quiz_submission
  *     description: Returns a specified quiz_submission
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz_submission's id
