@@ -73,10 +73,10 @@ router.route('/')
      *         description: Success
      */
     .post([auth, filterUsers(["ADMIN"]), createUserInvitation])
-router.route('/mega')
+router.route('/multiple')
     /**
      * @swagger
-     * /user_invitations/mega:
+     * /user_invitations/multiple:
      *   post:
      *     tags:
      *       - User_invitation

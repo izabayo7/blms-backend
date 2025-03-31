@@ -5,6 +5,10 @@ const {upload_single} = require("../../utils/imports");
 const {Faculty} = require("../../models/faculty/faculty.model");
 const {User_invitation, validate_user_invitation} = require('../../models/user_invitations/user_invitations.model');
 const {v4: uuid, validate: uuidValidate} = require('uuid');
+const readXlsxFile = require('read-excel-file/node')
+const {hashPassword} = require("../../utils/imports");
+const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
+const {makeUserName} = require("../../utils/imports");
 const {
     formatResult, u, User_category, College, ONE_DAY, updateDocument, User
 } = require('../../utils/imports');
@@ -231,9 +235,9 @@ function checkIfArrayIsUnique(myArray) {
             if (i !== j) {
                 if (myArray[i] === myArray[j]) {
                     return {error: `all rows must be unique (row ${i + 1} and row ${j + 1} are dupplicates)`};
-                } else if (myArray[i].email === myArray[j].email) {
+                } else if (myArray[i].email && myArray[i].email === myArray[j].email) {
                     return {error: `email must be unique (row ${i + 1} and row ${j + 1} have same emails)`};
-                } else if (myArray[i].user_name === myArray[j].user_name) {
+                } else if (myArray[i].user_name && myArray[i].user_name === myArray[j].user_name) {
                     return {error: `registration number must be unique (row ${i + 1} and row ${j + 1} have same registration numbers)`};
                 }
             }
@@ -321,8 +325,6 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
                 type: String
             },
         }
-
-        const readXlsxFile = require('read-excel-file/node')
 
         req.kuriousStorageData = {
             dir: addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}`),
@@ -455,6 +457,220 @@ exports.createMultipleUserInvitations = async (req, res, next) => {
     }
 }
 
+/***
+ *  Create's a multiple users from a file
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.createMultipleUsers = async (req, res, next) => {
+    try {
+
+        let faculties = await Faculty.find({college: req.user.college}).populate('college')
+        let college
+        if (!faculties.length)
+            college = await College.findOne({
+                _id: req.user.college
+            })
+        let user_groups = await User_group.find({
+            faculty: {$in: faculties.map(x => x._id.toString())}
+        })
+        let user_group_names = user_groups.map(x => x.name)
+        let user_categories = await User_category.find();
+        let user_categories_names = ["ADMIN", "STUDENT", "INSTRUCTOR"]
+
+
+        const schema = {
+            'FIRST NAME': {
+                prop: 'sur_name',
+                type: String,
+                required: true
+            },
+            'LAST NAME': {
+                prop: 'other_names',
+                type: String,
+                required: true
+            },
+            'GENDER': {
+                prop: 'gender',
+                type: String,
+                required: true
+            },
+            'DATE OF BIRTH': {
+                prop: 'date_of_birth',
+                type: String
+            },
+            'PASSWORD': {
+                prop: 'password',
+                type: (value) => {
+                    let error
+                    if (!/^(?=.*[a-z])/.test(value))
+                        error = "password must contain a lowercase letter"
+                    else if (!/^(?=.*[A-Z])/.test(value))
+                        error = "password must contain an uppercase letter"
+                    else if (!/^(?=.*[0-9])/.test(value))
+                        error = "password must contain a number"
+                    else if (!/^(?=.{8,})/.test(value))
+                        error = "password must have atleast 8 characters"
+
+                    if (error) {
+                        throw new Error(error)
+                    }
+                    return value
+                },
+            },
+            'EMAIL': {
+                prop: 'email',
+                type: (value) => {
+                    const regex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                    if (!regex.test(value)) {
+                        throw new Error('invalid')
+                    }
+                    return value
+                },
+            },
+            'USER GROUP': {
+                prop: 'user_group',
+                type: (value) => {
+                    if (!user_group_names.includes(value)) {
+                        throw new Error(`invalid use (${user_group_names})`)
+                    }
+                    return value
+                },
+                required: true
+            },
+            'USER CATEGORY': {
+                prop: 'category',
+                type: (value) => {
+                    if (!user_categories_names.includes(value)) {
+                        throw new Error(`invalid use (${user_categories_names})`)
+                    }
+                    return value
+                },
+                required: true
+            },
+            'REGISTRATION NUMBER': {
+                prop: 'registration_number',
+                type: String
+            },
+        }
+
+        req.kuriousStorageData = {
+            dir: addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}`),
+        }
+
+        upload_xlsx(req, res, async (err) => {
+            if (err) {
+                req.res = formatResult(500, err.message)
+                return next()
+            }
+            if (!req.file) {
+                req.res = formatResult(500, "file is required")
+                return next()
+            }
+
+            req.kuriousStorageData.path = `${req.kuriousStorageData.dir}/${req.file.filename}`
+
+
+            const {rows, errors} = await readXlsxFile(req.kuriousStorageData.path, {schema})
+
+            // `errors` list items have shape: `{ row, column, error, value }`.
+            if (errors.length) {
+                req.res = formatResult(400, `(${errors[0].value}) ${errors[0].column} on row ${errors[0].row} is ${errors[0].error}`, errors[0])
+                return next()
+            }
+
+            const {error} = checkIfArrayIsUnique(rows)
+
+            if (error) {
+                req.res = formatResult(400, error)
+                return next()
+            }
+
+            // `rows` is an array of rows
+            // each row being an array of cells.
+
+            let creationErrors = []
+            const savedUsers = []
+            for (const i in rows) {
+                if (rows[i].email) {
+                    const user = await User.findOne({
+                        email: rows[i].email,
+                        "status.deleted": {$ne: 1}
+                    })
+                    if (user) {
+                        creationErrors.push(`User with email (${rows[i].email}) arleady exist`)
+                        break
+                    }
+                }
+
+                if (rows[i].category !== "ADMIN" && !rows[i].user_group) {
+                    creationErrors.push(`User (${rows[i].sur_name} ${rows[i].other_names}) must have a student group`)
+                    break
+                }
+
+
+                let user_category
+                user_categories.map(x => {
+                    if (x.name === rows[i].category) {
+                        user_category = x._id
+                    }
+                })
+
+                let user_group
+                user_groups.map(x => {
+                    if (x.name === rows[i].user_group) {
+                        user_group = x._id
+                    }
+                })
+
+
+                if (rows[i].email) {
+                    const {sent, err} = await sendInvitationMail({
+                        email: rows[i].email,
+                        names: req.user.sur_name + ' ' + req.user.other_names,
+                        token: token,
+                        institution: {name: college ? college.name : faculties[0].college.name},
+                        user_group: user_group
+                    });
+                    if (err) {
+                        creationErrors.push(err)
+                        break
+                    }
+                }
+
+                const newDocument = new User({
+                    sur_name: rows[i].sur_name,
+                    email: rows[i].email,
+                    other_names: rows[i].other_names,
+                    college: req.user.college,
+                    category: user_category,
+                    gender: rows[i].gender,
+                    user_name: await makeUserName(),
+                    password: await hashPassword(rows[i].password)
+                });
+
+                const result = await newDocument.save();
+
+                if (result) {
+                    await User_user_group.create({user: result._id, user_group: user_group})
+                    savedUsers.push(result)
+                }
+            }
+
+
+            req.res = formatResult(201, creationErrors.length ? `${savedUsers.length} users ` : '' + 'CREATED', {
+                savedUsers,
+                creationErrors
+            })
+            return next()
+        })
+    } catch
+        (e) {
+        req.res = formatResult(500, e)
+        next()
+    }
+}
 
 /**
  * Accept or Deny invitation

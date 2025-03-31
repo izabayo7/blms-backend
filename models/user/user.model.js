@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
+    registration_number: {
+        type: String,
+    },
     position: {
         type: String
     },

@@ -1746,6 +1746,14 @@ exports.makeCode = (length) => {
     return result;
 }
 
+exports.makeUserName = async () => {
+    const result = `user_${Math.floor(100000 + Math.random() * 900000)}`
+    const user = await this.User.findOne({user_name: result})
+    if (user)
+        return await this.makeUserName()
+    return result;
+}
+
 // proper way to define user roles
 // proper way to use jwt
 // proper way to use config
