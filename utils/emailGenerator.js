@@ -492,8 +492,7 @@ exports.requestCallback = ({
               through <a href="https://kurious.rw">Kurious home page</a>.
             </div>
             <div class="text-center" style="text-align: center">
-              <a href="call:${phone_number}" target="_blank" rel="noopener noreferrer">
-                <button class="confirm" style="
+                <div class="confirm" style="
                       height: 54px;
                       width: 172px;
                       left: 0px;
@@ -506,9 +505,8 @@ exports.requestCallback = ({
                       margin: 4px auto;
                       cursor: pointer;
                     " onfocus="this.style.outline='none'">
-                  Call now
-                </button>
-              </a>
+                  ${phone_number}
+                </div>
             </div>
             <div class="thanks" style="
                   font-family: Inter;

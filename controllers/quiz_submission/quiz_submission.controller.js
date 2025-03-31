@@ -558,7 +558,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
 
         if (file_type === 'image') {
             sendResizedImage(req, res, file_path)
-        } else if (file_type == 'video') {
+        } else if (file_type === 'video') {
             streamVideo(req, res, file_path)
         } else {
             return res.sendFile(path.normalize(file_path))
@@ -732,7 +732,7 @@ router.post('/', auth, async (req, res) => {
             _id: user.category
         })
 
-        if (user_category.name != 'STUDENT')
+        if (user_category.name !== 'STUDENT')
             return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
         let quiz = await findDocument(Quiz, {
