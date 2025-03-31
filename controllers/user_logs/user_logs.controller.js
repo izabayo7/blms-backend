@@ -1,4 +1,5 @@
 // import dependencies
+const {User_category} = require("../../utils/imports");
 const {createDocument} = require("../../utils/imports");
 const {validate_user_log} = require("../../models/user_logs/user_logs.model");
 const {User} = require("../../utils/imports");
@@ -103,6 +104,70 @@ router.get('/statistics/online', async (req, res) => {
     }
 })
 
+/**
+ * @swagger
+ * /user_logs/statistics/course_access:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of how users accessed courses
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: start_date
+ *         description: The starting date
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: end_date
+ *         description: The ending date
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/course_access', async (req, res) => {
+    try {
+        const {start_date, end_date} = req.query
+
+        const student = await User_category.findOne({name: "STUDENT"});
+        const users = await User.find({college: req.user.college, category: student._id}, {_id: 1})
+        console.log(users.map(x => x._id.toString()))
+        const result = await User_logs.aggregate([
+            // {"$match": {"logs.createdAt": {$gt: date(start_date), $lte: date(end_date)}}},
+            // {"$match": {user: {$in: users.map(x => x._id.toString())}}},
+            // {"$unwind": {path: "$logs"}},
+            {$project: {accessed_courses: {"$size": "$logs.accessed_course"}}},
+            {
+                "$group": {
+                    "_id": {
+                        "$subtract": [
+                            "$logs.createdAt",
+                            {
+                                "$mod": [
+                                    {"$subtract": ["$logs.createdAt", date("1970-01-01T00:00:00.000Z")]},
+                                    1000 * 60 * 60 * 24
+                                ]
+                            }
+                        ]
+                    },
+                    "total_users": {"$sum": "accessed_courses"}
+                }
+            },
+            {"$sort": {"_id": 1}}
+        ])
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 
 /**
  * @swagger
@@ -172,56 +237,51 @@ router.post('/', async (req, res) => {
         if (req.body.online !== undefined && req.body.online !== true)
             return res.send(formatResult(404, 'Invalid value for online'))
 
+        const today = new Date()
+        today.setMinutes(0)
+        today.setSeconds(0)
+        today.setHours(0)
+        const yesterday = new Date((today).valueOf() - 1000 * 60 * 60 * 24);
+        const tommorrow = new Date((today).valueOf() + 1000 * 60 * 60 * 24);
+
         // check if user log exist
         let userLog = await User_logs.findOne({
-            user: req.user._id
+            user: req.user._id,
+            createdAt: {$gte: yesterday, $lt: tommorrow}
         })
         if (!userLog) {
-            let result = await createDocument(User_logs, {
-                user: req.user._id,
-                logs: [req.body.online ? {
-                    online: true
-                } : req.body.course_id ? {
-                    accessed_course: [req.body.course_id]
-                } : {
-                    accessed_live_stream: [req.body.live_session_id]
-                }]
-            })
+            let obj = req.body.online ? {
+                online: true
+            } : req.body.course_id ? {
+                accessed_course: [req.body.course_id]
+            } : {
+                accessed_live_stream: [req.body.live_session_id]
+            }
+            obj.user = req.user._id
+            let result = await createDocument(User_logs, obj)
             return res.send(result)
         } else {
-            const today = new Date()
 
-            const {index} = recursiveFunction(userLog.logs, today, 0, userLog.logs.length - 1)
-            if (index == -1) {
-                userLog.logs.unshift(req.body.online ? {
-                    online: true
-                } : req.body.course_id ? {
-                    accessed_course: [req.body.course_id]
-                } : {
-                    accessed_live_stream: [req.body.live_session_id]
-                })
-            } else {
-                if (req.body.online)
-                    if (userLog.logs[index].online)
-                        return res.send(formatResult(400, 'User access already recorded'))
+            if (req.body.online)
+                if (userLog.online)
+                    return res.send(formatResult(400, 'User access already recorded'))
+                else
+                    userLog.online = true
+            else if (req.body.course_id) {
+                if (userLog.accessed_course)
+                    if (userLog.accessed_course.indexOf(req.body.course_id) === -1)
+                        userLog.accessed_course.push(req.body.course_id)
                     else
-                        userLog.logs[index].online = true
-                else if (req.body.course_id) {
-                    if (userLog.logs[index].accessed_course)
-                        if (userLog.logs[index].accessed_course.indexOf(req.body.course_id) === -1)
-                            userLog.logs[index].accessed_course.push(req.body.course_id)
-                        else
-                            return res.send(formatResult(400, 'Course access already recorded'))
-                } else {
-                    if (userLog.logs[index].accessed_live_stream)
-                        if (userLog.logs[index].accessed_live_stream.indexOf(req.body.live_session_id) === -1)
-                            userLog.logs[index].accessed_live_stream.push(req.body.live_session_id)
-                        else
-                            return res.send(formatResult(400, 'Live_session access already recorded'))
-                }
-                await userLog.save()
-                return res.send(formatResult(400, 'Log recorded sucessfully'))
+                        return res.send(formatResult(400, 'Course access already recorded'))
+            } else {
+                if (userLog.accessed_live_stream)
+                    if (userLog.accessed_live_stream.indexOf(req.body.live_session_id) === -1)
+                        userLog.accessed_live_stream.push(req.body.live_session_id)
+                    else
+                        return res.send(formatResult(400, 'Live_session access already recorded'))
             }
+            await userLog.save()
+            return res.send(formatResult(400, 'Log recorded sucessfully'))
 
         }
     } catch (error) {
