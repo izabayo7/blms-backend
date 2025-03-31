@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation } = require('../../controllers/user_invitations/user_invitations.controller')
+const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation } = require('../../controllers/user_invitations/user_invitations.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
@@ -97,10 +97,10 @@ router.route('/:token/:action')
     /**
      * @swagger
      * /user_invitations/{token}/{action}:
-     *   get:
+     *   put:
      *     tags:
      *       - User_invitation
-     *     description: Returns all user_invitations
+     *     description: Accept or deny user_invitations
      *     parameters:
      *       - name: token
      *         description: invitation token
@@ -124,10 +124,10 @@ router.route('/:token/renew')
     /**
      * @swagger
      * /user_invitations/{token}/renew:
-     *   get:
+     *   put:
      *     tags:
      *       - User_invitation
-     *     description: Returns all user_invitations
+     *     description: Extends the expiration time of an invitation
      *     parameters:
      *       - name: token
      *         description: invitation token
@@ -141,3 +141,25 @@ router.route('/:token/renew')
      *         description: Internal Server Error
      */
     .get([auth, renewInvitation])
+
+router.route('/:token/delete')
+    /**
+     * @swagger
+     * /user_invitations/{token}/delete:
+     *   delete:
+     *     tags:
+     *       - User_invitation
+     *     description: Deletes a user_invitation
+     *     parameters:
+     *       - name: token
+     *         description: invitation token
+     *         in: path
+     *         type: string
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     */
+    .get([auth, deleteInvitation])
