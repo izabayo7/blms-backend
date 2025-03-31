@@ -13,7 +13,7 @@ const course_schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    instructor: {
+    user: {
         type: String,
         required: true
     },
@@ -33,7 +33,11 @@ const course_schema = new mongoose.Schema({
     },
     published_on: {
         type: Date
-    }
+    },
+    status: {
+        type: Number,
+        default: 1
+    },
 })
 
 course_schema.plugin(timestamps)
@@ -42,11 +46,12 @@ course_schema.plugin(timestamps)
 function validate_course(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
-        instructor: Joi.ObjectId().required(),
+        user: Joi.ObjectId().required(),
         faculty_college_year: Joi.ObjectId().required(),
         description: Joi.string().max(500).min(10),
         cover_picture: Joi.string(),
-        published: Joi.boolean()
+        published: Joi.boolean(),
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)
 }

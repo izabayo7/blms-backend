@@ -3,16 +3,14 @@ const {
   express,
   fs,
   Course,
-  getCollege,
-  CollegeYear,
+  College_year,
   College,
-  Instructor,
-  validateCourse,
-  StudentFacultyCollegeYear,
-  FacultyCollegeYear,
-  FacultyCollege,
+  User,
+  validate_course,
+  User_faculty_college_year,
+  Faculty_college_year,
+  Faculty_college,
   Faculty,
-  Student,
   injectChapters,
   _,
   validateObjectId,
@@ -20,7 +18,17 @@ const {
   removeDocumentVersion,
   injectUser,
   simplifyObject,
-  injectStudentProgress
+  injectStudentProgress,
+  findDocuments,
+  formatResult,
+  findDocument,
+  User_category,
+  u,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  User_progress,
+  Quiz
 } = require('../../utils/imports')
 
 // create router
@@ -31,13 +39,11 @@ const router = express.Router()
  * definitions:
  *   Course:
  *     properties:
- *       _id:
- *         type: string
  *       name:
  *         type: string
- *       instructor:
+ *       user:
  *         type: string
- *       facultyCollegeYear:
+ *       faculty_college_year:
  *         type: string
  *       description:
  *         type: string
@@ -47,8 +53,8 @@ const router = express.Router()
  *         type: boolean
  *     required:
  *       - name
- *       - instructor
- *       - facultyCollegeYear
+ *       - user
+ *       - faculty_college_year
  *       - description
  */
 
@@ -70,15 +76,17 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
 
-    let courses = await Course.find().lean()
+    let result = await findDocuments(Course)
 
-    if (courses.length === 0)
-      return res.status(404).send('Course list is empty')
-    courses = await injectUser(courses, 'instructor')
-    courses = await injectChapters(courses)
-    return res.status(200).send(courses)
+    if (result.data.length === 0)
+      return res.send(formatResult(404, 'Course list is empty'))
+
+    // result.data = await injectUser(result.data, 'user')
+    // result.data = await injectChapters(result.data)
+
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -109,51 +117,86 @@ router.get('/college/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
-    let college = await College.findOne({
+      return res.send(formatResult(400, error.details[0].message))
+
+    let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college)
-      return res.status(404).send(`College ${req.params.id} Not Found`)
-
-    let instructors = await Instructor.find({
-      college: req.params.id
-    })
-    if (!instructors)
-      return res.status(404).send(`Courses in ${college.name} Not Found`)
+    if (!college.data)
+      return res.send(formatResult(404, 'college not found'))
+    /*
+        let user_category = await findDocument(User_category, {
+          name: 'INSTRUCTOR'
+        })
+    
+        let users = await findDocuments(User, {
+          college: req.params.id,
+          category: user_category.data._id
+        })
+        if (!users.data.length)
+          return res.send(formatResult(4040, `${college.data.name} course list is empty`))
+    
+        let foundCourses = []
+    
+        for (const user of users.data) {
+          let courses = await findDocuments(Course, {
+            user: user._id
+          })
+          if (courses.data.length > 0) {
+            for (const course of courses.data) {
+              foundCourses.push(course)
+            }
+          }
+        }
+    */
 
     let foundCourses = []
 
-    for (const instructor of instructors) {
-      let courses = await Course.find({
-        instructor: instructor._id
-      }).lean()
-      if (courses.length > 0) {
-        for (const course of courses) {
+    let faculty_college = await findDocuments(Faculty_college, { college: req.params.id })
+    if (!faculty_college.data.length)
+      return res.send(formatResult(404, 'courses not found'))
+
+    for (const i in faculty_college.data) {
+      let faculty_college_year = await findDocuments(Faculty_college_year, { faculty_college: faculty_college.data[i]._id })
+      if (!faculty_college_year.data.length)
+        continue
+
+      for (const k in faculty_college_year.data) {
+        let courses = await findDocuments(Course, {
+          faculty_college_year: faculty_college_year.data[i]._id
+        })
+        if (!courses.data.length)
+          continue
+
+        for (const course of courses.data) {
           foundCourses.push(course)
         }
       }
+
     }
+
     if (foundCourses.length === 0)
-      return res.status(404).send(`${college.name} course list is empty`)
-    foundCourses = await injectUser(foundCourses, 'instructor')
-    foundCourses = await injectChapters(foundCourses)
-    return res.status(200).send(foundCourses)
+      return res.send(formatResult(404, `${college.data.name} course list is empty`))
+
+    // foundCourses = await injectUser(foundCourses, 'user')
+    // foundCourses = await injectChapters(foundCourses)
+
+    return res.send(formatResult(u, u, foundCourses))
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
 /**
  * @swagger
- * /course/instructor/{id}:
+ * /course/user/{id}:
  *   get:
  *     tags:
  *       - Course
- *     description: Returns courses of a specified instructor
+ *     description: Returns courses of a specified user
  *     parameters:
  *       - name: id
- *         description: Instructor id
+ *         description: User id
  *         in: path
  *         required: true
  *         type: string
@@ -165,45 +208,56 @@ router.get('/college/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/instructor/:id', async (req, res) => {
+router.get('/user/:id', async (req, res) => {
   try {
     const {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(500).send(error.details[0].message)
-    let instructor = await Instructor.findOne({
+      return res.send(formatResult(400, error.details[0].message))
+
+    let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!instructor)
-      return res.status(404).send(`Instructor ${req.params.id} Not Found`)
-    let courses = await Course.find({
-      instructor: req.params.id
-    }).lean()
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-    if (courses.length === 0)
-      return res.status(404).send(`${instructor.name} have No courses`)
+    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+      user: user.data._id,
+      status: 1
+    })
+    if (!user_faculty_college_year.data)
+      return res.send(formatResult(404, 'courses not found'))
 
-    courses = await injectChapters(courses)
-    course = await injectFacultyCollegeYear(courses)
-    courses = await injectChapters(courses)
+    let courses = await findDocuments(Course, {
+      faculty_college_year: user_faculty_college_year.data.faculty_college_year
+    })
 
-    return res.status(200).send(courses)
+    // ******* while adding permissions remember to filter data according to the user requesting *******
+
+    if (courses.data.length === 0)
+      return res.send(formatResult(404, 'courses not found'))
+
+    // courses = await injectChapters(courses)
+    // course = await injectFaculty_college_year(courses)
+    // courses = await injectChapters(courses)
+
+    return res.send(courses)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
 /**
  * @swagger
- * /course/instructor/{instructorId}/{courseName}:
+ * /course/user/{userId}/{courseName}:
  *   get:
  *     tags:
  *       - Course
  *     description: Returns a course with the specified name
  *     parameters:
- *       - name: instructorId
- *         description: Instructor id
+ *       - name: userId
+ *         description: User id
  *         in: path
  *         required: true
  *         type: string
@@ -220,157 +274,45 @@ router.get('/instructor/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/instructor/:instructorId/:courseName', async (req, res) => {
+router.get('/user/:userId/:courseName', async (req, res) => {
   try {
-    // validate the instructorId
+    // validate the userId
     const {
       error
-    } = validateObjectId(req.params.instructorId)
+    } = validateObjectId(req.params.userId)
     if (error)
-      return res.status(400).send(error.details[0].message)
+      return res.send(formatResult(400, error.details[0].message))
 
-    // check if instructor exist
-    let instructor = await Instructor.findOne({
-      _id: req.params.instructorId
+    let user = await findDocument(User, {
+      _id: req.params.userId
     })
-    if (!instructor)
-      return res.status(404).send(`Sudent with code ${req.params.instructorId} doens't exist`)
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-    let course = await Course.findOne({
-      instructor: req.params.instructorId,
+    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+      user: user.data._id,
+      status: 1
+    })
+    if (!user_faculty_college_year.data)
+      return res.send(formatResult(404, 'course not found'))
+
+    let course = await findDocument(Course, {
+      faculty_college_year: user_faculty_college_year.data.faculty_college_year,
       name: req.params.courseName
-    }).lean()
-    if (!course)
-      return res.status(404).send(`The requested course was not found`)
-
-    course = await injectChapters([course])
-    course = await injectFacultyCollegeYear(course)
-
-    return res.status(200).send(course[0])
-  } catch (error) {
-    return res.status(500).send(error)
-  }
-})
-
-/**
- * @swagger
- * /course/student/{id}:
- *   get:
- *     tags:
- *       - Course
- *     description: Returns courses of a student
- *     parameters:
- *       - name: id
- *         description: Student id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/student/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.status(400).send(error.details[0].message)
-
-    // check if student exist
-    let student = await Student.findOne({
-      _id: req.params.id
     })
-    if (!student)
-      return res.status(404).send(`Sudent with code ${req.params.id} doens't exist`)
 
-    const studentFacultyCollegeYear = await StudentFacultyCollegeYear.findOne({
-      student: student._id,
-      status: 1
-    }).lean()
-    let courses = await Course.find({
-      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: true
-    }).lean()
-    if (courses.length === 0)
-      return res.status(404).send(`There are no courses for student ${req.params.id}`)
+    // ******* while adding permissions remember to filter data according to the user requesting *******
 
-    courses = await injectUser(courses, 'instructor')
-    courses = await injectChapters(courses)
-    courses = await injectStudentProgress(courses, student._id)
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
-    return res.status(200).send(courses)
+    // course.data = await injectChapters([course.data])
+    // course.data = await injectFaculty_college_year(course.data)
+    // course.data = course.data[0]
+
+    return res.status(200).send(course)
   } catch (error) {
-    return res.status(500).send(error)
-  }
-})
-
-/**
- * @swagger
- * /course/student/{studentId}/{courseName}:
- *   get:
- *     tags:
- *       - Course
- *     description: Returns a course with the specified name
- *     parameters:
- *       - name: studentId
- *         description: Student id
- *         in: path
- *         required: true
- *         type: string
- *       - name: courseName
- *         description: Course name
- *         in: path
- *         required: false
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/student/:studentId/:courseName', async (req, res) => {
-  try {
-    // validate the studentId
-    const {
-      error
-    } = validateObjectId(req.params.studentId)
-    if (error)
-      return res.status(400).send(error.details[0].message)
-
-    // check if student exist
-    let student = await Student.findOne({
-      _id: req.params.studentId
-    })
-    if (!student)
-      return res.status(404).send(`Sudent with code ${req.params.studentId} doens't exist`)
-
-    const studentFacultyCollegeYear = await StudentFacultyCollegeYear.findOne({
-      student: student._id,
-      status: 1
-    }).lean()
-
-    let courses = await Course.find({
-      facultyCollegeYear: studentFacultyCollegeYear.facultyCollegeYear, published: true
-    }).lean()
-    if (courses.length < 1)
-      return res.status(404).send(`The requested course was not found`)
-    let course = courses.filter(c => c.name == req.params.courseName)
-    if (course.length < 1) {
-      return res.status(404).send(`The requested course was not found`)
-    }
-    course = await injectUser(course, 'instructor')
-    course = await injectChapters(course)
-    course = await injectStudentProgress(course, student._id)
-
-    return res.status(200).send(course[0])
-  } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -396,22 +338,27 @@ router.get('/student/:studentId/:courseName', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let course = await Course.findOne({
-    _id: req.params.id
-  }).lean()
   try {
-    if (!course)
-      return res.status(404).send(`Course ${req.params.id} Not Found`)
-    course = await injectUser([course], 'instructor')
-    course = await injectChapters(course)
-    return res.status(200).send(course[0])
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    let course = await findDocument(Course, {
+      _id: req.params.id
+    })
+
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
+
+    // course.data = await injectUser([course.data], 'user')
+    // course.data = await injectChapters(course.data)
+    // course.data = course.data[0]
+
+    return res.send(course)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -443,40 +390,42 @@ router.post('/', async (req, res) => {
   try {
     const {
       error
-    } = validateCourse(req.body)
+    } = validate_course(req.body)
     if (error)
-      return res.status(400).send(error.details[0].message)
+      return res.send(formatResult(400, error.details[0].message))
 
-    let facultyCollegeYear = await FacultyCollegeYear.findOne({
-      _id: req.body.facultyCollegeYear
+    let faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: req.body.faculty_college_year
     })
-    if (!facultyCollegeYear)
-      return res.status(404).send(`facultyCollegeYear of Code ${req.body.facultyCollegeYear} Not Found`)
+    if (!faculty_college_year.data)
+      return res.send(formatResult(404, 'faculty_college_year not found'))
 
-    let newDocument = new Course({
+    let course = await findDocument(Course, {
+      name: req.body.name
+    })
+    if (course.data)
+      return res.send(formatResult(400, 'name was taken'))
+
+    let result = await createDocument(Course, {
       name: req.body.name,
-      instructor: req.body.instructor,
-      facultyCollegeYear: req.body.facultyCollegeYear,
-      description: req.body.description,
-      coverPicture: req.file === undefined ? undefined : req.file.filename
+      user: req.body.user,
+      faculty_college_year: req.body.faculty_college_year,
+      description: req.body.description
     })
 
-    let saveDocument = await newDocument.save()
-    if (!saveDocument)
-      return res.status(500).send('New Course not Registered')
+    // result.data = simplifyObject(result.data)
+    // result.data = await injectChapters([result.data])
+    // result.data = await injectFaculty_college_year(result.data)
 
-    saveDocument = simplifyObject(saveDocument)
-    saveDocument = await injectChapters([saveDocument])
-    saveDocument = await injectFacultyCollegeYear(saveDocument)
-    return res.status(201).send(saveDocument[0])
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
 /**
  * @swagger
- * /course/tooglePublishment/{id}:
+ * /course/toogle_publishment_status/{id}:
  *   put:
  *     tags:
  *       - Course
@@ -497,39 +446,37 @@ router.post('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/tooglePublishment/:id', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
+router.put('/toogle_publishment_status/:id', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if course exist
-  let course = await Course.findOne({
-    _id: req.params.id
-  })
-  if (!course)
-    return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.params.id
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
-  const now = new Date()
+    const now = new Date()
 
-  const updateObject = {
-    published: !course.published,
-    publishedOn: !course.published ? now : undefined
+    const updateObject = {
+      published: !course.data.published,
+      publishedOn: !course.data.published ? now : undefined
+    }
+
+    let result = await updateDocument(Course, req.params.id, updateObject)
+
+    // result.data = await injectFaculty_college_year([result.data])
+    // result.data = result.data[0]
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
-
-  let updateDocument = await Course.findOneAndUpdate({
-    _id: req.params.id
-  }, updateObject, {
-    new: true
-  }).lean()
-  if (!updateDocument)
-    return res.status(500).send("Error ocurred")
-
-  updateDocument = await injectFacultyCollegeYear([updateDocument])
-  return res.status(201).send(updateDocument[0])
-
-
 })
 
 /**
@@ -562,32 +509,40 @@ router.put('/tooglePublishment/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  error = validateCourse(req.body)
-  error = error.error
-  if (error)
-    return res.status(400).send(error.details[0].message)
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if course exist
-  let course = await Course.findOne({
-    _id: req.params.id
-  })
-  if (!course)
-    return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
+    error = validate_course(req.body)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  const updateDocument = await Course.findOneAndUpdate({
-    _id: req.params.id
-  }, req.body, {
-    new: true
-  })
-  if (updateDocument)
-    return res.status(201).send(updateDocument)
-  return res.status(500).send("Error ocurred")
+    // check if course exist
+    let course = await findDocument(Course, {
+      _id: req.params.id
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
 
+    course = await findDocument(Course, {
+      _id: {
+        $ne: req.params.id
+      },
+      name: req.body.name
+    })
+    if (course.data)
+      return res.send(formatResult(400, 'name was taken'))
+
+    const result = await updateDocument(Course, req.params.id, req.body)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -614,65 +569,96 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let course = await Course.findOne({
-    _id: req.params.id
-  })
-  if (!course)
-    return res.status(404).send(`Course of Code ${req.params.id} Not Found`)
-  let deletedCourse = await Course.findOneAndDelete({
-    _id: req.params.id
-  })
-  if (!deletedCourse)
-    return res.status(500).send('Course Not Deleted')
-  const college = getCollege(course.facultyCollegeYear)
-  const dir = `./uploads/schools/${college}/courses/${req.params.id}`
-  fs.exists(dir, (err) => {
-    if (err)
-      return res.status(500).send(err)
-    fs.remove(dir, { recursive: true }, (err) => {
-      if (err)
-        return res.status(500).send(err)
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    let course = await findDocument(Course, {
+      _id: req.params.id
     })
-  })
-  return res.status(200).send(`Course ${deletedCourse._id} Successfully deleted`)
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
+
+    // check if the course is never used
+    const course_used = false
+
+    const progress = await findDocument(User_progress, {
+      course: req.params.id
+    })
+    if (progress.data)
+      course_used = true
+
+    const quiz = await findDocument(Quiz, {
+      "target.id": req.params.id
+    })
+    if (quiz.data)
+      course_used = true
+
+    if (!course_used) {
+
+      const result = await deleteDocument(Course, req.params.id)
+
+      let faculty_college_year = await findDocument(Faculty_college_year, {
+        _id: course.data.faculty_college_year
+      })
+
+      let faculty_college = await findDocument(Faculty_college, {
+        _id: faculty_college_year.data.faculty_college
+      })
+
+      const path = `./uploads/colleges/${faculty_college.data.college}/courses/${req.params.id}`
+      fs.exists(path, (err) => {
+        fs.remove(path, {
+          recursive: true
+        })
+      })
+
+      return res.send(result)
+    }
+
+    const updated_course = await updateDocument(Course, req.params.id, {
+      status: 0
+    })
+    return res.send(formatResult(200, `Course ${updated_course.data.user_name} couldn't be deleted because it was used, instead it was disabled`, updated_course.data))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 // inject faculty college Year
-async function injectFacultyCollegeYear(courses) {
+async function injectFaculty_college_year(courses) {
   for (const i in courses) {
-    const facultyCollegeYear = await FacultyCollegeYear.findOne({
-      _id: courses[i].facultyCollegeYear
+    const faculty_college_year = await Faculty_college_year.findOne({
+      _id: courses[i].faculty_college_year
     }).lean()
 
-    courses[i].facultyCollegeYear = removeDocumentVersion(facultyCollegeYear)
+    courses[i].faculty_college_year = removeDocumentVersion(faculty_college_year)
 
-    const collegeYear = await CollegeYear.findOne({
-      _id: facultyCollegeYear.collegeYear
+    const collegeYear = await College_year.findOne({
+      _id: faculty_college_year.collegeYear
     }).lean()
-    courses[i].facultyCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+    courses[i].faculty_college_year.collegeYear = removeDocumentVersion(collegeYear)
 
-    const facultyCollege = await FacultyCollege.findOne({
-      _id: facultyCollegeYear.facultyCollege
+    const faculty_college = await Faculty_college.findOne({
+      _id: faculty_college_year.faculty_college
     }).lean()
-    courses[i].facultyCollegeYear.facultyCollege = removeDocumentVersion(facultyCollege)
+    courses[i].faculty_college_year.faculty_college = removeDocumentVersion(faculty_college)
 
     const faculty = await Faculty.findOne({
-      _id: facultyCollege.faculty
+      _id: faculty_college.faculty
     }).lean()
-    courses[i].facultyCollegeYear.facultyCollege.faculty = removeDocumentVersion(faculty)
+    courses[i].faculty_college_year.faculty_college.faculty = removeDocumentVersion(faculty)
 
     const college = await College.findOne({
-      _id: facultyCollege.college
+      _id: faculty_college.college
     }).lean()
 
-    courses[i].facultyCollegeYear.facultyCollege.college = removeDocumentVersion(college)
-    if (courses[i].facultyCollegeYear.facultyCollege.college.logo) {
-      courses[i].facultyCollegeYear.facultyCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+    courses[i].faculty_college_year.faculty_college.college = removeDocumentVersion(college)
+    if (courses[i].faculty_college_year.faculty_college.college.logo) {
+      courses[i].faculty_college_year.faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }
   }
   return courses
