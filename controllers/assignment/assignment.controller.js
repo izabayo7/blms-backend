@@ -67,7 +67,7 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
             })
 
             assignments = await findDocuments(Assignment, {
-                user: {$in: instructors.map(x => x._id.toString())},
+                user: {$in: instructors.map(x => x.user)},
                 status: {$in: ["PUBLISHED", "RELEASED"]}
             }, u, u, u, u, u, {_id: -1})
         }
@@ -197,6 +197,10 @@ router.get('/:id', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
  *         description: custom width
  *         in: query
  *         type: string
+ *       - name: download
+ *         description: make it true if you want to download the attachment
+ *         in: query
+ *         type: boolean
  *     responses:
  *       200:
  *         description: OK
