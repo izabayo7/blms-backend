@@ -411,7 +411,7 @@ router.post('/', async (req, res) => {
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category !== user_category.data._id)
+    if (user.data.category != user_category.data._id)
       return res.send(formatResult(404, 'user can\'t create course'))
 
     let course = await findDocument(Course, {
@@ -582,7 +582,7 @@ router.put('/:id', async (req, res) => {
  *     description: Delete a course
  *     parameters:
  *       - name: id
- *         description: College id
+ *         description: Course id
  *         in: path
  *         required: true
  *         type: string

@@ -18,7 +18,8 @@ const {
   findDocument,
   User,
   User_category,
-  createDocument
+  createDocument,
+  deleteDocument
 } = require('../../utils/imports')
 const {
   parseInt
@@ -264,31 +265,34 @@ router.get('/user/:id/:quiz_name', async (req, res) => {
     let chapter
     let course
 
-    if (quiz.data.target.type === 'chapter') {
-      chapter = await findDocument(Chapter, {
-        _id: quiz.data.target.id
+    if (quiz.data.target.id) {
+      if (quiz.data.target.type === 'chapter') {
+        chapter = await findDocument(Chapter, {
+          _id: quiz.data.target.id
+        })
+        course = await findDocument(Course, {
+          _id: chapter.data.course
+        })
+        faculty_college_year = course.data.faculty_college_year
+      } else if (quiz.data.target.type === 'course') {
+        course = await findDocument(Course, {
+          _id: quiz.data.target.id
+        })
+        faculty_college_year = course.data.faculty_college_year
+      } else if (quiz.data.target.type === 'faculty_college_year') {
+        faculty_college_year = quiz.data.target.id
+      }
+
+      const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+        user: req.params.id,
+        faculty_college_year: faculty_college_year
       })
-      course = await findDocument(Course, {
-        _id: chapter.data.course
-      })
-    } else if (quiz.data.target.type === 'course') {
-      course = await findDocument(Course, {
-        _id: quiz.data.target.id
-      })
-      faculty_college_year = course.data.faculty_college_year
+      if (!user_faculty_college_year.data)
+        return res.send(formatResult(404, 'quiz not found'))
+    } else {
+      if (quiz.data.user !== req.params.id)
+        return res.send(formatResult(404, 'quiz not found'))
     }
-
-    if (quiz.data.target.type === 'faculty_college_year') {
-      faculty_college_year = quiz.data.target.id
-    }
-
-    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: req.params.id,
-      faculty_college_year: faculty_college_year
-    })
-
-    if (!user_faculty_college_year.data)
-      return res.send(formatResult(404, 'quiz not found'))
 
     // quiz.data = await addAttachmentMediaPaths([quiz.data])
     // quiz.data = await addQuizUsages(quiz.data)
@@ -343,7 +347,7 @@ router.post('/', async (req, res) => {
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category !== user_category.data._id)
+    if (user.data.category != user_category.data._id)
       return res.send(formatResult(404, 'user can\'t create quiz'))
 
     // check if quizname exist
@@ -424,7 +428,7 @@ router.put('/:id', async (req, res) => {
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category !== user_category.data._id)
+    if (user.data.category != user_category.data._id)
       return res.send(formatResult(404, 'user can\'t create quiz'))
 
     // check if quiz exist
@@ -435,6 +439,8 @@ router.put('/:id', async (req, res) => {
     if (!quiz.data)
       return res.send(formatResult(404, 'quiz not found'))
 
+    let quiz_copy = quiz
+
     // check if quizname exist
     quiz = await findDocument(Quiz, {
       _id: {
@@ -444,6 +450,8 @@ router.put('/:id', async (req, res) => {
     })
     if (quiz.data)
       return res.send(formatResult(400, 'name was taken'))
+
+    quiz = quiz_copy
 
     if (req.body.target) {
 
@@ -482,14 +490,7 @@ router.put('/:id', async (req, res) => {
       if (!target.data)
         return res.send(formatResult(404, 'quiz target not found'))
 
-      // const last_targeted_quiz = await Quiz.findOne({
-      //   target: req.body.target
-      // })
-      // if (last_targeted_quiz) {
-      //   last_targeted_quiz.target = undefined
-      //   await last_targeted_quiz.save()
-      // }
-
+      // remove the previously attached quiz
       const last_targeted_quiz = await findDocument(Quiz, {
         target: req.body.target
       })
@@ -518,26 +519,26 @@ router.put('/:id', async (req, res) => {
 
 
     // delete removed files
-    for (const i in quiz.questions) {
+    for (const i in quiz_copy.data.questions) {
       if (
-        quiz.questions[i].type.includes("file-select") &&
-        quiz.questions[i].options.choices.length > 0
+        quiz_copy.data.questions[i].type.includes("file-select") &&
+        quiz_copy.data.questions[i].options.choices.length > 0
       ) {
         let deleteAll = false
         if (!req.body.questions[i].type.includes('file-select')) {
           deleteAll = true
         }
-        for (const j in quiz.questions[i].options.choices) {
+        for (const j in quiz_copy.data.questions[i].options.choices) {
           let deletePicture = true
           if (req.body.questions[i].type.includes('file-select')) {
             for (const k in req.body.questions[i].options.choices) {
-              if (quiz.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
+              if (quiz_copy.data.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
                 deletePicture = false
               }
             }
           }
           if (deleteAll || deletePicture) {
-            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
+            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.data.questions[i].options.choices[j].src}`
             fs.exists(path, (exists) => {
               if (exists) {
                 fs.unlink(path, {
@@ -550,13 +551,35 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    return res.send(200, 'UPDATED', quiz.data)
+    return res.send(formatResult(200, 'UPDATED', quiz.data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
 })
 
-// delete a quiz
+/**
+ * @swagger
+ * /quiz/{id}:
+ *   delete:
+ *     tags:
+ *       - Quiz
+ *     description: Delete a quiz
+ *     parameters:
+ *       - name: id
+ *         description: Quiz id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.delete('/:id', async (req, res) => {
   try {
 
@@ -572,43 +595,41 @@ router.delete('/:id', async (req, res) => {
     if (!quiz.data)
       return res.send(formatResult(404, 'quiz not found'))
 
-    let user = await findDocument(User, {
-      _id: quiz.user
+    // check if the quiz is never used
+    let quiz_used = false
+
+    if (!user_used) {
+      let user = await findDocument(User, {
+        _id: quiz.user
+      })
+
+      let result = await deleteDocument(Quiz, req.params.id)
+
+      let err = undefined
+
+      const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`
+      fs.exists(path, (exists) => {
+        if (exists) {
+          fs.remove(path, {
+            recursive: true
+          })
+        }
+      })
+
+      return res.send(result)
+    }
+
+    const update_quiz = await updateDocument(Quiz, req.params.id, {
+      status: 0
     })
-
-    let deletedQuiz = await Quiz.findOneAndDelete({
-      _id: req.params.id
-    })
-    if (!deletedQuiz)
-      return res.status(500).send('Quiz Not Deleted')
-
-    let err = undefined
-
-    const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`
-    fs.exists(path, (exists) => {
-      if (exists) {
-        fs.rmdir(path, {
-          recursive: true
-        }, (err) => {
-          if (err) {
-            err = err
-          }
-        })
-      }
-    })
-
-
-    if (err)
-      return res.status(500).send(err)
-
-    return res.send(`Quiz ${deletedQuiz._id} Successfully deleted`)
+    return res.send(formatResult(200, 'quiz couldn\'t be deleted because it was used, instead it was disabled', update_user.data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
 })
 
 function validateQuestions(questions) {
-  const allowedQuestionTypes = ['open-ended', 'single-text-select', 'multiple-text-select', 'single-file-select', 'multiple-file-select', 'file-upload']
+  const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_file_select', 'multiple_file_select', 'file_upload']
   let message = ''
   let marks = 0
   for (let i in questions) {
@@ -622,20 +643,43 @@ function validateQuestions(questions) {
         message = `question ${i + 1} must have selection options`
         break;
       } else {
+        if (questions[i].options.choices.length < 2) {
+          message = `question ${i + 1} must have more than one selection choices`
+          break;
+        }
         if (!questions[i].options.choices && !questions[i].type.includes('file')) {
           message = `question ${i + 1} must have selection choices`
           break;
         }
+        let right_option_found = false
         for (let k in questions[i].options.choices) {
           k = parseInt(k)
-          if ((questions[i].type === 'single-text-select' || questions[i].type === 'multi-text-select') && !questions[i].options.choices[k].text) {
-            message = `choice ${k + 1} in question ${i + 1} must have text`
+          let times
+          if (questions[i].type === 'single_text_select' || questions[i].type === 'multi_text_select') {
+            times = questions[i].options.choices.filter(choice => choice.text == questions[i].options.choices[k].text).length
+            if (!questions[i].options.choices[k].text) {
+              message = `choice ${k + 1} in question ${i + 1} must have text`
+              break;
+            }
+          }
+          if (questions[i].type === 'single_file_select' || questions[i].type === 'multi_file_select') {
+            times = questions[i].options.choices.filter(choice => choice.src == questions[i].options.choices[k].src).length
+            if (!questions[i].options.choices[k].src) {
+              message = `choice ${k + 1} in question ${i + 1} must have attachment src`
+              break;
+            }
+          }
+          if (questions[i].options.choices[k].right) {
+            right_option_found = true
+          }
+          if (times > 1) {
+            message = `question ${i + 1} must have identical choices`
             break;
           }
-          if ((questions[i].type === 'single-file-select' || questions[i].type === 'multi-file-select') && !questions[i].options.choices[k].src) {
-            message = `choice ${k + 1} in question ${i + 1} must have attachment src`
-            break;
-          }
+        }
+        if (!right_option_found) {
+          message = `question ${i + 1} must have one right selection choice`
+          break;
         }
       }
     }

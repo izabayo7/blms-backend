@@ -332,7 +332,7 @@ router.post('/', async (req, res) => {
       _id: req.body.category
     })
     if (!user_category.data)
-      return res.send(formatResult(404, `User_category of Code ${req.body.category} Not Found`))
+      return res.send(formatResult(404, 'category not found'))
 
     if (user_category.data.name !== 'SUPER_ADMIN') {
       if (!req.body.college) {

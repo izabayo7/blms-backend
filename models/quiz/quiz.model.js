@@ -50,7 +50,8 @@ const quiz_schema = new mongoose.Schema({
                     type: String
                 },
                 right: {
-                    type: Boolean
+                    type: Boolean,
+                    default: false
                 }
             }],
         },
@@ -66,7 +67,11 @@ const quiz_schema = new mongoose.Schema({
     published: {
         type: Boolean,
         default: false
-    }
+    },
+    status: {
+        type: Number,
+        default: 1
+    },
 })
 quiz_schema.plugin(timestamps);
 
@@ -97,7 +102,8 @@ function validate_quiz(body) {
         })).required(),
         total_marks: Joi.number(),
         user: Joi.ObjectId().required(),
-        published: Joi.boolean()
+        published: Joi.boolean(),
+        status: Joi.number().min(0).max(1)
     }
     return Joi.validate(body, schema)
 }
