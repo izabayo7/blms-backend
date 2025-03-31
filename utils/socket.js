@@ -10,6 +10,7 @@ const {
     simplifyObject,
     _,
     u,
+    Comment,
     Notification,
     injectUser,
     Course,
@@ -332,7 +333,6 @@ module.exports.listen = (app) => {
 
             if (!target)
                 return socket.error(formatResult(404, 'comment target not found'))
-
 
             // let result = await createDocument(Comment, comment)
             let result = new Comment(comment);
