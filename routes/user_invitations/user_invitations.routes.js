@@ -90,6 +90,30 @@ router.route('/all')
      */
     .get([auth, getAllInvitations])
 
+router.route('/:token/renew')
+    /**
+     * @swagger
+     * /user_invitations/{token}/renew:
+     *   put:
+     *     tags:
+     *       - User_invitation
+     *     description: Extends the expiration time of an invitation
+     *     security:
+     *       - bearerAuth: -[]
+     *     parameters:
+     *       - name: token
+     *         description: invitation token
+     *         in: path
+     *         type: string
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     */
+    .put([auth, renewInvitation])
+
 router.route('/:token/:action')
     /**
      * @swagger
@@ -117,29 +141,6 @@ router.route('/:token/:action')
      */
     .put(acceptOrDenyInvitation)
 
-router.route('/:token/renew')
-    /**
-     * @swagger
-     * /user_invitations/{token}/renew:
-     *   put:
-     *     tags:
-     *       - User_invitation
-     *     description: Extends the expiration time of an invitation
-     *     security:
-     *       - bearerAuth: -[]
-     *     parameters:
-     *       - name: token
-     *         description: invitation token
-     *         in: path
-     *         type: string
-     *         required: true
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     */
-    .get([auth, renewInvitation])
 
 router.route('/:token/delete')
     /**
