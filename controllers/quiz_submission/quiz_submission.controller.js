@@ -559,6 +559,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Quiz_submission
  *     description: Update quiz_submission
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz_submission id
