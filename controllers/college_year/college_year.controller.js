@@ -105,6 +105,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - College_year
  *     description: Create college_year
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a college_year
