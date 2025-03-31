@@ -57,7 +57,8 @@ const router = express.Router()
  *       national_id:
  *         type: number
  *       date_of_birth:
- *         type: date
+ *         type: string
+ *         format: date
  *       gender:
  *         type: string
  *       phone:
@@ -89,16 +90,16 @@ const router = express.Router()
  *       - category
  */
 
- /**
- * @swagger
- * definitions:
- *   UserLogin:
- *     properties:
- *       email_user_name_or_phone:
- *         type: string
- *       password:
- *         type: string
- */
+/**
+* @swagger
+* definitions:
+*   UserLogin:
+*     properties:
+*       email_user_name_or_phone:
+*         type: string
+*       password:
+*         type: string
+*/
 
 /**
  * @swagger
