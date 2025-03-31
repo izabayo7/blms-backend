@@ -118,9 +118,8 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
 
                             assignment_submissions[k].total_feedbacks = 0
 
-                            for (const l in assignment_submissions[k].answers) {
-                                assignment_submissions[k].total_feedbacks += assignment_submissions[k].answers[l].feedback ? 1 : 0;
-                            }
+                            assignment_submissions[k].total_feedbacks += assignment_submissions[k].feedback ? 1 : 0;
+
                             assignment_submissions[k].assignment = assignments[i]
                             foundSubmissions.push(assignment_submissions[k])
                         }
@@ -190,10 +189,8 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
                         }
 
                         assignment_submissions[k].total_feedbacks = 0
+                        assignment_submissions[k].total_feedbacks += assignment_submissions[k].feedback ? 1 : 0;
 
-                        for (const l in assignment_submissions[k].answers) {
-                            assignment_submissions[k].total_feedbacks += assignment_submissions[k].answers[l].feedback ? 1 : 0;
-                        }
                     }
                     assignments[i].submissions = assignment_submissions
                     foundSubmissions.push(assignments[i])
@@ -782,14 +779,12 @@ async function get_faculty_college_year(assignment) {
 
 async function injectUserFeedback(submissions) {
     for (const i in submissions) {
-        for (const k in submissions[i].answers) {
-            let feedback = await Comment.find({
-                "target.type": 'assignment_submission_answer', auth,
-                "target.id": submissions[i].answers[k]._id
-            })
-            feedback = await injectUser(simplifyObject(feedback), 'sender')
-            submissions[i].answers[k].feedback = feedback[0]
-        }
+        let feedback = await Comment.find({
+            "target.type": 'assignment_submission',
+            "target.id": submissions[i]._id
+        })
+        feedback = await injectUser(simplifyObject(feedback), 'sender')
+        submissions[i].feedback = feedback[0]
     }
     return submissions
 }
