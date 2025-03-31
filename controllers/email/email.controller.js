@@ -1,18 +1,32 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
+const {createTransport} = require('nodemailer')
+const smtpTransport = require('nodemailer-smtp-transport')
 const { invitationToSystem, contactUs, requestCallback, reset_password, confirm_email } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    port: 465,
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     port: 465,
+//     auth: {
+//         user: process.env.EMAIL,
+//         pass: process.env.PASSWORD
+//     }
+// });
+
+const transporter = createTransport(smtpTransport({
+    host: "mail.kurious.rw",
+    port: 25,
     auth: {
         user: process.env.EMAIL,
         pass: process.env.PASSWORD
+    },
+    tls: {
+        rejectUnauthorized: false
     }
-});
+}));
 
 // let transporter
 
