@@ -581,15 +581,21 @@ router.put('/:id/document', async (req, res) => {
  *   put:
  *     tags:
  *       - Chapter
- *     description: Update chapter video (video upload using swagger is still under construction)
+ *     description: Update chapter video
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: Chapter id
  *         in: path
  *         required: true
  *         type: string
+ *       - in: formData
+ *         name: file
+ *         type: file
+ *         description: course coverpicture to upload.
  *     responses:
  *       201:
  *         description: Created
@@ -632,7 +638,7 @@ router.put('/:id/video', async (req, res) => {
         return res.send(formatResult(500, err.message))
 
       const exists = fs.existsSync(`${req.kuriousStorageData.dir}/${chapter.uploaded_video}`)
-      console.log(exists)
+
       if (exists && chapter.uploaded_video && chapter.uploaded_video != req.file.filename) {
         fs.unlink(`${req.kuriousStorageData.dir}/${chapter.uploaded_video}`, (err) => {
           if (err) {
