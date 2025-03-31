@@ -1,7 +1,7 @@
 const { User_invitation, validate_user_invitation } = require('../../models/user_invitations/user_invitations.model');
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 const {
-  formatResult, u, User_category, College, ONE_DAY, updateDocument
+  formatResult, u, User_category, College, ONE_DAY, updateDocument, User
 } = require('../../utils/imports');
 const { sendInvitationMail } = require('../email/email.controller');
 
