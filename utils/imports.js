@@ -324,7 +324,7 @@ exports.checkCollegePayment = async (arguements) => {
     try {
         let paid = false
         const {link, registration_number} = arguements
-        const res = await axios.get(link + registration_number)
+        const res = await axios.get(link +'/'+ registration_number)
         if (res.data)
             paid = res.data.paid
         return paid

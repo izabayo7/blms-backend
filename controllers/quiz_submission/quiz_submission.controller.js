@@ -1,5 +1,5 @@
 // import dependencies
-const {autoMarkSelectionQuestions, Live_session, checkCollegePayment} = require("../../utils/imports");
+const {autoMarkSelectionQuestions, Live_session, checkCollegePayment, College} = require("../../utils/imports");
 const {
     quiz
 } = require('../../models/quiz/quiz.model')
@@ -698,10 +698,16 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        if (req.user.registration_number !== undefined) {
+        const college = await College.findOne({_id: req.user.college})
+
+        if (college.users_verification_link) {
+
+            if (!req.user.registration_number)
+                return res.send(formatResult(403, 'user must have a registration number (since the college is verifying your college payment status)'))
+
             let paid = await checkCollegePayment({
                 registration_number: req.user.registration_number,
-                link: 'https://test.apis.kurious.rw/api/user/reg_number/'
+                link: college.users_verification_link
             })
             if (!paid)
                 return res.send(formatResult(403, 'user must pay the college to be able to create a submission'))
