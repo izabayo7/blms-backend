@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllPosts, getMyPosts, createPost, updatePost } = require('../../controllers/posts/posts.controller')
+const { getAllPosts, getMyPosts, createPost, updatePost, deletePost } = require('../../controllers/posts/posts.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
@@ -29,7 +29,7 @@ router.route('/')
     .get([auth, getMyPosts])
     /**
      * @swagger
-     * /user_invitations:
+     * /posts:
      *   post:
      *     tags:
      *       - Post
@@ -119,7 +119,7 @@ router.route('/:id')
 router.route('/:id/:action')
     /**
      * @swagger
-     * /user_invitations/{id}/{action}:
+     * /posts/{id}/{action}:
      *   put:
      *     tags:
      *       - Post
@@ -142,22 +142,22 @@ router.route('/:id/:action')
      *       500:
      *         description: Internal Server Error
      */
-    .put(updatePostStatus)
+    .put([auth, updatePostStatus])
 
 
-router.route('/:token/delete')
+router.route('/:id/delete')
     /**
      * @swagger
-     * /user_invitations/{token}/delete:
+     * /posts/{id}/delete:
      *   delete:
      *     tags:
      *       - Post
-     *     description: Deletes a user_invitation
+     *     description: Deletes a Post
      *     security:
      *       - bearerAuth: -[]
      *     parameters:
-     *       - name: token
-     *         description: invitation token
+     *       - name: id
+     *         description: post id
      *         in: path
      *         type: string
      *         required: true
@@ -167,6 +167,6 @@ router.route('/:token/delete')
      *       500:
      *         description: Internal Server Error
      */
-    .delete([auth, deleteInvitation])
+    .delete([auth, deletePost])
 
 exports.Post_routes = router
