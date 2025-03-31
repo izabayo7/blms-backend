@@ -661,7 +661,7 @@ router.put('/', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user/{user_name}/password:
+ * /user/password:
  *   put:
  *     tags:
  *       - User
@@ -669,10 +669,6 @@ router.put('/', auth, async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *        - name: user_name
- *          in: path
- *          type: string
- *          description: User's user name
  *        - name: body
  *          description: Fields for a User
  *          in: body
@@ -693,7 +689,7 @@ router.put('/', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:user_name/password', auth, async (req, res) => {
+router.put('/password', auth, async (req, res) => {
   try {
 
     const {
@@ -703,13 +699,10 @@ router.put('/:user_name/password', auth, async (req, res) => {
       return res.send(formatResult(400, error.details[0].message))
 
     let user = await User.findOne({
-      user_name: req.params.user_name
-    }).populate('category')
+      user_name: req.user.user_name
+    })
     if (!user)
       return res.send(formatResult(400, `user not found`))
-
-    if (req.user.user_name !== user.user_name)
-      return res.send(formatResult(403, 'YOU ARE NOT AUTHORIZED'))
 
     const validPassword = await compare(req.body.current_password, user.password);
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
@@ -725,7 +718,7 @@ router.put('/:user_name/password', auth, async (req, res) => {
 
 /**
  * @swagger
- * /user/{id}/profile:
+ * /user/profile:
  *   put:
  *     tags:
  *       - User
@@ -735,11 +728,6 @@ router.put('/:user_name/password', auth, async (req, res) => {
  *     consumes:
  *        - multipart/form-data
  *     parameters:
- *       - name: id
- *         description: User id
- *         in: path
- *         required: true
- *         type: string
  *       - in: formData
  *         name: file
  *         type: file
@@ -754,7 +742,7 @@ router.put('/:user_name/password', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/profile', async (req, res) => {
+router.put('/profile', auth, async (req, res) => {
   try {
     const {
       error
@@ -764,7 +752,7 @@ router.put('/:id/profile', async (req, res) => {
 
     // check if user exist
     const user = await findDocument(User, {
-      _id: req.params.id
+      user_name: req.user.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
