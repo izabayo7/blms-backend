@@ -1377,7 +1377,17 @@ exports.generateGroupCode = async () => {
   return code
 }
 
-// exports.injectCommentsReplys = 
+exports.injectCommentsReplys = async (comments) => {
+  for (const i in comments) {
+    let replies = await this.findDocuments(this.Comment, {
+      reply: comments[i]._id
+    })
+    replies = await this.injectUser(replies, 'sender')
+    // simplify 
+    comments[i].replies = replies
+  }
+  return comments
+}
 
 // proper way to define user roles
 // proper way to use jwt

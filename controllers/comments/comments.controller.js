@@ -15,7 +15,8 @@ const {
   createDocument,
   updateDocument,
   Chapter,
-  injectUser
+  injectUser,
+  injectCommentsReplys
 } = require('../../utils/imports')
 
 // create router
@@ -64,7 +65,7 @@ router.get('/', async (req, res) => {
   try {
     let results = await findDocuments(Comment)
     results = await injectUser(results, 'sender')
-    
+    results = await injectCommentsReplys(results)
     return res.send(formatResult(u, u, results))
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -139,6 +140,7 @@ router.get('/:target/:id', async (req, res) => {
       "target.id": req.params.id
     })
     comments = await injectUser(comments, 'sender')
+    comments = await injectCommentsReplys(comments)
     return res.send(formatResult(u, u, comments))
   } catch (error) {
     return res.send(formatResult(500, error))
