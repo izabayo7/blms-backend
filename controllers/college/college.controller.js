@@ -430,8 +430,8 @@ router.put('/:id', auth, async (req, res) => {
         }
 
         let result = await updateDocument(College, req.params.id, req.body)
-        result = await injectLogoMediaPaths([result])
-        result = result[0]
+        result.data = await injectLogoMediaPaths([result.data])
+        result.data = result.data[0]
         return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
