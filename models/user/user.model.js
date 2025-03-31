@@ -88,15 +88,15 @@ exports.validate_user = (credentials, method = 'create') => {
         category: Joi.string().required(),
         status: Joi.object({ disabled: Joi.number().min(0).max(1).required(), active: Joi.number().min(0).max(2).required() })
     } : {
-            sur_name: Joi.string().min(3).max(100),
-            other_names: Joi.string().min(3).max(100),
-            user_name: Joi.string().min(3).max(100), // regex needed
-            national_id: Joi.string().min(16).max(16), // regex needed
-            gender: Joi.string().min(4).max(6).valid('male', 'female'),
-            phone: Joi.string().max(10).min(10), // regex needed
-            email: Joi.string().email(),
-            date_of_birth: Joi.date()
-        }
+        sur_name: Joi.string().min(3).max(100),
+        other_names: Joi.string().min(3).max(100),
+        user_name: Joi.string().min(3).max(100), // regex needed
+        national_id: Joi.string().min(16).max(16), // regex needed
+        gender: Joi.string().min(4).max(6).valid('male', 'female'),
+        phone: Joi.string().max(10).min(10), // regex needed
+        email: Joi.string().email(),
+        date_of_birth: Joi.date()
+    }
     return Joi.validate(credentials, schema)
 }
 
@@ -107,7 +107,7 @@ exports.validate_admin = (credentials, method = 'create') => {
         other_names: Joi.string().min(3).max(100).required(),
         user_name: Joi.string().min(3).max(100).required(),
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
-        password: Joi.string().max(100).regex(PasswordRegex).required(),
+        password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         email: Joi.string().email().required(),
         maximum_users: Joi.number().required(),
         college: Joi.string().min(3).max(200),
@@ -118,8 +118,8 @@ exports.validate_admin = (credentials, method = 'create') => {
 
 exports.validateUserPasswordUpdate = (data) => {
     const schema = {
-        current_password: Joi.string().max(100).regex(PasswordRegex).required(),
-        new_password: Joi.string().max(100).regex(PasswordRegex).required()
+        current_password: Joi.string().max(100).regex(this.PasswordRegex).required(),
+        new_password: Joi.string().max(100).regex(this.PasswordRegex).required()
     }
     return Joi.validate(data, schema)
 }

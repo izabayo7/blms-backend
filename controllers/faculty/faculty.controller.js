@@ -1,5 +1,6 @@
 // import dependencies
 const { User_group } = require('../../models/user_group/user_group.model')
+const { User_user_group } = require('../../models/user_user_group/user_user_group.model')
 const {
   express,
   findDocuments,
@@ -119,7 +120,7 @@ exports.getFaculties = async (req, res) => {
       )
 
     }
-    // foundFaculties = await injectDetails(faculties, faculty_colleges)
+    foundFaculties = await injectDetails(faculties)
     foundFaculties = faculties
     return res.send(formatResult(u, u, foundFaculties.length ? fetch_all_faculties ? foundFaculties : foundFaculties[0] : []))
   } catch (error) {
@@ -236,24 +237,23 @@ exports.deleteFaculty = async (req, res) => {
   return res.send(formatResult(200, `Faculty ${faculty.name} couldn't be deleted because it was used`))
 }
 
-async function injectDetails(faculties, faculty_colleges) {
+async function injectDetails(faculties) {
   // add head teacher
   for (const i in faculties) {
     let all_attendants = 0, total_courses = 0;
-    const faculty_collegeYears = await Faculty_college_year.find({
-      faculty_college: faculty_colleges[i]._id
+    const user_groups = await User_group.find({
+      faculty: faculties[i]._id
     })
-    for (const k in faculty_collegeYears) {
-      const attendants = await User_faculty_college_year.find({
-        faculty_college_year: faculty_collegeYears[k]._id.toString()
+    for (const k in user_groups) {
+      const attendants = await User_user_group.find({
+        user_group: user_groups[k]._id
       }).countDocuments()
-      total_courses += await countDocuments(Course, { faculty_college_year: faculty_collegeYears[k]._id })
+      total_courses += await countDocuments(Course, { user_group: user_groups[k]._id })
       all_attendants += attendants
     }
-    faculties[i].total_student_groups = faculty_collegeYears.length
+    faculties[i].total_student_groups = user_groups.length
     faculties[i].total_students = all_attendants
     faculties[i].total_courses = total_courses
-    faculties[i].description = faculty_colleges[i].description
     faculties[i].attendants = all_attendants
   }
   return faculties
