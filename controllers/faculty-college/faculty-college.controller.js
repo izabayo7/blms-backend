@@ -55,6 +55,7 @@ router.get('/', async (req, res) => {
   }
 })
 
+
 /**
  * @swagger
  * /faculty-college:

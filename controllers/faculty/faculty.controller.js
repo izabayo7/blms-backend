@@ -372,6 +372,7 @@ async function injectDetails(faculties, facultyColleges) {
     }
     faculties[i].attendants = all_attendants
     faculties[i].teacher = 'under development'
+    faculties[i].facultyCollegeId = facultyColleges[i]._id
   }
   return faculties
 }

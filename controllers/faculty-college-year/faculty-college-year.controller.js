@@ -8,7 +8,8 @@ const {
   validateFacultyCollegeYear,
   validateObjectId,
   removeDocumentVersion,
-  StudentFacultyCollegeYear
+  StudentFacultyCollegeYear,
+  simplifyObject
 } = require('../../utils/imports')
 const {
   Faculty
@@ -189,7 +190,7 @@ router.post('/', async (req, res) => {
     })
     let saveDocument = await newDocument.save()
     if (saveDocument){
-      saveDocument = await injectDetails([saveDocument])
+      saveDocument = await injectDetails([simplifyObject(saveDocument)])
       return res.send(saveDocument[0]).status(201)
   }
     return res.send('New facultyCollegeYear not Registered').status(500)

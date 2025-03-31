@@ -50,50 +50,6 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /college-year/college/{id}:
- *   get:
- *     tags:
- *       - CollegeYear
- *     description: Returns collegeYears in a specified college
- *     parameters:
- *       - name: id
- *         description: College's id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/college/:id', async (req, res) => {
-  const {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-  let college = await College.findOne({
-    _id: req.params.id
-  })
-  if (!college)
-    return res.status(404).send(`College ${req.params.id} Not Found`)
-  const collegeYears = await CollegeYear.find({
-    college: req.params.id
-  })
-  try {
-    if (collegeYears.length === 0)
-      return res.status(404).send(`${college.name} collegeYear list is empty`)
-    return res.status(200).send(collegeYears)
-  } catch (error) {
-    return res.status(500).send(error)
-  }
-})
-
-/**
- * @swagger
  * /college-year/{id}:
  *   get:
  *     tags:
