@@ -27,13 +27,12 @@ const message_schema = new mongoose.Schema({
     group: {
         type: String,
     },
-    attachments: {
-        type: String,
-    },
-    read: {
-        type: Boolean,
-        default: false
-    }
+    attachments: [{
+        src: {
+            type: String,
+            required: true
+        }
+    }]
 })
 
 message_schema.plugin(timestamps)
@@ -42,10 +41,10 @@ message_schema.plugin(timestamps)
 function validate_message(credentials) {
     const schema = {
         sender: Joi.ObjectId().required(),
-        receivers: Joi.array().min(1).items({ id: Joi.ObjectId().required() }),
+        receivers: Joi.array().min(1).items({ id: Joi.ObjectId().required() }).required(),
         content: Joi.string().max(9000),
         group: Joi.ObjectId(),
-        attachments: Joi.array(),
+        attachments: Joi.array().min(1).items({ src: Joi.string().required() }),
         read: Joi.boolean(),
     }
     return Joi.validate(credentials, schema)

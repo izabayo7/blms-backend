@@ -464,74 +464,68 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
 
 // format contacts
 module.exports.formatContacts = async (messages, user_id) => {
-  try {
-    let formatedContacts = []
-    for (const message of messages) {
-      let id = '',
-        name = "",
-        image = '',
-        is_group = undefined,
-        unreadMessagesLength = 0,
-        members = undefined,
-        last_message = {
-          time: message.createdAt,
-          content: message.content,
-          sender: message.sender
-        }
 
-      if (message.group) {
-        const group = await this.findDocument(this.Chat_group, {
-          _id: message.group
-        })
-
-        id = message.group
-        is_group = true
-        name = group.name
-        members = await this.injectUser(group.members.filter(member => member.status == true), 'id', 'data')
-        image = group.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${group._id}/profile/${group.profile}` : undefined
-        unreadMessagesLength = await this.countDocuments(this.Message, {
-          group: message.group,
-          receivers: {
-            $elemMatch: {
-              id: user_id,
-              read: false
-            }
-          }
-        })
-      } else {
-        let user = await this.injectUser([{ id: message.sender == user_id ? message.receivers[0].id : message.sender }], 'id', 'data')
-        user = user[0]
-        id = user._id
-        name = `${user.sur_name} ${user.other_names}`
-        image = user.profile
-        unreadMessagesLength = await this.countDocuments(this.Message, {
-          sender: user._id,
-          group: undefined,
-          receivers: {
-            $elemMatch: {
-              id: user_id,
-              read: false
-            }
-          }
-        })
+  let formatedContacts = []
+  for (const message of messages) {
+    let id = '',
+      name = "",
+      image = '',
+      is_group = undefined,
+      unreadMessagesLength = 0,
+      members = undefined,
+      last_message = {
+        time: message.createdAt,
+        content: message.content,
+        sender: message.sender
       }
-      formatedContacts.push({
-        id: id,
-        name: name,
-        image: image,
-        last_message: last_message,
-        unreadMessagesLength: unreadMessagesLength,
-        is_group: is_group,
-        members: members
+
+    if (message.group) {
+      const group = await this.findDocument(this.Chat_group, {
+        _id: message.group
+      })
+
+      id = message.group
+      is_group = true
+      name = group.name
+      members = await this.injectUser(group.members.filter(member => member.status == true), 'id', 'data')
+      image = group.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${group._id}/profile/${group.profile}` : undefined
+      unreadMessagesLength = await this.countDocuments(this.Message, {
+        group: message.group,
+        receivers: {
+          $elemMatch: {
+            id: user_id,
+            read: false
+          }
+        }
+      })
+    } else {
+      let user = await this.injectUser([{ id: message.sender == user_id ? message.receivers[0].id : message.sender }], 'id', 'data')
+      user = user[0]
+      id = user._id
+      name = `${user.sur_name} ${user.other_names}`
+      image = user.profile
+      unreadMessagesLength = await this.countDocuments(this.Message, {
+        sender: user._id,
+        group: undefined,
+        receivers: {
+          $elemMatch: {
+            id: user_id,
+            read: false
+          }
+        }
       })
     }
-    return { data: formatedContacts }
+    formatedContacts.push({
+      id: id,
+      name: name,
+      image: image,
+      last_message: last_message,
+      unreadMessagesLength: unreadMessagesLength,
+      is_group: is_group,
+      members: members
+    })
   }
-  catch (error) {
-    return {
-      error: error
-    }
-  }
+  return formatedContacts
 }
 
 // format messages
@@ -580,140 +574,185 @@ module.exports.formatMessages = async (messages, user_id) => {
 
 // get latest conversations
 module.exports.getLatestMessages = async (user_id) => {
-  try {
+  const u = this.u
 
-    const u = this.u
+  let latestMessages = []
 
-    let latestMessages = []
-
-    // get groups the user belongs
-    const groups = await this.findDocuments(this.Chat_group, {
-      members: {
-        $elemMatch: {
-          id: req.params.id,
-          status: true
-        }
+  // get groups the user belongs
+  const groups = await this.findDocuments(this.Chat_group, {
+    members: {
+      $elemMatch: {
+        id: user_id,
+        status: true
       }
+    }
+  })
+
+  for (const i in groups) {
+    const message = await this.findDocuments(this.Message, {
+      group: groups[i]._id
+    }, u, 1, u, u, u, {
+      _id: -1
     })
-
-    for (const i in groups) {
-      const message = await this.findDocuments(this.Message, {
-        group: groups[i]._id
-      }, u, 1, u, u, u, {
-        _id: -1
-      })
-      if (message) {
-        latestMessages.push(message)
-      }
-
-    }
-    // get latest messages sent to us
-    let receivedMessages = await this.Message.aggregate([{
-      $sort: {
-        _id: -1
-      }
-    },
-    {
-      $match: {
-        receivers: {
-          $elemMatch: {
-            id: user_id
-          }
-        },
-        group: undefined
-      }
-    }, {
-      $group: {
-        _id: "$sender",
-        realId: {
-          $first: "$_id"
-        },
-        receivers: {
-          $first: "$receivers"
-        },
-        sender: {
-          $first: "$sender"
-        },
-        content: {
-          $first: "$content"
-        },
-        createdAt: {
-          $first: "$createdAt"
-        },
-        read: {
-          $first: "$read"
-        }
-      }
-    }
-    ])
-
-    // get latest messages sent to us
-    let sentMessages = await this.Message.aggregate([{
-      $sort: {
-        _id: -1
-      }
-    },
-    {
-      $match: {
-        sender: user_id,
-        group: undefined
-      }
-    }, {
-      $group: {
-        _id: "$receivers.id",
-        receivers: {
-          $first: "$receivers"
-        },
-        realId: {
-          $first: "$_id"
-        },
-        sender: {
-          $first: "$sender"
-        },
-        content: {
-          $first: "$content"
-        },
-        createdAt: {
-          $first: "$createdAt"
-        },
-        read: {
-          $first: "$read"
-        }
-      }
-    }
-    ])
-
-    // kanze ndebe
-    if (sentMessages.length && receivedMessages.length)
-      soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
-
-    for (const message of receivedMessages) {
+    if (message) {
       latestMessages.push(message)
     }
 
-    for (const message of sentMessages) {
-      latestMessages.push(message)
+  }
+  // get latest messages sent to us
+  let receivedMessages = await this.Message.aggregate([{
+    $sort: {
+      _id: -1
     }
-
-    // without dupplication
-    // for (const message of soltedMessages) {
-    //     latestMessages.push(message)
-    // }
-
-    // arrange the messages that the latest comes in front
-    return {
-      data: latestMessages.sort((a, b) => {
-        if (a.createdAt > b.createdAt) return -1;
-        if (a.createdAt < b.createdAt) return 1;
-        return 0;
-      })
+  },
+  {
+    $match: {
+      receivers: {
+        $elemMatch: {
+          id: user_id
+        }
+      },
+      group: undefined
     }
-
-  } catch (error) {
-    return {
-      error: error
+  }, {
+    $group: {
+      _id: "$sender",
+      realId: {
+        $first: "$_id"
+      },
+      receivers: {
+        $first: "$receivers"
+      },
+      sender: {
+        $first: "$sender"
+      },
+      content: {
+        $first: "$content"
+      },
+      createdAt: {
+        $first: "$createdAt"
+      },
+      read: {
+        $first: "$read"
+      }
     }
   }
+  ])
+
+  // get latest messages sent to us
+  let sentMessages = await this.Message.aggregate([{
+    $sort: {
+      _id: -1
+    }
+  },
+  {
+    $match: {
+      sender: user_id,
+      group: undefined
+    }
+  }, {
+    $group: {
+      _id: "$receivers.id",
+      receivers: {
+        $first: "$receivers"
+      },
+      realId: {
+        $first: "$_id"
+      },
+      sender: {
+        $first: "$sender"
+      },
+      content: {
+        $first: "$content"
+      },
+      createdAt: {
+        $first: "$createdAt"
+      },
+      read: {
+        $first: "$read"
+      }
+    }
+  }
+  ])
+
+  // kanze ndebe
+  if (sentMessages.length && receivedMessages.length)
+    soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
+
+  for (const message of receivedMessages) {
+    latestMessages.push(message)
+  }
+
+  for (const message of sentMessages) {
+    latestMessages.push(message)
+  }
+
+  // without dupplication
+  // for (const message of soltedMessages) {
+  //     latestMessages.push(message)
+  // }
+
+  // arrange the messages that the latest comes in front
+  return latestMessages.sort((a, b) => {
+    if (a.createdAt > b.createdAt) return -1;
+    if (a.createdAt < b.createdAt) return 1;
+    return 0;
+  })
+}
+
+/**
+ *  creates or update a message (done for code reusability between socket and rest)
+ * @param {String} sender  Sender user_name
+ * @param {String} reciever Sender user_name or name if it's a group
+ * @param {Object} content the message content
+ * @param {Object} action creat of update
+ * @returns FormatedResult
+ */
+module.exports.Create_or_update_message = async (sender, reciever, content, _id) => {
+
+  if (_id) {
+    const message = await this.findDocument(this.Message, { _id: _id })
+    if (!message) return this.formatResult(404, 'message not found')
+  }
+
+  let reciever_found = false, receivers = []
+
+  let _sender = await this.findDocument(this.User, { user_name: sender })
+  if (!_sender) return this.formatResult(404, 'sender not found')
+
+
+  let chat_group = await this.findDocument(this.Chat_group, { name: reciever })
+  if (chat_group) {
+    reciever_found = true
+    for (const i in chat_group.members) {
+      receivers.push({
+        id: chat_group.members[i].id
+      })
+    }
+  }
+  else {
+    let _receiver = await this.findDocument(this.User, { user_name: reciever })
+    if (_receiver) {
+      reciever_found = true
+      receivers.push({ id: _receiver._id })
+    }
+  }
+
+  if (!reciever_found)
+    return res.send(formatResult(404, 'reciever not found'))
+
+  return _id ? await this.updateDocument(this.Message, _id, {
+    sender: _sender._id,
+    receivers: receivers,
+    content: content,
+    group: chat_group ? chat_group._id : this.u
+  }) : await this.createDocument(this.Message, {
+    sender: _sender._id,
+    receivers: receivers,
+    content: content,
+    group: chat_group ? chat_group._id : this.u
+  })
+
 }
 
 const fs = require('fs')

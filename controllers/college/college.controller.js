@@ -256,7 +256,7 @@ router.post('/', async (req, res) => {
       const phoneFound = req.body.phone == college.phone
       const nameFound = req.body.name == college.name
       const emailFound = req.body.email == college.email
-      return res.send(formatResult(400, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
+      return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
 
     let result = await createDocument(College, {
@@ -340,7 +340,7 @@ router.put('/:id', async (req, res) => {
       const phoneFound = req.body.phone == college.phone
       const nameFound = req.body.name == college.name
       const emailFound = req.body.email == college.email
-      return res.send(formatResult(400, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
+      return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
 
     let result = await updateDocument(College, req.params.id, req.body)

@@ -299,6 +299,13 @@ router.post('/', async (req, res) => {
     if (chat_group)
       return res.send(formatResult(403, 'name was taken'))
 
+    // avoid user_name === group name
+    let user = await findDocument(User, {
+      user_name: req.body.name
+    })
+    if (user)
+      return res.send(formatResult(403, 'name was taken'))
+
     for (const i in req.body.members) {
       let user = await findDocument(User, {
         _id: req.body.members[i].id
@@ -377,6 +384,13 @@ router.put('/:id', async (req, res) => {
       name: req.body.name
     })
     if (chat_group)
+      return res.send(formatResult(403, 'name was taken'))
+
+    // avoid user_name === group name
+    let user = await findDocument(User, {
+      user_name: req.body.name
+    })
+    if (user)
       return res.send(formatResult(403, 'name was taken'))
 
     const result = await updateDocument(Chat_group, req.params.id, req.body)

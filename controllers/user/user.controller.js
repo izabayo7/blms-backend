@@ -33,7 +33,8 @@ const {
   Faculty,
   Faculty_college_year,
   upload_single_image,
-  Compress_images
+  Compress_images,
+  Chat_group
 } = require('../../utils/imports')
 
 // create router
@@ -400,6 +401,13 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : ''} arleady exist`))
     }
 
+    // avoid user_name === group name
+    let chat_group = await findDocument(Chat_group, {
+      name: req.body.user_name
+    })
+    if (chat_group)
+      return res.send(formatResult(403, 'user_name was taken'))
+
     let user_category = await findDocument(User_category, {
       _id: req.body.category
     })
@@ -605,8 +613,15 @@ router.put('/:id', async (req, res) => {
       const national_idFound = req.body.national_id == user.national_id
       const emailFound = req.body.email == user.email
       const user_nameFound = req.body.user_name == user.user_name
-      return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
+      return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
     }
+
+    // avoid user_name === group name
+    let chat_group = await findDocument(Chat_group, {
+      name: req.body.user_name
+    })
+    if (chat_group)
+      return res.send(formatResult(403, 'user_name was taken'))
 
     let user_category = await findDocument(User_category, {
       _id: req.body.category
@@ -746,7 +761,7 @@ router.delete('/:id/profile/:file_name', async (req, res) => {
     if (!user.profile || user.profile !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
-    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}` 
+    const path = user.college ? `./uploads/colleges/${user.college}/user_profiles/${user.profile}` : `./uploads/system/user_profiles/${user.profile}`
 
     fs.unlink(path, (err) => {
       if (err)

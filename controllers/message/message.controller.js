@@ -1,5 +1,6 @@
 // import dependencies
-const { express, multer, fs, Message, Student, Admin, Instructor, validateMessage, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student, formatResult } = require('../../utils/imports')
+const { validate_message } = require('../../models/message/message.model')
+const { express, multer, fs, Message, Student, Admin, Instructor, validate_message, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, _student, formatResult, findDocument, User, findDocuments, u, Chat_group, Create_or_update_message, deleteDocument } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
@@ -22,11 +23,15 @@ const router = express.Router()
  *                type: boolean
  *       content:
  *         type: string
- *       attachments:
+ *       group:
  *         type: string
- *       read:
- *          type: boolean
- *          default: false
+ *       attachments:
+ *         type: array
+ *         items:
+ *           type: object
+ *           properties:
+ *             src:
+ *               type: string
  *     required:
  *       - sender
  *       - receivers
@@ -51,7 +56,7 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(Message)
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'Message list is empty'))
 
     return res.send(result)
@@ -62,14 +67,19 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /message/user/{id}:
+ * /message/user/{user_name}/:type:
  *   get:
  *     tags:
  *       - Message
  *     description: Returns messages to and from a specified user
  *     parameters:
- *       - name: id
- *         description: Users's id
+ *       - name: user_name
+ *         description: Users's user_name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: type
+ *         description: The type of messages you want (sent, received, all)
  *         in: path
  *         required: true
  *         type: string
@@ -81,19 +91,48 @@ router.get('/', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:user_name/:type', async (req, res) => {
   try {
     const { error } = validateObjectId(req.params.id)
     if (error)
       return res.send(formatResult(400, error.details[0].message))
-      
-    let userFound = await findUser(req.params.id)
-    if (!userFound)
-      return res.send('The User id is invalid')
-    const sent = await Message.find({ sender: req.params.id })
-    const recieved = await Message.find({ receiver: req.params.id })
 
-    return res.send({ sent: sent, recieved: recieved })
+    let user = await findDocument(User, { _id: req.params.user_name })
+    if (!user)
+      return res.send(formatResult(404, 'user not found'))
+
+    req.params.type = req.params.type.toLocaleLowerCase()
+
+    if (req.params.type != 'sent' && req.params.type != 'recieved' && req.params.type != 'all')
+      return res.send(formatResult(400, 'invalid type'))
+
+    let sent, recieved, result
+
+    if (req.params.type.to == 'sent' || req.params.type == 'all')
+      sent = await findDocuments(Message, { sender: user._id })
+
+    if (sent.length) {
+      for (const i in sent) {
+        result.push(sent[i])
+      }
+    }
+
+    if (req.params.type.to == 'received' || req.params.type == 'all')
+      recieved = await findDocuments(Message, {
+        receivers: {
+          $elemMatch: {
+            id: user._id
+          }
+        }
+      })
+
+    if (recieved.length) {
+      for (const i in recieved) {
+        result.push(recieved[i])
+      }
+    }
+
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -123,32 +162,18 @@ router.get('/user/:id', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', upload.single('attachments'), async (req, res) => {
-  const { error } = validateMessage(req.body)
-  if (error)
-    return res.send(formatResult(400, error.details[0].message))
+router.post('/', async (req, res) => {
+  try {
+    const { error } = validate_message(req.body)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  let sender = await findUser(req.body.sender)
-  if (!sender)
-    return res.send(`Sender Not Found`)
-  for (const i in req.body.receivers) {
-    let receiver = await findUser(req.body.receivers[i].id)
-    if (!receiver)
-      return res.send(`Reciever Not Found`)
+    const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
   }
-
-
-  let newDocument = new Message({
-    sender: req.body.sender,
-    receivers: req.body.receivers,
-    content: req.body.content,
-    attachments: req.files === undefined ? undefined : req.files
-  })
-
-  const saveDocument = await newDocument.save()
-  if (saveDocument)
-    return res.send(saveDocument).status(201)
-  return res.send('New Message not Registered').status(500)
 })
 
 /**
@@ -179,25 +204,22 @@ router.post('/', upload.single('attachments'), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id', upload.single('attachments'), async (req, res) => {
-  let { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(formatResult(400, error.details[0].message))
-  error = validateMessage(req.body)
-  error = error.error
-  if (error)
-    return res.send(formatResult(400, error.details[0].message))
+router.put('/:id', async (req, res) => {
+  try {
+    let { error } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+    error = validate_message(req.body)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-  // check if message exist
-  let message = await Message.findOne({ _id: req.params.id })
-  if (!message)
-    return res.send(`Message with code ${req.params.id} doens't exist`)
+    const result = await Create_or_update_message(req.body.sender, req.body.receiver, req.body.content, req.params.id)
 
-  const updateDocument = await Message.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
-  if (updateDocument)
-    return res.send(updateDocument).status(201)
-  return res.send("Error ocurred").status(500)
-
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
 })
 
 /**
@@ -224,31 +246,24 @@ router.put('/:id', upload.single('attachments'), async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  const { error } = validateObjectId(req.params.id)
-  if (error)
-    return res.send(formatResult(400, error.details[0].message))
-  let message = await Message.findOne({ _id: req.params.id })
-  if (!message)
-    return res.send(`Message of Code ${req.params.id} Not Found`)
-  // need to delete all attachments
-  let deleteDocument = await Message.findOneAndDelete({ _id: req.params.id })
-  if (!deleteDocument)
-    return res.send('Message Not Deleted').status(500)
-  return res.send(`Message ${deleteDocument._id} Successfully deleted`)
-})
+  try {
+    const { error } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
 
-async function findUser(id) {
-  let user = await Admin.findOne({ _id: id })
-  if (user)
-    return true
-  user = await Instructor.findOne({ _id: id })
-  if (user)
-    return true
-  user = await Student.findOne({ _id: id })
-  if (user)
-    return true
-  return false
-}
+    let message = await findDocument(Message, { _id: req.params.id })
+    if (!message)
+      return res.send(formatResult(404, 'message not found'))
+
+    // need to delete all attachments
+
+    const result = await deleteDocument(Message, req.params.id)
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
 
 // export the router
 module.exports = router
