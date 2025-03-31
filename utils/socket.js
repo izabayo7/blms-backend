@@ -1,13 +1,15 @@
 const socket_io = require('socket.io')
-const { addMessageDetails } = require("./imports");
-const { injectAttachementsMediaPath } = require("./imports");
-const { addAttachmentMediaPaths } = require("./imports");
-const { countDocuments } = require("./imports");
-const { User_attendance } = require("../models/user_attendance/user_attendance.model");
-const { autoMarkSelectionQuestions } = require("./imports");
-const { Quiz_submission } = require("./imports");
-const { User_notification } = require("./imports");
-const { User_user_group } = require("../models/user_user_group/user_user_group.model");
+const {sendLiveScheduledEmail} = require("../controllers/email/email.controller");
+const {sendReleaseMarskEmail} = require("../controllers/email/email.controller");
+const {addMessageDetails} = require("./imports");
+const {injectAttachementsMediaPath} = require("./imports");
+const {addAttachmentMediaPaths} = require("./imports");
+const {countDocuments} = require("./imports");
+const {User_attendance} = require("../models/user_attendance/user_attendance.model");
+const {autoMarkSelectionQuestions} = require("./imports");
+const {Quiz_submission} = require("./imports");
+const {User_notification} = require("./imports");
+const {User_user_group} = require("../models/user_user_group/user_user_group.model");
 // import modules
 const {
     Message,
@@ -56,7 +58,7 @@ module.exports.listen = (app) => {
         const token = socket.handshake.query.token
         try {
             const decoded = jwt.verify(token, config.get('auth_key'))
-            user = await User.findOne({ user_name: decoded.user_name }).populate('category')
+            user = await User.findOne({user_name: decoded.user_name}).populate('category')
         } catch (e) {
             socket.error('invalid token')
             return socket.disconnect(true)
@@ -71,7 +73,7 @@ module.exports.listen = (app) => {
          * messsage events
          */
 
-        MyEmitter.on('socket_event', async ({ name, data }) => {
+        MyEmitter.on('socket_event', async ({name, data}) => {
             if (user.category.name === "ADMIN") {
                 if (name === `new_user_in_${user.college}`)
                     socket.emit('res/users/new', {
@@ -81,13 +83,13 @@ module.exports.listen = (app) => {
                     socket.emit('user_limit_reached');
             } else if (user.category.name === "INSTRUCTOR")
                 if (name === `upcoming_livesession_${user._id}`) {
-                    const { user_group, isLive, liveId } = data
+                    const {user_group, isLive, liveId} = data
                     let newDocument = new Notification(isLive ? {
-                        link: `/live/${liveId}`,
-                        content: "Live session just started"
-                    } : {
-                        content: "you have a live class in 5 minutes",
-                    }
+                            link: `/live/${liveId}`,
+                            content: "Live session just started"
+                        } : {
+                            content: "you have a live class in 5 minutes",
+                        }
                     )
                     const saveDocument = await newDocument.save()
                     if (saveDocument) {
@@ -136,7 +138,7 @@ module.exports.listen = (app) => {
 
             if (name === `join_group_${id}`) {
                 const contacts = await formatContacts([data], user)
-                socket.emit('res/message/contacts/new', { contact: contacts[0], redirect: data.content.includes(id) })
+                socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})
             }
             if (name === `send_message_${id}`) {
                 // send success mesage
@@ -149,13 +151,13 @@ module.exports.listen = (app) => {
             socket.on("users/recentlyJoined", async () => {
                 const res = await User.find({
                     college: user.college,
-                    "status.deleted": { $ne: 1 }
+                    "status.deleted": {$ne: 1}
                 }, {
                     sur_name: 1,
                     other_names: 1,
                     category: 1,
                     createdAt: 1
-                }).populate('category').limit(3).sort({ _id: -1 });
+                }).populate('category').limit(3).sort({_id: -1});
 
                 socket.emit('res/users/recentlyJoined', res);
             })
@@ -187,9 +189,9 @@ module.exports.listen = (app) => {
         // })
 
         socket.on('message/conversation', async ({
-            conversation_id,
-            lastMessage
-        }) => {
+                                                     conversation_id,
+                                                     lastMessage
+                                                 }) => {
             // get the messages
             const messages = await getConversationMessages({
                 user_id: id,
@@ -218,8 +220,8 @@ module.exports.listen = (app) => {
 
         // check if conversation_id is valid
         socket.on('message/conversation_id', async ({
-            conversation_id
-        }) => {
+                                                        conversation_id
+                                                    }) => {
 
             if (conversation_id === 'announcements')
                 return socket.emit('res/message/conversation_id', true);
@@ -246,8 +248,8 @@ module.exports.listen = (app) => {
 
         // save and deriver new messages
         socket.on('message/notify-users', async ({
-            message
-        }) => {
+                                                     message
+                                                 }) => {
             message.receivers.forEach(reciever => {
                 // send the message
                 socket.broadcast.to(reciever.id).emit('res/message/new', message)
@@ -256,14 +258,14 @@ module.exports.listen = (app) => {
 
         // save and deriver new messages
         socket.on('message/create', async ({
-            receiver,
-            content
-        }) => {
+                                               receiver,
+                                               content
+                                           }) => {
             const receiver_type = typeof receiver
             if (content === "")
                 content = undefined
 
-            const { error } = validate_message({
+            const {error} = validate_message({
                 sender: user.user_name,
                 receiver: receiver_type === 'string' ? receiver : receiver.toString(),
                 content: content
@@ -304,15 +306,15 @@ module.exports.listen = (app) => {
 
         // start a new conversation
         socket.on('message/start_conversation', async ({
-            conversation_id
-        }) => {
-            const Receiver = await findDocument(User, { user_name: conversation_id })
+                                                           conversation_id
+                                                       }) => {
+            const Receiver = await findDocument(User, {user_name: conversation_id})
             if (Receiver) {
                 const content = `This is the begining of conversation between __user__${id} and __user__${Receiver._id}`
                 // avoid dupplicate initialisation
-                const conversation_found = await Message.findOne({ content: content })
+                const conversation_found = await Message.findOne({content: content})
                 if (!conversation_found) {
-                    const { error } = validate_message({ sender: 'SYSTEM', receiver: conversation_id, content: content })
+                    const {error} = validate_message({sender: 'SYSTEM', receiver: conversation_id, content: content})
 
                     if (error) {
                         socket.error(error)
@@ -322,7 +324,7 @@ module.exports.listen = (app) => {
                     const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
                     result.data = await replaceUserIds([result.data], Receiver._id.toString())
                     result.data = await formatContacts(result.data, Receiver._id.toString(), user)
-                    socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', { contact: result.data[0] })
+                    socket.broadcast.to(Receiver._id).emit('res/message/contacts/new', {contact: result.data[0]})
                 }
 
                 // send success mesage
@@ -333,8 +335,8 @@ module.exports.listen = (app) => {
 
         // mark all messages in a coversation as read
         socket.on('message/all_messages_read', async ({
-            conversation_id
-        }) => {
+                                                          conversation_id
+                                                      }) => {
             console.log("ahooooooo, ", conversation_id)
             if (!conversation_id) return
 
@@ -345,7 +347,7 @@ module.exports.listen = (app) => {
             } else {
 
                 let documents
-                const chat_group = await findDocument(Chat_group, { code: conversation_id })
+                const chat_group = await findDocument(Chat_group, {code: conversation_id})
 
                 // fetch unread messages in a group
                 if (chat_group) {
@@ -361,12 +363,12 @@ module.exports.listen = (app) => {
                 }
                 // fetch unread messages from the sender
                 else {
-                    let sender = await findDocument(User, { user_name: conversation_id })
+                    let sender = await findDocument(User, {user_name: conversation_id})
                     // save the message
                     documents = await findDocuments(Message, {
                         $or: [
-                            { sender: "SYSTEM" },
-                            { sender: sender._id, }
+                            {sender: "SYSTEM"},
+                            {sender: sender._id,}
                         ],
                         group: undefined,
                         receivers: {
@@ -401,11 +403,11 @@ module.exports.listen = (app) => {
 
         // tell that someone is typing
         socket.on('message/typing', async ({
-            conversation_id
-        }) => {
+                                               conversation_id
+                                           }) => {
             let receivers = [], chat_group
             if (typeof conversation_id !== 'string') {
-                chat_group = await findDocument(Chat_group, { code: conversation_id })
+                chat_group = await findDocument(Chat_group, {code: conversation_id})
                 for (const i in chat_group.members) {
                     if (chat_group.members[i].id != id)
                         receivers.push({
@@ -413,9 +415,9 @@ module.exports.listen = (app) => {
                         })
                 }
             } else {
-                let _receiver = await findDocument(User, { user_name: conversation_id })
+                let _receiver = await findDocument(User, {user_name: conversation_id})
                 if (_receiver) {
-                    receivers.push({ id: _receiver._id })
+                    receivers.push({id: _receiver._id})
                 }
             }
             receivers.forEach(receiver => {
@@ -430,9 +432,9 @@ module.exports.listen = (app) => {
 
         // add a comment in live_session
         socket.on('comment/new', async ({
-            comment,
-            receivers
-        }) => {
+                                            comment,
+                                            receivers
+                                        }) => {
             // set sender as current user
             comment.sender = id
 
@@ -480,7 +482,7 @@ module.exports.listen = (app) => {
         })
 
         // check student attendance
-        socket.on('live/checkAttendance', async ({ receivers, session_id }) => {
+        socket.on('live/checkAttendance', async ({receivers, session_id}) => {
 
             const live_session = await Live_session.findById(session_id)
             live_session.attendance_check += 1
@@ -490,13 +492,13 @@ module.exports.listen = (app) => {
             const code = makeCode(6);
 
             receivers.forEach(receiver => {
-                socket.broadcast.to(receiver.id).emit('res/live/checkAttendance', { code })
+                socket.broadcast.to(receiver.id).emit('res/live/checkAttendance', {code})
             })
 
         })
 
         // notify instructor that you are still following
-        socket.on('res/live/checkAttendance', async ({ receivers, attendance, session_id }) => {
+        socket.on('res/live/checkAttendance', async ({receivers, attendance, session_id}) => {
 
             let user_attendance = await User_attendance.findOne({
                 user: id,
@@ -514,12 +516,12 @@ module.exports.listen = (app) => {
             }
 
             receivers.forEach(receiver => {
-                socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', { id, attendance })
+                socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', {id, attendance})
             })
         })
 
         // notify members that quiz is released
-        socket.on('live/releaseQuiz', async ({ quiz, receivers }) => {
+        socket.on('live/releaseQuiz', async ({quiz, receivers}) => {
 
             receivers.forEach(receiver => {
                 socket.broadcast.to(receiver.id).emit('live/quizReleased', quiz)
@@ -535,8 +537,8 @@ module.exports.listen = (app) => {
 
         // tell students that a new couse was published
         socket.on('course-published', async ({
-            courseId
-        }) => {
+                                                 courseId
+                                             }) => {
             // get the course
             let course = await Course.findOne({
                 _id: courseId,
@@ -611,10 +613,10 @@ module.exports.listen = (app) => {
 
         // tell user that someone replied his or her comment
         socket.on('chapter-comment', async ({
-            userName,
-            route,
-            content
-        }) => {
+                                                userName,
+                                                route,
+                                                content
+                                            }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -629,7 +631,7 @@ module.exports.listen = (app) => {
                 newDocument = await injectUser([newDocument], 'user')
                 newDocument = newDocument[0]
 
-                const user = await User.findOne({ user_name: userName })
+                const user = await User.findOne({user_name: userName})
 
                 // create notification for user
                 let userNotification = await User_notification.findOne({
@@ -666,10 +668,10 @@ module.exports.listen = (app) => {
 
         // tell user that marks were released
         socket.on('marksReleased', async ({
-            route,
-            user_group,
-            content
-        }) => {
+                                              route,
+                                              user_group,
+                                              content
+                                          }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -728,10 +730,10 @@ module.exports.listen = (app) => {
 
         // tell instructor that student submitted
         socket.on('student-submitted', async ({
-            userId,
-            route,
-            content
-        }) => {
+                                                  userId,
+                                                  route,
+                                                  content
+                                              }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -781,9 +783,13 @@ module.exports.listen = (app) => {
 
         // tell users that there is a scheduled live session
         socket.on('live-session', async ({
-            user_group,
-            content
-        }) => {
+                                             user_group,
+                                             content,
+                                             date,
+                                             time,
+                                             course_name,
+                                             chapter_name,
+                                         }) => {
 
             let newDocument = new Notification({
                 user: id,
@@ -799,17 +805,18 @@ module.exports.listen = (app) => {
 
                 const user_user_groups = await User_user_group.find({
                     user_group: user_group
-                })
+                }).populate('user').lean()
 
-                user_user_groups.forEach(async _doc => {
-                    if (_doc.user != id) {
+                for (const _doc of user_user_groups) {
+                    _doc.user._id = _doc.user._id.toString()
+                    if (_doc.user._id !== id) {
                         // create notification for user
                         let userNotification = await User_notification.findOne({
-                            user: _doc.user
+                            user: _doc.user._id
                         })
                         if (!userNotification) {
                             userNotification = new User_notification({
-                                user: _doc.user,
+                                user: _doc.user._id,
                                 notifications: [{
                                     id: newDocument._id
                                 }]
@@ -828,13 +835,23 @@ module.exports.listen = (app) => {
                             notification.id = undefined
                             notification.notification = newDocument
                             // send the notification
-                            socket.broadcast.to(_doc.user).emit('new-notification', {
+                            socket.broadcast.to(_doc.user._id).emit('new-notification', {
                                 notification: notification
                             })
+                            if (_doc.user.email) {
+                                await sendLiveScheduledEmail({
+                                    email: _doc.user.email,
+                                    user_names: `Mr${_doc.user.gender === 'female' ? 's' : ''} ${_doc.user.sur_name} ${_doc.user.other_names}`,
+                                    instructor_names: user.sur_name + ' ' + user.other_names,
+                                    course_name,
+                                    chapter_name,
+                                    date,
+                                    time,
+                                })
+                            }
                         }
                     }
-                })
-
+                }
             }
 
         });
@@ -843,8 +860,8 @@ module.exports.listen = (app) => {
          * auto save quiz-submission while student is working
          */
         socket.on('start-quiz', async ({
-            quiz
-        }) => {
+                                           quiz
+                                       }) => {
 
             let newDocument = new Quiz_submission({
                 user: id,
@@ -860,16 +877,16 @@ module.exports.listen = (app) => {
         });
 
         socket.on('save-progress', async ({
-            index,
-            submission_id,
-            attempt,
-            end,
-            questions
-        }) => {
+                                              index,
+                                              submission_id,
+                                              attempt,
+                                              end,
+                                              questions
+                                          }) => {
 
             attempt.user = id
 
-            const { answers, total_marks, is_selection_only } = autoMarkSelectionQuestions(questions, attempt.answers)
+            const {answers, total_marks, is_selection_only} = autoMarkSelectionQuestions(questions, attempt.answers)
 
             let updateDocument = await Quiz_submission.findByIdAndUpdate(submission_id, end ? {
                 answers: answers,
@@ -880,7 +897,7 @@ module.exports.listen = (app) => {
                 time_submitted: new Date()
             } : attempt)
             if (updateDocument) {
-                socket.emit('progress-saved', { index, end, is_selection_only });
+                socket.emit('progress-saved', {index, end, is_selection_only});
             }
 
         });

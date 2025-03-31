@@ -3,6 +3,7 @@ const Mailgen = require('mailgen');
 const {formatResult} = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
+const {live_scheduled_email} = require("../../utils/emailGenerator");
 const {marks_release_email} = require("../../utils/emailGenerator");
 const {confirm_email} = require("../../utils/emailGenerator");
 const {confirm_account} = require("../../utils/emailGenerator");
@@ -214,7 +215,14 @@ exports.sendEmailConfirmation = async ({email, user_name, token}) => {
     }
 };
 
-exports.sendReleaseMarskEmail = async ({ email, user_names, instructor_names, assignment_name, assignment_type, link }) => {
+exports.sendReleaseMarskEmail = async ({
+                                           email,
+                                           user_names,
+                                           instructor_names,
+                                           assignment_name,
+                                           assignment_type,
+                                           link
+                                       }) => {
     try {
 
         const mail = marks_release_email({user_names, instructor_names, assignment_name, assignment_type, link})
@@ -222,6 +230,36 @@ exports.sendReleaseMarskEmail = async ({ email, user_names, instructor_names, as
             from: process.env.EMAIL,
             to: email,
             subject: 'Marks Released.',
+            html: mail,
+        };
+
+        return {
+            sent: await transporter.sendMail(_message)
+        }
+
+    } catch (err) {
+        return {
+            err: err
+        }
+    }
+};
+
+exports.sendLiveScheduledEmail = async ({
+                                            email,
+                                            user_names,
+                                            instructor_names,
+                                            course_name,
+                                            chapter_name,
+                                            date,
+                                            time
+                                        }) => {
+    try {
+
+        const mail = live_scheduled_email({user_names, instructor_names, course_name, chapter_name, date, time})
+        const _message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'New Live session.',
             html: mail,
         };
 
