@@ -95,7 +95,6 @@ app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
 app.get("/", express.static(path.join(__dirname, 'views')))
 
 // app.use('/kurious/message', messageController)
-// app.use('/kurious/file', fileController)
 
 app.use(`${basePath}/user`, user_controller)
 app.use(`${basePath}/user_category`, user_category_controller)
