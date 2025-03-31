@@ -49,6 +49,8 @@ const router = express.Router()
  *     tags:
  *       - User_notification
  *     description: Get all user_notifications
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
