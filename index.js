@@ -46,7 +46,7 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
-app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs, false, { docExpansion: "none" }));
 
 // import models
 require('./models/mongodb')

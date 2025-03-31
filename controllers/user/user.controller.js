@@ -383,7 +383,7 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.post('/', async (req, res) => {
+router.post('/', async (req, res) => {  
   try {
     const {
       error
