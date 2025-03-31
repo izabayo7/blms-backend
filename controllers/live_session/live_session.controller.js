@@ -212,6 +212,8 @@ router.post('/', async (req, res) => {
  *     tags:
  *       - Live_session
  *     description: Update a live_session
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         in: path
