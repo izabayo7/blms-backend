@@ -1313,10 +1313,10 @@ router.put('/', auth, async (req, res) => {
             })
 
             if (user) {
-                const phoneFound = req.body.phone == user.phone
-                const national_idFound = req.body.national_id == user.national_id
-                const emailFound = req.body.email == user.email
-                const user_nameFound = req.body.user_name == user.user_name
+                const phoneFound = req.body.phone ? req.body.phone == user.phone : false
+                const national_idFound = req.body.national_id ? req.body.national_id == user.national_id : false
+                const emailFound = req.body.email ? req.body.email == user.email : false
+                const user_nameFound = req.body.user_name ? req.body.user_name == user.user_name : false
                 return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
             }
         }
