@@ -702,7 +702,7 @@ router.post('/:id/attachments', async (req, res) => {
     })
 
     req.kuriousStorageData = {
-      dir: `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`,
+      dir: addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`),
     }
     let savedAttachments = []
 
