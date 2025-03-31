@@ -23,7 +23,9 @@ const {
   injectStudentProgress,
   formatResult,
   findDocument,
-  User
+  User,
+  Create_or_update_message,
+  Chat_group
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -32,296 +34,283 @@ module.exports.listen = (app) => {
 
   io.on('connection', async (socket) => {
 
-    try {
-      const user_name = socket.handshake.query.user_name
+    const user_name = socket.handshake.query.user_name
 
-      const user = await findDocument(User, { user_name: user_name })
-      if (!user) {
-        socket.error('user not found')
-        socket.disconnect(true)
+    const user = await findDocument(User, { user_name: user_name })
+    if (!user) {
+      socket.error('user not found')
+      socket.disconnect(true)
+    }
+
+    const id = user._id.toString()
+
+    socket.join(id)
+
+    /**
+     * messsage events
+     */
+
+
+    socket.on('message/contacts', async () => {
+      // get the latest conversations
+      const latestMessages = await getLatestMessages(id)
+
+      // format the contacts
+      const contacts = await formatContacts(latestMessages, id)
+
+      // send the contacts
+      socket.emit('res/message/contacts', {
+        contacts: contacts
+      });
+    })
+
+    socket.on('message/conversation', async ({
+      conversation_id,
+      lastMessage
+    }) => {
+      // get the messages
+      const messages = await getConversationMessages({
+        user_id: id,
+        conversation_id: conversation_id,
+        lastMessage: lastMessage
+      })
+      // format the messages
+      const formatedMessages = await formatMessages(messages, id)
+
+      // send the messages  
+      socket.emit('res/message/conversation', {
+        conversation: formatedMessages
+      });
+
+    })
+
+
+    // save and deriver new messages
+    socket.on('message/create', async ({
+      receiver,
+      content
+    }) => {
+      // remember limiting the message***********************************************************
+      let result = await Create_or_update_message(user_name, receiver, content)
+
+      result = simplifyObject(result)
+
+      // inject sender Info
+      let _user = await injectUser([{ id: id }], 'id', 'data')
+      result.data.sender = _user[0].data
+
+      if (result.data.group) {
+        const group = await findDocument(Chat_group, { _id: result.data.group })
+        result.data.group = group.name
       }
 
-      socket.join(user._id)
-
-      /**
-       * chat events
-       */
-
-      // send contacts
-      socket.on('/chat/contacts', async () => {
-        // get the latest conversations
-        const latestMessages = await getLatestMessages(user._id)
-
-        console.log(latestMessages)
-        // format the contacts
-        const contacts = await formatContacts(latestMessages, user._id)
-
-        // send the contacts
-        socket.emit('/response/chat/contacts', {
-          contacts: contacts
-        });
+      result.data.receivers.forEach(reciever => {
+        // send the message
+        socket.broadcast.to(reciever.id).emit('message/new', result.data)
       })
 
-      socket.on('request_conversation', async ({
-        conversation_id,
-        lastMessage
-      }) => {
-        // get the messages
-        const messages = await getConversationMessages({
-          user_id: user._id,
-          conversation_id: conversation_id,
-          lastMessage: lastMessage
-        })
+      // send success mesage
+      socket.emit('message/sent', result.data)
 
-        // format the messages
-        const formatedMessages = await formatMessages(messages, user._id)
+    })
 
-        // send the messages  
-        socket.emit('receive_conversation', {
-          conversation: formatedMessages
-        });
+    // tell the sender that the message was received / read and update the document
+    socket.on('message_received', async ({
+      messageId
+    }) => {
 
+      // save the message
+      let document = await Message.findOne({
+        _id: messageId
       })
 
+      let allRecieversRead = 1
 
-      // save and deriver new messages
-      socket.on('send-message', async ({
-        recipient,
-        msg
-      }) => {
-
-        let group, recievers = []
-
-        const chat_group = await ChatGroup.findOne({
-          _id: recipient
-        })
-        if (chat_group) {
-          group = recipient
-          for (const i in chat_group.members) {
-            recievers.push({
-              id: chat_group.members[i].id
-            })
-          }
-        } else {
-          recievers.push({
-            id: recipient
-          })
+      for (const i in document.receivers) {
+        if (document.receivers[i].id == id) {
+          document.receivers[i].read = true
+        } else if (!document.receivers[i].read) {
+          allRecieversRead = 0
         }
+      }
 
-        // save the message
-        let newDocument = new Message({
-          sender: id,
-          receivers: recievers,
-          content: msg,
-          group: group
+      if (allRecieversRead) {
+        document.read = true
+      }
+      const updateDocument = await document.save()
+
+      if (updateDocument) {
+        socket.broadcast.to(document.sender).emit('message-read', {
+          messageId: document._id,
+          reader: id
         })
+      }
+    })
 
-        const saveDocument = await newDocument.save()
-
-        if (saveDocument) {
-          newDocument = simplifyObject(newDocument)
-          // inject sender Info
-          const user = await returnUser(newDocument.sender)
-
-          newDocument.sender = _.pick(user, ['_id', 'surName', 'otherNames', 'phone', 'email', 'category', 'profile'])
-          if (user.profile) {
-            newDocument.sender.profile = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
+    // mark all messages in a coversation as read
+    socket.on('all_messages_read', async ({
+      sender,
+      groupId
+    }) => {
+      let documents
+      // fetch unread messages from the sender
+      if (sender) {
+        // save the message
+        documents = await Message.find({
+          sender: sender,
+          group: undefined,
+          receivers: {
+            $elemMatch: {
+              id: id,
+              read: false
+            }
           }
-
-          recievers.forEach(reciever => {
-            // send the message
-            socket.broadcast.to(reciever.id).emit('receive-message', newDocument)
-          })
-          // send success mesage
-          socket.emit('message-sent', saveDocument)
-        }
-      })
-
-      // tell the sender that the message was received / read and update the document
-      socket.on('message_received', async ({
-        messageId
-      }) => {
-
-        // save the message
-        let document = await Message.findOne({
-          _id: messageId
         })
-
+      }
+      // fetch unread messages in a group
+      else {
+        documents = await Message.find({
+          group: groupId,
+          receivers: {
+            $elemMatch: {
+              id: id,
+              read: false
+            }
+          }
+        })
+      }
+      for (const i in documents) {
         let allRecieversRead = 1
 
-        for (const i in document.receivers) {
-          if (document.receivers[i].id == id) {
-            document.receivers[i].read = true
-          } else if (!document.receivers[i].read) {
+        for (const k in documents[i].receivers) {
+          if (documents[i].receivers[k].id == id) {
+            documents[i].receivers[k].read = true
+          } else if (!documents[i].receivers[k].read) {
             allRecieversRead = 0
           }
         }
 
         if (allRecieversRead) {
-          document.read = true
+          documents[i].read = true
         }
-        const updateDocument = await document.save()
-
+        const updateDocument = await documents[i].save()
         if (updateDocument) {
-          socket.broadcast.to(document.sender).emit('message-read', {
-            messageId: document._id,
+          socket.broadcast.to(documents[i].sender).emit('message-read', {
+            messageId: documents[i]._id,
             reader: id
           })
-        }
-      })
-
-      // mark all messages in a coversation as read
-      socket.on('all_messages_read', async ({
-        sender,
-        groupId
-      }) => {
-        let documents
-        // fetch unread messages from the sender
-        if (sender) {
-          // save the message
-          documents = await Message.find({
+          socket.emit('all_read', {
             sender: sender,
-            group: undefined,
-            receivers: {
-              $elemMatch: {
-                id: id,
-                read: false
-              }
-            }
+            group: groupId
           })
         }
-        // fetch unread messages in a group
-        else {
-          documents = await Message.find({
-            group: groupId,
-            receivers: {
-              $elemMatch: {
-                id: id,
-                read: false
-              }
-            }
-          })
-        }
-        for (const i in documents) {
-          let allRecieversRead = 1
+      }
+    })
 
-          for (const k in documents[i].receivers) {
-            if (documents[i].receivers[k].id == id) {
-              documents[i].receivers[k].read = true
-            } else if (!documents[i].receivers[k].read) {
-              allRecieversRead = 0
-            }
-          }
-
-          if (allRecieversRead) {
-            documents[i].read = true
-          }
-          const updateDocument = await documents[i].save()
-          if (updateDocument) {
-            socket.broadcast.to(documents[i].sender).emit('message-read', {
-              messageId: documents[i]._id,
-              reader: id
+    // tell that someone is typing
+    socket.on('message/typing', async ({
+      conversation_id
+    }) => {
+      let receivers = []
+      const chat_group = await findDocument(Chat_group, { name: conversation_id })
+      if (chat_group) {
+        for (const i in chat_group.members) {
+          if (chat_group.members[i].id != id)
+            receivers.push({
+              id: chat_group.members[i].id
             })
-            socket.emit('all_read', {
-              sender: sender,
-              group: groupId
-            })
-          }
         }
+      }
+      else {
+        let _receiver = await findDocument(User, { user_name: conversation_id })
+        if (_receiver) {
+          receivers.push({ id: _receiver._id })
+        }
+      }
+      receivers.forEach(receiver => {
+        console.log(receiver, conversation_id)
+        socket.broadcast.to(receiver.id).emit('message/typing', user_name)
       })
+    })
 
-      // tell the recipients that someone is typing
-      socket.on('typing', async ({
-        recipients
-      }) => {
-        console.log('typing')
-        recipients.forEach(recipient => {
-          socket.broadcast.to(recipient.id).emit('typing', id)
-        })
+
+    /**
+     * notifications
+     */
+
+    // tell students that a new couse was published
+    socket.on('course-published', async ({
+      courseId
+    }) => {
+      // get the course
+      let course = await Course.findOne({
+        _id: courseId,
+        published: true
+      }).lean()
+
+      // add chapters and instructor
+      course = await injectChapters([course])
+      course = await injectUser(course, 'instructor')
+      course = course[0]
+
+      let newDocument = new Notification({
+        doer_type: "User",
+        doer_id: id,
+        content: `published ${course.name}`,
+        link: `/courses/preview/${course.name}`,
       })
+      const saveDocument = await newDocument.save()
+      if (saveDocument) {
 
+        newDocument = simplifyObject(newDocument)
 
-      /**
-       * notifications
-       */
+        newDocument = await injectDoer(newDocument)
 
-      // tell students that a new couse was published
-      socket.on('course-published', async ({
-        courseId
-      }) => {
-        // get the course
-        let course = await Course.findOne({
-          _id: courseId,
-          published: true
-        }).lean()
-
-        // add chapters and instructor
-        course = await injectChapters([course])
-        course = await injectUser(course, 'instructor')
-        course = course[0]
-
-        let newDocument = new Notification({
-          doer_type: "User",
-          doer_id: id,
-          content: `published ${course.name}`,
-          link: `/courses/preview/${course.name}`,
+        const studentFaucultyCollegeYears = await StudentFacultyCollegeYear.find({
+          facultyCollegeYear: course.facultyCollegeYear
         })
-        const saveDocument = await newDocument.save()
-        if (saveDocument) {
 
-          newDocument = simplifyObject(newDocument)
+        studentFaucultyCollegeYears.forEach(async _doc => {
 
-          newDocument = await injectDoer(newDocument)
-
-          const studentFaucultyCollegeYears = await StudentFacultyCollegeYear.find({
-            facultyCollegeYear: course.facultyCollegeYear
+          // create notification for user
+          let userNotification = await UserNotification.findOne({
+            user_id: _doc.student
           })
-
-          studentFaucultyCollegeYears.forEach(async _doc => {
-
-            // create notification for user
-            let userNotification = await UserNotification.findOne({
-              user_id: _doc.student
-            })
-            if (!userNotification) {
-              userNotification = new UserNotification({
-                user_id: _doc.student,
-                notifications: [{
-                  id: newDocument._id
-                }]
-              })
-
-            } else {
-              userNotification.notifications.push({
+          if (!userNotification) {
+            userNotification = new UserNotification({
+              user_id: _doc.student,
+              notifications: [{
                 id: newDocument._id
-              })
-            }
+              }]
+            })
 
-            _newDocument = await userNotification.save()
+          } else {
+            userNotification.notifications.push({
+              id: newDocument._id
+            })
+          }
 
-            if (_newDocument) {
-              let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
-              notification.id = undefined
-              notification.notification = newDocument
-              // send the notification
-              socket.broadcast.to(_doc.student).emit('new-notification', {
-                notification: notification
-              })
+          _newDocument = await userNotification.save()
 
-              // add student progress
-              const _course = await injectStudentProgress([course], _doc.student)
+          if (_newDocument) {
+            let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
+            notification.id = undefined
+            notification.notification = newDocument
+            // send the notification
+            socket.broadcast.to(_doc.student).emit('new-notification', {
+              notification: notification
+            })
 
-              // send the course
-              socket.broadcast.to(_doc.student).emit('new-course', _course[0])
-            }
-          })
-        }
+            // add student progress
+            const _course = await injectStudentProgress([course], _doc.student)
 
-      })
-    }
-    catch (error) {
-      socket.emit('error', formatResult(500, error));
-    }
+            // send the course
+            socket.broadcast.to(_doc.student).emit('new-course', _course[0])
+          }
+        })
+      }
+
+    })
   });
   return io
 }

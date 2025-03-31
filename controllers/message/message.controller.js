@@ -104,38 +104,33 @@ router.get('/', async (req, res) => {
  */
 router.get('/user/:user_name/:type', async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
 
     let user = await findDocument(User, {
-      _id: req.params.user_name
+      user_name: req.params.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     req.params.type = req.params.type.toLocaleLowerCase()
 
-    if (req.params.type != 'sent' && req.params.type != 'recieved' && req.params.type != 'all')
+    if (req.params.type != 'sent' && req.params.type != 'received' && req.params.type != 'all')
       return res.send(formatResult(400, 'invalid type'))
 
-    let sent, recieved, result
+    let sent, received, result = []
 
-    if (req.params.type.to == 'sent' || req.params.type == 'all')
+    if (req.params.type == 'sent' || req.params.type == 'all') {
       sent = await findDocuments(Message, {
         sender: user._id
       })
 
-    if (sent.length) {
-      for (const i in sent) {
-        result.push(sent[i])
+      if (sent.length) {
+        for (const i in sent) {
+          result.push(sent[i])
+        }
       }
     }
-
-    if (req.params.type.to == 'received' || req.params.type == 'all')
-      recieved = await findDocuments(Message, {
+    if (req.params.type == 'received' || req.params.type == 'all') {
+      received = await findDocuments(Message, {
         receivers: {
           $elemMatch: {
             id: user._id
@@ -143,12 +138,12 @@ router.get('/user/:user_name/:type', async (req, res) => {
         }
       })
 
-    if (recieved.length) {
-      for (const i in recieved) {
-        result.push(recieved[i])
+      if (received.length) {
+        for (const i in received) {
+          result.push(received[i])
+        }
       }
     }
-
     return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))

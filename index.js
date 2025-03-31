@@ -2,7 +2,7 @@
 const {
     express,
     cors,
-    path
+    path,
 } = require('./utils/imports')
 
 const dotenv = require('dotenv');
@@ -112,7 +112,7 @@ app.use(`${basePath}/user_progress`, user_progress_contoller)
 app.use(`${basePath}/notification`, notification_controller)
 app.use(`${basePath}/user_notification`, user_notification_controller)
 app.use(`${basePath}/chat_group`, chat_group_controller)
-app.use(`${basePath}/chat`, message_controller)
+app.use(`${basePath}/message`, message_controller)
 
 // start the server
 server.listen(port, () => {

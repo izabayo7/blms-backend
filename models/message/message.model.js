@@ -40,10 +40,9 @@ message_schema.plugin(timestamps)
 // validate message
 function validate_message(credentials) {
     const schema = {
-        sender: Joi.ObjectId().required(),
-        receivers: Joi.array().min(1).items({ id: Joi.ObjectId().required() }).required(),
-        content: Joi.string().max(9000),
-        group: Joi.ObjectId(),
+        sender: Joi.string().required(),
+        receiver: Joi.string().required(),
+        content: Joi.string().max(9000).required(),
         attachments: Joi.array().min(1).items({ src: Joi.string().required() }),
         read: Joi.boolean(),
     }

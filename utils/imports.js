@@ -361,26 +361,29 @@ module.exports.getConversationMessages = async ({
 }) => {
   let messages
 
-  const group = await this.ChatGroup.findOne({
-    _id: conversation_id
+  const group = await this.findDocument(this.Chat_group, {
+    name: conversation_id
   })
 
   if (group) {
-    messages = lastMessage ? await Message.find({
+    conversation_id = group._id
+    messages = lastMessage ? await this.findDocuments(this.Message, {
       _id: {
         $lt: lastMessage
       },
       group: conversation_id
     }, {
       receivers: 0
-    }).lean() : await Message.find({
+    }) : await this.findDocuments(this.Message, {
       group: conversation_id
     }, {
       receivers: 0
-    }).lean()
+    })
 
   } else {
-    messages = lastMessage ? await Message.find({
+    const user = await this.findDocument(this.User, { user_name: conversation_id })
+    conversation_id = user._id
+    messages = lastMessage ? await this.findDocuments(this.Message, {
       _id: {
         $lt: lastMessage
       },
@@ -402,7 +405,7 @@ module.exports.getConversationMessages = async ({
       group: undefined
     }, {
       receivers: 0
-    }).lean() : await Message.find({
+    }) : await this.findDocuments(this.Message, {
       $or: [{
         sender: user_id,
         receivers: {
@@ -421,7 +424,7 @@ module.exports.getConversationMessages = async ({
       group: undefined
     }, {
       receivers: 0
-    }).lean()
+    })
   }
   return messages
 }
@@ -484,7 +487,7 @@ module.exports.formatContacts = async (messages, user_id) => {
         _id: message.group
       })
 
-      id = message.group
+      id = group.name
       is_group = true
       name = group.name
       members = await this.injectUser(group.members.filter(member => member.status == true), 'id', 'data')
@@ -500,8 +503,8 @@ module.exports.formatContacts = async (messages, user_id) => {
       })
     } else {
       let user = await this.injectUser([{ id: message.sender == user_id ? message.receivers[0].id : message.sender }], 'id', 'data')
-      user = user[0]
-      id = user._id
+      user = user[0].data
+      id = user.user_name
       name = `${user.sur_name} ${user.other_names}`
       image = user.profile
       unreadMessagesLength = await this.countDocuments(this.Message, {
@@ -539,11 +542,10 @@ module.exports.formatMessages = async (messages, user_id) => {
         let image = undefined
         let matchingMessages = []
         if (message.sender != user_id) {
-          const user = await this.returnUser(message.sender == user_id ? message.receivers[0].id : message.sender)
-          from = `${user.surName} ${user.otherNames}`
-          if (user.profile) {
-            image = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
-          }
+          let user = await this.injectUser([{ id: message.sender == user_id ? message.receivers[0].id : message.sender }], 'id', 'data')
+          user = user[0].data
+          from = `${user.sur_name} ${user.other_names}`
+          image = user.profile
         }
         let relatedMessages = messagesCopy.filter(m => m.sender == message.sender)
         for (const i in relatedMessages) {
@@ -631,9 +633,6 @@ module.exports.getLatestMessages = async (user_id) => {
       },
       createdAt: {
         $first: "$createdAt"
-      },
-      read: {
-        $first: "$read"
       }
     }
   }
@@ -667,9 +666,6 @@ module.exports.getLatestMessages = async (user_id) => {
       },
       createdAt: {
         $first: "$createdAt"
-      },
-      read: {
-        $first: "$read"
       }
     }
   }
@@ -739,7 +735,7 @@ module.exports.Create_or_update_message = async (sender, reciever, content, _id)
   }
 
   if (!reciever_found)
-    return res.send(formatResult(404, 'reciever not found'))
+    return this.formatResult(404, 'reciever not found')
 
   return _id ? await this.updateDocument(this.Message, _id, {
     sender: _sender._id,
@@ -893,6 +889,7 @@ module.exports.injectUser = async (array, property, newProperty) => {
     const user = await this.findDocument(this.User, {
       _id: array[i][`${property}`]
     })
+    // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
     array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
     if (array[i][`${name}`].profile) {
       array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
