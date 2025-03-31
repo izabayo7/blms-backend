@@ -403,7 +403,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
         } else if (file_type == 'video') {
             streamVideo(req, res, file_path)
         } else {
-            return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+            return res.sendFile(file_path)
         }
 
     } catch (error) {
