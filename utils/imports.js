@@ -922,10 +922,24 @@ exports.getStudentExams = async (user_id, undone = false) => {
         user_group: {$in: user_user_groups.map(x => x.user_group)}
     })
     const ids = courses.map(x => x._id.toString())
-    return Exam.find({
+    const exams = Exam.find({
         "course": {$in: ids},
         status: {$in: undone ? ["PUBLISHED"] : ["PUBLISHED", "RELEASED"]}
     }).sort({_id: -1}).lean()
+    if (!undone)
+        return exams
+    const result = []
+    for (const i in exams) {
+        let date = new Date(exams[i].starting_time)
+        date.setHours(date.getHours() - 2)
+
+        let endDate = new Date(date)
+        endDate.setTime(endDate.getTime() + (exams[i].duration * 1000))
+
+        if (new Date() < new Date(endDate))
+            result.push(exams[i])
+    }
+    return result
 }
 exports.injectAttachementsMediaPath = (message) => {
     for (const j in message.attachments) {
