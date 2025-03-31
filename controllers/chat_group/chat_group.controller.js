@@ -991,7 +991,7 @@ async function injectDetails(chat_groups) {
     }
     chat_groups[i].members = await injectUser(chat_groups[i].members, 'id', 'data')
     if (chat_groups[i].profile) {
-      chat_groups[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${chat_groups[i].college}/profile/${chat_groups[i].profile}`
+      chat_groups[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${chat_groups[i].code}/profile/${chat_groups[i].profile}`
     }
   }
   return chat_groups
