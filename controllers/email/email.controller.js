@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
-const { invitationToSystem } = require('../../utils/emailGenerator');
+const { invitationToSystem, contactUs, requestCallback } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
 
@@ -69,12 +69,12 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
 exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
     try {
 
-        const mail = invitationToSystem({ inviter: names, institution, token })
+        const mail = contactUs({ user_name, user_email, message })
 
         const message = {
             from: process.env.EMAIL,
-            to: email,
-            subject: names + ' Invited you to join Kurious', // add message like Cedric invited you to join RCA workspace on Kurious
+            to: process.env.COMMUNICATION_TEAM_EMAIL,
+            subject: names + ' Contacted by ' + user_name,
             html: mail,
         };
 
@@ -106,4 +106,6 @@ exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
         }
     }
 };
+
+
 
