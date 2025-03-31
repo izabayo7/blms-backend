@@ -54,7 +54,7 @@ router.route('/request_call_back')
      *               type: string
      *             role_at_institution:
      *               type: string
-     *               enum:['INSTRUCTOR']
+     *               enum: ['INSTRUCTOR']
      *             phone_number:
      *               type: string
      *           required:
