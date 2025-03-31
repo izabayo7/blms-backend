@@ -117,8 +117,8 @@ app.use(`${basePath}/course`, auth, course_controller)
 app.use(`${basePath}/chapter`, auth, chapter_controller)
 app.use(`${basePath}/quiz`, auth, quiz_controller)
 app.use(`${basePath}/quiz_submission`, auth, quiz_submission_controller)
-// ejo hera aha wlh
 app.use(`${basePath}/user_progress`, auth, user_progress_contoller)
+// ejo hera aha wlh
 app.use(`${basePath}/notification`, auth, notification_controller)
 app.use(`${basePath}/user_notification`, auth, user_notification_controller)
 app.use(`${basePath}/chat_group`, auth, chat_group_controller)
