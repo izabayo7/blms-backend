@@ -557,6 +557,7 @@ exports.formatContacts = async (messages, user_id) => {
                 sur_name: 'You'
             }
         } else if (last_message.sender) {
+            console.log(last_message.sender)
             let sender = await this.injectUser([{
                 id: message.sender
             }], 'id', 'data')
@@ -665,35 +666,52 @@ exports.formatMessages = async (messages, user_id) => {
     return formatedMessages
 }
 
+async function replaceUserIds(messages){
+    for (const messagesKey in messages) {
+        if(messages[messagesKey].sender === 'SYSTEM'){
+            const messageSegments = messages[messagesKey].content.split(" ")
+            for (const messageSegmentsKey in messageSegments) {
+                if(/^__user__(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i.test(messageSegments[messageSegmentsKey])){
+                    const user_id = messageSegments[messageSegmentsKey].split('__user__')[1]
+                    const __user = await user.findById(user_id,{sur_name:1,other_names:1})
+                    messageSegments[messageSegmentsKey] = __user.sur_name + ' ' + __user.other_names
+                }
+            }
+            messages[messagesKey].content = messageSegments.join(" ")
+        }
+    }
+    return messages
+}
+
 // get latest conversations
 exports.getLatestMessages = async (user_id) => {
     const u = this.u
 
-    let latestMessages = []
+    // let latestMessages = []
     // get groups the user belongs
-    const groups = await this.findDocuments(this.Chat_group, {
-        members: {
-            $elemMatch: {
-                id: user_id,
-                status: true
-            }
-        }
-    })
-
-    for (const i in groups) {
-        const message = await this.findDocuments(this.Message, {
-            group: groups[i]._id
-        }, u, 1, u, u, u, {
-            _id: -1
-        })
-
-        if (message.length) {
-            latestMessages.push(message[0])
-        }
-
-    }
+    // const groups = await this.findDocuments(this.Chat_group, {
+    //     members: {
+    //         $elemMatch: {
+    //             id: user_id,
+    //             status: true
+    //         }
+    //     }
+    // })
+    //
+    // for (const i in groups) {
+    //     const message = await this.findDocuments(this.Message, {
+    //         group: groups[i]._id
+    //     }, u, 1, u, u, u, {
+    //         _id: -1
+    //     })
+    //
+    //     if (message.length) {
+    //         latestMessages.push(message[0])
+    //     }
+    //
+    // }
     // get latest messages sent to us
-    let receivedMessages = await this.Message.aggregate([{
+    let latestMessages = await this.Message.aggregate([{
         $sort: {
             _id: -1
         }
@@ -705,7 +723,7 @@ exports.getLatestMessages = async (user_id) => {
                         id: user_id
                     }
                 },
-                group: undefined
+                // group: undefined
             }
         }, {
             $group: {
@@ -732,67 +750,73 @@ exports.getLatestMessages = async (user_id) => {
         }
     ])
 
+
+    latestMessages = await replaceUserIds(latestMessages)
+
     // get latest messages sent to us
-    let sentMessages = await this.Message.aggregate([{
-        $sort: {
-            _id: -1
-        }
-    },
-        {
-            $match: {
-                sender: user_id,
-                group: undefined
-            }
-        }, {
-            $group: {
-                _id: "$receivers.id",
-                receivers: {
-                    $first: "$receivers"
-                },
-                realId: {
-                    $first: "$_id"
-                },
-                sender: {
-                    $first: "$sender"
-                },
-                content: {
-                    $first: "$content"
-                },
-                createdAt: {
-                    $first: "$createdAt"
-                }
-            }
-        }
-    ])
+    // let sentMessages = await this.Message.aggregate([{
+    //     $sort: {
+    //         _id: -1
+    //     }
+    // },
+    //     {
+    //         $match: {
+    //             sender: user_id,
+    //             group: undefined
+    //         }
+    //     }, {
+    //         $group: {
+    //             _id: "$receivers.id",
+    //             receivers: {
+    //                 $first: "$receivers"
+    //             },
+    //             realId: {
+    //                 $first: "$_id"
+    //             },
+    //             sender: {
+    //                 $first: "$sender"
+    //             },
+    //             content: {
+    //                 $first: "$content"
+    //             },
+    //             createdAt: {
+    //                 $first: "$createdAt"
+    //             }
+    //         }
+    //     }
+    // ])
 
-    if (sentMessages.length && receivedMessages.length)
-        soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
-    const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
-
-    var start = new Date().getTime();
-    let i = 0
-    for (const message of receivedMessages) {
-        if (!systemMessageFound.length || receivedMessages.length === 1)
-            latestMessages.push(message)
-        else {
-            if (!latestMessages.includes(message)) {
-                for (const k in receivedMessages) {
-                    if (receivedMessages[k]._id !== message._id) {
-                        const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
-                        const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
-
-                        if (!await receiversMatch(minorMessage.receivers, majorMessage.receivers) && (!latestMessages.includes(majorMessage) && !latestMessages.includes(minorMessage))) {
-                            latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for (const message of sentMessages) {
-        latestMessages.push(message)
-    }
+    // let sentMessages = []
+    //
+    // if (sentMessages.length && receivedMessages.length)
+    //     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
+    // const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
+    //
+    // var start = new Date().getTime();
+    // let i = 0
+    // for (const message of receivedMessages) {
+    //     if (!systemMessageFound.length || receivedMessages.length === 1)
+    //         latestMessages.push(message)
+    //     else {
+    //         if (!latestMessages.includes(message)) {
+    //             for (const k in receivedMessages) {
+    //                 if (receivedMessages[k]._id !== message._id) {
+    //                     const majorMessage = message.sender == 'SYSTEM' ? message : receivedMessages[k]
+    //                     const minorMessage = majorMessage._id === message._id ? receivedMessages[k] : message
+    //
+    //                     if (!await receiversMatch(minorMessage.receivers, majorMessage.receivers) && (!latestMessages.includes(majorMessage) && !latestMessages.includes(minorMessage))) {
+    //                         latestMessages.push(majorMessage.realId > minorMessage.realId ? majorMessage : minorMessage)
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    //
+    // for (const message of sentMessages) {
+    //     latestMessages.push(message)
+    // }
+    // console.log(latestMessages)
     // arrange the messages that the latest comes in front
     return latestMessages.sort((a, b) => {
         if (a.createdAt > b.createdAt) return -1;
