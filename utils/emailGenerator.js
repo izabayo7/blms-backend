@@ -227,7 +227,7 @@ exports.submission_email = ({
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
-                                href="https://test.apis.kurious.rw/api/user/accept/${token}"
+                                href="https://${process.env.HOST}/api/user/accept/${token}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                         >
@@ -1196,7 +1196,7 @@ exports.confirm_email = ({
             </div>
             <div class="text-center" style="text-align: center">
                 <a
-                        href="https://test.apis.kurious.rw/api/user/confirm/${token}"
+                        href="https://${process.env.HOST}/api/user/confirm/${token}"
                         target="_blank"
                         rel="noopener noreferrer"
                 >
@@ -1384,7 +1384,7 @@ exports.confirm_account = ({
                     </div>
                     <div class="text-center" style="text-align: center">
                         <a
-                                href="https://test.apis.kurious.rw/api/user/confirm/${token}"
+                                href="https://${process.env.HOST}/api/user/confirm/${token}"
                                 target="_blank"
                                 rel="noopener noreferrer"
                         >
