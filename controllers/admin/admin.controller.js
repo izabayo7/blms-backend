@@ -77,7 +77,7 @@ router.post('/', [auth, _superAdmin], async (req, res) => {
     if (admin)
         return res.send(`Admin with college ${req.body.college} arleady exist`)
 
-    let newAdmin = new Admin({
+    let newDocument = new Admin({
         surName: req.body.surName,
         otherNames: req.body.otherNames,
         nationalId: req.body.nationalId,
@@ -89,8 +89,8 @@ router.post('/', [auth, _superAdmin], async (req, res) => {
         college: req.body.college
     })
 
-    newAdmin.password = await hashPassword(newAdmin.password)
-    const saveDocument = await newAdmin.save()
+    newDocument.password = await hashPassword(newDocument.password)
+    const saveDocument = await newDocument.save()
     if (saveDocument)
         return res.send(saveDocument).status(201)
     return res.send('New Admin not Registered').status(500)

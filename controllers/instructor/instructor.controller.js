@@ -79,7 +79,7 @@ router.post('/', [auth, _superAdmin], async (req, res) => {
     if (status !== 'alright')
         return res.send(status).status(400)
 
-    let newAdmin = new Instructor({
+    let newDocument = new Instructor({
         surName: req.body.surName,
         otherNames: req.body.otherNames,
         nationalId: req.body.nationalId,
@@ -91,8 +91,8 @@ router.post('/', [auth, _superAdmin], async (req, res) => {
         college: req.body.college
     })
 
-    newAdmin.password = await hashPassword(newAdmin.password)
-    const saveDocument = await newAdmin.save()
+    newDocument.password = await hashPassword(newDocument.password)
+    const saveDocument = await newDocument.save()
     if (saveDocument)
         return res.send(saveDocument).status(201)
     return res.send('New Instructor not Registered').status(500)
@@ -122,7 +122,7 @@ router.put('/:id', upload.single('profile'), async (req, res) => {
     let { error } = validateObjectId(req.params.id)
     if (error)
         return res.send(error.details[0].message).status(400)
-    rror = validateInstructor(req.body)
+    error = validateInstructor(req.body)
     if (error)
         return res.send(error.details[0].message).status(400)
 

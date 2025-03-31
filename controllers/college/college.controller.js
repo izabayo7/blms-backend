@@ -55,12 +55,18 @@ router.post('/', [auth, _superAdmin], async (req, res) => {
     if (error)
         return res.send(error.details[0].message).status(400);
 
-    let newCollege = new College({
+    let college = await College.findOne({ email: req.body.email });
+    if (!college)
+        return res.send(`College of Code ${req.body.email} arleady exist`);
+
+        // same names ?
+
+    let newDocument = new College({
         name: req.body.name,
         email: req.body.email,
     });
 
-    const saveDocument = await newCollege.save();
+    const saveDocument = await newDocument.save();
     if (saveDocument)
         return res.send(saveDocument).status(201);
     return res.send('New College not Registered').status(500);

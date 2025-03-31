@@ -1,0 +1,31 @@
+GET http://localhost:7070/kurious/chapter/course/5f0b9e6265ebec2a5c996bda
+###
+GET http://localhost:7070/kurious/chapter/college/5efdd646752e750798e84888
+###
+GET http://localhost:7070/kurious/chapter/5eff0468b634e405cc48bef6
+###
+
+POST http://localhost:7070/kurious/chapter
+Content-Type: application/json
+
+{
+    "name": "csfffd",
+    "course": "5f0b9e6265ebec2a5c996bda"
+}
+
+###
+PUT http://localhost:7070/kurious/chapter/5eff0468b634e405cc48bef6
+Content-Type: application/json
+
+{
+    "surName": "Nadina",
+    "otherNames": "Umukura",
+    "nationalId": "1103473948628496",
+    "gender": "FeMale",
+    "phone": "9999000000",
+    "email": "umukura@gmail.com",
+    "college": "5efdd646752e750798e84888"
+}
+
+###
+DELETE http://localhost:7070/kurious/chapter/5eff0468b634e405cc48bef6

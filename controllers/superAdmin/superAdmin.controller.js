@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
   if (availableDocuments > 0)
     return res.send(`Can't register more than one SuperAdmin to the system`);
 
-  let newAdmin = new SuperAdmin({
+  let newDocument = new SuperAdmin({
     surName: req.body.surName,
     otherNames: req.body.otherNames,
     nationalId: req.body.nationalId,
@@ -58,8 +58,8 @@ router.post('/', async (req, res) => {
     password: defaulPassword,
   });
 
-  newAdmin.password = await hashPassword(newAdmin.password);
-  const saveDocument = await newAdmin.save();
+  newDocument.password = await hashPassword(newDocument.password);
+  const saveDocument = await newDocument.save();
   if (saveDocument)
     return res.send(saveDocument).status(201);
   return res.send('New SuperAdmin not Registered').status(500);
@@ -86,7 +86,10 @@ router.post('/login', async (req, res) => {
 
 // updated a superAdmin
 router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, res) => {
-  const { error } = validateSuperAdmin(req.body);
+  let { error } = validateObjectId(req.params.id)
+  if (error)
+      return res.send(error.details[0].message).status(400)
+  error = validateSuperAdmin(req.body);
   if (error)
     return res.send(error.details[0].message).status(400);
 
@@ -114,6 +117,9 @@ router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, re
 
 // delete a superAdmin
 router.delete('/:id', [auth, _superAdmin], async (req, res) => {
+  const { error } = validateObjectId(req.params.id)
+  if (error)
+      return res.send(error.details[0].message).status(400)
   let superAdmin = await SuperAdmin.findOne({ _id: req.params.id });
   if (!superAdmin)
     return res.send(`SuperAdmin of Code ${req.params.id} Not Found`);

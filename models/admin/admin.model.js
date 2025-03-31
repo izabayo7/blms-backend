@@ -42,7 +42,6 @@ const adminSchema = new mongoose.Schema({
     },
     profile: {
         type: String,
-        required: false
     }
 });
 

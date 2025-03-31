@@ -42,7 +42,6 @@ const instructorSchema = new mongoose.Schema({
     },
     profile: {
         type: String,
-        required: false
     }
 });
 

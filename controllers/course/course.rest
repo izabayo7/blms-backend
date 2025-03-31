@@ -1,0 +1,30 @@
+GET http://localhost:7070/kurious/course
+###
+GET http://localhost:7070/kurious/course/college/5efdd646752e750798e84888
+###
+GET http://localhost:7070/kurious/course/5eff0468b634e405cc48bef6
+###
+
+POST http://localhost:7070/kurious/course
+Content-Type: application/json
+
+{
+    "name": "digital marketing",
+    "instructor": "5eff02bcf21877015cd15daf",
+    "facilityCollegeYear": "5f0d32b5f052ff2a1cbaa2da",
+    "descryption": "It takes a lot of work to build, maintain."
+}
+
+###
+PUT http://localhost:7070/kurious/course/5f0b9e6265ebec2a5c996bda
+Content-Type: application/json
+
+{
+    "name": "fop",
+    "instructor": "5eff02bcf21877015cd15daf",
+    "facilityCollegeYear": "5f0d32b5f052ff2a1cbaa2da",
+    "descryption": "FeMaleooooouuuuuoooo"
+}
+
+###
+DELETE http://localhost:7070/kurious/course/5eff0468b634e405cc48bef6

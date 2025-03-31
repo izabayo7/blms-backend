@@ -2,6 +2,7 @@
 const Joi = require('joi')
 Joi.ObjectId = require('joi-objectid')(Joi)
 module.exports.express = require('express')
+module.exports.cors = require('cors')
 module.exports.bodyparser = require('body-parser')
 module.exports.mongoose = require('mongoose')
 module.exports.Joi = Joi
@@ -18,6 +19,12 @@ const { Admin, validateAdmin } = require('../models/admin/admin.model')
 const { College, validateCollege } = require('../models/college/college.model')
 const { Instructor, validateInstructor } = require('../models/instructor/instructor.model')
 const { Student, validateStudent } = require('../models/student/student.model')
+const { Facility, validateFacility } = require('../models/facility/facility.model')
+const { facilityCollege, validateFacilityCollege } = require('../models/facility-college/facility-college.model')
+const { facilityCollegeYear, validateFacilityCollegeYear } = require('../models/facility-college-year/facility-college-year.model')
+const { CollegeYear, validateCollegeYear } = require('../models/collegeYear/collegeYear.model')
+const { Course, validateCourse } = require('../models/course/course.model')
+const { Chapter, validateChapter } = require('../models/chapter/chapter.model')
 const { hashPassword } = require('./hash')
 const { fileFilter } = require('./multer/fileFilter')
 
@@ -31,6 +38,18 @@ module.exports.Instructor = Instructor
 module.exports.validateInstructor = validateInstructor
 module.exports.Student = Student
 module.exports.validateStudent = validateStudent
+module.exports.Facility = Facility
+module.exports.validateFacility =  validateFacility
+module.exports.FacilityCollege =  facilityCollege
+module.exports.validateFacilityCollege =  validateFacilityCollege
+module.exports.CollegeYear = CollegeYear
+module.exports.validateCollegeYear = validateCollegeYear
+module.exports.FacilityCollegeYear = facilityCollegeYear
+module.exports.validateFacilityCollegeYear = validateFacilityCollegeYear
+module.exports.Course = Course
+module.exports.validateCourse = validateCourse
+module.exports.Chapter = Chapter
+module.exports.validateChapter = validateChapter
 module.exports.fileFilter = fileFilter
 module.exports.hashPassword = hashPassword
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
@@ -50,23 +69,23 @@ module.exports.validateUserLogin = (credentials) => {
 module.exports.checkRequirements = async (category, body) => {
     let Users = category === 'SuperAdmin' ? SuperAdmin : category === 'Admin' ? Admin : category === 'Instructor' ? Instructor : Student
 
-    let college = await College.findOne({ _id: req.body.college })
+    let college = await College.findOne({ _id: body.college })
     if (!college)
         return `College ${body.college} Not Found`
-    let user = await Users.findOne({ email: req.body.email })
+    let user = await Users.findOne({ email: body.email })
     if (user)
         return `${category} with email ${body.email} arleady exist`
 
-    user = await Users.findOne({ nationalId: req.body.nationalId })
+    user = await Users.findOne({ nationalId: body.nationalId })
     if (user)
         return `${category} with nationalId ${body.nationalId} arleady exist`
 
-    user = await Users.findOne({ phone: req.body.phone })
+    user = await Users.findOne({ phone: body.phone })
     if (user)
         return `${category} with phone ${body.phone} arleady exist`
 
     if (category === 'Admin') {
-        user = await Users.findOne({ college: req.body.college })
+        user = await Users.findOne({ college: body.college })
         if (user)
             return `${category} with college ${body.college} arleady exist`
     }
@@ -95,3 +114,9 @@ module.exports.collegeController = require('../controllers/college/college.contr
 module.exports.adminController = require('../controllers/admin/admin.controller')
 module.exports.instructorController = require('../controllers/instructor/instructor.controller')
 module.exports.studentController = require('../controllers/student/student.controller')
+module.exports.facilityController = require('../controllers/facility/facility.controller')
+module.exports.facilityCollegeController = require('../controllers/facility-college/facility-college.controller')
+module.exports.collegeYearController = require('../controllers/collegeYear/collegeYear.controller')
+module.exports.facilityCollegeYearController = require('../controllers/facility-college-year/facility-college-year.controller')
+module.exports.courseController = require('../controllers/course/course.controller')
+module.exports.chapterController = require('../controllers/chapter/chapter.controller')
