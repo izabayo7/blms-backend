@@ -241,7 +241,7 @@ router.get('/:id/profile/:file_name', async (req, res) => {
     })
     if (!group)
       return res.send(formatResult(404, 'group not found'))
-    console.log(group.profile)
+    
     if (!group.profile || (group.profile != req.params.file_name))
       return res.send(formatResult(404, 'file not found'))
 
@@ -351,8 +351,8 @@ router.post('/', async (req, res) => {
       college: req.body.college,
     })
 
-    await Create_or_update_message(`SYSTEM`, result.data.name, `This channel was created by __user__${user._id} at __time__${new Date().toISOString()}`)
-    
+    await Create_or_update_message('SYSTEM', result.data.name, `This channel was created by __user__${user._id} at __time__${new Date().toISOString()}`, u, user._id)
+
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))

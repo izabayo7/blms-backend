@@ -482,7 +482,7 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
     for (const k in receivedMessages) {
       if (
         (sentMessages[i].sender == receivedMessages[k].receivers[0].id && receivedMessages[k].sender == sentMessages[i].receivers[0].id) ||
-        (receivedMessages[k].sender == 'SYSTEM' && receiversMatch(sentMessages[i].receivers, receivedMessages[i].receivers))) {
+        (receivedMessages[k].sender == 'SYSTEM' && receiversMatch(receivedMessages[k].receivers, sentMessages[i].receivers))) {
         if (sentMessages[i].realId > receivedMessages[k].realId) {
           messagesToDelete[1].push(k)
         } else {
@@ -501,7 +501,6 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
       receivedMessages.splice(index, 1)
     }
   }
-
   return {
     sent: sentMessages,
     received: receivedMessages
@@ -528,7 +527,7 @@ module.exports.formatContacts = async (messages, user_id) => {
     if (message.sender == 'SYSTEM') {
       const contact = message.receivers.filter(c => c.id != user_id)
       last_message.sender = undefined
-      message.sender = contact[0].id
+      message.sender = contact.length > 1 ? undefined : contact[0].id
     }
 
     if (message.sender == user_id) {
@@ -593,6 +592,7 @@ module.exports.formatContacts = async (messages, user_id) => {
       members: members
     })
   }
+  console.log(formatedContacts)
   return formatedContacts
 }
 
@@ -667,6 +667,7 @@ module.exports.getLatestMessages = async (user_id) => {
     }, u, 1, u, u, u, {
       _id: -1
     })
+
     if (message.length) {
       latestMessages.push(message[0])
     }
@@ -752,7 +753,7 @@ module.exports.getLatestMessages = async (user_id) => {
   for (const message of sentMessages) {
     latestMessages.push(message)
   }
-
+console.log(latestMessages)
   // arrange the messages that the latest comes in front
   return latestMessages.sort((a, b) => {
     if (a.createdAt > b.createdAt) return -1;
@@ -781,20 +782,14 @@ module.exports.Create_or_update_message = async (sender, reciever, content, _id,
   let reciever_found = false,
     receivers = []
 
-  let _sender = await this.findDocument(this.User, {
+  let _sender = sender == 'SYSTEM' ? {
+    _id: sender
+  } : await this.findDocument(this.User, {
     user_name: sender
   })
 
-  if (sender == 'SYSTEM' && user_id) {
-    _sender = {
-      _id: sender
-    }
-    receivers.push({
-      id: user_id
-    })
-  } else {
-    if (!_sender) return this.formatResult(404, 'sender not found')
-  }
+  if (!_sender)
+    return this.formatResult(404, 'sender not found')
 
   let chat_group = await this.findDocument(this.Chat_group, {
     name: reciever
@@ -807,6 +802,13 @@ module.exports.Create_or_update_message = async (sender, reciever, content, _id,
       })
     }
   } else {
+
+    if (sender == 'SYSTEM' && user_id) {
+      receivers.push({
+        id: user_id
+      })
+    }
+
     let _receiver = await this.findDocument(this.User, {
       user_name: reciever
     })
