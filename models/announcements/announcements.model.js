@@ -59,7 +59,6 @@ const announcement_schema = new mongoose.Schema({
 // validate announcement
 function validate_announcement(credentials, action = 'create') {
     const schema = action == 'create' ? {
-        sender: Joi.string().min(3).max(100).required(),
         target: Joi.object({
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
