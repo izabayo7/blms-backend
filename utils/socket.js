@@ -395,7 +395,7 @@ module.exports.listen = (app) => {
 
             // add chapters and instructor
             course = await injectChapters([course])
-            course = await injectUser(course, 'instructor')
+            course = await injectUser(course, 'user')
             course = course[0]
 
             let newDocument = new Notification({
