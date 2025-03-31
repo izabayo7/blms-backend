@@ -1,6 +1,7 @@
-const { Reset_password } = require("../../models/reset_password/reset_password.model");
+const { Reset_password, validatePasswordReset } = require("../../models/reset_password/reset_password.model");
 const { formatResult, User, ONE_DAY } = require("../../utils/imports");
 const { sendResetPasswordEmail } = require("../email/email.controller");
+const { update_password } = require("../user/user.controller");
 
 /**
  * Create (open) a password reset
@@ -57,7 +58,7 @@ exports.createPasswordReset = async (req, res) => {
 */
 exports.updatePasswordReset = async (req, res) => {
   try {
-    const { error } = validatp(req.body, 'update');
+    const { error } = validatePasswordReset(req.body, 'update');
     if (error) return res.send(formatResult(400, error.details[0].message));
 
     const user = await User.findOne({ email: req.body.email });
@@ -77,15 +78,11 @@ exports.updatePasswordReset = async (req, res) => {
     if (token.expiration < Date.now())
       return res.send(formatResult(400, 'PasswordReset Token has expired'))
 
-    const hashedPassword = await hashPassword(req.body.password);
+    await update_password({ password: req.body.password, user_id: user._id })
 
     token.status = 'CLOSED'
 
     await token.save()
-
-    user.password = hashedPassword
-
-    await user.save()
 
     return res.status(200).send(formatResult(200, 'Password was reseted'));
   }
