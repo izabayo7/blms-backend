@@ -247,14 +247,14 @@ module.exports.createDocument = async (model, properties) => {
  * @param {Object} properties Model
  * @returns formattedResult
  */
-module.exports.updateDocument = async (model, id, properties) => {
+module.exports.updateDocument = async (model, id, properties, simplified = true) => {
     try {
         const updatedDocument = await model.findOneAndUpdate({
             _id: id
         }, properties, {
             new: true
         }).exec()
-        return this.formatResult(200, 'UPDATED', updatedDocument)
+        return this.formatResult(200, 'UPDATED', simplified ? this.simplifyObject(updatedDocument) : updatedDocument)
     } catch (error) {
         return this.formatResult(500, error)
     }
@@ -832,6 +832,8 @@ module.exports.injectChapters = async (courses) => {
             if (courses[i].chapters[k].uploaded_video) {
                 courses[i].chapters[k].uploaded_video = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
             }
+            if (!courses[i].chapters[k].attachments)
+                courses[i].chapters[k].attachments = []
 
             for (const l in courses[i].chapters[k].attachments) {
                 courses[i].chapters[k].attachments[l].download_link = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/attachment/${courses[i].chapters[k].attachments[l].src}/download`
@@ -948,6 +950,44 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
         }
     }
 }
+
+// configure multer dynamic storage
+module.exports.dynamic_storage = this.multer.diskStorage({
+    destination: (req, file, cb) => {
+        const {
+            dir
+        } = req.kuriousStorageData
+        fs.exists(dir, exist => {
+            if (!exist) {
+                return fs.mkdir(dir, {
+                    recursive: true
+                }, error => cb(error, dir))
+            }
+            return cb(null, dir)
+        })
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${file.originalname}`)
+    }
+})
+
+// file size limits needed
+// type checking also needed
+
+// upload sing file
+module.exports.upload_single = this.multer({
+    storage: this.dynamic_storage,
+    // limits: {
+    //     fileSize: 1024 * 1024 * 5
+    // },
+    // fileFilter: fileFilter
+}).single('file')
+
+
+// upload multiple filies
+module.exports.upload_multiple = this.multer({
+    storage: this.dynamic_storage
+}).any()
 
 // send resized Image
 module.exports.sendResizedImage = async (req, res, path) => {

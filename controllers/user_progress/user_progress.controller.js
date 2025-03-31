@@ -14,7 +14,8 @@ const {
   updateDocument,
   deleteDocument,
   User_category,
-  User_faculty_college_year
+  User_faculty_college_year,
+  u
 } = require('../../utils/imports')
 
 // create router
@@ -54,10 +55,10 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(User_progress)
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'User_progress list is empty'))
 
-    return res.send(result)
+    return res.send(formatResult(u,u,result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -95,10 +96,10 @@ router.get('/:id', async (req, res) => {
     const result = await findDocument(User_progress, {
       _id: req.params.id
     })
-    if (!result.data)
+    if (!result)
       return res.send(formatResult(404, 'user_progress not found'))
 
-    return res.send(result)
+    return res.send(formatResult(u,u,result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -147,14 +148,14 @@ router.get('/user/:user_id/:course_id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.user_id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     // check if course exist
     let course = await findDocument(Course, {
       _id: req.params.course_id
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     const user_progress = await findDocument(User_progress, {
@@ -162,10 +163,10 @@ router.get('/user/:user_id/:course_id', async (req, res) => {
       course: req.params.course_id
     })
 
-    if (!user_progress.data)
+    if (!user_progress)
       return res.send(formatResult(404, 'user_progress not found'))
 
-    return res.send(user_progress)
+    return res.send(formatResult(u,u,user_progress))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -207,21 +208,21 @@ router.post('/', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name != 'STUDENT')
+    if (user_category.name != 'STUDENT')
       return res.send(formatResult(403, 'user is not allowed to have a progress'))
 
     // check if course exist
     let course = await findDocument(Course, {
       _id: req.body.course
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     // check if user_progress exist
@@ -229,7 +230,7 @@ router.post('/', async (req, res) => {
       user: req.body.user,
       course: req.body.course
     })
-    if (user_progress.data)
+    if (user_progress)
       return res.send(formatResult(400, 'User_progress arleady exist'))
 
     let result = await createDocument(User_progress, {
@@ -290,51 +291,51 @@ router.put('/:id', async (req, res) => {
     let user_progress = await findDocument(User_progress, {
       _id: req.params.id
     })
-    if (!user_progress.data)
+    if (!user_progress)
       return res.send(formatResult(404, 'User_progress not found'))
 
     // check if user exist
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name != 'STUDENT')
+    if (user_category.name != 'STUDENT')
       return res.send(formatResult(403, 'user is not allowed to have a progress'))
 
     // check if course exist
     let course = await findDocument(Course, {
       _id: req.body.course
     })
-    if (!course.data)
+    if (!course)
       return res.send(formatResult(404, 'course not found'))
 
     const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: user.data._id,
+      user: user._id,
       status: 1
     })
-    if (course.data.faculty_college_year != user_faculty_college_year.data.faculty_college_year)
+    if (course.faculty_college_year != user_faculty_college_year.faculty_college_year)
       return res.send(formatResult(403, 'user is not allowed to study this course'))
 
     // check if chapter exist
     let chapter = await findDocument(Chapter, {
       _id: req.body.chapter
     })
-    if (!chapter.data)
+    if (!chapter)
       return res.send(formatResult(404, 'chapter not found'))
 
-    if (chapter.data.course !== req.body.course)
+    if (chapter.course !== req.body.course)
       return res.send(formatResult(400, 'chapter don\'t belong to the course'))
 
     if (findFinishedChapter(user_progress.finished_chapters, req.body.chapter))
       return res.send(formatResult(400, 'progress already exists'))
 
-    user_progress.data.finished_chapters.push({ id: req.body.chapter })
+    user_progress.finished_chapters.push({ id: req.body.chapter })
 
     const chapters = await findDocuments(Chapter, {
       course: req.body.course
@@ -342,19 +343,19 @@ router.put('/:id', async (req, res) => {
 
     let finished_chapters = 0
 
-    for (const i in chapters.data) {
-      if (findFinishedChapter(user_progress.data.finished_chapters, chapters.data[i]._id)) {
+    for (const i in chapters) {
+      if (findFinishedChapter(user_progress.finished_chapters, chapters[i]._id)) {
         finished_chapters++
       }
     }
 
-    const progress = (finished_chapters / chapters.data.length) * 100
+    const progress = (finished_chapters / chapters.length) * 100
 
     let updateObject = {
       user: req.body.user,
       course: req.body.course,
       progress: progress,
-      finished_chapters: user_progress.data.finished_chapters
+      finished_chapters: user_progress.finished_chapters
     }
 
     const result = await updateDocument(User_progress, req.params.id, updateObject)
@@ -400,7 +401,7 @@ router.delete('/:id', async (req, res) => {
     let user_progress = await findDocument(User_progress, {
       _id: req.params.id
     })
-    if (!user_progress.data)
+    if (!user_progress)
       return res.send(formatResult(404, 'User_progress not found'))
 
     const result = await deleteDocument(User_progress, req.params.id)

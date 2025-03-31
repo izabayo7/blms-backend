@@ -57,10 +57,10 @@ router.get('/', async (req, res) => {
   try {
     let result = await findDocuments(Faculty_college_year)
 
-    if (result.data.length === 0)
+    if (result.length === 0)
       return res.send(formatResult(404, 'faculty_college_year list is empty'))
 
-    // result.data = await injectDetails(result.data)
+    // result = await injectDetails(result)
 
     return res.send(result)
   } catch (error) {
@@ -95,18 +95,18 @@ router.get('/college/:id', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College with code ${req.params.id} doens't exist`))
 
     let faculty_college_years = await findDocuments(Faculty_college, {
       college: req.params.id
     })
-    if (faculty_college_years.data.length < 1)
+    if (faculty_college_years.length < 1)
       return res.send(formatResult(404, `faculty_college in ${college.name} Not Found`))
 
     let foundFaculty_college_years = []
 
-    for (const faculty_college of faculty_college_years.data) {
+    for (const faculty_college of faculty_college_years) {
 
       const faculty_details = await findDocument(Faculty, {
         _id: faculty_college.faculty
@@ -116,7 +116,7 @@ router.get('/college/:id', async (req, res) => {
         faculty_college: faculty_college._id
       })
 
-      for (const faculty_college_year of response.data) {
+      for (const faculty_college_year of response) {
 
         const year_details = await findDocument(College_year, {
           _id: faculty_college_year.college_year
@@ -126,7 +126,7 @@ router.get('/college/:id', async (req, res) => {
           _id: faculty_college_year._id,
           faculty_college: faculty_college_year.faculty_college,
           college_year: faculty_college_year.college_year,
-          name: `${faculty_details.data.name} Year ${year_details.data.digit}`
+          name: `${faculty_details.name} Year ${year_details.digit}`
         })
       }
     }
@@ -177,21 +177,21 @@ router.post('/', async (req, res) => {
     let faculty_college = await findDocument(Faculty_college, {
       _id: req.body.faculty_college
     })
-    if (!faculty_college.data)
+    if (!faculty_college)
       return res.send(formatResult(404, `Faculty_college with code ${req.body.faculty_college} doens't exist`))
 
     // check if college_year exist
     let college_year = await findDocument(College_year, {
       _id: req.body.college_year
     })
-    if (!college_year.data)
+    if (!college_year)
       return res.send(formatResult(404, `College_year with code ${req.body.college_year} doens't exist`))
 
     let faculty_college_year = await findDocument(Faculty_college_year, {
       faculty_college: req.body.faculty_college,
       college_year: req.body.college_year
     })
-    if (faculty_college_year.data)
+    if (faculty_college_year)
       return res.send(formatResult(400, `faculty_college_year you want to create arleady exist`))
 
     let result = await createDocument(Faculty_college_year, {
@@ -199,7 +199,7 @@ router.post('/', async (req, res) => {
       college_year: req.body.college_year
     })
 
-    // result.data = await injectDetails([simplifyObject(result.data)])
+    // result = await injectDetails([simplifyObject(result)])
 
     return res.send(result)
   } catch (error) {
@@ -241,14 +241,14 @@ router.delete('/:id', async (req, res) => {
     let faculty_college_year = await findDocument(Faculty_college_year, {
       _id: req.params.id
     })
-    if (!faculty_college_year.data)
+    if (!faculty_college_year)
       return res.send(formatResult(404, `faculty_college_year of Code ${req.params.id} Not Found`))
 
     // check if the faculty_college_year is never used
     const faculty_college_year_found = await findDocument(User_faculty_college_year, {
       faculty_college_year: req.params.id
     })
-    if (!faculty_college_year_found.data) {
+    if (!faculty_college_year_found) {
       let result = await deleteDocument(Faculty_college_year, req.params.id)
       return res.send(result)
     }
@@ -256,7 +256,7 @@ router.delete('/:id', async (req, res) => {
     const update_faculty_college_year = await updateDocument(Faculty_college_year, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, `User ${update_faculty_college_year.data._id} couldn't be deleted because it was used, instead it was disabled`, update_faculty_college_year.data))
+    return res.send(formatResult(200, `User ${update_faculty_college_year._id} couldn't be deleted because it was used, instead it was disabled`, update_faculty_college_year.data))
 
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -270,17 +270,17 @@ async function injectDetails(faculty_college_years) {
     const faculty_college = await findDocument(Faculty_college, {
       _id: faculty_college_years[i].faculty_college
     })
-    faculty_college_years[i].faculty_college = simplifyObject(removeDocumentVersion(faculty_college.data))
+    faculty_college_years[i].faculty_college = simplifyObject(removeDocumentVersion(faculty_college))
 
     const faculty = await findDocument(Faculty, {
       _id: faculty_college_years[i].faculty_college.faculty
     })
-    faculty_college_years[i].faculty_college.faculty = simplifyObject(removeDocumentVersion(faculty.data))
+    faculty_college_years[i].faculty_college.faculty = simplifyObject(removeDocumentVersion(faculty))
 
     const college = await findDocument(College, {
       _id: faculty_college_years[i].faculty_college.college
     })
-    faculty_college_years[i].faculty_college.college = simplifyObject(removeDocumentVersion(college.data))
+    faculty_college_years[i].faculty_college.college = simplifyObject(removeDocumentVersion(college))
     if (faculty_college_years[i].faculty_college.college.logo) {
       faculty_college_years[i].faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }
@@ -288,7 +288,7 @@ async function injectDetails(faculty_college_years) {
     const college_year = await findDocument(College_year, {
       _id: faculty_college_years[i].college_year
     })
-    faculty_college_years[i].college_year = removeDocumentVersion(college_year.data)
+    faculty_college_years[i].college_year = removeDocumentVersion(college_year)
 
     // add the number of students
     const attendants = await countDocuments(User_faculty_college_year, {

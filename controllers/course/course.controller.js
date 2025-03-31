@@ -244,9 +244,7 @@ router.get('/user/:id', async (req, res) => {
     result = simplifyObject(result)
 
     result = await injectChapters(result)
-    console.log(result)
     result = await injectFaculty_college_year(result)
-    // console.log(result)
     let user_category = await findDocument(User_category, {
       _id: user.category
     })
@@ -255,8 +253,8 @@ router.get('/user/:id', async (req, res) => {
       result = await injecUserProgress(result, user._id)
       result = await injectUser(result, 'user')
     }
-console.log(result)
-    return res.send(result)
+
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -335,7 +333,7 @@ router.get('/user/:userId/:courseName', async (req, res) => {
 
     course = course[0]
 
-    return res.status(200).send(course)
+    return res.status(200).send(formatResult(u, u, course))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -435,10 +433,7 @@ router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
     if (!course)
       return res.send(formatResult(404, 'course not found'))
 
-    if (!course.cover_picture)
-      return res.send(formatResult(404, 'file not found'))
-
-    if (course.cover_picture !== req.params.file_name)
+    if (!course.cover_picture && course.cover_picture !== req.params.file_name)
       return res.send(formatResult(404, 'file not found'))
 
     let faculty_college_year = await findDocument(Faculty_college_year, {
@@ -666,6 +661,94 @@ router.put('/:id', async (req, res) => {
     return res.send(formatResult(500, error))
   }
 })
+
+/**
+ * @swagger
+ * /chapter/{id}/cover_picture:
+ *   post:
+ *     tags:
+ *       - Chapter
+ *     description: Upload chapter attacments (file upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/cover_picture/:file_name', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if college exist
+    const course = await findDocument(Course, {
+      _id: req.params.id
+    })
+    if (!course)
+      return res.send(formatResult(404, 'course not found'))
+
+    if (!course.cover_picture && course.cover_picture !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    let faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.faculty_college_year
+    })
+
+    let faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    })
+
+    const path = `./uploads/colleges/${faculty_college.college}/courses/${course._id}/${course.cover_picture}`
+
+    req.kuriousStorageData = {
+      dir: `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}`,
+    }
+    upload(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+      if (course.coverPicture) {
+        fs.unlink(`${req.kuriousStorageData.dir}/${course.coverPicture}`, (err) => {
+          if (err)
+            return res.send(formatResult(500, err))
+        })
+      }
+      const updateDocument = await Course.findOneAndUpdate({
+        _id: req.params.id
+      }, {
+        coverPicture: req.file.filename
+      }, {
+        new: true
+      })
+      if (updateDocument) {
+        updateDocument.coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${req.params.id}/${updateDocument.coverPicture}`
+        return res.status(201).send(updateDocument)
+      }
+      return res.send(formatResult(500, "Error ocurred"))
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
 
 /**
  * @swagger

@@ -20,6 +20,8 @@ const {
   path,
   streamVideo,
   findFileType,
+  upload_single,
+  upload_multiple,
 } = require('../../utils/imports')
 
 // create router
@@ -112,31 +114,31 @@ router.get('/:id/document', async (req, res) => {
 })
 
 /**
-* @swagger
-* /chapter/{id}/video/{file_name}:
-*   get:
-*     tags:
-*       - Chapter
-*     description: Returns the uploaded_video of a specified Chapter
-*     parameters:
-*       - name: id
-*         description: Chapter's id
-*         in: path
-*         required: true
-*         type: string
-*       - name: file_name
-*         description: Chapter's video filename
-*         in: path
-*         required: true
-*         type: string
-*     responses:
-*       200:
-*         description: OK
-*       404:
-*         description: Not found
-*       500:
-*         description: Internal Server error
-*/
+ * @swagger
+ * /chapter/{id}/video/{file_name}:
+ *   get:
+ *     tags:
+ *       - Chapter
+ *     description: Returns the uploaded_video of a specified Chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: Chapter's video filename
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id/video/:file_name', async (req, res) => {
   try {
 
@@ -478,6 +480,318 @@ router.put('/:id', async (req, res) => {
     return res.send(formatResult(500, error))
   }
 })
+
+/**
+ * @swagger
+ * /chapter/{id}/document:
+ *   put:
+ *     tags:
+ *       - Chapter
+ *     description: Update chapter content
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: content to upload
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             content: 
+ *               type: string
+ *               required: true
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/document', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    error = validate_chapter(req.body, true)
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    })
+
+    const dir = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/main_content`
+
+    fs.createFile(`${dir}/index.html`, (error) => {
+      if (error)
+        res.send(formatResult(500, error))
+      fs.writeFile(`${dir}/index.html`, req.body.content, (err) => {
+        if (err)
+          return res.send(formatResult(500, err))
+        return res.send(formatResult(u, u, 'Content was successfully saved'))
+      })
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chapter/{id}/video:
+ *   put:
+ *     tags:
+ *       - Chapter
+ *     description: Update chapter video (video upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/video', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    })
+
+    req.kuriousStorageData = {
+      dir: `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/video`,
+    }
+    upload_single(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+
+      if (chapter.uploaded_video && chapter.uploaded_video != req.file.filename) {
+        fs.unlink(`${req.kuriousStorageData.dir}/${chapter.uploaded_video}`, (err) => {
+          if (err) {
+            return res.send(formatResult(500, err))
+          }
+        })
+      }
+
+      const result = await updateDocument(Chapter, req.params.id, {
+        uploaded_video: req.file.filename
+      })
+      result.data.uploaded_video = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${req.params.id}/video/${result.data.uploaded_video}`
+      return res.status(201).send(result)
+
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chapter/{id}/attachment:
+ *   post:
+ *     tags:
+ *       - Chapter
+ *     description: Upload chapter attacments (file upload using swagger is still under construction)
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/:id/attachment', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    })
+
+    req.kuriousStorageData = {
+      dir: `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${req.params.id}/attachments`,
+    }
+    let savedAttachments = []
+
+    upload_multiple(req, res, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err.message))
+      const status = true
+      for (const i in req.files) {
+        const file_found = chapter.attachments.filter(attachment => attachment.src == req.files[i].filename)
+        if (!file_found.length) {
+          chapter.attachments.push({ src: req.files[i].filename })
+        }
+      }
+
+      const result = await updateDocument(Chapter, req.params.id, {
+        attachments: chapter.attachments
+      })
+      return res.status(201).send(result)
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chapter/{id}/attachment:
+ *   delete:
+ *     tags:
+ *       - Course
+ *     description: Delete a chapter
+ *     parameters:
+ *       - name: id
+ *         description: Chapter id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: file's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:id/attachment/:file_name', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    let file_found = false
+
+    for (const i in chapter.attachments) {
+      if (chapter.attachments[i].src == req.params.file_name) {
+        file_found = true
+        chapter.attachments.splice(i, 1)
+        break
+      }
+    }
+    if (!file_found)
+      return res.send(formatResult(404, 'file not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.faculty_college
+    })
+
+    const file_path = `./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/attachments/${req.params.file_name}`
+
+
+    fs.unlink(file_path, async (err) => {
+      if (err)
+        return res.send(formatResult(500, err))
+
+      const result = await updateDocument(Chapter, req.params.id, {
+        attachments: chapter.attachments
+      })
+      result.message = 'DELETED'
+      return res.status(201).send(result)
+    })
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
 
 /**
  * @swagger

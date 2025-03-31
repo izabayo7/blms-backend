@@ -37,8 +37,10 @@ const swaggerOptions = {
                 in: 'header',
             },
         },
+        consumes: ['multipart/form-data']
     },
     apis: ['./controllers/**/*.js', './controllers/**/**/*.js'],
+
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

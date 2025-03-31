@@ -97,13 +97,13 @@ router.get('/', async (req, res) => {
 
     let result = await findDocuments(Quiz_submission)
 
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'Quiz_submission list is empty'))
 
-    // result.data = await injectUser(result.data, 'user')
-    // result.data = await injectQuiz(result.data)
+    // result = await injectUser(result, 'user')
+    // result = await injectQuiz(result)
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -141,14 +141,14 @@ router.get('/:id', async (req, res) => {
     let result = await findDocument(Quiz_submission, {
       _id: req.params.id
     })
-    if (!result.data)
+    if (!result)
       return res.send(formatResult(404, 'quiz_submission not found'))
 
-    // result.data = await injectUser([result.data], 'user')
-    // result.data = await injectQuiz(result.data)
-    // result.data = result.data[0]
+    // result = await injectUser([result], 'user')
+    // result = await injectQuiz(result)
+    // result = result[0]
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -187,19 +187,19 @@ router.get('/quiz/:id', async (req, res) => {
     let quiz = await findDocument(Quiz, {
       _id: req.params.id
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
     let result = await findDocuments(Quiz_submission, {
       quiz: req.params.id
     })
 
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'quiz_submissions not found'))
 
-    // result.data = await injectUser(result.data, 'user')
+    // result = await injectUser(result, 'user')
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -238,28 +238,28 @@ router.get('/user/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let result
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name == 'STUDENT') {
+    if (user_category.name == 'STUDENT') {
       result = simplifyObject(await findDocuments(Quiz_submission, {
         user: req.params.id
       }))
-      if (!result.data.length)
+      if (!result.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
-      result.data = await injectQuiz(result.data)
-      for (const i in result.data) {
-        if (result.data[i].quiz) {
-          result.data[i].quiz = await addAttachmentMediaPaths([result.data[i].quiz])
-          result.data[i].quiz = await injectUser(result.data[i].quiz, 'user')
-          result.data[i].quiz = result.data[i].quiz[0]
+      result = await injectQuiz(result)
+      for (const i in result) {
+        if (result[i].quiz) {
+          result[i].quiz = await addAttachmentMediaPaths([result[i].quiz])
+          result[i].quiz = await injectUser(result[i].quiz, 'user')
+          result[i].quiz = result[i].quiz[0]
         }
       }
     } else {
@@ -267,23 +267,23 @@ router.get('/user/:id', async (req, res) => {
       let quizes = await findDocuments(Quiz, {
         user: req.params.id
       })
-      if (!quizes.data.length)
+      if (!quizes.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
       let foundSubmissions = []
 
-      for (const i in quizes.data) {
+      for (const i in quizes) {
         let quiz_submission = await findDocuments(Quiz_submission, {
-          quiz: quizes.data[i]._id
+          quiz: quizes[i]._id
         })
-        if (quiz_submission.data.length) {
-          quiz_submission.data = await injectUser(quiz_submission.data, 'user')
-          quiz_submission.data = await injectQuiz(quiz_submission.data)
+        if (quiz_submission.length) {
+          quiz_submission = await injectUser(quiz_submission, 'user')
+          quiz_submission = await injectQuiz(quiz_submission)
 
-          for (const k in quiz_submission.data) {
+          for (const k in quiz_submission) {
             quiz_submission[k].quiz = await addAttachmentMediaPaths([quiz_submission[k].quiz])
             quiz_submission[k].quiz = quiz_submission[k].quiz[0]
-            foundSubmissions.push(quiz_submission.data[k])
+            foundSubmissions.push(quiz_submission[k])
           }
         }
       }
@@ -293,7 +293,7 @@ router.get('/user/:id', async (req, res) => {
       result = formatResult(u, u, foundSubmissions)
     }
 
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -332,30 +332,30 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     let user = await findDocument(User, {
       user_name: req.params.user_name
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let quiz = await findDocument(Quiz, {
       name: req.params.quiz_name
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
     let result = await findDocument(Quiz_submission, {
-      user: user.data._id,
-      quiz: quiz.data._id
+      user: user._id,
+      quiz: quiz._id
     })
-    if (!result.data)
+    if (!result)
       return res.send(formatResult(404, 'quiz_submission not found'))
-    result.data = simplifyObject(result.data)
-    result.data = await injectQuiz([result.data])
-    result.data[0].quiz = await addAttachmentMediaPaths([result.data[0].quiz])
-    result.data[0].quiz = simplifyObject(result.data[0].quiz)
-    result.data[0].quiz = await injectUser(result.data[0].quiz, 'user')
-    result.data[0].quiz = result.data[0].quiz[0]
-    result.data = result.data[0]
+    result = simplifyObject(result)
+    result = await injectQuiz([result])
+    result[0].quiz = await addAttachmentMediaPaths([result[0].quiz])
+    result[0].quiz = simplifyObject(result[0].quiz)
+    result[0].quiz = await injectUser(result[0].quiz, 'user')
+    result[0].quiz = result[0].quiz[0]
+    result = result[0]
 
-    return res.send(result)
+    return res.send(formatResult(u,u,result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -399,23 +399,23 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
     const submission = await findDocument(Quiz_submission, {
       _id: req.params.id
     })
-    if (!submission.data)
+    if (!submission)
       return res.send(formatResult(404, 'quiz_submission not found'))
 
     const quiz = await findDocument(Quiz, {
-      _id: submission.data.quiz
+      _id: submission.quiz
     })
 
     const user = await findDocument(User, {
-      _id: quiz.data.user
+      _id: quiz.user
     })
 
     let file_found = false
 
-    for (let i in submission.data.answers) {
+    for (let i in submission.answers) {
       i = parseInt(i)
-      if (quiz.data.questions[i].type == 'file_upload') {
-        if (submission.data.answers[i].src == req.params.file_name) {
+      if (quiz.questions[i].type == 'file_upload') {
+        if (submission.answers[i].src == req.params.file_name) {
           file_found = true
           break
         }
@@ -426,7 +426,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const file_path = `./uploads/colleges/${user.data.college}/assignments/${submission.data.quiz}/submissions/${submission.data._id}/${req.params.file_name}`
+    const file_path = `./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`
 
     const file_type = await findFileType(req.params.file_name)
 
@@ -479,35 +479,35 @@ router.post('/', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name != 'STUDENT')
+    if (user_category.name != 'STUDENT')
       return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
     let quiz = await findDocument(Quiz, {
       _id: req.body.quiz
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
-    if (!quiz.data.target.id)
+    if (!quiz.target.id)
       return res.send(formatResult(404, 'quiz is not available'))
 
     const faculty_college_year = await get_faculty_college_year(req.body.quiz)
 
     let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: user.data._id,
-      faculty_college_year: faculty_college_year.data._id
+      user: user._id,
+      faculty_college_year: faculty_college_year._id
     })
-    if (!user_faculty_college_year.data)
+    if (!user_faculty_college_year)
       return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
-    const valid_submision = validateSubmittedAnswers(quiz.data.questions, req.body.answers, 'anwsering')
+    const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'anwsering')
     if (valid_submision.status !== true)
       return res.send(formatResult(400, valid_submision.error))
 
@@ -516,7 +516,7 @@ router.post('/', async (req, res) => {
       user: req.body.user,
       quiz: req.body.quiz
     })
-    if (quiz_submission.data)
+    if (quiz_submission)
       return res.send(formatResult(400, 'quiz_submission already exist'))
 
     let result = await createDocument(Quiz_submission, {
@@ -527,9 +527,9 @@ router.post('/', async (req, res) => {
       auto_submitted: req.body.auto_submitted
     })
 
-    result.data = simplifyObject(result.data)
-    result.data = await injectQuiz([result.data])
-    result.data = result.data[0]
+    result = simplifyObject(result)
+    result = await injectQuiz([result])
+    result = result[0]
 
     return res.send(result)
   } catch (error) {
@@ -588,35 +588,35 @@ router.put('/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name != 'STUDENT')
+    if (user_category.name != 'STUDENT')
       return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
     let quiz = await findDocument(Quiz, {
       _id: req.body.quiz
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
-    if (!quiz.data.target.id)
+    if (!quiz.target.id)
       return res.send(formatResult(404, 'quiz is not available'))
 
     const faculty_college_year = await get_faculty_college_year(req.body.quiz)
 
     let user_faculty_college_year = await findDocument(User_faculty_college_year, {
-      user: user.data._id,
-      faculty_college_year: faculty_college_year.data._id
+      user: user._id,
+      faculty_college_year: faculty_college_year._id
     })
-    if (!user_faculty_college_year.data)
+    if (!user_faculty_college_year)
       return res.send(formatResult(403, 'user is not allowed to do this quiz'))
 
-    const valid_submision = validateSubmittedAnswers(quiz.data.questions, req.body.answers, 'marking')
+    const valid_submision = validateSubmittedAnswers(quiz.questions, req.body.answers, 'marking')
     if (valid_submision.status !== true)
       return res.send(formatResult(400, valid_submision.error))
 
@@ -665,22 +665,22 @@ router.delete('/:id', async (req, res) => {
     let quiz_submission = await findDocument(Quiz_submission, {
       _id: req.params.id
     })
-    if (!quiz_submission.data)
+    if (!quiz_submission)
       return res.send(formatResult(404, 'quiz_submission not found'))
 
     const result = await deleteDocument(Quiz_submission, req.params.id)
 
     let quiz = await findDocument(Quiz, {
-      _id: quiz_submission.data.quiz
+      _id: quiz_submission.quiz
     })
-    if (!quiz.data.target.id) {
-      let faculty_college_year = await get_faculty_college_year(quiz.data._id)
+    if (!quiz.target.id) {
+      let faculty_college_year = await get_faculty_college_year(quiz._id)
 
       let faculty_college = await findDocument(Faculty_college, {
-        _id: faculty_college_year.data.faculty_college
+        _id: faculty_college_year.faculty_college
       })
 
-      const path = `./uploads/colleges/${faculty_college.data.college}/assignments/${quiz.data._id}/submissions/${req.params.id}`
+      const path = `./uploads/colleges/${faculty_college.college}/assignments/${quiz._id}/submissions/${req.params.id}`
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)
@@ -789,26 +789,26 @@ async function get_faculty_college_year(quiz_id) {
   })
   let course
 
-  if (quiz.data.target.type == 'chapter') {
+  if (quiz.target.type == 'chapter') {
     let chapter = await findDocument(Chapter, {
-      _id: quiz.data.target.id
+      _id: quiz.target.id
     })
     course = await findDocument(Course, {
-      _id: chapter.data.course
+      _id: chapter.course
     })
     return await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
-  } else if (quiz.data.target.type == 'course') {
+  } else if (quiz.target.type == 'course') {
     course = await findDocument(Course, {
-      _id: quiz.data.target.id
+      _id: quiz.target.id
     })
     return await findDocument(Faculty_college_year, {
-      _id: course.data.faculty_college_year
+      _id: course.faculty_college_year
     })
   } else {
     return await findDocument(Faculty_college_year, {
-      _id: quiz.data.target.id
+      _id: quiz.target.id
     })
   }
 }

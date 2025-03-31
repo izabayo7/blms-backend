@@ -42,8 +42,10 @@ const chapter_schema = new mongoose.Schema({
 chapter_schema.plugin(timestamps)
 
 // validate chapter
-function validate_chapter(credentials) {
-    const schema = {
+function validate_chapter(credentials, document = false) {
+    const schema = document ?{
+        content: Joi.string().required()
+    } : {
         name: Joi.string().min(3).required(),
         number: Joi.number().min(1),
         course: Joi.ObjectId().required(),

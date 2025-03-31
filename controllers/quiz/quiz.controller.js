@@ -24,7 +24,8 @@ const {
   Quiz_submission,
   sendResizedImage,
   findFileType,
-  streamVideo
+  streamVideo,
+  u
 } = require('../../utils/imports')
 const {
   parseInt
@@ -110,13 +111,13 @@ router.get('/', async (req, res) => {
   try {
     let result = await findDocuments(Quiz)
 
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'Quiz list is empty'))
 
-    // result.data = await injectInstructor(result.data)
-    // result.data = await addAttachmentMediaPaths(result.data)
+    // result = await injectInstructor(result)
+    // result = await addAttachmentMediaPaths(result)
 
-    return res.send(result)
+    return res.send(formatResult(u,u,result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -154,14 +155,14 @@ router.get('/:id', async (req, res) => {
     let quiz = await findDocument(Quiz, {
       _id: req.params.id
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
-    // quiz.data = await injectInstructor([quiz.data])
-    // quiz.data = await addAttachmentMediaPaths(quiz.data)
-    // quiz.data = quiz.data[0]
+    // quiz = await injectInstructor([quiz])
+    // quiz = await addAttachmentMediaPaths(quiz)
+    // quiz = quiz[0]
 
-    return res.send(quiz)
+    return res.send(formatResult(u,u,quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -199,21 +200,21 @@ router.get('/user/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let quiz = await findDocuments(Quiz, {
       user: req.params.id
     })
 
-    if (!quiz.data.length)
+    if (!quiz.length)
       return res.send(formatResult(404, 'quizes not found'))
 
-    // quiz.data = await addAttachmentMediaPaths(quiz.data)
-    // quiz.data = await addQuizUsages(quiz.data)
-    // quiz.data = await addAttachedCourse(quiz.data)
+    // quiz = await addAttachmentMediaPaths(quiz)
+    // quiz = await addQuizUsages(quiz)
+    // quiz = await addAttachedCourse(quiz)
 
-    return res.send(quiz)
+    return res.send(formatResult(u,u,quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -256,55 +257,55 @@ router.get('/user/:id/:quiz_name', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let quiz = await findDocument(Quiz, {
       name: req.params.quiz_name
     })
 
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
     let faculty_college_year
     let chapter
     let course
 
-    if (quiz.data.target.id) {
-      if (quiz.data.target.type === 'chapter') {
+    if (quiz.target.id) {
+      if (quiz.target.type === 'chapter') {
         chapter = await findDocument(Chapter, {
-          _id: quiz.data.target.id
+          _id: quiz.target.id
         })
         course = await findDocument(Course, {
-          _id: chapter.data.course
+          _id: chapter.course
         })
-        faculty_college_year = course.data.faculty_college_year
-      } else if (quiz.data.target.type === 'course') {
+        faculty_college_year = course.faculty_college_year
+      } else if (quiz.target.type === 'course') {
         course = await findDocument(Course, {
-          _id: quiz.data.target.id
+          _id: quiz.target.id
         })
-        faculty_college_year = course.data.faculty_college_year
-      } else if (quiz.data.target.type === 'faculty_college_year') {
-        faculty_college_year = quiz.data.target.id
+        faculty_college_year = course.faculty_college_year
+      } else if (quiz.target.type === 'faculty_college_year') {
+        faculty_college_year = quiz.target.id
       }
 
       const user_faculty_college_year = await findDocument(User_faculty_college_year, {
         user: req.params.id,
         faculty_college_year: faculty_college_year
       })
-      if (!user_faculty_college_year.data)
+      if (!user_faculty_college_year)
         return res.send(formatResult(404, 'quiz not found'))
     } else {
-      if (quiz.data.user !== req.params.id)
+      if (quiz.user !== req.params.id)
         return res.send(formatResult(404, 'quiz not found'))
     }
 
-    quiz.data = await addAttachmentMediaPaths([quiz.data])
-    quiz.data = await addQuizUsages(quiz.data)
-    quiz.data = await addAttachedCourse(quiz.data)
-    quiz.data = quiz.data[0]
+    quiz = await addAttachmentMediaPaths([quiz])
+    quiz = await addQuizUsages(quiz)
+    quiz = await addAttachedCourse(quiz)
+    quiz = quiz[0]
 
-    return res.send(quiz)
+    return res.send(formatResult(u,u,quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -361,15 +362,15 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
     const quiz = await findDocument(Quiz, {
       _id: req.params.id
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
     let file_found = false
 
-    for (const i in quiz.data.questions) {
-      if (quiz.data.questions[i].type.includes('file_select')) {
-        for (const k in quiz.data.questions[i].options.choices) {
-          if (quiz.data.questions[i].options.choices[k].src == req.params.file_name) {
+    for (const i in quiz.questions) {
+      if (quiz.questions[i].type.includes('file_select')) {
+        for (const k in quiz.questions[i].options.choices) {
+          if (quiz.questions[i].options.choices[k].src == req.params.file_name) {
             file_found = true
             break
           }
@@ -382,10 +383,10 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
       return res.send(formatResult(404, 'file not found'))
 
     const user = await findDocument(User, {
-      _id: quiz.data.user
+      _id: quiz.user
     })
 
-    const file_path = `./uploads/colleges/${user.data.college}/assignments/${quiz.data._id}/${req.params.file_name}`
+    const file_path = `./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`
 
     const file_type = await findFileType(req.params.file_name)
 
@@ -441,17 +442,17 @@ router.post('/', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category != user_category.data._id)
+    if (user.category != user_category._id)
       return res.send(formatResult(404, 'user can\'t create quiz'))
 
     // check if quizname exist
     let quiz = await findDocument(Quiz, {
       name: req.body.name
     })
-    if (quiz.data)
+    if (quiz)
       return res.send(formatResult(400, 'name was taken'))
 
     const validQuestions = validateQuestions(req.body.questions)
@@ -522,10 +523,10 @@ router.put('/:id', async (req, res) => {
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category != user_category.data._id)
+    if (user.category != user_category._id)
       return res.send(formatResult(404, 'user can\'t create quiz'))
 
     // check if quiz exist
@@ -533,7 +534,7 @@ router.put('/:id', async (req, res) => {
       _id: req.params.id,
       user: req.body.user
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
     let quiz_copy = quiz
@@ -545,7 +546,7 @@ router.put('/:id', async (req, res) => {
       },
       name: req.body.name
     })
-    if (quiz.data)
+    if (quiz)
       return res.send(formatResult(400, 'name was taken'))
 
     quiz = quiz_copy
@@ -585,16 +586,16 @@ router.put('/:id', async (req, res) => {
           break;
       }
 
-      if (!target.data)
+      if (!target)
         return res.send(formatResult(404, 'quiz target not found'))
 
       // remove the previously attached quiz
       const last_targeted_quiz = await findDocument(Quiz, {
         target: req.body.target
       })
-      if (last_targeted_quiz.data) {
-        last_targeted_quiz.data.target = undefined
-        await last_targeted_quiz.data.save()
+      if (last_targeted_quiz) {
+        last_targeted_quiz.target = undefined
+        await last_targeted_quiz.save()
       }
     }
 
@@ -604,38 +605,38 @@ router.put('/:id', async (req, res) => {
 
     req.body.total_marks = validQuestions.total_marks
 
-    quiz.data.name = req.body.name
-    quiz.data.instructions = req.body.instructions
-    quiz.data.target = req.body.target
-    quiz.data.duration = req.body.duration
-    quiz.data.questions = req.body.questions
-    quiz.data.total_marks = req.body.total_marks
-    quiz.data.user = req.body.user
-    quiz.data.published = req.body.published
+    quiz.name = req.body.name
+    quiz.instructions = req.body.instructions
+    quiz.target = req.body.target
+    quiz.duration = req.body.duration
+    quiz.questions = req.body.questions
+    quiz.total_marks = req.body.total_marks
+    quiz.user = req.body.user
+    quiz.published = req.body.published
 
-    await quiz.data.save()
+    await quiz.save()
 
 
     // delete removed files
-    for (const i in quiz_copy.data.questions) {
+    for (const i in quiz_copy.questions) {
       if (
-        quiz_copy.data.questions[i].type.includes("file_select")
+        quiz_copy.questions[i].type.includes("file_select")
       ) {
         let deleteAll = false
         if (!req.body.questions[i].type.includes('file_select')) {
           deleteAll = true
         }
-        for (const j in quiz_copy.data.questions[i].options.choices) {
+        for (const j in quiz_copy.questions[i].options.choices) {
           let deletePicture = true
           if (req.body.questions[i].type.includes('file_select')) {
             for (const k in req.body.questions[i].options.choices) {
-              if (quiz_copy.data.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
+              if (quiz_copy.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
                 deletePicture = false
               }
             }
           }
           if (deleteAll || deletePicture) {
-            const path = `./uploads/colleges/${user.data.college}/assignments/${req.params.id}/${quiz_copy.data.questions[i].options.choices[j].src}`
+            const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`
             fs.exists(path, (exists) => {
               if (exists) {
                 fs.unlink(path)
@@ -646,7 +647,7 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    return res.send(formatResult(200, 'UPDATED', quiz.data))
+    return res.send(formatResult(200, 'UPDATED', quiz))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -687,7 +688,7 @@ router.delete('/:id', async (req, res) => {
     let quiz = await findDocument(Quiz, {
       _id: req.params.id
     })
-    if (!quiz.data)
+    if (!quiz)
       return res.send(formatResult(404, 'quiz not found'))
 
     // check if the quiz is never used
@@ -696,17 +697,17 @@ router.delete('/:id', async (req, res) => {
     const submission = await findDocument(Quiz_submission, {
       quiz: req.params.id
     })
-    if (submission.data)
+    if (submission)
       quiz_used = true
 
     if (!quiz_used) {
       let user = await findDocument(User, {
-        _id: quiz.data.user
+        _id: quiz.user
       })
 
       let result = await deleteDocument(Quiz, req.params.id)
 
-      const path = `./uploads/colleges/${user.data.college}/assignments/${req.params.id}`
+      const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`
       fs.exists(path, (exists) => {
         if (exists) {
           fs.remove(path)

@@ -47,9 +47,9 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(Faculty)
-    if (result.data.length === 0)
+    if (!result.length)
       return res.send(formatResult(404, 'Faculty list is empty'))
-    return res.send(result)
+    return res.send(formatResult(u, u, result))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -87,31 +87,31 @@ router.get('/college/:id', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College ${req.params.id} Not Found`))
 
     const faculty_colleges = await findDocuments(Faculty_college, {
       college: req.params.id
     })
-    if (faculty_colleges.data.length === 0)
+    if (!faculty_colleges.length)
       return res.send(formatResult(404, `College ${college.name} has no faculties`))
 
     let foundFaculties = []
 
-    for (const faculty_college of faculty_colleges.data) {
+    for (const faculty_college of faculty_colleges) {
       const faculty = await findDocument(Faculty, {
         _id: faculty_college.faculty
       })
-      if (!faculty.data)
+      if (!faculty)
         return res.send(formatResult(404, `Faculty ${faculty_college.faculty} Not Found`)) // recheck use case
-      foundFaculties.push(faculty.data)
+      foundFaculties.push(faculty)
     }
 
-    if (foundFaculties.length < 1)
+    if (!foundFaculties.length)
       return res.send(formatResult(404, `College ${college.name} has no faculties`))
 
-    // foundFaculties.data = await injectDetails(foundFaculties, faculty_colleges.data)
-    return res.send(formatResult(u, u, foundFaculties)).status(200)
+    // foundFaculties = await injectDetails(foundFaculties, faculty_colleges)
+    return res.send(formatResult(u, u, foundFaculties))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -149,20 +149,20 @@ router.get('/import/college/:id', async (req, res) => {
     let college = await findDocument(College, {
       _id: req.params.id
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College ${req.params.id} Not Found`))
 
     const all_faculties = await findDocuments(Faculty)
 
     let foundFaculties = []
 
-    for (const i in all_faculties.data) {
+    for (const i in all_faculties) {
       const faculty_college = await findDocument(Faculty_college, {
         college: req.params.id,
-        faculty: all_faculties.data[i]._id
+        faculty: all_faculties[i]._id
       })
-      if (!faculty_college.data)
-        foundFaculties.push(all_faculties.data[i]);
+      if (!faculty_college)
+        foundFaculties.push(all_faculties[i]);
     }
 
     if (foundFaculties.length < 1)
@@ -207,7 +207,7 @@ router.get('/:id', async (req, res) => {
     const result = await findDocument(Faculty, {
       _id: req.params.id
     })
-    if (!result.data)
+    if (!result)
       return res.send(formatResult(404, `Faculty ${req.params.id} Not Found`))
 
     return res.send(result)
@@ -252,7 +252,7 @@ router.post('/', async (req, res) => {
     let faculty = await findDocument(Faculty, {
       name: req.body.name
     })
-    if (faculty.data)
+    if (faculty)
       return res.send(formatResult(400, `Faculty with code ${req.body.name} arleady exist`))
 
     let result = await createDocument(Faculty, {
@@ -305,7 +305,7 @@ router.put('/:id', async (req, res) => {
     let faculty = await findDocument(Faculty, {
       _id: req.params.id
     })
-    if (!faculty.data)
+    if (!faculty)
       return res.send(formatResult(404, `Faculty with code ${req.params.id} doens't exist`))
 
     const result = await updateDocument(Faculty, req.params.id, req.body)
@@ -349,7 +349,7 @@ router.delete('/:id', async (req, res) => {
   let faculty = await findDocument(Faculty, {
     _id: req.params.id
   })
-  if (!faculty.data)
+  if (!faculty)
     return res.send(formatResult(404, `Faculty of Code ${req.params.id} Not Found`))
 
 
@@ -358,12 +358,12 @@ router.delete('/:id', async (req, res) => {
   const faculty_college_found = await findDocument(Faculty_college, {
     faculty: req.params.id
   })
-  if (!faculty_college_found.data) {
+  if (!faculty_college_found) {
     let result = await deleteDocument(Faculty, req.params.id)
     return res.send(result)
   }
 
-  return res.send(formatResult(200, `Faculty ${faculty.data.name} couldn't be deleted because it was used`))
+  return res.send(formatResult(200, `Faculty ${faculty.name} couldn't be deleted because it was used`))
 })
 
 async function injectDetails(faculties, faculty_colleges) {
