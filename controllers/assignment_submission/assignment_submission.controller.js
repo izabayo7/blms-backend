@@ -68,20 +68,20 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
 
         if (req.user.category.name === 'STUDENT') {
 
-            const user_user_group = await findDocument(User_user_group, {
-                user: req.user._id,
-                status: "ACTIVE"
+            const user_user_group = await findDocuments(User_user_group, {
+                user: req.user._id
             })
 
-            if (!user_user_group)
+            if (!user_user_group.length)
                 return res.send(formatResult(200, undefined, []))
 
             let courses = await findDocuments(Course, {
-                user_group: user_user_group.user_group,
+                user_group: {$in: user_user_group.map(x => x.user_group)},
                 published: true
             }, u, u, u, u, u, {
                 _id: -1
             })
+
             if (!courses.length)
                 return res.send(formatResult(200, undefined, []))
 
@@ -90,7 +90,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
             for (const j in courses) {
                 const chapters = await Chapter.find({course: courses[j]._id})
                 const ids = chapters.map(x => x._id.toString())
-                ids.push(courses[j]._id)
+                ids.push(courses[j]._id.toString())
 
                 // check if there are assignments made by the user
                 let assignments = await findDocuments(Assignment, {
@@ -446,7 +446,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (assignment.status !== 'PUBLISHED')
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
-        if(new Date() > new Date(assignment.dueDate))
+        if (new Date() > new Date(assignment.dueDate))
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
         const user_group = await get_faculty_college_year(assignment)
@@ -533,7 +533,7 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
         if (assignment_submission.assignment.status !== "PUBLISHED")
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
-        if(new Date() > new Date(assignment_submission.assignment.dueDate))
+        if (new Date() > new Date(assignment_submission.assignment.dueDate))
             return res.send(formatResult(403, 'Submission on this assignment have ended'))
 
         if (req.user.category.name !== 'INSTRUCTOR')
@@ -841,7 +841,7 @@ router.delete('/feedback/:id/:file_name', auth, async (req, res) => {
         await updateDocument(Assignment_submission, req.params.id, {
             feedback_src: undefined
         })
-        return res.send(formatResult(u,"DELETED"))
+        return res.send(formatResult(u, "DELETED"))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
