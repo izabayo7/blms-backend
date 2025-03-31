@@ -177,6 +177,7 @@ router.post('/', async (req, res) => {
                 user_group_name: user_group.name,
                 user_type: user.category.name
             });
+            return res.send({result,err})
         }
 
         return res.send(result)
