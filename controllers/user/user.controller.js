@@ -318,7 +318,8 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
 
         let users = await findDocuments(User, req.params.category === 'ALL' ? {
             college: req.user.college,
-            _id: {$ne: req.user._id}
+            _id: {$ne: req.user._id},
+            "status.deleted": {$ne: 1}
         } : {
             college: req.user.college,
             category: user_category._id,
