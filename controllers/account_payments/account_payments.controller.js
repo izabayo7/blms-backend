@@ -102,7 +102,6 @@ async function createPayment(req, res) {
 
 
         const college = await College.findOne({_id: req.user.college, status: 1});
-        if (college) return res.send(formatResult(404, 'College not found'));
 
         if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
@@ -139,7 +138,6 @@ async function createPayment(req, res) {
 async function getPaymentHistory(req, res) {
     try {
         const college = await College.findOne({_id: req.user.college, status: 1});
-        if (college) return res.send(formatResult(404, 'College not found'));
 
         if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(u, u, []));
 
@@ -159,7 +157,6 @@ async function getPaymentHistory(req, res) {
 async function getPaymentStatus(req, res) {
     try {
         const college = await College.findOne({_id: req.user.college, status: 1});
-        if (college) return res.send(formatResult(404, 'College not found'));
 
         if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(u, 'Your college must have a payment plan'));
 
