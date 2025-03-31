@@ -700,6 +700,13 @@ router.post('/:id/attachments', async (req, res) => {
       const result = await updateDocument(Chapter, req.params.id, {
         attachments: chapter.attachments
       })
+      for (const i in result.data.attachments) {
+        const obj = {
+          download_link: `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${req.params.id}/attachment/${result.data.attachments[i].src}/download`,
+          name: result.data.attachments[i].src
+        }
+        result.data.attachments[i] = obj
+      }
       return res.send(result)
     })
 
