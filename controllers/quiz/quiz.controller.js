@@ -706,15 +706,18 @@ router.post('/:id/attachment', async (req, res) => {
     upload_multiple_images(req, res, async (err) => {
       if (err)
         return res.send(formatResult(500, err.message))
-
+      let error
       for (const i in req.files) {
         setTimeout(() => {
           fs.unlink(`${temp_path}/${req.files[i].filename}`, (err) => {
             if (err)
-              return res.send(formatResult(500, err))
+              error = err
           })
         }, 1000);
       }
+
+      if (error)
+        return res.send(formatResult(500, error))
 
       return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
     })
