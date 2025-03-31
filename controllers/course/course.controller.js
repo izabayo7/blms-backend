@@ -270,7 +270,7 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
         }).populate('live_session',
             {attendance_check: 1, _id: 0}
         )
-        console.log(attendances)
+
         let total_required_marks = 0
         let total_got_marks = 0
         let total_attendance = 0

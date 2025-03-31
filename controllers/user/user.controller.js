@@ -1,4 +1,6 @@
 // import dependencies
+const {User_attendance} = require("../../models/user_attendance/user_attendance.model");
+const {Live_session} = require("../../utils/imports");
 const {Chapter} = require("../../utils/imports");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_invitation} = require("../../models/user_invitations/user_invitations.model");
@@ -605,7 +607,8 @@ router.get('/:user_name', auth, async (req, res) => {
 
                 const quiz = await Quiz.find({
                     "target.type": "chapter",
-                    "target.id": {$in: chapters.map(x => x.toString())}
+                    "target.id": {$in: chapters.map(x => x.toString())},
+                    status: 2
                 }, {total_marks: 1, status: 1, updatedAt: 1}).sort({_id: -1})
 
                 const submissions = await Quiz_submission.find({
@@ -626,10 +629,90 @@ router.get('/:user_name', auth, async (req, res) => {
                 submissions.map(x => {
                     total_got += x.total_marks
                 })
-                courses[coursesKey].successRate = (total_got / total_required) * 100
+
+                if (submissions.length)
+                    courses[coursesKey].successRate = (total_got / total_required) * 100
 
                 courses[coursesKey].total_chapters = chapters.length
 
+            }
+
+        } else if (user.category === "STUDENT") {
+
+            courses = await Course.find({
+                user_group: {
+                    $in: user_user_groups.map(x =>
+                        x.user_group._id.toString()
+                    )
+                }
+            }).populate('user_group').lean()
+
+            for (const coursesKey in courses) {
+                const chapters = await Chapter.distinct('_id', {course: courses[coursesKey]._id.toString()})
+
+                const quiz = await Quiz.find({
+                    "target.type": "chapter",
+                    "target.id": {$in: chapters.map(x => x.toString())},
+                    status: 2
+                }, {total_marks: 1, status: 1, updatedAt: 1}).sort({_id: -1})
+
+                const submissions = await Quiz_submission.find({
+                    user: user._id.toString(),
+                    quiz: {$in: quiz.map(x => x._id.toString())}
+                }, {total_marks: 1, quiz: 1}).sort({_id: -1})
+
+                let total_required = 0
+                let total_got = 0
+
+                quiz.map(x => {
+                    total_required += x.total_marks
+                })
+
+                submissions.map(x => {
+                    total_got += x.total_marks
+                })
+
+                if (submissions.length) {
+                    courses[coursesKey].successRate = ((total_got / total_required) * 100) || 0
+                    courses[coursesKey].last_quiz = Math.round(submissions[0].total_marks) + '/' + Math.round(quiz.filter(x => x._id.toString() === submissions[0].quiz)[0].total_marks)
+                }
+
+                courses[coursesKey].progress = await User_progress.findOne({
+                    course: courses[coursesKey]._id.toString(),
+                    user: user._id.toString()
+                })
+
+                if (courses[coursesKey].progress) {
+                    const length = courses[coursesKey].progress.finished_chapters.length
+                    if (length)
+                        courses[coursesKey].last_accessed_chapter = await Chapter.findOne({
+                            _id: courses[coursesKey].progress.finished_chapters[length - 1].id
+                        })
+                }
+                if (req.user.category.name === 'INSTRUCTOR') {
+                    let live_sessions = await Live_session.find({
+                        "target.type": "chapter",
+                        "target.id": {$in: chapters.map(x => x.toString())}
+                    }, {_id: 1}).sort({_id:-1})
+
+                    const attendances = await User_attendance.find({
+                        user: user._id.toString(),
+                        live_session: {$in: live_sessions.map(x => x._id.toString())}
+                    }).populate('live_session',
+                        {attendance_check: 1}
+                    )
+
+                    let student_total_attendance = 0
+                    attendances.map(x => {
+                        student_total_attendance += (x.attendance / x.live_session.attendance_check)
+                    })
+                    if (attendances.length) {
+                        courses[coursesKey].attendanceRate = student_total_attendance / attendances.length
+                        const found = attendances.filter(x => x.live_session._id.toString() === live_sessions[0]._id.toString())
+                        if(found.length)
+                            courses[coursesKey].attendanceLastSession = true
+                    }
+                }
             }
 
         }
