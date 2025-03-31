@@ -263,6 +263,7 @@ router.get('/user/:user_name', async (req, res) => {
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
       result = await injectQuiz(result)
+
       for (const i in result) {
         if (result[i].quiz) {
           result[i].quiz = await addAttachmentMediaPaths([result[i].quiz])
@@ -285,32 +286,11 @@ router.get('/user/:user_name', async (req, res) => {
 
       quizes = await addAttachmentMediaPaths(quizes)
 
+
+      quizes = await addQuizTarget(quizes)
+
       for (const i in quizes) {
 
-        if (quizes[i].target.type !== 'faculty_college_year') {
-
-          let chapter, course;
-
-          if (quizes[i].target.type === 'chapter') {
-            chapter = await findDocument(Chapter, {
-              _id: quizes[i].target.id
-            }, u, true)
-            course = await findDocument(Course, {
-              _id: chapter.course
-            })
-          }
-          course = await findDocument(Course, {
-            _id: chapter ? chapter.course : quiz.target.id
-          })
-
-          course = await injectFaculty_college_year([course])
-          course = course[0]
-
-          quizes[i].target.course = _.pick(course, ['name', 'cover_picture', 'createdAt'])
-          quizes[i].target.chapter = chapter ? _.pick(chapter, ['name', 'createdAt']) : '-'
-          quizes[i].target.faculty_college_year = course.faculty_college_year
-
-        }
         let quiz_submissions = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
         }, u, u, u, u, u, { _id: -1 })
