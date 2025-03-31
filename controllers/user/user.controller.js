@@ -579,12 +579,11 @@ router.post('/admin', async (req, res) => {
       return res.send(formatResult(403, `College with same name is arleady registered`))
 
 
-    let result = await createDocument(College, {
+    let { data } = await createDocument(College, {
       name: req.body.name,
       maximum_users: req.body.maximum_users
     })
 
-    college = result.data
 
     let result = await createDocument(User, {
       user_name: req.body.user_name,
@@ -593,7 +592,7 @@ router.post('/admin', async (req, res) => {
       gender: req.body.gender,
       email: req.body.email,
       password: await hashPassword(req.body.password),
-      college: college._id,
+      college: data._id,
       category: category._id
     })
 
