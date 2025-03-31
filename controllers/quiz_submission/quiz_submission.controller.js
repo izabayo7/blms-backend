@@ -308,10 +308,7 @@ router.get('/user/:user_name', auth, async (req, res) => {
 
             if (quiz_submissions.length) {
 
-              quiz_submissions = await injectUser(quiz_submissions, 'user')
               quiz_submissions = await injectUserFeedback(quiz_submissions)
-
-
 
               for (const k in quiz_submissions) {
 
