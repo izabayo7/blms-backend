@@ -90,7 +90,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
             for (const j in courses) {
                 const chapters = await Chapter.find({course: courses[j]._id})
                 const ids = chapters.map(x => x._id.toString())
-                ids.push(courses[i]._id)
+                ids.push(courses[j]._id)
 
                 // check if there are assignments made by the user
                 let assignments = await findDocuments(Assignment, {
