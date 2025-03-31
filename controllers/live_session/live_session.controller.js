@@ -148,6 +148,8 @@ router.get('/:type/:id', async (req, res) => {
  *     tags:
  *       - Live_session
  *     description: Send a live_session
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a live_session
