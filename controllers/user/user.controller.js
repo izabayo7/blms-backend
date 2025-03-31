@@ -406,16 +406,19 @@ router.post('/', async (req, res) => {
     let user = await findDocument(User, {
       $or: [{
         email: req.body.email
-      }, {
-        national_id: req.body.national_id
-      }, {
+      },
+      // {
+      //   national_id: req.body.national_id
+      // },
+      {
         phone: req.body.phone
       }],
     })
 
     if (user) {
       const phoneFound = req.body.phone == user.phone
-      const national_idFound = req.body.national_id == user.national_id
+      // const national_idFound = req.body.national_id == user.national_id
+      const national_idFound = false
       const emailFound = req.body.email == user.email
       return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : ''} arleady exist`))
     }
@@ -428,7 +431,7 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(403, 'user_name was taken'))
 
     let user_category = await findDocument(User_category, {
-      _id: req.body.category
+      name: req.body.category
     })
     if (!user_category)
       return res.send(formatResult(404, 'category not found'))
@@ -439,18 +442,15 @@ router.post('/', async (req, res) => {
       }
 
       let college = await findDocument(College, {
-        _id: req.body.college
+        name: req.body.college
       })
       if (!college)
-        return res.send(formatResult(404, `College with code ${req.body.college} Not Found`))
+        return res.send(formatResult(404, `College ${req.body.college} Not Found`))
 
       if (user_category.name === 'ADMIN') {
         const find_admin = await findDocument(User, {
-          _id: {
-            $ne: req.params.id
-          },
           category: user_category._id,
-          college: req.body.college
+          college: college._id
         })
 
         if (find_admin)
@@ -474,7 +474,7 @@ router.post('/', async (req, res) => {
       gender: req.body.gender,
       email: req.body.email,
       phone: req.body.phone,
-      password: await hashPassword(default_password),
+      password: await hashPassword(req.body.password),
       college: req.body.college,
       category: req.body.category,
       date_of_birth: req.body.date_of_birth
