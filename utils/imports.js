@@ -1601,7 +1601,7 @@ exports.generateAuthToken = async (user) => {
         sur_name: user.sur_name,
         other_names: user.other_names,
         user_name: user.user_name,
-        // national_id: user.national_id,
+        registration_number: user.registration_number,
         gender: user.gender,
         date_of_birth: user.date_of_birth,
         phone: user.phone,

@@ -89,6 +89,7 @@ exports.validate_user = (credentials, method = 'create') => {
         gender: Joi.string().min(4).max(6).valid('male', 'female').required(),
         password: Joi.string().max(100).regex(this.PasswordRegex).required(),
         email: Joi.string().email().required(),
+        registration_number: Joi.string().min(1),
         date_of_birth: Joi.date(),
         college: Joi.string(),
         category: Joi.string().required(),
@@ -98,6 +99,7 @@ exports.validate_user = (credentials, method = 'create') => {
         })
     } : {
         sur_name: Joi.string().min(3).max(100),
+        registration_number: Joi.string().min(1),
         other_names: Joi.string().min(3).max(100),
         user_name: Joi.string().min(3).max(100), // regex needed
         gender: Joi.string().min(4).max(6).valid('male', 'female'),
