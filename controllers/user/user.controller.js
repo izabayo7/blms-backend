@@ -927,8 +927,6 @@ router.post('/admin', async (req, res) => {
             email: result.data.email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
             institution_name: req.body.college,
-            institution_address: "ngahooo",
-            token: "ntayo",
             subscription: "trial"
         });
         if (err)

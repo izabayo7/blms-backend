@@ -103,32 +103,6 @@ exports.confirm_email = ({
                 <div>
                   <span
                     style="
-                      margin-right: 45px;
-                      font-family: Inter;
-                      font-style: normal;
-                      font-weight: normal;
-                      font-size: 14px;
-                      line-height: 30px;
-                      color: #343434;
-                    "
-                    >Address</span
-                  >
-                  :
-                  <span
-                    style="
-                      font-family: Inter;
-                      font-style: normal;
-                      font-weight: normal;
-                      font-size: 14px;
-                      line-height: 30px;
-                      color: #343434;
-                    "
-                    >${institution_address}</span
-                  >
-                </div>
-                <div>
-                  <span
-                    style="
                       margin-right: 65px;
                       font-family: Inter;
                       font-style: normal;
@@ -155,7 +129,7 @@ exports.confirm_email = ({
               </div>
               <div class="text-center" style="text-align: center">
                 <a
-                  href="https://learn.kurious.rw/confirm_email?token=${token}&institution=${institution_name}"
+                  href="https://learn.kurious.rw/login?institution=${institution_name}"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
