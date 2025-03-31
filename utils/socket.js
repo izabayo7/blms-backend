@@ -14,6 +14,7 @@ const {
     getLatestMessages,
     formatContacts,
     getConversationMessages,
+    addUserViewToAnnouncement,
     formatMessages,
     injectChapters,
     replaceUserIds,
@@ -202,7 +203,7 @@ module.exports.listen = (app) => {
                     conversation: messages
                 });
             }
-            
+
             // format the messages
             const formatedMessages = await formatMessages(messages, id)
 
@@ -332,56 +333,63 @@ module.exports.listen = (app) => {
         socket.on('message/all_messages_read', async ({
             conversation_id
         }) => {
-
+            console.log("ahooooooo, ", conversation_id)
             if (!conversation_id) return
 
-            let documents
-            const chat_group = await findDocument(Chat_group, { code: conversation_id })
+            if (conversation_id === 'announcements') {
 
-            // fetch unread messages in a group
-            if (chat_group) {
-                documents = await findDocuments(Message, {
-                    group: chat_group._id,
-                    receivers: {
-                        $elemMatch: {
-                            id: id,
-                            read: false
-                        }
-                    }
-                }, u, u, u, false)
-            }
-            // fetch unread messages from the sender
-            else {
-                let sender = await findDocument(User, { user_name: conversation_id })
-                // save the message
-                documents = await findDocuments(Message, {
-                    $or: [
-                        { sender: "SYSTEM" },
-                        { sender: sender._id, }
-                    ],
-                    group: undefined,
-                    receivers: {
-                        $elemMatch: {
-                            id: id,
-                            read: false
-                        }
-                    }
-                }, u, u, u, false)
-            }
+                await addUserViewToAnnouncement(user)
 
-            for (const i in documents) {
-                for (const k in documents[i].receivers) {
-                    if (documents[i].receivers[k].id == id) {
-                        documents[i].receivers[k].read = true
-                    }
+            } else {
+
+                let documents
+                const chat_group = await findDocument(Chat_group, { code: conversation_id })
+
+                // fetch unread messages in a group
+                if (chat_group) {
+                    documents = await findDocuments(Message, {
+                        group: chat_group._id,
+                        receivers: {
+                            $elemMatch: {
+                                id: id,
+                                read: false
+                            }
+                        }
+                    }, u, u, u, false)
+                }
+                // fetch unread messages from the sender
+                else {
+                    let sender = await findDocument(User, { user_name: conversation_id })
+                    // save the message
+                    documents = await findDocuments(Message, {
+                        $or: [
+                            { sender: "SYSTEM" },
+                            { sender: sender._id, }
+                        ],
+                        group: undefined,
+                        receivers: {
+                            $elemMatch: {
+                                id: id,
+                                read: false
+                            }
+                        }
+                    }, u, u, u, false)
                 }
 
-                await documents[i].save()
+                for (const i in documents) {
+                    for (const k in documents[i].receivers) {
+                        if (documents[i].receivers[k].id == id) {
+                            documents[i].receivers[k].read = true
+                        }
+                    }
 
-                socket.broadcast.to(documents[i].sender).emit('message-read', {
-                    messageId: documents[i]._id,
-                    reader: id
-                })
+                    await documents[i].save()
+
+                    socket.broadcast.to(documents[i].sender).emit('message-read', {
+                        messageId: documents[i]._id,
+                        reader: id
+                    })
+                }
             }
 
             socket.emit('all_read', {

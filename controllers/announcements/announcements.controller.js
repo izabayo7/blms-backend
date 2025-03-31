@@ -219,7 +219,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
                 default:
                     break;
             }
-            const users = await User_user_group.distinct('user', { user_group: { $in: user_groups.map(x => x.toString()) } })
+            const users = await User_user_group.distinct('user', { user_group: { $in: user_groups.map(x => x.toString()), _id: {$ne: req.user._id} } })
             for (const i in users) {
                 MyEmitter.emit('socket_event', {
                     name: `send_message_${users[i]}`,

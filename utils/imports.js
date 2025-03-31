@@ -546,7 +546,23 @@ exports.injectTarget = async (announcements) => {
     return announcements
 }
 
-exports.getUserAnnouncements = async (user, getOne = false,receivedOnly = false) => {
+exports.addUserViewToAnnouncement = async (user)=>{
+    const ids = await this.findTargetIds(user)
+    const announcements = await Announcement.find({
+        $or: [
+            { "target.id": { $in: ids } },
+            { specific_receivers: user._id.toString() },
+        ],
+        viewers: { $nin: user._id.toString() }
+    })
+
+    for (const i in announcements) {
+        announcements[i].viewers.push(user._id)
+        await announcements[i].save()
+    }
+}
+
+exports.findTargetIds = async(user)=>{
     const ids = [user.college]
 
     const user_user_group = await User_user_group.find({
@@ -573,6 +589,12 @@ exports.getUserAnnouncements = async (user, getOne = false,receivedOnly = false)
         })
 
     }
+    return ids
+}
+
+exports.getUserAnnouncements = async (user, getOne = false,receivedOnly = false) => {
+
+    const ids = await this.findTargetIds(user)
 
     let announcements
     let unreads
