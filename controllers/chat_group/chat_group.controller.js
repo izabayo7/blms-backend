@@ -903,6 +903,59 @@ router.put('/:code/remove_member/:member_user_name', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /chat_group/{code}/profile/{file_name}:
+ *   delete:
+ *     tags:
+ *       - Chat_group
+ *     description: remove Chat_group profile
+  *     security:
+  *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.delete('/:code/profile/:file_name', auth, async (req, res) => {
+  try {
+
+    // check if user exist
+    let chat_group = await findDocument(Chat_group, {
+      code: req.params.code
+    }, u, false)
+    if (!chat_group)
+      return res.send(formatResult(404, 'chat_group not found'))
+
+    if (!chat_group.profile || chat_group.profile !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    const path = addStorageDirectoryToPath(`./uploads/colleges/${chat_group.college}/chat/groups/${chat_group._id}/${chat_group.profile}`)
+
+    fs.unlink(path, (err) => {
+      if (err)
+        return res.send(formatResult(500, err))
+    })
+    chat_group.profile = u
+    await chat_group.save()
+
+    return res.send(formatResult(200, 'DELETED'))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /chat_group/{code}:
  *   delete:
  *     tags:
