@@ -677,6 +677,8 @@ router.put('/:code/profile', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Add a group member
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         in: path
