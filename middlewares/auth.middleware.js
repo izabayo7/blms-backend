@@ -1,5 +1,5 @@
 // import dependencies
-const { jwt, config, formatResult } = require('../utils/imports')
+const { jwt, config, formatResult, User } = require('../utils/imports')
 
 async function auth(req, res, next) {
     const header = req.header('authorization')
