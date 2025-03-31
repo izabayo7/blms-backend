@@ -69,6 +69,8 @@ router.get('/', async (req, res) => {
  *     tags:
  *       - User_role
  *     description: Returns a specified user_role
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: User_role's id
