@@ -370,11 +370,10 @@ module.exports.getConversationMessages = async ({
 }) => {
   let messages
 
-  const group = await this.findDocument(this.Chat_group, {
-    code: conversation_id
-  })
-
-  if (group) {
+  if (parseInt(conversation_id)) {
+    const group = await this.findDocument(this.Chat_group, {
+      code: conversation_id
+    })
     conversation_id = group._id
     messages = lastMessage ? await this.findDocuments(this.Message, {
       _id: {
@@ -390,71 +389,53 @@ module.exports.getConversationMessages = async ({
     }, limit)
 
   } else {
+    console.log(conversation_id)
     const user = await this.findDocument(this.User, {
       user_name: conversation_id
     })
     conversation_id = user._id
-    messages = lastMessage ? await this.findDocuments(this.Message, {
-      _id: {
-        $lt: lastMessage
-      },
+    console.log(user._id)
+    messages = await this.findDocuments(this.Message, {
       $or: [{
-        sender: user_id,
-        receivers: {
-          $elemMatch: {
-            id: conversation_id
+        $and: [
+          { sender: user_id },
+          {
+            receivers: {
+              $elemMatch: {
+                id: conversation_id
+              }
+            }
           }
-        }
+        ]
       }, {
-        sender: conversation_id,
-        receivers: {
-          $elemMatch: {
-            id: user_id
+        $and: [
+          { sender: conversation_id },
+          {
+            receivers: {
+              $elemMatch: {
+                id: user_id
+              }
+            }
           }
-        }
+        ]
       }, {
-        sender: 'SYSTEM',
-        receivers: {
-          $elemMatch: {
-            id: user_id
+        $and: [
+          { sender: 'SYSTEM' },
+          {
+            receivers: {
+              $elemMatch: {
+                id: user_id
+              }
+            }
+          },
+          {
+            receivers: {
+              $elemMatch: {
+                id: conversation_id
+              }
+            }
           }
-        },
-        receivers: {
-          $elemMatch: {
-            id: conversation_id
-          }
-        }
-      }],
-      group: undefined
-    }, {
-      receivers: 0
-    }, limit) : await this.findDocuments(this.Message, {
-      $or: [{
-        sender: user_id,
-        receivers: {
-          $elemMatch: {
-            id: conversation_id
-          }
-        }
-      }, {
-        sender: conversation_id,
-        receivers: {
-          $elemMatch: {
-            id: user_id
-          }
-        }
-      }, {
-        sender: 'SYSTEM',
-        receivers: {
-          $elemMatch: {
-            id: user_id
-          }
-        },
-        receivers: {
-          $elemMatch: {
-            id: conversation_id
-          }
-        }
+        ]
       }],
       group: undefined
     }, {
@@ -480,7 +461,7 @@ function removeIds(message) {
 
 // remove messages in the same discussion
 function removeDuplicateDiscussions(sentMessages, receivedMessages) {
-  let _sentMessagesCopy =  module.exports.simplifyObject(sentMessages), _receivedMessagesCopy = module.exports.simplifyObject(receivedMessages)
+  let _sentMessagesCopy = module.exports.simplifyObject(sentMessages), _receivedMessagesCopy = module.exports.simplifyObject(receivedMessages)
   let messagesToDelete = [
     // indices to remove in sentMessages
     [],
@@ -739,7 +720,7 @@ module.exports.getLatestMessages = async (user_id) => {
     }
   }
   ])
-  
+
   if (sentMessages.length && receivedMessages.length)
     soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
   const systemMessageFound = receivedMessages.filter(m => m.sender == 'SYSTEM')
