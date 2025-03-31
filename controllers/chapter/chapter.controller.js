@@ -104,7 +104,7 @@ router.get('/:id/document', async (req, res) => {
 
     const exists = await fs.exists(file_path)
     if (!exists)
-      return res.send(formatResult(404, 'file not found'))
+      return res.send("")
 
     return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
 
