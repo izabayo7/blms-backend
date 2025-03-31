@@ -120,7 +120,7 @@ exports.createUserInvitation = async (req, res) => {
         const {error} = validate_user_invitation(req.body);
         if (error) return res.send(formatResult(400, error.details[0].message));
 
-        if(req.body.category === "ADMIN" && !req.body.user_group)
+        if (req.body.category !== "ADMIN" && !req.body.user_group)
             return res.send(formatResult(404, 'UserGroup is required'))
 
         const {emails, category} = req.body
@@ -137,11 +137,13 @@ exports.createUserInvitation = async (req, res) => {
         if (!user_category)
             return res.send(formatResult(404, 'UserCategory not found'))
 
-        let user_group = await User_group.findOne({
-            name: req.body.user_group
-        })
-        if (!user_group)
-            return res.send(formatResult(404, 'User_group not found'))
+        if (req.body.user_group) {
+            let user_group = await User_group.findOne({
+                name: req.body.user_group
+            })
+            if (!user_group)
+                return res.send(formatResult(404, 'User_group not found'))
+        }
 
         const savedInvitations = []
 
