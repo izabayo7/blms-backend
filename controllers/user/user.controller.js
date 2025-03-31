@@ -551,6 +551,7 @@ router.get('/user_group/:id/:category', [auth, filterUsers(["ADMIN"])], async (r
             for (const j in user_user_groups) {
                 if (!user_category || user_user_groups[j].user.category === user_category._id.toString()) {
                     user_user_groups[j].user.user_user_group_id = user_user_groups[j]._id
+                    user_user_groups[j].user.date_joined = user_user_groups[j].createdAt
                     result.push(user_user_groups[j].user)
                 }
             }
