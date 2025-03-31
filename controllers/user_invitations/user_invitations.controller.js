@@ -131,12 +131,11 @@ exports.createUserInvitation = async (req, res) => {
       });
 
       const result = await newDocument.save();
-      console.log(process.env.EMAIL, process.env.PASSWORD)
 
       const { sent, err } = await sendInvitationMail({ email, names: req.user.sur_name + ' ' + req.user.other_names, token: result.token });
       if (err)
         return res.send(formatResult(500, err));
-      console.log(sent)
+
       if (sent) {
         savedInvitations.push(result)
       }
@@ -176,6 +175,15 @@ exports.acceptOrDenyInvitation = async (req, res) => {
 
     if (_invitation.expiration_date < Date.now())
       return res.send(formatResult(400, 'invitation has expired'))
+
+    if (action == 'accept') {
+      const user = await User.findOne({
+        email: _invitation.email
+      })
+      if (!user) {
+        return res.send(formatResult(400, `This invitation can only be marked as accepted when user finish signing up.`))
+      }
+    }
 
     _invitation.status = req.params.action == 'accept' ? "ACCEPTED" : "DENIED"
 
