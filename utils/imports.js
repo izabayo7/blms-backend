@@ -839,7 +839,7 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
     }
 }
 
-// return resized Image
+// send resized Image
 module.exports.sendResizedImage = async (req, res, path) => {
     this.fs.exists(path, (exists) => {
         if (!exists) {
@@ -864,6 +864,50 @@ module.exports.sendResizedImage = async (req, res, path) => {
             this.resizeImage(path, format, width, height).pipe(res)
         }
     })
+}
+
+// send video
+module.exports.streamVideo = async (req, res, path) => {
+    this.fs.stat(path, (err, stat) => {
+
+        // Handle file not found
+        if (err !== null && err.code === 'ENOENT') {
+            res.sendStatus(404);
+        }
+
+        const fileSize = stat.size
+        const range = req.headers.range
+        if (range) {
+
+            const parts = range.replace(/bytes=/, "").split("-");
+
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+            const chunksize = (end - start) + 1;
+            const file = this.fs.createReadStream(path, {
+                start,
+                end
+            });
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': 'video/mp4',
+            }
+
+            res.writeHead(206, head);
+            file.pipe(res);
+        } else {
+            const head = {
+                'Content-Length': fileSize,
+                'Content-Type': 'video/mp4',
+            }
+
+            res.writeHead(200, head);
+            this.fs.createReadStream(path).pipe(res);
+        }
+    });
 }
 
 // authentication middlewares
