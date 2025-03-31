@@ -243,6 +243,7 @@ exports.submission_email = ({
                                       color: white;
                                       border: none;
                                       text-align: center;
+                                      cursor: pointer;
                                       margin: 24px auto 0px;
                                       cursor: pointer;
                                     "
