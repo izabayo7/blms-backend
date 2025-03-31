@@ -55,7 +55,7 @@ const {fs, addStorageDirectoryToPath} = require("./imports");
 
 module.exports.listen = (app) => {
 
-    const io = socket_io.listen(app)
+    const io = socket_io.listen(app,{ cors: { origin: '*' } })
 
     io.on('connection', async (socket) => {
 
@@ -961,7 +961,7 @@ module.exports.listen = (app) => {
             if (!submission_id)
                 return
             try {
-
+console.log('twahageze')
                 const dir = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam_id}/submissions/${submission_id}`)
 
                 !fs.existsSync(dir) && fs.mkdirSync(dir, { recursive: true })
