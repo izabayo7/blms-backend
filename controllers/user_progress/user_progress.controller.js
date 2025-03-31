@@ -185,6 +185,8 @@ router.get('/user/:user_id/:course_id', async (req, res) => {
  *     tags:
  *       - User_progress
  *     description: Create user_progress
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a user_progress
