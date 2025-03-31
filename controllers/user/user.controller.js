@@ -612,7 +612,7 @@ router.get('/checkEmailExistance/:email', checkEmailExistance)
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkEmailExistance/:phone', checkPhoneExistance)
+router.get('/checkPhoneExistance/:phone', checkPhoneExistance)
 
 /**
  * @swagger
