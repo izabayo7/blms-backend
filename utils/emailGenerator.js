@@ -187,7 +187,7 @@ exports.invitationToSystem = ({ inviter, institution, token }) => {
     return result;
 };
 
-exports.invitationssssToSystem = ({ inviter, institution, token }) => {
+exports.invitationToSystem = ({ inviter, institution, token }) => {
     const result = `
     <!DOCTYPE html>
     <html lang="en">
@@ -201,13 +201,16 @@ exports.invitationssssToSystem = ({ inviter, institution, token }) => {
         <div class="logo" style="text-align: center; margin: 25px auto">
           <img src="https://apis.kurious.rw/assets/images/image%204.png" alt="" />
         </div>
-        <div class="flex" style="display: flex; justify-content: center">
+        <div
+          class="flex"
+        >
           <div class="">
             <div
               class="content"
               style="
                 background-color: white;
                 padding: 49px 39px 0;
+                margin: auto;
                 height: 340px;
                 max-width: 522px;
                 border-radius: 0px;
@@ -278,7 +281,8 @@ exports.invitationssssToSystem = ({ inviter, institution, token }) => {
                   top: 328px;
                 "
               >
-                Thanks, Kurious learn team
+                Thanks,
+                <br> Kurious learn team
               </div>
             </div>
             <div
