@@ -524,7 +524,7 @@ router.get('/:id/attachment/:file_name', auth, async (req, res) => {
  */
 router.post('/', auth, async (req, res) => {
   try {
-
+    req.body.user = req.user.user_name
     let {
       error
     } = validate_quiz_submission(req.body)
