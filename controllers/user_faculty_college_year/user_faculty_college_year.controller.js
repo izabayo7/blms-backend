@@ -57,10 +57,10 @@ router.get('/', async (req, res) => {
   try {
     let result = await findDocuments(User_faculty_college_year)
 
-    if (result.data.length === 0)
+    if (result.length === 0)
       return res.send(formatResult(404, 'user_faculty_college_year list is empty'))
 
-    // result.data = await injectDetails(result.data)
+    // result = await injectDetails(result)
 
     return res.send(result)
   } catch (error) {
@@ -97,11 +97,11 @@ router.get('/user/:id', async (req, res) => {
       status: 1
     })
 
-    if (!result.data)
+    if (!result)
       return res.send(formatResult(404, `user_faculty_college_year for ${req.params.id} was not found`))
 
-    // result.data = await injectDetails([result.data])
-    // result.data = result.data[0]
+    // result = await injectDetails([result])
+    // result = result[0]
 
     return res.send(result)
   } catch (error) {
@@ -145,29 +145,29 @@ router.post('/', async (req, res) => {
     let faculty_college_year = await findDocument(Faculty_college_year, {
       _id: req.body.faculty_college_year
     })
-    if (!faculty_college_year.data)
+    if (!faculty_college_year)
       return res.send(formatResult(404, `Faculty_college_year with code ${req.body.faculty_college_year} doens't exist`))
 
     // check if user exist
     let user = await findDocument(User, {
       _id: req.body.user
     })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, `User with code ${req.body.user} doens't exist`))
 
     let user_category = await findDocument(User_category, {
-      _id: user.data.category
+      _id: user.category
     })
 
-    if (user_category.data.name !== 'STUDENT' && user_category.data.name !== 'INSTRUCTOR')
+    if (user_category.name !== 'STUDENT' && user_category.name !== 'INSTRUCTOR')
       return res.send(formatResult(400, 'Only students and instructors can have a connection with the faculty_college_year'))
 
     let last_active_u_f_c_y = await findDocument(User_faculty_college_year, {
       user: req.body.user,
       status: 1
     })
-    if (last_active_u_f_c_y.data) {
-      await updateDocument(User_faculty_college_year, last_active_u_f_c_y.data._id, {
+    if (last_active_u_f_c_y) {
+      await updateDocument(User_faculty_college_year, last_active_u_f_c_y._id, {
         status: 0
       })
     }
@@ -176,7 +176,7 @@ router.post('/', async (req, res) => {
       faculty_college_year: req.body.faculty_college_year,
       user: req.body.user
     })
-    if (user_faculty_college_year.data)
+    if (user_faculty_college_year)
       return res.send(formatResult(400, `user_faculty_college_year you want to create arleady exist`))
 
     let result = await createDocument(User_faculty_college_year, {
@@ -184,8 +184,8 @@ router.post('/', async (req, res) => {
       user: req.body.user
     })
 
-    // result.data = await injectDetails([simplifyObject(result.data)])
-    // result.data = result.data[0]
+    // result = await injectDetails([simplifyObject(result)])
+    // result = result[0]
 
     return res.send(result)
   } catch (error) {
@@ -227,7 +227,7 @@ router.delete('/:id', async (req, res) => {
     let user_faculty_college_year = await findDocument(User_faculty_college_year, {
       _id: req.params.id
     })
-    if (!user_faculty_college_year.data)
+    if (!user_faculty_college_year)
       return res.send(formatResult(404, `user_faculty_college_year of Code ${req.params.id} Not Found`))
 
     let result = await deleteDocument(User_faculty_college_year, req.params.id)

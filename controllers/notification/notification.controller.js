@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
   try {
     const result = await findDocuments(Notification)
 
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'Notification list is empty'))
 
     return res.send(result)
@@ -95,13 +95,13 @@ router.get('/user/:id', async (req, res) => {
     let user_found = await findDocument(User, {
       _id: req.params.id
     })
-    if (!user_found.data)
+    if (!user_found)
       return res.send(formatResult(404, 'user not found'))
 
     const result = await findDocuments(Notification, {
       user: req.params.id
     })
-    if (!result.data.length)
+    if (!result.length)
       return res.send(formatResult(404, 'notifications not found'))
 
     return res.send(result)
@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(400, error.details[0].message))
 
     let user = await findDocument(User, { _id: req.body.user })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     let result = await createDocument(Notification, {
@@ -205,11 +205,11 @@ router.put('/:id', async (req, res) => {
     let notification = await findDocument(Notification, {
       _id: req.params.id
     })
-    if (!notification.data)
+    if (!notification)
       return res.send(formatResult(404, 'notification not found'))
 
     let user = await findDocument(User, { _id: req.body.user })
-    if (!user.data)
+    if (!user)
       return res.send(formatResult(404, 'user not found'))
 
     const result = await updateDocument(Notification, req.params.id, req.body)
@@ -255,20 +255,20 @@ router.delete('/:id', async (req, res) => {
     let notification = await findDocument(Notification, {
       _id: req.params.id
     })
-    if (!notification.data)
+    if (!notification)
       return res.send(formatResult(404, 'notification not found'))
 
     const user_notifications = await findDocuments(User_notification, { "notifications.id": req.params.id })
-    if (user_notifications.data.length) {
-      for (const i in user_notifications.data) {
-        let notifications = user_notifications.data[i].notifications
-        for (const k in user_notifications.data[i].notifications) {
-          if (user_notifications.data[i].notifications[k].id == req.params.id) {
+    if (user_notifications.length) {
+      for (const i in user_notifications) {
+        let notifications = user_notifications[i].notifications
+        for (const k in user_notifications[i].notifications) {
+          if (user_notifications[i].notifications[k].id == req.params.id) {
             notifications.splice(k, 1)
           }
         }
-        user_notifications.data[i].notifications = notifications
-        await user_notifications.data[i].save()
+        user_notifications[i].notifications = notifications
+        await user_notifications[i].save()
       }
     }
 

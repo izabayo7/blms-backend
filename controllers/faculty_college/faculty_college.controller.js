@@ -10,7 +10,6 @@ const {
   College,
   Faculty,
   createDocument,
-  simplifyObject,
   deleteDocument,
   validate_faculty_college,
   Faculty_college_year,
@@ -53,10 +52,10 @@ router.get('/', async (req, res) => {
   try {
     let result = await findDocuments(Faculty_college)
 
-    if (result.data.length === 0)
+    if (result.length === 0)
       return res.send(formatResult(404, 'faculty-college list is empty'))
 
-    // result.data = await injectDetails(result.data)
+    // result = await injectDetails(result)
 
     return res.send(result)
   } catch (error) {
@@ -101,21 +100,21 @@ router.post('/', async (req, res) => {
     let faculty = await findDocument(Faculty, {
       _id: req.body.faculty
     })
-    if (!faculty.data)
+    if (!faculty)
       return res.send(formatResult(404, `Faculty with code ${req.body.faculty} doens't exist`))
 
     // check if college exist
     let college = await findDocument(College, {
       _id: req.body.college
     })
-    if (!college.data)
+    if (!college)
       return res.send(formatResult(404, `College with code ${req.body.college} doens't exist`))
 
     let faculty_college = await findDocument(Faculty_college, {
       faculty: req.body.faculty,
       college: req.body.college
     })
-    if (faculty_college.data)
+    if (faculty_college)
       return res.send(formatResult(400, `faculty_college you want to create arleady exist`))
 
     let result = await createDocument(Faculty_college, {
@@ -123,7 +122,7 @@ router.post('/', async (req, res) => {
       college: req.body.college
     })
 
-    // result.data = await injectDetails([simplifyObject(result.data)])
+    // result = await injectDetails([simplifyObject(result)])
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -164,14 +163,14 @@ router.delete('/:id', async (req, res) => {
     let faculty_college = await findDocument(Faculty_college, {
       _id: req.params.id
     })
-    if (!faculty_college.data)
+    if (!faculty_college)
       return res.send(formatResult(404, `faculty_college of Code ${req.params.id} Not Found`))
 
     // check if the faculty_college is never used
     const faculty_college_found = await findDocument(Faculty_college_year, {
       faculty_college: req.params.id
     })
-    if (!faculty_college_found.data) {
+    if (!faculty_college_found) {
       let result = await deleteDocument(Faculty_college, req.params.id)
       return res.send(result)
     }
