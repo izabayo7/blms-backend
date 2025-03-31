@@ -17,8 +17,12 @@ const live_session_schema = new mongoose.Schema({
             required: true
         }
     },
-    starting_time: {
+    date: {
         type: Date,
+        required: true
+    },
+    time: {
+        type: String,
         required: true
     },
     quiz: {
@@ -35,7 +39,8 @@ function validate_live_session(credentials) {
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
         }).required(),
-        starting_time: Joi.date().required(),
+        date: Joi.date().required(),
+        time: Joi.string().required(),
         quiz: Joi.ObjectId()
     }
     return Joi.validate(credentials, schema)
