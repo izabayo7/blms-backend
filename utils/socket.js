@@ -421,11 +421,11 @@ module.exports.listen = (app) => {
                         let notification = simplifyObject(_newDocument.notifications[_newDocument.notifications.length - 1])
                         notification.id = undefined
                         notification.notification = newDocument
-                            // send the notification
-                            socket.broadcast.to(_doc.student).emit('new-notification', { notification: notification })
+                        // send the notification
+                        socket.broadcast.to(_doc.student).emit('new-notification', { notification: notification })
 
                         // add student progress
-                        const _course =  await injectStudentProgress([course], _doc.student)
+                        const _course = await injectStudentProgress([course], _doc.student)
 
                         // send the course
                         socket.broadcast.to(_doc.student).emit('new-course', _course[0])
