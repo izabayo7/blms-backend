@@ -1530,8 +1530,10 @@ router.put('/updateMainVideo/:chapter', async (req, res) => {
 
             if (chapter.mainVideo) {
                 fs.unlink(`${req.kuriousStorageData.dir}/${chapter.mainVideo}`, (err) => {
-                    if (err)
+                    if (err){
+                        console.log(err)
                         return res.status(500).send(err)
+                    }
                 })
             }
 

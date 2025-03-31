@@ -672,6 +672,16 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
     return quizes
 }
 
+// add the number of students who did the quiz
+module.exports.addQuizUsages = async (quizes) => {
+    for (const i in quizes) {
+        const usages = await this.QuizSubmission.find({ quiz: quizes[i]._id }).countDocuments()
+        console.log(i, usages)
+        quizes[i].usage = usages
+    }
+    return quizes
+}
+
 // add chapters in their parent courses
 module.exports.injectChapters = async (courses) => {
     for (const i in courses) {

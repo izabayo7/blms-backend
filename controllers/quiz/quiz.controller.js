@@ -12,7 +12,8 @@ const {
   Student,
   _,
   StudentFacultyCollegeYear,
-  addAttachmentMediaPaths
+  addAttachmentMediaPaths,
+  addQuizUsages
 } = require('../../utils/imports')
 const {
   parseInt
@@ -128,6 +129,7 @@ router.get('/instructor/:id', async (req, res) => {
       return res.status(404).send(`There are no quizes for instructor ${instructor.surName}`)
 
     quizes = await addAttachmentMediaPaths(quizes)
+    quizes = await addQuizUsages(quizes)
 
     return res.status(200).send(quizes)
   } catch (error) {
@@ -159,6 +161,7 @@ router.get('/instructor/:id/:quiz_name', async (req, res) => {
       return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
 
     quiz = await addAttachmentMediaPaths([quiz])
+    quiz = await addQuizUsages(quiz)
 
     return res.status(200).send(quiz[0])
   } catch (error) {
