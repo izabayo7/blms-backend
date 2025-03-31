@@ -37,7 +37,7 @@ exports.createPasswordReset = async (req, res) => {
 
       await resetPassword.save();
     }
-
+    console.log(user)
     const { sent, err } = await sendResetPasswordEmail({ email: user.email, user_name: user.sur_name + ' ' + user.other_names, token, institution_name: user.college.name });
     if (err)
       return res.send(formatResult(500, err));

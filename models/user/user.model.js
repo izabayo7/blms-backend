@@ -51,7 +51,8 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     college: {
-        type: String
+        type: String,
+        ref: "college",
     },
     status: {
         // disabled status 0(enabled) 1(disabled)
