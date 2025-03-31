@@ -33,6 +33,7 @@
     "nodemailer": "^6.4.17",
     "nodemailer-smtp-transport": "^2.7.4",
     "nodemon": "^2.0.4",
+    "paymentwall": "^1.2.5",
     "pm2": "^4.4.1",
     "sharp": "^0.26.0",
     "socket.io": "^2.3.0",
