@@ -81,7 +81,7 @@ exports.validate_user_invitation = (credentials) => {
         emails: Joi.array().min(1).items(Joi.string().email().required()).required(),
         user: Joi.ObjectId(),
         college: Joi.ObjectId(),
-        category: Joi.ObjectId().required()
+        category: Joi.string().min(5).required()
     }
     return Joi.validate(credentials, schema)
 }

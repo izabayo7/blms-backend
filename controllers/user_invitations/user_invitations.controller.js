@@ -98,7 +98,7 @@ exports.createUserInvitation = async (req, res) => {
       return res.send(formatResult(404, 'UserCategory not found'))
 
     let user_category = await User_category.findOne({
-      _id: category
+      name: category
     })
     if (!user_category)
       return res.send(formatResult(404, 'UserCategory not found'))
