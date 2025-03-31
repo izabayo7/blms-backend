@@ -404,23 +404,11 @@ router.post('/', async (req, res) => {
 
     // check if the name or email were not used
     let user = await findDocument(User, {
-      $or: [{
-        email: req.body.email
-      },
-      // {
-      //   national_id: req.body.national_id
-      // },
-      {
-        phone: req.body.phone
-      }],
+      email: req.body.email
     })
 
     if (user) {
-      const phoneFound = req.body.phone == user.phone
-      // const national_idFound = req.body.national_id == user.national_id
-      const national_idFound = false
-      const emailFound = req.body.email == user.email
-      return res.send(formatResult(400, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : ''} arleady exist`))
+      return res.send(formatResult(400, `User with same email is arleady registered`))
     }
 
     // avoid user_name === group name
