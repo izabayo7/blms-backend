@@ -1140,7 +1140,7 @@ router.post('/admin', async (req, res) => {
             college: saved_college.data._id,
             category: user_category._id
         })
-        console.log(result)
+
         const {sent, err} = await sendConfirmEmail({
             email: result.data.email,
             user_name: req.body.sur_name + ' ' + req.body.other_names,
@@ -1671,7 +1671,7 @@ async function addUserBill(collegeId, userCategory) {
     collegeId = collegeId.toString()
 
     const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
-    console.log(college)
+
     if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
         const payment = await Account_payments.findOne({
             college: collegeId,
