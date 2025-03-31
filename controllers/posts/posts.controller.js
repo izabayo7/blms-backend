@@ -4,7 +4,7 @@ const {
   formatResult, u, User_category, College, ONE_DAY, updateDocument, User, validateObjectId
 } = require('../../utils/imports');
 const { sendInvitationMail } = require('../email/email.controller');
-const { Post } = require('../../models/posts/posts.model');
+const { Post, validate_post } = require('../../models/posts/posts.model');
 
 const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
 
