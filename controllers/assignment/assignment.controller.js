@@ -11,13 +11,7 @@ const {
     fs,
     Chapter,
     Course,
-    path,
-    Faculty_college_year,
     validateObjectId,
-    _,
-    addAttachmentMediaPaths,
-    addAssignmentUsages,
-    addAttachedCourse,
     findDocuments,
     formatResult,
     findDocument,
@@ -25,14 +19,10 @@ const {
     User_category,
     createDocument,
     deleteDocument,
-    simplifyObject,
-    Assignment_submission,
     sendResizedImage,
     findFileType,
     streamVideo,
     u,
-    upload_multiple_images,
-    addAssignmentTarget,
     addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {
@@ -81,11 +71,28 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
             }, u, u, u, u, u, {_id: -1})
         }
 
+        assignments = await addAssignmentTarget(assignments)
+
         return res.send(formatResult(u, u, assignments))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
 })
+
+async function addAssignmentTarget(assignments) {
+    for (const i in assignments) {
+        if (assignments[i].target.type === 'course') {
+            assignments[i].target.course = await Course.findOne({_id: assignments[i].target.id}, {name: 1})
+        } else {
+            assignments[i].target.chapter = await Chapter.findOne({_id: assignments[i].target.id}, {
+                name: 1,
+                course: 1
+            }).populate('course', ['name'])
+            assignments[i].target.course = assignments[i].target.chapter.course
+        }
+    }
+    return assignments
+}
 
 /**
  * @swagger
