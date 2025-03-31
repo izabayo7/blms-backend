@@ -17,7 +17,8 @@ const {
   Chapter,
   injectUser,
   injectCommentsReplys,
-  simplifyObject
+  simplifyObject,
+  Quiz_submission
 } = require('../../utils/imports')
 
 // create router
@@ -108,7 +109,7 @@ router.get('/:target/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    const allowedTargetTypes = ['chapter', 'live_session']
+    const allowedTargetTypes = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
 
     if (!allowedTargetTypes.includes(req.params.target)) {
       return res.send(formatResult(400, 'invalid target type'))
@@ -126,6 +127,18 @@ router.get('/:target/:id', async (req, res) => {
       case 'live_session':
         target = await findDocument(Live_session, {
           _id: req.params.id
+        })
+        break;
+
+      case 'quiz_submission':
+        target = await findDocument(Quiz_submission, {
+          _id: req.params.id
+        })
+        break;
+
+      case 'quiz_submission_answer':
+        target = await findDocument(Quiz_submission, {
+          "answers._id": req.params.id
         })
         break;
 
@@ -189,7 +202,7 @@ router.post('/', async (req, res) => {
 
     req.body.target.type = req.body.target.type.toLowerCase()
 
-    const allowedTargets = ['chapter', 'live_session']
+    const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer']
 
     if (!allowedTargets.includes(req.body.target.type))
       return res.send(formatResult(400, 'invalid comment target_type'))
@@ -206,6 +219,18 @@ router.post('/', async (req, res) => {
       case 'live_session':
         target = await findDocument(Live_session, {
           _id: req.body.target.id
+        })
+        break;
+
+      case 'quiz_submission':
+        target = await findDocument(Quiz_submission, {
+          _id: req.body.target.id
+        })
+        break;
+
+      case 'quiz_submission_answer':
+        target = await findDocument(Quiz_submission, {
+          "answers._id": req.body.target.id
         })
         break;
 
