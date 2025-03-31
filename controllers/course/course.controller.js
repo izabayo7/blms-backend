@@ -747,15 +747,21 @@ router.put('/:id/cover_picture', async (req, res) => {
  *   delete:
  *     tags:
  *       - Course
- *     description: Remove course cover_picture (file upload using swagger is still under construction)
+ *     description: Remove course cover_picture
  *     security:
  *       - bearerAuth: -[]
+ *     consumes:
+ *        - multipart/form-data
  *     parameters:
  *       - name: id
  *         description: Course id
  *         in: path
  *         required: true
  *         type: string
+ *        - in: formData
+ *          name: file
+ *          type: file
+ *          description: User Profile to upload.
  *     responses:
  *       201:
  *         description: Created
@@ -794,7 +800,7 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
 
         const path = `./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`
 
-        
+
         fs.unlink(`${path}/${course.cover_picture}`, (err) => {
             error = err
         })
