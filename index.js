@@ -27,7 +27,7 @@ const swaggerOptions = {
             version: '1.0.0',
             description: "Explore APIs as you wish",
         },
-        schemes: ['http'],
+        schemes: ['http', 'https'],
         host: host,
         basePath: basePath,
         securityDefinitions: {
