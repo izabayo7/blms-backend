@@ -560,6 +560,8 @@ router.get('/current', auth, async (req, res) => {
  *   get:
  *     tags:
  *       - User
+ *     security:
+ *       - bearerAuth: -[]
  *     description: tells whether the username is available or taken
  *     parameters:
  *       - name: user_name
@@ -575,7 +577,7 @@ router.get('/current', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.get('/checkUserNameExistance/:user_name', checkUsernameExistence)
+router.get('/checkUserNameExistance/:user_name', auth, checkUsernameExistence)
 
 /**
  * @swagger
