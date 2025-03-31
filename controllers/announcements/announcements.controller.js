@@ -48,7 +48,7 @@ router.get('/user', async (req, res) => {
 
         // ['course', 'student_group', 'faculty', 'college']
 
-        const user_user_group = await findDocument(User_user_group, {
+        const user_user_group = await User_user_group.find({
             user: req.user._id,
             status: "ACTIVE"
         }, {user_group: 1}).populate('user_group',
