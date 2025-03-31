@@ -424,7 +424,7 @@ async function injectDetails(user_groups) {
     for (const i in user_groups) {
 
         const total_courses = await countDocuments(Course, {
-            user_groups: user_groups[i]._id
+            user_group: user_groups[i]._id
         })
         // add courses
         user_groups[i].total_courses = total_courses
