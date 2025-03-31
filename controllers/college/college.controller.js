@@ -164,6 +164,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - College
  *     description: Returns the logo of a specified college
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: college_name
  *         description: College name
