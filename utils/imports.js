@@ -182,12 +182,12 @@ module.exports.u = undefined
  */
 
 /**
- *  returns a formated result (made to avoid console errors caused by statuses and to utilise the results we give)
+ *  returns a formatted result (made to avoid console errors caused by statuses and to utilise the results we give)
  * @param {Number} status  Status code
  * @param {String} message Message
  * @param {Object} data Data
  */
-module.exports.formatResult = (status = 200, message = 'OK', data = {}) => {
+module.exports.formatResult = (status = 200, message = 'OK', data = undefined) => {
     return {
         status: status,
         message: message.toString(),
@@ -228,7 +228,7 @@ module.exports.validateUserLogin = (credentials) => {
  *  creates a new document with the data
  * @param {Object} model Model
  * @param {Object} properties Model
- * @returns formatedResult 
+ * @returns formattedResult 
  */
 module.exports.createDocument = async (model, properties) => {
     try {
@@ -245,7 +245,7 @@ module.exports.createDocument = async (model, properties) => {
  * @param {Object} model Model
  * @param {Object} id MongoId of the document
  * @param {Object} properties Model
- * @returns formatedResult
+ * @returns formattedResult
  */
 module.exports.updateDocument = async (model, id, properties) => {
     try {
@@ -264,7 +264,7 @@ module.exports.updateDocument = async (model, id, properties) => {
  *  deletes a document with the given id
  * @param {Object} model Model
  * @param {Object} id MongoId of the document
- * @returns formatedResult
+ * @returns formattedResult
  */
 module.exports.deleteDocument = async (model, id) => {
     try {
@@ -284,13 +284,12 @@ module.exports.deleteDocument = async (model, id) => {
  * @param {Object} fields Specifies the needed fields
  * @param {Number} limit Specifies the limit
  * @param {Number} startIndex Specifies the startingIndex
- * @returns formatedResult
+ * @returns formattedResult
  */
-module.exports.findDocuments = async (model, query, fields, limit, startIndex) => {
+module.exports.findDocuments = async (model, query, fields, limit, startIndex, formatted = true) => {
     try {
         const documents = await model.find(query, fields).limit(limit).skip(startIndex).exec()
-        return this.formatResult(200, 'OK', documents)
-
+        return formatted ? this.formatResult(200, 'OK', documents) : documents
     } catch (error) {
         return this.formatResult(500, error)
     }
@@ -302,12 +301,12 @@ module.exports.findDocuments = async (model, query, fields, limit, startIndex) =
  * @param {Object} model Model
  * @param {Object} query Query object
  * @param {Object} fields Specifies the needed fields
- * @returns formatedResult
+ * @returns formattedResult
  */
-module.exports.findDocument = async (model, query, fields) => {
+module.exports.findDocument = async (model, query, fields, lean = false, formatted = true) => {
     try {
-        const document = await model.findOne(query, fields).exec()
-        return this.formatResult(200, 'OK', document)
+        const document = await model.findOne(query, fields).lean(lean).exec()
+        return formatted ? this.formatResult(200, 'OK', document) : document
     } catch (error) {
         return this.formatResult(500, error)
     }
@@ -515,7 +514,7 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
 
 // format contacts
 module.exports.formatContacts = async (messages, userId) => {
-    let formatedContacts = []
+    let formattedContacts = []
     for (const message of messages) {
         let id = ''
         let name = ""
@@ -559,7 +558,7 @@ module.exports.formatContacts = async (messages, userId) => {
                 }
             }).countDocuments()
         }
-        formatedContacts.push({
+        formattedContacts.push({
             id: id,
             name: name,
             image: image,
@@ -567,13 +566,13 @@ module.exports.formatContacts = async (messages, userId) => {
             unreadMessagesLength: unreadMessagesLength
         })
     }
-    return formatedContacts
+    return formattedContacts
 }
 
 // format messages
 module.exports.formatMessages = async (messages, userId) => {
     let messagesCopy = this.simplifyObject(messages)
-    let formatedMessages = []
+    let formattedMessages = []
     for (const message of messages) {
         for (const i in messagesCopy) {
             if (message._id == messagesCopy[i]._id) {
@@ -604,7 +603,7 @@ module.exports.formatMessages = async (messages, userId) => {
 
                     }
                 }
-                formatedMessages.push({
+                formattedMessages.push({
                     from: from,
                     image: image,
                     messages: matchingMessages
@@ -613,7 +612,7 @@ module.exports.formatMessages = async (messages, userId) => {
             }
         }
     }
-    return formatedMessages
+    return formattedMessages
 }
 
 // get latest conversations
@@ -760,9 +759,8 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
                 for (const j in quizes[i].questions[k].options.choices) {
                     if (quizes[i].questions[k].options.choices[j].src) {
                         if (!quizes[i].questions[k].options.choices[j].src.includes('http')) {
-                            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}${process.env.BASE_PATH}/file/quizAttachedFiles/${quizes[i]._id}/${quizes[i].questions[k].options.choices[j].src}`
+                            quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}${process.env.BASE_PATH}/quiz/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
                         }
-
                     }
                     if (removeRightChoice) {
                         quizes[i].questions[k].options.choices[j].right = undefined
@@ -777,9 +775,9 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
 // add the number of students who did the quiz
 module.exports.addQuizUsages = async (quizes) => {
     for (const i in quizes) {
-        const usages = await this.QuizSubmission.find({
+        const usages = await this.countDocuments(this.Quiz_submission, {
             quiz: quizes[i]._id
-        }).countDocuments()
+        })
         quizes[i].usage = usages
     }
     return quizes
@@ -835,7 +833,9 @@ module.exports.injectChapters = async (courses) => {
                 courses[i].chapters[k].uploaded_video = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
             }
 
-
+            for (const l in courses[i].chapters[k].attachments) {
+                courses[i].chapters[k].attachments[l].download_link = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/attachment/${courses[i].chapters[k].attachments[l].src}/download`
+            }
 
             // add assignments attached to chapters
             const chapterQuiz = await this.findDocuments(this.Quiz, {
@@ -864,13 +864,13 @@ module.exports.injectChapters = async (courses) => {
 
 // replace user id by the user information
 module.exports.injectUser = async (array, property, newProperty) => {
+
     let name = newProperty ? newProperty : property
     for (const i in array) {
         const user = await this.findDocument(this.User, {
             _id: array[i][`${property}`]
         })
-
-        array[i][`${name}`] = this._.pick(user.data, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile"])
+        array[i][`${name}`] = this._.pick(user.data, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
         if (array[i][`${name}`].profile) {
             array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.data.user_name}/profile/${user.data.profile}`
         }
@@ -899,7 +899,7 @@ module.exports.injectNotification = async (array) => {
 }
 
 // add student progress
-module.exports.injecUserProgress =  async (courses, userId) => {
+module.exports.injecUserProgress = async (courses, userId) => {
     for (const i in courses) {
         const result = await this.findDocument(this.User_progress, {
             course: courses[i]._id,
@@ -983,7 +983,7 @@ module.exports.streamVideo = async (req, res, path) => {
 
         // Handle file not found
         if (err !== null && err.code === 'ENOENT') {
-            res.send(this.formatResul(404, 'file not found'));
+            res.send(this.formatResult(404, 'file not found'));
         }
 
         const fileSize = stat.size
@@ -1028,6 +1028,7 @@ module.exports.generateAuthToken = async (user) => {
         _id: user._id,
         sur_name: user.sur_name,
         other_names: user.other_names,
+        user_name: user.user_name,
         // national_id: user.national_id,
         gender: user.gender,
         date_of_birth: user.date_of_birth,

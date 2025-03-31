@@ -99,6 +99,11 @@ router.get('/:id/document', async (req, res) => {
     })
 
     const file_path = `uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/main_content/index.html`
+
+    const exists = await fs.exists(file_path)
+    if (!exists)
+      return res.send(formatResult(404, 'file not found'))
+
     return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
 
   } catch (error) {
@@ -162,6 +167,10 @@ router.get('/:id/video/:file_name', async (req, res) => {
     })
 
     const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/video/${chapter.data.uploaded_video}`
+    const exists = await fs.exists(file_path)
+    if (!exists)
+      return res.send(formatResult(404, 'file not found'))
+
     streamVideo(req, res, file_path)
 
   } catch (error) {

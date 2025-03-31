@@ -299,10 +299,10 @@ router.get('/user/:id/:quiz_name', async (req, res) => {
         return res.send(formatResult(404, 'quiz not found'))
     }
 
-    // quiz.data = await addAttachmentMediaPaths([quiz.data])
-    // quiz.data = await addQuizUsages(quiz.data)
-    // quiz.data = await addAttachedCourse(quiz.data)
-    // quiz.data = quiz.data[0]
+    quiz.data = await addAttachmentMediaPaths([quiz.data])
+    quiz.data = await addQuizUsages(quiz.data)
+    quiz.data = await addAttachedCourse(quiz.data)
+    quiz.data = quiz.data[0]
 
     return res.send(quiz)
   } catch (error) {

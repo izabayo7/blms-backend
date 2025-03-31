@@ -638,8 +638,8 @@ router.put('/:id', async (req, res) => {
     if (!user.data)
       return res.send(formatResult(404, 'user not found'))
 
-    if (user.data.category !== user_category.data._id)
-      return res.send(formatResult(404, 'user can\'t create quiz'))
+    if (user.data.category != user_category.data._id)
+      return res.send(formatResult(404, 'user can\'t create course'))
 
     // check if course exist
     let course = await findDocument(Course, {
@@ -760,16 +760,16 @@ router.delete('/:id', async (req, res) => {
 // inject faculty college Year
 async function injectFaculty_college_year(courses) {
   for (const i in courses) {
-    const faculty_college_year = await Faculty_college_year.findOne({
+    const faculty_college_year = await findDocument(Faculty_college_year, {
       _id: courses[i].faculty_college_year
-    }).lean()
-
+    }, { _v: 0 }, true)
+console.log(faculty_college_year)
     courses[i].faculty_college_year = removeDocumentVersion(faculty_college_year)
 
     const collegeYear = await College_year.findOne({
-      _id: faculty_college_year.collegeYear
+      _id: faculty_college_year.college_year
     }).lean()
-    courses[i].faculty_college_year.collegeYear = removeDocumentVersion(collegeYear)
+    courses[i].faculty_college_year.college_year = removeDocumentVersion(collegeYear)
 
     const faculty_college = await Faculty_college.findOne({
       _id: faculty_college_year.faculty_college

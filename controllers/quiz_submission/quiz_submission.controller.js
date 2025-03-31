@@ -24,7 +24,8 @@ const {
   findFileType,
   sendResizedImage,
   streamVideo,
-  path
+  path,
+  simplifyObject
 } = require('../../utils/imports')
 
 // create router
@@ -247,20 +248,20 @@ router.get('/user/:id', async (req, res) => {
     })
 
     if (user_category.data.name == 'STUDENT') {
-      result = await findDocuments(Quiz_submission, {
+      result = simplifyObject(await findDocuments(Quiz_submission, {
         user: req.params.id
-      })
+      }))
       if (!result.data.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
-      // result.data = await injectQuiz(result.data)
-      // for (const i in result.data) {
-      //   if (result.data[i].quiz) {
-      //     result.data[i].quiz = await addAttachmentMediaPaths([result.data[i].quiz])
-      //     result.data[i].quiz = await injectUser(result.data[i].quiz, 'user')
-      //     result.data[i].quiz = result.data[i].quiz[0]
-      //   }
-      // }
+      result.data = await injectQuiz(result.data)
+      for (const i in result.data) {
+        if (result.data[i].quiz) {
+          result.data[i].quiz = await addAttachmentMediaPaths([result.data[i].quiz])
+          result.data[i].quiz = await injectUser(result.data[i].quiz, 'user')
+          result.data[i].quiz = result.data[i].quiz[0]
+        }
+      }
     } else {
       // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
@@ -276,12 +277,12 @@ router.get('/user/:id', async (req, res) => {
           quiz: quizes.data[i]._id
         })
         if (quiz_submission.data.length) {
-          // quiz_submission.data = await injectUser(quiz_submission.data, 'user')
-          // quiz_submission.data = await injectQuiz(quiz_submission.data)
+          quiz_submission.data = await injectUser(quiz_submission.data, 'user')
+          quiz_submission.data = await injectQuiz(quiz_submission.data)
 
           for (const k in quiz_submission.data) {
-            // quiz_submission[k].quiz = await addAttachmentMediaPaths([quiz_submission[k].quiz])
-            // quiz_submission[k].quiz = quiz_submission[k].quiz[0]
+            quiz_submission[k].quiz = await addAttachmentMediaPaths([quiz_submission[k].quiz])
+            quiz_submission[k].quiz = quiz_submission[k].quiz[0]
             foundSubmissions.push(quiz_submission.data[k])
           }
         }
@@ -346,12 +347,13 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     })
     if (!result.data)
       return res.send(formatResult(404, 'quiz_submission not found'))
-
-    // result.data = await injectQuiz([result.data])
-    // result.data[0].quiz = await addAttachmentMediaPaths([result.data[0].quiz])
-    // result.data[0].quiz = await injectUser(result.data[0].quiz, 'user')
-    // result.data[0].quiz = result.data[0].quiz[0]
-    // result.data = result.data[0]
+    result.data = simplifyObject(result.data)
+    result.data = await injectQuiz([result.data])
+    result.data[0].quiz = await addAttachmentMediaPaths([result.data[0].quiz])
+    result.data[0].quiz = simplifyObject(result.data[0].quiz)
+    result.data[0].quiz = await injectUser(result.data[0].quiz, 'user')
+    result.data[0].quiz = result.data[0].quiz[0]
+    result.data = result.data[0]
 
     return res.send(result)
   } catch (error) {
@@ -525,6 +527,10 @@ router.post('/', async (req, res) => {
       auto_submitted: req.body.auto_submitted
     })
 
+    result.data = simplifyObject(result.data)
+    result.data = await injectQuiz([result.data])
+    result.data = result.data[0]
+
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -614,7 +620,7 @@ router.put('/:id', async (req, res) => {
     if (valid_submision.status !== true)
       return res.send(formatResult(400, valid_submision.error))
 
-    req.body.totalMarks = valid_submision.totalMarks
+    req.body.total_marks = valid_submision.total_marks
     req.body.marked = true
 
     const result = await updateDocument(Quiz_submission, req.params.id, req.body)
@@ -759,7 +765,7 @@ function validateSubmittedAnswers(questions, answers, mode) {
   }
   return message === '' ? {
     status: true,
-    totalMarks: marks
+    total_marks: marks
   } : {
       status: false,
       error: message

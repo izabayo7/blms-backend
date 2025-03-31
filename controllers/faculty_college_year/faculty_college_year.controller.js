@@ -17,6 +17,9 @@ const {
   College,
   validateObjectId,
   updateDocument,
+  removeDocumentVersion,
+  countDocuments,
+  simplifyObject,
 } = require('../../utils/imports')
 // create router
 const router = express.Router()
@@ -130,7 +133,7 @@ router.get('/college/:id', async (req, res) => {
     if (foundFaculty_college_years.length < 1)
       return res.send(formatResult(404, `There are no Faculty College Years in ${college.name}`))
 
-    // foundFaculty_acollege_years = await injectDetails(foundFaculty_college_years)
+    foundFaculty_acollege_years = await injectDetails(foundFaculty_college_years)
 
     return res.send(formatResult(u, u, foundFaculty_college_years))
   } catch (error) {
@@ -253,7 +256,7 @@ router.delete('/:id', async (req, res) => {
     const update_faculty_college_year = await updateDocument(Faculty_college_year, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, `User ${update_faculty_college_year.data._id} couldn't be deleted because it was used, instead it was disabled`,update_faculty_college_year.data))
+    return res.send(formatResult(200, `User ${update_faculty_college_year.data._id} couldn't be deleted because it was used, instead it was disabled`, update_faculty_college_year.data))
 
   } catch (error) {
     return res.send(formatResult(500, error))
@@ -264,33 +267,33 @@ router.delete('/:id', async (req, res) => {
 async function injectDetails(faculty_college_years) {
   for (const i in faculty_college_years) {
 
-    const faculty_college = await Faculty_college.findOne({
+    const faculty_college = await findDocument(Faculty_college, {
       _id: faculty_college_years[i].faculty_college
-    }).lean()
-    faculty_college_years[i].faculty_college = removeDocumentVersion(faculty_college)
+    })
+    faculty_college_years[i].faculty_college = simplifyObject(removeDocumentVersion(faculty_college.data))
 
-    const faculty = await Faculty.findOne({
+    const faculty = await findDocument(Faculty, {
       _id: faculty_college_years[i].faculty_college.faculty
-    }).lean()
-    faculty_college_years[i].faculty_college.faculty = removeDocumentVersion(faculty)
+    })
+    faculty_college_years[i].faculty_college.faculty = simplifyObject(removeDocumentVersion(faculty.data))
 
-    const college = await College.findOne({
+    const college = await findDocument(College, {
       _id: faculty_college_years[i].faculty_college.college
-    }).lean()
-    faculty_college_years[i].faculty_college.college = removeDocumentVersion(college)
+    })
+    faculty_college_years[i].faculty_college.college = simplifyObject(removeDocumentVersion(college.data))
     if (faculty_college_years[i].faculty_college.college.logo) {
       faculty_college_years[i].faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }
 
-    const college_year = await College_year.findOne({
+    const college_year = await findDocument(College_year, {
       _id: faculty_college_years[i].college_year
-    }).lean()
-    faculty_college_years[i].college_year = removeDocumentVersion(college_year)
+    })
+    faculty_college_years[i].college_year = removeDocumentVersion(college_year.data)
 
     // add the number of students
-    const attendants = await StudentFaculty_college_year.find({
+    const attendants = await countDocuments(User_faculty_college_year, {
       faculty_college_year: faculty_college_years[i]._id
-    }).countDocuments()
+    })
     faculty_college_years[i].attendants = attendants
   }
   return faculty_college_years
