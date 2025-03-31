@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation, acceptOrDenyInvitation } = require('../../controllers/user_invitations/user_invitations.controller')
+const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation, acceptOrDenyInvitation, getInvitationbyToken } = require('../../controllers/user_invitations/user_invitations.controller')
 const { auth } = require('../../utils/imports')
 const router = express.Router()
 
@@ -89,6 +89,28 @@ router.route('/all')
      *         description: Internal Server Error
      */
     .get([auth, getAllInvitations])
+
+router.route('/:token')
+    /**
+     * @swagger
+     * /user_invitations/{token}:
+     *   get:
+     *     tags:
+     *       - User_invitation
+     *     description: Returns a specific user_invitation
+     *     parameters:
+     *       - name: token
+     *         description: User invitation token
+     *         in: path
+     *         type: string
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     */
+    .get(getInvitationbyToken)
 
 router.route('/:token/renew')
     /**
