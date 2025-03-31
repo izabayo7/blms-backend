@@ -766,11 +766,11 @@ router.put('/profile', auth, async (req, res) => {
             return res.send(formatResult(500, err))
         })
       }
-      const result = await updateDocument(User, user._id, {
+      const result = await User.findByIdAndUpdate(user._id, {
         profile: req.file.filename
       })
-      result.data.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${result.data.profile}`
-      return res.send(result)
+      result.profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${result.profile}`
+      return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result)))
     })
 
   } catch (error) {
@@ -788,11 +788,6 @@ router.put('/profile', auth, async (req, res) => {
  *     security:
  *       - bearerAuth: -[]
  *     parameters:
- *       - name: id
- *         description: Chapter id
- *         in: path
- *         required: true
- *         type: string
  *       - name: file_name
  *         description: File name
  *         in: path
@@ -810,11 +805,6 @@ router.put('/profile', auth, async (req, res) => {
  */
 router.delete('/profile/:file_name', auth, async (req, res) => {
   try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
 
     // check if user exist
     const user = await findDocument(User, {
@@ -865,7 +855,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     let {
       error
