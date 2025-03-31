@@ -137,7 +137,7 @@ router.get('/', auth, async (req, res) => {
                         if (foundSubmissions[a].marked) {
                             courses[j].marking_status += percentage_of_one_submission
                         }
-                        if (!foundSubmissions[a].results_seen) {
+                        if (!foundSubmissions[a].results_seen && foundSubmissions[a].status == 'RELEASED') {
                             courses[j].unread_results++
                         }
                     }
