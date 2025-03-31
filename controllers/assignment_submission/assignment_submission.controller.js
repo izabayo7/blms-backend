@@ -306,13 +306,12 @@ router.get('/user/:user_name/:assignment_id', auth, filterUsers(["INSTRUCTOR", "
             return res.send(formatResult(404, 'assignment_submission not found'))
 
         result.assignment = assignment
-        result = await injectUserFeedback(result)
         result = await injectUser([result], 'user')
+        result = await injectUserFeedback(result)
         result = result[0]
         result.assignment = await addAssignmentTarget([result.assignment])
         result.assignment = await injectUser(result.assignment, 'user')
         result.assignment = result.assignment[0]
-        result = await injectUserFeedback(result)
         return res.send(formatResult(u, u, result))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -375,7 +374,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         let file_found = false
 
         for (const i in submission.attachments) {
-            if (submission.attachments[i].src === req.parama.file_name) {
+            if (submission.attachments[i].src === req.params.file_name) {
                 file_found = true
                 break
             }
