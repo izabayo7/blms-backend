@@ -3,6 +3,7 @@ const Mailgen = require('mailgen');
 const {formatResult} = require('../../utils/imports');
 const {createTransport} = require('nodemailer')
 const smtpTransport = require('nodemailer-smtp-transport')
+const {confirm_email} = require("../../utils/emailGenerator");
 const {confirm_account} = require("../../utils/emailGenerator");
 const {submission_email} = require("../../utils/emailGenerator");
 const {
