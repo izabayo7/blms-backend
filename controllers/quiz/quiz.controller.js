@@ -1,37 +1,37 @@
 // import dependencies
 const {
-  express,
-  fs,
-  Quiz,
-  Chapter,
-  Course,
-  validate_quiz,
-  Faculty_college_year,
-  validateObjectId,
-  _,
-  User_faculty_college_year,
-  addAttachmentMediaPaths,
-  addQuizUsages,
-  addAttachedCourse,
-  findDocuments,
-  formatResult,
-  findDocument,
-  User,
-  User_category,
-  createDocument,
-  deleteDocument,
-  simplifyObject,
-  Quiz_submission,
-  sendResizedImage,
-  findFileType,
-  streamVideo,
-  u,
-  upload_multiple_images,
-  addQuizTarget,
-  addStorageDirectoryToPath
+    express,
+    fs,
+    Quiz,
+    Chapter,
+    Course,
+    validate_quiz,
+    Faculty_college_year,
+    validateObjectId,
+    _,
+    User_faculty_college_year,
+    addAttachmentMediaPaths,
+    addQuizUsages,
+    addAttachedCourse,
+    findDocuments,
+    formatResult,
+    findDocument,
+    User,
+    User_category,
+    createDocument,
+    deleteDocument,
+    simplifyObject,
+    Quiz_submission,
+    sendResizedImage,
+    findFileType,
+    streamVideo,
+    u,
+    upload_multiple_images,
+    addQuizTarget,
+    addStorageDirectoryToPath
 } = require('../../utils/imports')
 const {
-  parseInt
+    parseInt
 } = require('lodash')
 
 // create router
@@ -113,19 +113,19 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  try {
-    let result = await findDocuments(Quiz)
+    try {
+        let result = await findDocuments(Quiz)
 
-    if (!result.length)
-      return res.send(formatResult(404, 'Quiz list is empty'))
+        if (!result.length)
+            return res.send(formatResult(404, 'Quiz list is empty'))
 
-    // result = await injectInstructor(result)
-    // result = await addAttachmentMediaPaths(result)
+        // result = await injectInstructor(result)
+        // result = await addAttachmentMediaPaths(result)
 
-    return res.send(formatResult(u, u, result))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -152,27 +152,27 @@ router.get('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    let quiz = await findDocument(Quiz, {
-      _id: req.params.id
-    })
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
-    // quiz = await injectInstructor([quiz])
-    quiz = await addAttachmentMediaPaths(quiz)
-    // quiz = quiz[0]
+        // quiz = await injectInstructor([quiz])
+        quiz = await addAttachmentMediaPaths(quiz)
+        // quiz = quiz[0]
 
-    return res.send(formatResult(u, u, quiz))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(formatResult(u, u, quiz))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -199,25 +199,25 @@ router.get('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/user/:user_name', async (req, res) => {
-  try {
-    let user = await findDocument(User, {
-      user_name: req.params.user_name
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
+    try {
+        let user = await findDocument(User, {
+            user_name: req.params.user_name
+        })
+        if (!user)
+            return res.send(formatResult(404, 'user not found'))
 
-    let quiz = await findDocuments(Quiz, {
-      user: user._id
-    }, u, u, u, u, u, { _id: -1 })
+        let quiz = await findDocuments(Quiz, {
+            user: user._id
+        }, u, u, u, u, u, {_id: -1})
 
-    quiz = await addAttachmentMediaPaths(quiz)
-    quiz = await addQuizUsages(quiz)
-    quiz = await addAttachedCourse(quiz)
+        quiz = await addAttachmentMediaPaths(quiz)
+        quiz = await addQuizUsages(quiz)
+        quiz = await addAttachedCourse(quiz)
 
-    return res.send(formatResult(u, u, quiz))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(formatResult(u, u, quiz))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -249,70 +249,70 @@ router.get('/user/:user_name', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/user/:user_name/:quiz_name', async (req, res) => {
-  try {
-    let user = await findDocument(User, {
-      user_name: req.params.user_name
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
-
-    let user_category = await findDocument(User_category, {
-      name: 'INSTRUCTOR'
-    })
-
-    const isInstructor = user.category == user_category._id
-
-    let quiz = await findDocument(Quiz, isInstructor ? {
-      name: req.params.quiz_name,
-      user: user._id
-    } : { name: req.params.quiz_name })
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
-
-    let faculty_college_year
-    let chapter
-    let course
-
-    if (quiz.target) {
-      if (quiz.target.type === 'chapter') {
-        chapter = await findDocument(Chapter, {
-          _id: quiz.target.id
+    try {
+        let user = await findDocument(User, {
+            user_name: req.params.user_name
         })
-        course = await findDocument(Course, {
-          _id: chapter.course
+        if (!user)
+            return res.send(formatResult(404, 'user not found'))
+
+        let user_category = await findDocument(User_category, {
+            name: 'INSTRUCTOR'
         })
-        faculty_college_year = course.faculty_college_year
-      } else if (quiz.target.type === 'course') {
-        course = await findDocument(Course, {
-          _id: quiz.target.id
-        })
-        faculty_college_year = course.faculty_college_year
-      } else if (quiz.target.type === 'faculty_college_year') {
-        faculty_college_year = quiz.target.id
-      }
-      const user_faculty_college_year = await findDocument(User_faculty_college_year, {
-        user: user._id,
-        faculty_college_year: faculty_college_year
-      })
-      if (!user_faculty_college_year)
-        return res.send(formatResult(404, 'quiz not found'))
-    } else {
-      if (req.params.user_name != req.user.user_name)
-        return res.send(formatResult(404, 'quiz not found'))
+
+        const isInstructor = user.category == user_category._id
+
+        let quiz = await findDocument(Quiz, isInstructor ? {
+            name: req.params.quiz_name,
+            user: user._id
+        } : {name: req.params.quiz_name})
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
+
+        let faculty_college_year
+        let chapter
+        let course
+
+        if (quiz.target) {
+            if (quiz.target.type === 'chapter') {
+                chapter = await findDocument(Chapter, {
+                    _id: quiz.target.id
+                })
+                course = await findDocument(Course, {
+                    _id: chapter.course
+                })
+                faculty_college_year = course.faculty_college_year
+            } else if (quiz.target.type === 'course') {
+                course = await findDocument(Course, {
+                    _id: quiz.target.id
+                })
+                faculty_college_year = course.faculty_college_year
+            } else if (quiz.target.type === 'faculty_college_year') {
+                faculty_college_year = quiz.target.id
+            }
+            const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+                user: user._id,
+                faculty_college_year: faculty_college_year
+            })
+            if (!user_faculty_college_year)
+                return res.send(formatResult(404, 'quiz not found'))
+        } else {
+            if (req.params.user_name != req.user.user_name)
+                return res.send(formatResult(404, 'quiz not found'))
+        }
+
+        if (isInstructor) {
+            quiz = await addQuizUsages(quiz)
+        }
+
+        quiz = await addAttachmentMediaPaths([quiz])
+        quiz = await addAttachedCourse(quiz)
+        quiz = await addQuizTarget(quiz)
+        quiz = quiz[0]
+        return res.send(formatResult(u, u, quiz))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    if (isInstructor) {
-      quiz = await addQuizUsages(quiz)
-    }
-
-    quiz = await addAttachmentMediaPaths([quiz])
-    quiz = await addAttachedCourse(quiz)
-    quiz = await addQuizTarget(quiz)
-    quiz = quiz[0]
-    return res.send(formatResult(u, u, quiz))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 
@@ -357,56 +357,56 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
  *         description: Internal Server error
  */
 router.get('/:id/attachment/:file_name', async (req, res) => {
-  try {
+    try {
 
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const quiz = await findDocument(Quiz, {
-      _id: req.params.id
-    })
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        const quiz = await findDocument(Quiz, {
+            _id: req.params.id
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
-    let file_found = false
+        let file_found = false
 
-    for (const i in quiz.questions) {
-      if (quiz.questions[i].type.includes('file_select')) {
-        for (const k in quiz.questions[i].options.choices) {
-          if (quiz.questions[i].options.choices[k].src == req.params.file_name) {
-            file_found = true
-            break
-          }
+        for (const i in quiz.questions) {
+            if (quiz.questions[i].type.includes('file_select')) {
+                for (const k in quiz.questions[i].options.choices) {
+                    if (quiz.questions[i].options.choices[k].src == req.params.file_name) {
+                        file_found = true
+                        break
+                    }
+                }
+            }
+            if (file_found)
+                break
         }
-      }
-      if (file_found)
-        break
+        if (!file_found)
+            return res.send(formatResult(404, 'file not found'))
+
+        const user = await findDocument(User, {
+            _id: quiz.user
+        })
+
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`)
+        console.log(file_path)
+        const file_type = await findFileType(req.params.file_name)
+
+        if (file_type === 'image') {
+            sendResizedImage(req, res, file_path)
+        } else if (file_type == 'video') {
+            streamVideo(req, res, file_path)
+        } else {
+            return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+        }
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-    if (!file_found)
-      return res.send(formatResult(404, 'file not found'))
-
-    const user = await findDocument(User, {
-      _id: quiz.user
-    })
-
-    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${quiz._id}/${req.params.file_name}`)
-    console.log(file_path)
-    const file_type = await findFileType(req.params.file_name)
-
-    if (file_type === 'image') {
-      sendResizedImage(req, res, file_path)
-    } else if (file_type == 'video') {
-      streamVideo(req, res, file_path)
-    } else {
-      return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
-    }
-
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -436,52 +436,52 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/', async (req, res) => {
-  try {
-    const {
-      error
-    } = validate_quiz(req.body)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validate_quiz(req.body)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    let user_category = await findDocument(User_category, {
-      name: 'INSTRUCTOR'
-    })
+        let user_category = await findDocument(User_category, {
+            name: 'INSTRUCTOR'
+        })
 
-    let user = await findDocument(User, {
-      user_name: req.body.user
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
+        let user = await findDocument(User, {
+            user_name: req.body.user
+        })
+        if (!user)
+            return res.send(formatResult(404, 'user not found'))
 
-    if (user.category != user_category._id)
-      return res.send(formatResult(404, 'user can\'t create quiz'))
+        if (user.category != user_category._id)
+            return res.send(formatResult(404, 'user can\'t create quiz'))
 
-    // check if quizname exist
-    let quiz = await findDocument(Quiz, {
-      name: req.body.name,
-      user: user._id
-    })
-    if (quiz)
-      return res.send(formatResult(400, 'name was taken'))
+        // check if quizname exist
+        let quiz = await findDocument(Quiz, {
+            name: req.body.name,
+            user: user._id
+        })
+        if (quiz)
+            return res.send(formatResult(400, 'name was taken'))
 
-    const validQuestions = validateQuestions(req.body.questions)
-    if (validQuestions.status !== true)
-      return res.send(formatResult(400, validQuestions.error))
+        const validQuestions = validateQuestions(req.body.questions)
+        if (validQuestions.status !== true)
+            return res.send(formatResult(400, validQuestions.error))
 
-    let result = await createDocument(Quiz, {
-      name: req.body.name,
-      duration: req.body.duration,
-      instructions: req.body.instructions,
-      user: user._id,
-      questions: req.body.questions,
-      total_marks: validQuestions.total_marks,
-      passMarks: req.body.passMarks
-    })
+        let result = await createDocument(Quiz, {
+            name: req.body.name,
+            duration: req.body.duration,
+            instructions: req.body.instructions,
+            user: user._id,
+            questions: req.body.questions,
+            total_marks: validQuestions.total_marks,
+            passMarks: req.body.passMarks
+        })
 
-    return res.send(result)
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(result)
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -516,108 +516,108 @@ router.post('/', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id', async (req, res) => {
-  try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    error = validate_quiz(req.body)
-    error = error.error
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        error = validate_quiz(req.body)
+        error = error.error
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    let user_category = await findDocument(User_category, {
-      name: 'INSTRUCTOR'
-    })
+        let user_category = await findDocument(User_category, {
+            name: 'INSTRUCTOR'
+        })
 
-    let user = await findDocument(User, {
-      user_name: req.body.user
-    })
-    if (!user)
-      return res.send(formatResult(404, 'user not found'))
+        let user = await findDocument(User, {
+            user_name: req.body.user
+        })
+        if (!user)
+            return res.send(formatResult(404, 'user not found'))
 
-    if (user.category != user_category._id)
-      return res.send(formatResult(404, 'user can\'t create quiz'))
+        if (user.category != user_category._id)
+            return res.send(formatResult(404, 'user can\'t create quiz'))
 
-    // check if quiz exist
-    let quiz = await findDocument(Quiz, {
-      _id: req.params.id,
-      user: user._id
-    }, u, false)
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        // check if quiz exist
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id,
+            user: user._id
+        }, u, false)
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
-    let quiz_copy = quiz
+        let quiz_copy = quiz
 
-    // check if quizname exist
-    quiz = await findDocument(Quiz, {
-      _id: {
-        $ne: req.params.id
-      },
-      name: req.body.name
-    })
-    if (quiz)
-      return res.send(formatResult(400, 'name was taken'))
+        // check if quizname exist
+        quiz = await findDocument(Quiz, {
+            _id: {
+                $ne: req.params.id
+            },
+            name: req.body.name
+        })
+        if (quiz)
+            return res.send(formatResult(400, 'name was taken'))
 
-    quiz = quiz_copy
-    quiz_copy = simplifyObject(quiz)
+        quiz = quiz_copy
+        quiz_copy = simplifyObject(quiz)
 
-    const validQuestions = validateQuestions(req.body.questions)
-    if (validQuestions.status !== true)
-      return res.send(formatResult(400, validQuestions.error))
+        const validQuestions = validateQuestions(req.body.questions)
+        if (validQuestions.status !== true)
+            return res.send(formatResult(400, validQuestions.error))
 
-    req.body.total_marks = validQuestions.total_marks
+        req.body.total_marks = validQuestions.total_marks
 
-    quiz.name = req.body.name
-    quiz.instructions = req.body.instructions
-    quiz.duration = req.body.duration
-    quiz.questions = req.body.questions
-    quiz.total_marks = req.body.total_marks
-    quiz.user = user._id
-    quiz.published = req.body.published
-    quiz.passMarks = req.body.passMarks
+        quiz.name = req.body.name
+        quiz.instructions = req.body.instructions
+        quiz.duration = req.body.duration
+        quiz.questions = req.body.questions
+        quiz.total_marks = req.body.total_marks
+        quiz.user = user._id
+        quiz.published = req.body.published
+        quiz.passMarks = req.body.passMarks
 
-    await quiz.save()
+        await quiz.save()
 
 
-    // delete removed files
-    for (const i in quiz_copy.questions) {
-      if (
-        quiz_copy.questions[i].type.includes("file_select")
-      ) {
-        let current_question = quiz.questions.filter(q = q._id == quiz_copy.questions[i]._id)
-        current_question = current_question[0]
-        for (const j in quiz_copy.questions[i].options.choices) {
-          let deletePicture = true
-          if (current_question) {
-            if (current_question.type.includes('file_select')) {
-              for (const k in current_question.options.choices) {
-                if (quiz_copy.questions[i].options.choices[j].src === current_question.options.choices[k].src) {
-                  deletePicture = false
+        // delete removed files
+        for (const i in quiz_copy.questions) {
+            if (
+                quiz_copy.questions[i].type.includes("file_select")
+            ) {
+                let current_question = quiz.questions.filter(q = q._id == quiz_copy.questions[i]._id)
+                current_question = current_question[0]
+                for (const j in quiz_copy.questions[i].options.choices) {
+                    let deletePicture = true
+                    if (current_question) {
+                        if (current_question.type.includes('file_select')) {
+                            for (const k in current_question.options.choices) {
+                                if (quiz_copy.questions[i].options.choices[j].src === current_question.options.choices[k].src) {
+                                    deletePicture = false
+                                }
+                            }
+                        }
+                    }
+                    if (deletePicture) {
+                        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`)
+                        fs.exists(path, (exists) => {
+                            if (exists) {
+                                fs.unlink(path)
+                            }
+                        })
+                    }
                 }
-              }
             }
-          }
-          if (deletePicture) {
-            const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz_copy.questions[i].options.choices[j].src}`)
-            fs.exists(path, (exists) => {
-              if (exists) {
-                fs.unlink(path)
-              }
-            })
-          }
         }
-      }
+        quiz = await addQuizUsages([quiz])
+        quiz = await addAttachedCourse(quiz)
+        quiz = quiz[0]
+        return res.send(formatResult(200, 'UPDATED', quiz))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-    quiz = await addQuizUsages([quiz])
-    quiz = await addAttachedCourse(quiz)
-    quiz = quiz[0]
-    return res.send(formatResult(200, 'UPDATED', quiz))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -657,84 +657,84 @@ router.put('/:id', async (req, res) => {
  *         description: Internal Server error
  */
 router.put('/:id/target', async (req, res) => {
-  try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    error = validate_quiz(req.body, true)
-    error = error.error
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        error = validate_quiz(req.body, true)
+        error = error.error
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    // check if quiz exist
-    let quiz = await findDocument(Quiz, {
-      _id: req.params.id
-    }, u, false)
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        // check if quiz exist
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id
+        }, u, false)
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
 
-    req.body.type = req.body.type.toLowerCase()
+        req.body.type = req.body.type.toLowerCase()
 
-    const allowedTargets = ['chapter', 'course', 'faculty_college_year']
+        const allowedTargets = ['chapter', 'course', 'faculty_college_year']
 
-    if (!allowedTargets.includes(req.body.type))
-      return res.send(formatResult(400, 'invalid quiz target_type'))
+        if (!allowedTargets.includes(req.body.type))
+            return res.send(formatResult(400, 'invalid quiz target_type'))
 
-    let target
+        let target
 
-    switch (req.body.type) {
-      case 'chapter':
-        target = await findDocument(Chapter, {
-          _id: req.body.id
-        })
-        break;
+        switch (req.body.type) {
+            case 'chapter':
+                target = await findDocument(Chapter, {
+                    _id: req.body.id
+                })
+                break;
 
-      case 'course':
-        target = await findDocument(Course, {
-          _id: req.body.id
-        })
-        break;
+            case 'course':
+                target = await findDocument(Course, {
+                    _id: req.body.id
+                })
+                break;
 
-      case 'faculty_college_year':
-        target = await findDocument(Faculty_college_year, {
-          _id: req.body.id
-        })
-        break;
+            case 'faculty_college_year':
+                target = await findDocument(Faculty_college_year, {
+                    _id: req.body.id
+                })
+                break;
 
-      default:
-        break;
+            default:
+                break;
+        }
+
+        if (!target)
+            return res.send(formatResult(404, 'quiz target not found'))
+
+        // remove the previously attached quiz
+        const last_targeted_quiz = await findDocument(Quiz, {
+            _id: {
+                $ne: req.params.id
+            },
+            "target.id": req.body.id
+        }, u, false)
+        if (last_targeted_quiz) {
+            last_targeted_quiz.target = undefined
+            await last_targeted_quiz.save()
+        }
+
+        quiz.target = {
+            type: req.body.type,
+            id: req.body.id
+        }
+
+        await quiz.save()
+
+        return res.send(formatResult(200, 'UPDATED', quiz))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    if (!target)
-      return res.send(formatResult(404, 'quiz target not found'))
-
-    // remove the previously attached quiz
-    const last_targeted_quiz = await findDocument(Quiz, {
-      _id: {
-        $ne: req.params.id
-      },
-      "target.id": req.body.id
-    }, u, false)
-    if (last_targeted_quiz) {
-      last_targeted_quiz.target = undefined
-      await last_targeted_quiz.save()
-    }
-
-    quiz.target = {
-      type: req.body.type,
-      id: req.body.id
-    }
-
-    await quiz.save()
-
-    return res.send(formatResult(200, 'UPDATED', quiz))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 
@@ -764,29 +764,29 @@ router.put('/:id/target', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id/target', async (req, res) => {
-  try {
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    // check if quiz exist
-    let quiz = await findDocument(Quiz, {
-      _id: req.params.id,
-      user: req.user._id
-    }, u, false)
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        // check if quiz exist
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id,
+            user: req.user._id
+        }, u, false)
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
-    quiz.target = undefined
+        quiz.target = undefined
 
-    await quiz.save()
+        await quiz.save()
 
-    return res.send(formatResult(200, 'UPDATED', quiz))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
+        return res.send(formatResult(200, 'UPDATED', quiz))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
 })
 
 /**
@@ -815,54 +815,54 @@ router.delete('/:id/target', async (req, res) => {
  *         description: Internal Server error
  */
 router.post('/:id/attachment', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+    try {
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    const quiz = await findDocument(Quiz, {
-      _id: req.params.id
-    })
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        const quiz = await findDocument(Quiz, {
+            _id: req.params.id
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
-    const user = await findDocument(User, {
-      _id: quiz.user
-    })
+        const user = await findDocument(User, {
+            _id: quiz.user
+        })
 
-    const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
 
-    req.kuriousStorageData = {
-      dir: path,
-    }
-
-    let file_missing = false
-
-    for (const i in quiz.questions) {
-      if (quiz.questions[i].type.includes('file_select')) {
-        for (const k in quiz.questions[i].options.choices) {
-          const file_found = await fs.exists(`${path}/${quiz.questions[i].options.choices[k].src}`)
-          if (!file_found) {
-            file_missing = true
-          }
+        req.kuriousStorageData = {
+            dir: path,
         }
-      }
+
+        let file_missing = false
+
+        for (const i in quiz.questions) {
+            if (quiz.questions[i].type.includes('file_select')) {
+                for (const k in quiz.questions[i].options.choices) {
+                    const file_found = await fs.exists(`${path}/${quiz.questions[i].options.choices[k].src}`)
+                    if (!file_found) {
+                        file_missing = true
+                    }
+                }
+            }
+        }
+        if (!file_missing)
+            return res.send(formatResult(400, 'all attachments for this quiz were already uploaded'))
+
+        upload_multiple_images(req, res, async (err) => {
+            if (err)
+                return res.send(formatResult(500, err.message))
+
+            return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
+        })
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-    if (!file_missing)
-      return res.send(formatResult(400, 'all attachments for this quiz were already uploaded'))
-
-    upload_multiple_images(req, res, async (err) => {
-      if (err)
-        return res.send(formatResult(500, err.message))
-
-      return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
-    })
-
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 /**
@@ -891,134 +891,144 @@ router.post('/:id/attachment', async (req, res) => {
  *         description: Internal Server error
  */
 router.delete('/:id', async (req, res) => {
-  try {
+    try {
 
-    let {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.send(formatResult(400, error.details[0].message))
+        let {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
 
-    let quiz = await findDocument(Quiz, {
-      _id: req.params.id
-    })
-    if (!quiz)
-      return res.send(formatResult(404, 'quiz not found'))
+        let quiz = await findDocument(Quiz, {
+            _id: req.params.id
+        })
+        if (!quiz)
+            return res.send(formatResult(404, 'quiz not found'))
 
-    // check if the quiz is never used
-    let quiz_used = false
+        // check if the quiz is never used
+        let quiz_used = false
 
-    const submission = await findDocument(Quiz_submission, {
-      quiz: req.params.id
-    })
-    if (submission)
-      quiz_used = true
+        const submission = await findDocument(Quiz_submission, {
+            quiz: req.params.id
+        })
+        if (submission)
+            quiz_used = true
 
-    if (!quiz_used) {
-      let user = await findDocument(User, {
-        _id: quiz.user
-      })
+        if (!quiz_used) {
+            let user = await findDocument(User, {
+                _id: quiz.user
+            })
 
-      let result = await deleteDocument(Quiz, req.params.id)
+            let result = await deleteDocument(Quiz, req.params.id)
 
-      const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
-      fs.exists(path, (exists) => {
-        if (exists) {
-          fs.remove(path)
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${req.params.id}`)
+            fs.exists(path, (exists) => {
+                if (exists) {
+                    fs.remove(path)
+                }
+            })
+
+            return res.send(result)
         }
-      })
 
-      return res.send(result)
+        const update_quiz = await updateDocument(Quiz, req.params.id, {
+            status: 0
+        })
+        return res.send(formatResult(200, 'quiz couldn\'t be deleted because it was used, instead it was disabled', update_quiz.data))
+    } catch (error) {
+        return res.send(formatResult(500, error))
     }
-
-    const update_quiz = await updateDocument(Quiz, req.params.id, {
-      status: 0
-    })
-    return res.send(formatResult(200, 'quiz couldn\'t be deleted because it was used, instead it was disabled', update_quiz.data))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
 })
 
 function validateQuestions(questions) {
-  const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_file_select', 'multiple_file_select', 'file_upload']
-  let message = ''
-  let marks = 0
-  for (let i in questions) {
-    i = parseInt(i)
-    if (!allowedQuestionTypes.includes(questions[i].type)) {
-      message = `question type "${questions[i].type}" is not supported`
-      break;
-    }
-    if (questions[i].type.includes('select')) {
-      if (!questions[i].options) {
-        message = `question ${i + 1} must have selection options`
-        break;
-      } else {
-        if (questions[i].options.choices.length < 2) {
-          message = `question ${i + 1} must have more than one selection choices`
-          break;
-        }
-        if (!questions[i].options.choices && !questions[i].type.includes('file')) {
-          message = `question ${i + 1} must have selection choices`
-          break;
-        }
-        let right_option_found = false
-        for (let k in questions[i].options.choices) {
-          k = parseInt(k)
-          let times
-          if (questions[i].type === 'single_text_select' || questions[i].type === 'multi_text_select') {
-            times = questions[i].options.choices.filter(choice => choice.text == questions[i].options.choices[k].text).length
-            if (!questions[i].options.choices[k].text) {
-              message = `choice ${k + 1} in question ${i + 1} must have text`
-              break;
-            }
-          }
-          if (questions[i].type === 'single_file_select' || questions[i].type === 'multi_file_select') {
-            times = questions[i].options.choices.filter(choice => choice.src == questions[i].options.choices[k].src).length
-            if (!questions[i].options.choices[k].src) {
-              message = `choice ${k + 1} in question ${i + 1} must have attachment src`
-              break;
-            }
-          }
-          if (questions[i].options.choices[k].right) {
-            right_option_found = true
-          }
-          if (times > 1) {
-            message = `question ${i + 1} must have identical choices`
+    const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_file_select', 'multiple_file_select', 'file_upload']
+    let message = ''
+    let marks = 0
+    for (let i in questions) {
+        i = parseInt(i)
+        if (!allowedQuestionTypes.includes(questions[i].type)) {
+            message = `question type "${questions[i].type}" is not supported`
             break;
-          }
         }
-        if (!right_option_found) {
-          message = `question ${i + 1} must have one right selection choice`
-          break;
+        if (questions[i].type.includes('select')) {
+            if (!questions[i].options) {
+                message = `question ${i + 1} must have selection options`
+                break;
+            } else {
+                if (questions[i].options.choices.length < 2) {
+                    message = `question ${i + 1} must have more than one selection choices`
+                    break;
+                }
+                if (!questions[i].options.choices && !questions[i].type.includes('file')) {
+                    message = `question ${i + 1} must have selection choices`
+                    break;
+                }
+                let right_option_found = false
+                for (let k in questions[i].options.choices) {
+                    k = parseInt(k)
+                    let times
+                    if (questions[i].type === 'single_text_select' || questions[i].type === 'multi_text_select') {
+                        times = questions[i].options.choices.filter(choice => choice.text == questions[i].options.choices[k].text).length
+                        if (!questions[i].options.choices[k].text) {
+                            message = `choice ${k + 1} in question ${i + 1} must have text`
+                            break;
+                        }
+                    }
+                    if (questions[i].type === 'single_file_select' || questions[i].type === 'multi_file_select') {
+                        times = questions[i].options.choices.filter(choice => choice.src == questions[i].options.choices[k].src).length
+                        if (!questions[i].options.choices[k].src) {
+                            message = `choice ${k + 1} in question ${i + 1} must have attachment src`
+                            break;
+                        }
+                    }
+                    if (questions[i].options.choices[k].right) {
+                        right_option_found = true
+                    }
+                    if (times > 1) {
+                        message = `question ${i + 1} must have identical choices`
+                        break;
+                    }
+                }
+                if (!right_option_found) {
+                    message = `question ${i + 1} must have one right selection choice`
+                    break;
+                }
+            }
         }
-      }
+
+        if (questions[i].type == "file_upload") {
+            if (!questions[i].allowed_files) {
+                message = `question"${i + 1}" must have files that students are allowed to submit`
+            }
+
+            if (!questions[i].allowed_files.length) {
+                message = `question"${i + 1}" must have files that students are allowed to submit`
+            }
+        }
+        marks += parseInt(questions[i].marks)
+        // more validations later
     }
-    marks += parseInt(questions[i].marks)
-    // more validations later
-  }
-  return message === '' ? {
-    status: true,
-    total_marks: marks
-  } : {
-    status: false,
-    error: message
-  }
+    return message === '' ? {
+        status: true,
+        total_marks: marks
+    } : {
+        status: false,
+        error: message
+    }
 }
 
 // replace user id by the user information
 async function injectInstructor(quizes) {
-  for (const i in quizes) {
-    const user = await Instructor.findOne({
-      _id: quizes[i].user
-    })
-    quizes[i].user = _.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
-    if (quizes[i].user.profile) {
-      quizes[i].user.profile = `${process.env.HOST}/kurious/file/userProfile/${user._id}`
+    for (const i in quizes) {
+        const user = await Instructor.findOne({
+            _id: quizes[i].user
+        })
+        quizes[i].user = _.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
+        if (quizes[i].user.profile) {
+            quizes[i].user.profile = `${process.env.HOST}/kurious/file/userProfile/${user._id}`
+        }
     }
-  }
-  return quizes
+    return quizes
 }
 
 // export the router

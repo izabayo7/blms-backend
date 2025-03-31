@@ -47,6 +47,9 @@ const quiz_schema = new mongoose.Schema({
             type: Boolean,
             default: false
         },
+        allowed_files:{
+            type: Array
+        },
         options: {
             list_style_type: {
                 type: String
@@ -104,6 +107,7 @@ function validate_quiz(body, target = false) {
                 marks: Joi.number().required(),
                 details: Joi.string().min(5).required(),
                 required: Joi.boolean(),
+                allowed_files: Joi.array(),
                 options: {
                     list_style_type: Joi.string(),
                     choices: Joi.array().items(Joi.object({
