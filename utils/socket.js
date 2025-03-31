@@ -5,9 +5,12 @@ const {
     Student,
     Admin,
     getUnreadMesages,
+    getUserChatGroups,
     getPreviousMessages,
+    getPreviousMessagesInGroup,
     returnUser,
-    Message
+    Message,
+    ChatGroup
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -19,7 +22,7 @@ module.exports.listen = (app) => {
         socket.join(id)
 
         // send userInformation and his / her contacts
-        socket.on('request-self-and-contacts', async () => {
+        socket.on('request-self-groups-and-contacts', async () => {
             // find the connected user
             user = await returnUser(id)
 
@@ -78,10 +81,13 @@ module.exports.listen = (app) => {
                 }
             }
 
+            const groups = await getUserChatGroups(id)
+
             // send the sound data
-            socket.emit('get-self-and-contacts', {
+            socket.emit('get-self-groups-and-contacts', {
                 userName: userName,
-                contacts: contacts
+                contacts: contacts,
+                groups: groups
             });
         })
 
@@ -89,16 +95,22 @@ module.exports.listen = (app) => {
         socket.on('request-unread-messages', async () => {
             // get un read messages
             const unreadMessages = await getUnreadMesages(id)
-
             // send the messages
             socket.emit('unread-messages', unreadMessages);
         })
 
         // get previous messages
         socket.on('get-messages', async ({
-            users
+            users,
+            groupId,
+            lastMessage
         }) => {
-            const messages = await getPreviousMessages(users)
+            let messages
+            if (groupId) {
+                messages = await getPreviousMessagesInGroup(groupId, lastMessage)
+            } else {
+                messages = await getPreviousMessages(users, lastMessage)
+            }
             // send the messages
             socket.emit('previous-messages', messages);
         })
@@ -152,14 +164,15 @@ module.exports.listen = (app) => {
         // save and deriver new messages
         socket.on('send-message', async ({
             recipients,
-            msg
+            msg,
+            group
         }) => {
-
             // save the message
             let newDocument = new Message({
                 sender: id,
                 receivers: recipients,
                 content: msg,
+                group: group
             })
 
             const saveDocument = await newDocument.save()
@@ -183,7 +196,6 @@ module.exports.listen = (app) => {
 
         // tell the sender that the message was recieved / read and update the document
         socket.on('message_received', async ({
-            reader,
             messageId
         }) => {
 
@@ -195,7 +207,7 @@ module.exports.listen = (app) => {
             let allRecieversRead = 1
 
             for (const i in document.receivers) {
-                if (document.receivers[i].id == reader) {
+                if (document.receivers[i].id == id) {
                     document.receivers[i].read = true
                 } else if (!document.receivers[i].read) {
                     allRecieversRead = 0
@@ -210,27 +222,38 @@ module.exports.listen = (app) => {
             if (updateDocument) {
                 socket.broadcast.to(document.sender).emit('message-read', {
                     messageId: document._id,
-                    reader: reader
+                    reader: id
                 })
             }
         })
 
         // mark all messages in a coversation as read
         socket.on('all_messages_read', async ({
-            receiver,
-            sender
+            sender,
+            groupId
         }) => {
-            // save the message
-            let documents = await Message.find({
-                sender: sender,
-                "receivers.id": receiver,
-                read: false
-            })
+            let documents
+            // fetch unread messages from the sender
+            if (sender) {
+                // save the message
+                documents = await Message.find({
+                    sender: sender,
+                    group: undefined,
+                    receivers: { $elemMatch: { id: id, read: false } }
+                })
+            } 
+            // fetch unread messages in a group
+            else {
+                documents = await Message.find({
+                    group: groupId,
+                    receivers: { $elemMatch: { id: id, read: false } }
+                })
+            }
             for (const i in documents) {
                 let allRecieversRead = 1
 
                 for (const k in documents[i].receivers) {
-                    if (documents[i].receivers[k].id == receiver) {
+                    if (documents[i].receivers[k].id == id) {
                         documents[i].receivers[k].read = true
                     } else if (!documents[i].receivers[k].read) {
                         allRecieversRead = 0
@@ -244,10 +267,11 @@ module.exports.listen = (app) => {
                 if (updateDocument) {
                     socket.broadcast.to(documents[i].sender).emit('message-read', {
                         messageId: documents[i]._id,
-                        reader: receiver
+                        reader: id
                     })
-                    socket.emit('unread_decreased', {
-                        sender: sender
+                    socket.emit('all_read', {
+                        sender: sender,
+                        group: groupId
                     })
                 }
             }
@@ -255,25 +279,51 @@ module.exports.listen = (app) => {
 
         // tell the recipients that someone is typing
         socket.on('typing', async ({
-            recipients,
-            typer
+            recipients
         }) => {
 
             recipients.forEach(recipient => {
-                socket.broadcast.to(recipient.id).emit('typing', typer)
+                socket.broadcast.to(recipient.id).emit('typing', id)
             })
         })
 
         // notify when some one stops writing
         socket.on('typing-over', async ({
-            recipients,
-            typer
+            recipients
         }) => {
 
             recipients.forEach(recipient => {
-                socket.broadcast.to(recipient.id).emit('typing-over', typer)
+                socket.broadcast.to(recipient.id).emit('typing-over', id)
             })
         })
+        // save and deriver new messages
+        socket.on('create-group', async ({
+            name,
+            description,
+            private,
+            members
+        }) => {
+            // save the message
+            let newDocument = new ChatGroup({
+                name: name,
+                description: description,
+                private: private,
+                members: members,
+            })
+
+            const saveDocument = await newDocument.save()
+
+            if (saveDocument) {
+                members = members.filter(m => m.id !== id)
+                members.forEach(member => {
+                    // tell members that they were invited
+                    socket.broadcast.to(member.id).emit('invited-in-group', newDocument)
+                })
+                // send success mesage
+                socket.emit('group-created', newDocument)
+            }
+        })
+
     });
     return io
 }

@@ -21,21 +21,46 @@
       <div class="chat-sidebar">
         <h3><i class="fas fa-comments"></i> User Name:</h3>
         <h2 id="user-name"></h2>
-        <h3><i class="fas fa-users"></i> Contacts</h3>
+        <h3><i class="fas fa-user-friends"></i> Contacts</h3>
         <ul id="contacts"></ul>
+        <h3><i class="fas fa-users"></i> Groups <button id="new-group">new group</button></h3>
+        <ul id="groups">
+
+        </ul>
       </div>
       <div class="chat-messages">
         select a conversation
       </div>
+      <div class="new-group" hidden>
+        <form id="new-group-form">
+          <div class="input-container"><label>name</label>
+            <input type="text" id="group_name" class="wide-input" required></div>
+          <div class="input-container"><label>description</label>
+            <input type="text" id="group_description" class="wide-input" required></div>
+          <div class="input-container">
+            <label class="switch">
+              <input type="checkbox" id="private">
+              <span class="slider round"></span>
+            </label> Private
+          </div>
+          <div class="input-container">
+            <label for="room">Members</label>
+            <select name="user" id="members" multiple class="wider-input" required></select>
+          </div>
+          <div class="input-container">
+            <button class="btn">SaveGroup</button>
+
+          </div>
+        </form><button id="cancelGroupCreation" class="btn">Cancel</button>
+      </div>
     </main>
     <div class="chat-form-container">
       <form id="chat-form">
-        <input id="msg" type="text" placeholder="Enter Message" required autocomplete="off" />
+        <input id="msg" type="text" placeholder="Enter Message" required autocomplete="off" required />
         <button class="btn"><i class="fas fa-paper-plane"></i> Send</button>
       </form>
     </div>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"
     integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>

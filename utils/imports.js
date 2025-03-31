@@ -35,6 +35,7 @@ const { StudentProgress, validateStudentProgress } = require('../models/studentP
 const { Quiz, validateQuiz } = require('../models/quiz/quiz.model')
 const { QuizSubmission, validateQuizSubmission } = require('../models/quizSubmission/quizSubmission.model')
 const { fileFilter } = require('./multer/fileFilter')
+const { chatGroup, validatechatGroup } = require('../models/chat-group/chat-group.model')
 
 module.exports.Admin = Admin
 module.exports.validateAdmin = validateAdmin
@@ -71,6 +72,8 @@ module.exports.validateQuiz = validateQuiz
 module.exports.QuizSubmission = QuizSubmission
 module.exports.validateQuizSubmission = validateQuizSubmission
 module.exports.fileFilter = fileFilter
+module.exports.ChatGroup = chatGroup
+module.exports.validatechatGroup = validatechatGroup
 
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
 
@@ -127,7 +130,6 @@ module.exports.findDocument = async (model, id) => {
 
 module.exports.getCollege = async (id, type) => {
     let course = type === 'chapter' ? await Course.findOne({ _id: id }) : undefined
-    console.log(course)
     let facilityCollegeYear = await module.exports.FacilityCollegeYear.findOne({ _id: type === 'chapter' ? course.facilityCollegeYear : id })
     if (!facilityCollegeYear)
         return `facilityCollegeYear ${id} Not Found`
@@ -142,18 +144,31 @@ module.exports.getCourse = async (id) => {
 module.exports.removeDocumentVersion = (obj) => {
     return module.exports._.omit(obj, '__v')
 }
-
+// get un read messages for a user
 module.exports.getUnreadMesages = async (userId) => {
     const messages = await Message.find(
-        { "receivers.id": userId, read: false }
+        { receivers: { $elemMatch: { id: userId, read: false } } }
     ).lean()
     return messages
 }
-
-module.exports.getPreviousMessages = async (users) => {
-    const messages = await Message.find({ $or: [{ sender: users[0], "receivers.id": users[1] }, { sender: users[1], "receivers.id": users[0] }] }).lean()
+// get groups in which a user belong
+module.exports.getUserChatGroups = async (userId) => {
+    const groups = await this.ChatGroup.find(
+        { members: { $elemMatch: { id: userId, status: true } }, status: true }
+    ).lean()
+    return groups
+}
+// get history conversations btn two users
+module.exports.getPreviousMessages = async (users, lastMessage) => {
+    const messages = lastMessage ? await Message.find({ _id: { $lt: lastMessage }, $or: [{ sender: users[0], "receivers.id": users[1] }, { sender: users[1], "receivers.id": users[0] }], group: undefined }).lean() : await Message.find({ $or: [{ sender: users[0], "receivers.id": users[1] }, { sender: users[1], "receivers.id": users[0] }], group: undefined }).lean()
     return messages
 }
+// get histroy conversations in a group
+module.exports.getPreviousMessagesInGroup = async (groupId, lastMessage) => {
+    const messages = lastMessage ? await Message.find({ _id: { $lt: lastMessage }, group: groupId }).lean() : await Message.find({ group: groupId }).lean()
+    return messages
+}
+// find a specific user
 module.exports.returnUser = async (id) => {
     let user = await Admin.findOne({ _id: id })
     if (user)
