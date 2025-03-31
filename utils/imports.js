@@ -1172,6 +1172,8 @@ exports.sendResizedImage = async (req, res, path) => {
   })
 }
 
+// npm uninstall gifsicle pngquant-bin compress-images --save
+
 // send video
 exports.streamVideo = async (req, res, path) => {
   this.fs.stat(path, (err, stat) => {
