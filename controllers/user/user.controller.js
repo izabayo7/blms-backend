@@ -1277,6 +1277,59 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
 
 /**
  * @swagger
+ * /user/status/{username}/{value}:
+ *   put:
+ *     tags:
+ *       - User
+ *     description: Change user status
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: username
+ *         description: Username
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: value
+ *         description: Status
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: ['hold','unhold']
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/status/:username/:value', auth, async (req, res) => {
+    try {
+        if (!['hold','unhold'].includes(req.params.value))
+            return res.send(formatResult(400, "invalid status"))
+
+        // check if user exist
+        let user = await findDocument(User, {
+            user_name: req.params.username
+        })
+        if (!user)
+            return res.send(formatResult(400, `User not found`))
+
+        const update_user = await updateDocument(User, req.params.id, {
+            "status.disabled": req.params.value === 'hold' ? 1 : 0
+        })
+        return res.send(formatResult(200, 'User account is now ' + req.params.value))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
+/**
+ * @swagger
  * /user/{id}:
  *   delete:
  *     tags:
