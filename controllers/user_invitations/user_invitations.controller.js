@@ -2,7 +2,8 @@ const { User_invitation, validate_user_invitation } = require('../../models/user
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 const {
   formatResult, u, User_category, College, ONE_DAY, updateDocument
-} = require('../../utils/imports')
+} = require('../../utils/imports');
+const { sendInvitationMail } = require('../email/email.controller');
 
 const expiration_date = new Date(new Date().getTime() + (ONE_DAY * 7)).toISOString()
 
@@ -122,6 +123,9 @@ exports.createUserInvitation = async (req, res) => {
       });
 
       const result = await newDocument.save();
+
+      await sendInvitationMail(req, res);
+
       savedInvitations.push(result)
     }
 
