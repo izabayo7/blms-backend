@@ -247,6 +247,12 @@ exports.createMultipleUserInvitations = async (req, res) => {
                 type: String,
                 required: true
             },
+            'USER CATEGORY': {
+                prop: 'category',
+                type: String,
+                enum: ["STUDENT","INSTRUCTOR"],
+                required: true
+            },
             'REGISTRATION NUMBER': {
                 prop: 'user_name',
                 type: String
@@ -255,17 +261,17 @@ exports.createMultipleUserInvitations = async (req, res) => {
 
         const readXlsxFile = require('read-excel-file/node')
 
-        readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema}).then(({rows, errors}) => {
-            // `errors` list items have shape: `{ row, column, error, value }`.
-            if (errors.length)
-                return res.send(formatResult(400, "", errors[0]))
+        const {rows,errors} = await readXlsxFile('./controllers/user/file_example_XLS_50.xlsx', {schema})
 
-            // `rows` is an array of rows
-            // each row being an array of cells.
-            result = rows
-            console.table(rows)
-            return res.status(201).send(result)
-        })
+        // `errors` list items have shape: `{ row, column, error, value }`.
+        if (errors.length)
+            return res.send(formatResult(400, "", errors[0]))
+
+        // `rows` is an array of rows
+        // each row being an array of cells.
+        result = rows
+        console.table(rows)
+        return res.status(201).send(result)
 
         const {error} = validate_user_invitation(req.body);
         if (error) return res.send(formatResult(400, error.details[0].message));

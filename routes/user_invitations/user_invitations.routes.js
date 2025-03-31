@@ -1,6 +1,16 @@
 const express = require('express')
-const { getAllInvitations, createUserInvitation, getMyInvitations, renewInvitation, deleteInvitation, acceptOrDenyInvitation, getInvitationbyToken } = require('../../controllers/user_invitations/user_invitations.controller')
-const { auth } = require('../../utils/imports')
+const {filterUsers} = require("../../middlewares/auth.middleware");
+const {createMultipleUserInvitations} = require("../../controllers/user_invitations/user_invitations.controller");
+const {
+    getAllInvitations,
+    createUserInvitation,
+    getMyInvitations,
+    renewInvitation,
+    deleteInvitation,
+    acceptOrDenyInvitation,
+    getInvitationbyToken
+} = require('../../controllers/user_invitations/user_invitations.controller')
+const {auth} = require('../../utils/imports')
 const router = express.Router()
 
 router.route('/')
@@ -61,7 +71,21 @@ router.route('/')
      *       200:
      *         description: Success
      */
-    .post([auth, createUserInvitation])
+    .post([auth, filterUsers(["ADMIN"]), createUserInvitation])
+    /**
+     * @swagger
+     * /user_invitations/mega:
+     *   post:
+     *     tags:
+     *       - User_invitation
+     *     description: Creates User_invitations from uploaded file
+     *     security:
+     *       - bearerAuth: -[]
+     *     responses:
+     *       200:
+     *         description: Success
+     */
+    .post([auth, filterUsers(["ADMIN"]), createMultipleUserInvitations])
 
 router.route('/all')
     /**
@@ -186,6 +210,6 @@ router.route('/:token/delete')
      *       500:
      *         description: Internal Server Error
      */
-    .delete([auth, deleteInvitation])
+    .delete([auth, filterUsers(["ADMIN"]), deleteInvitation])
 
 exports.User_invitation_routes = router
