@@ -306,7 +306,7 @@ async function getPaymentHistory(req, res) {
 
         if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, u, []));
 
-        const payments = await Account_payments.find({user: req.user._id}).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
+        const payments = await Account_payments.find(["ADMIN", "SUPERADMIN"].includes(req.user.category.name) ? {college: req.user.college} : {user: req.user._id}).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
 
         return res.send(formatResult(200, u, payments));
     } catch (err) {
