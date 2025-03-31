@@ -947,6 +947,7 @@ module.exports.injectChapters = async (courses) => {
 
       for (const l in courses[i].chapters[k].attachments) {
         courses[i].chapters[k].attachments[l].download_link = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/attachment/${courses[i].chapters[k].attachments[l].src}/download`
+        courses[i].chapters[k].attachments[l].name = courses[i].chapters[k].attachments[l].src
       }
 
       // add assignments attached to chapters
