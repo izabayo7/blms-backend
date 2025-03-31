@@ -158,6 +158,9 @@ io.listen(server)
 // Serve the chatdemo
 app.use('/chat-demo', express.static(path.join(__dirname, 'chatDemo')));
 
+// Serve the chatdemo
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+
 // Serve the live
 app.use('/live', express.static(path.join(__dirname, 'views/live')));
 

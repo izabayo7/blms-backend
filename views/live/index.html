@@ -10,45 +10,9 @@
 </head>
 
 <body>
-    <button id="btn-open-room">Open Room</button>
-    <button id="btn-join-room">Join Room</button>
+    <button><a href="./video-conferencing.html">Meeting</a></button>
     <button><a href="./Scalable-Broadcast.html">broadcast</a></button>
-    <button><a href="./mixed.html">mixed</a></button>
+    <button><a href="./mixed.html">broadcast + screen sharing</a></button>
     <hr>
 </body>
-
-<script>
-    var connection = new RTCMultiConnection();
-
-    // this line is VERY_important
-    connection.socketURL = '/';
-
-    // all below lines are optional; however recommended.
-
-    connection.session = {
-        audio: true,
-        video: true
-    };
-
-    connection.sdpConstraints.mandatory = {
-        OfferToReceiveAudio: true,
-        OfferToReceiveVideo: true
-    };
-
-    connection.onstream = function (event) {
-        document.body.appendChild(event.mediaElement);
-    };
-    var predefinedRoomId = 'YOUR_Name';
-
-    document.getElementById('btn-open-room').onclick = function () {
-        this.disabled = true;
-        connection.open(predefinedRoomId);
-    };
-
-    document.getElementById('btn-join-room').onclick = function () {
-        this.disabled = true;
-        connection.join(predefinedRoomId);
-    };
-</script>
-
 </html>
