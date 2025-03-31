@@ -89,7 +89,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
 
             for (const j in courses) {
                 const chapters = await Chapter.find({course: courses[j]._id})
-                const ids = chapters.map(x=>x._id.toString())
+                const ids = chapters.map(x => x._id.toString())
                 ids.push(courses[i]._id)
 
                 // check if there are assignments made by the user
@@ -234,7 +234,7 @@ router.get('/', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) =
  *       500:
  *         description: Internal Server error
  */
-router.get('/:id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
+router.get('/:id', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
         const {
             error
@@ -282,8 +282,11 @@ router.get('/:id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res)
  *       500:
  *         description: Internal Server error
  */
-router.get('/user/:user_name/:assignment_id', auth,filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
+router.get('/user/:user_name/:assignment_id', auth, filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
     try {
+
+        if (req.user.category.name === 'STUDENT' && req.params.user_name !== req.user.user_name)
+            return res.send(formatResult(403, 'You can only view your submissions'))
 
         // check if user exist
         let user = await findDocument(User, {
@@ -307,7 +310,7 @@ router.get('/user/:user_name/:assignment_id', auth,filterUsers(["INSTRUCTOR", "S
 
         result.assignment = assignment
         result = await injectUserFeedback(result)
-        result = await injectUser(result, 'user')
+        result = await injectUser([result], 'user')
         result = result[0]
         result.assignment = await addAssignmentTarget([result.assignment])
         result.assignment = await injectUser(result.assignment, 'user')
@@ -431,7 +434,6 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
  */
 router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
     try {
-        req.body.user = req.user.user_name
         let {
             error
         } = validate_assignment_submission(req.body)
@@ -447,7 +449,7 @@ router.post('/', auth, filterUsers(["STUDENT"]), async (req, res) => {
         if (assignment.status !== 'PUBLISHED')
             return res.send(formatResult(404, 'assignment is not available'))
 
-        const user_group = await get_faculty_college_year(req.body.assignment)
+        const user_group = await get_faculty_college_year(assignment)
 
         let user_user_group = await findDocument(User_user_group, {
             user: req.user._id,
@@ -514,12 +516,12 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        error = validate_assignment_submission(req.body)
+        error = validate_assignment_submission(req.body, req.user.category.name)
         error = error.error
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        let assignment_submission = await findDocument(Assignment_submission, {
+        let assignment_submission = await Assignment_submission.findOne({
             _id: req.params.id
         }).populate('assignment')
         if (!assignment_submission)
@@ -530,7 +532,7 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
 
         req.body.user = req.user._id
 
-        const user_group = await get_faculty_college_year(req.body.assignment)
+        const user_group = await get_faculty_college_year(assignment_submission.assignment)
 
         let user_user_group = await findDocument(User_faculty_college_year, {
             user: req.user._id,
@@ -541,6 +543,25 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
 
         if (req.user.category.name === 'INSTRUCTOR')
             req.body.marked = true
+
+        // delete removed files
+        for (const i in assignment_submission.attachments) {
+            let deleteFile = true
+            for (const j in req.body.attachments) {
+                if (assignment_submission.attachments[i].src === req.body.attachments[j].src) {
+                    deleteFile = false
+                    break
+                }
+            }
+            if (deleteFile) {
+                const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${assignment_submission.assignment._id}/submissions/${req.params.id}/${assignment_submission.attachments[i].src}`)
+                fs.exists(path, (exists) => {
+                    if (exists) {
+                        fs.unlink(path)
+                    }
+                })
+            }
+        }
 
         const result = await updateDocument(Assignment_submission, req.params.id, req.body)
 
@@ -639,7 +660,7 @@ router.post('/:id/attachment', auth, filterUsers(["STUDENT"]), async (req, res) 
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const assignment_submission = await findDocument(Assignment_submission, {
+        const assignment_submission = await Assignment_submission.findOne({
             _id: req.params.id,
             user: req.user._id
         }).populate('assignment')

@@ -78,6 +78,7 @@ const {Post_routes} = require('./routes/posts/posts.route');
 const announcement_controller = require('./controllers/announcements/announcements.controller');
 const payments_controller = require('./controllers/account_payments/account_payments.controller');
 const assignments_controller = require('./controllers/assignment/assignment.controller');
+const assignment_submission_controller = require('./controllers/assignment_submission/assignment_submission.controller');
 const college_payment_plans_controller = require('./controllers/college_payment_plans/college_payment_plans.controller');
 
 // use middlewares
@@ -135,6 +136,7 @@ app.use(`${basePath}/announcement`, auth, announcement_controller)
 app.use(`${basePath}/college_payment_plans`, auth, college_payment_plans_controller)
 app.use(`${basePath}/account_payments`, auth, payments_controller)
 app.use(`${basePath}/assignments`, auth, assignments_controller)
+app.use(`${basePath}/assignment_submission`, auth, assignment_submission_controller)
 
 // change faculty to faculty college
 

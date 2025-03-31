@@ -67,7 +67,7 @@ const schema = new mongoose.Schema({
 },{timestamps: true})
 
 // validate assignment_submision
-function validate_assignment_submission(credentials) {
+function validate_assignment_submission(credentials,category) {
     const schema = {
         assignment: Joi.ObjectId().required(),
         details: Joi.string(),
@@ -78,6 +78,9 @@ function validate_assignment_submission(credentials) {
             src: Joi.string().required()
         })),
     }
+    if(category === 'INSTRUCTOR')
+        schema.total_marks = Joi.number().required()
+
     return Joi.validate(credentials, schema)
 }
 
