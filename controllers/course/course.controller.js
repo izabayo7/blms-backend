@@ -791,25 +791,19 @@ router.post('/', async (req, res) => {
         } = validate_course(req.body)
         if (error)
             return res.send(formatResult(400, error.details[0].message))
-
-        let faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: req.body.faculty_college_year
-        })
-        if (!faculty_college_year)
-            return res.send(formatResult(404, 'faculty_college_year not found'))
+            let user_group = await findDocument(User_group, {
+                _id: req.body.user_group
+            })
+            if (!user_group)
+            return res.send(formatResult(404, 'User_group not found'))
+            console.log(user_group)
 
         let user_category = await findDocument(User_category, {
             name: 'INSTRUCTOR'
         })
 
-        let user = await findDocument(User, {
-            user_name: req.body.user
-        })
-        if (!user)
-            return res.send(formatResult(404, 'user not found'))
-
-        if (user.category != user_category._id)
-            return res.send(formatResult(404, 'user can\'t create course'))
+        if (req.user.category.name != "INSTRUCTOR")
+            return res.send(formatResult(404, 'you can\'t create course'))
 
         let course = await findDocument(Course, {
             name: req.body.name
@@ -819,8 +813,8 @@ router.post('/', async (req, res) => {
 
         let result = await createDocument(Course, {
             name: req.body.name,
-            user: user._id,
-            faculty_college_year: req.body.faculty_college_year,
+            user: req.user._id,
+            user_group: req.body.user_group,
             description: req.body.description
         })
 
