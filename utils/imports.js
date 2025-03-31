@@ -1443,7 +1443,7 @@ exports.injectFaculty_college_year = async (courses) => {
   return courses
 }
 
-exports.savedecodedBase64Image(dataString, dir) {
+exports.savedecodedBase64Image = (dataString, dir) => {
 
   var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
     response = {};
