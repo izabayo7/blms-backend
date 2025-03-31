@@ -7,7 +7,7 @@ function auth(req, res, next) {
         return res.send('No Token Found').status(401)
 
     try {
-        const decoded = jwt.verify(token, config.get('KuriousKey'))
+        const decoded = jwt.verify(token, config.get('auth_key'))
         req.user = decoded
         next()
     }

@@ -4,7 +4,7 @@ const {
     Joi,
     timestamps,
 } = require('../../utils/imports')
-const recieverSchema = new mongoose.Schema({
+const receiver_schema = new mongoose.Schema({
     id: {
         type: String,
         required: true
@@ -14,13 +14,13 @@ const recieverSchema = new mongoose.Schema({
         default: false
     },
 })
-recieverSchema.plugin(timestamps)
-const messageSchema = new mongoose.Schema({
+receiver_schema.plugin(timestamps)
+const message_schema = new mongoose.Schema({
     sender: {
         type: String,
         required: true
     },
-    receivers: [recieverSchema],
+    receivers: [receiver_schema],
     content: {
         type: String,
     },
@@ -36,10 +36,10 @@ const messageSchema = new mongoose.Schema({
     }
 })
 
-messageSchema.plugin(timestamps)
+message_schema.plugin(timestamps)
 
 // validate message
-function validateMessage(credentials) {
+function validate_message(credentials) {
     const schema = {
         sender: Joi.ObjectId().required(),
         receivers: Joi.array().min(1).items({ id: Joi.ObjectId().required() }),
@@ -52,8 +52,8 @@ function validateMessage(credentials) {
 }
 
 // create messages model
-const Message = mongoose.model('Message', messageSchema)
+const message = mongoose.model('message', message_schema)
 
 // export the model and the validation function
-module.exports.Message = Message
-module.exports.validateMessage = validateMessage
+module.exports.message = message
+module.exports.validate_message = validate_message

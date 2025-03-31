@@ -5,7 +5,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const QuizSchema = new mongoose.Schema({
+const quiz_schema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -34,7 +34,7 @@ const QuizSchema = new mongoose.Schema({
             choices: [{ text: { type: String }, src: { type: String }, right: {type: Boolean} }],
         },
     }],
-    totalMarks: {
+    total_marks: {
         type: Number,
         required: true
     },
@@ -47,10 +47,10 @@ const QuizSchema = new mongoose.Schema({
         default: false
     }
 })
-QuizSchema.plugin(timestamps);
+quiz_schema.plugin(timestamps);
 
-// validate Quiz
-function validateQuiz(body) {
+// validate quiz
+function validate_quiz(body) {
     const schema = {
         name: Joi.string().min(3).required(),
         instructions: Joi.string().min(3),
@@ -69,16 +69,16 @@ function validateQuiz(body) {
                 choices: Joi.array().items(Joi.object({ _id: Joi.ObjectId(), text: Joi.string(), src: Joi.string(), right: Joi.boolean() })).required(),
             },
         })).required(),
-        totalMarks: Joi.number(),
+        total_marks: Joi.number(),
         instructor: Joi.ObjectId().required(),
         published: Joi.boolean()
     }
     return Joi.validate(body, schema)
 }
 
-// create Quizs model
-const Quiz = mongoose.model('Quiz', QuizSchema)
+// create quizs model
+const quiz = mongoose.model('quiz', quiz_schema)
 
 // export the model and the validation function
-module.exports.Quiz = Quiz
-module.exports.validateQuiz = validateQuiz
+module.exports.quiz = quiz
+module.exports.validate_quiz = validate_quiz

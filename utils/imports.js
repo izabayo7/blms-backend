@@ -44,15 +44,15 @@ const {
 const {
     facultyCollege,
     validateFacultyCollege
-} = require('../models/faculty-college/faculty-college.model')
+} = require('../models/faculty_college/faculty_college.model')
 const {
     facultyCollegeYear,
     validateFacultyCollegeYear
-} = require('../models/faculty-college-year/faculty-college-year.model')
+} = require('../models/faculty_college_year/faculty_college_year.model')
 const {
     CollegeYear,
     validateCollegeYear
-} = require('../models/collegeYear/collegeYear.model')
+} = require('../models/college_year/college_year.model')
 const {
     Course,
     validateCourse
@@ -68,11 +68,11 @@ const {
 const {
     Attachment,
     validateAttachment
-} = require('../models/attachments/attachments.model')
+} = require('../models/attachment/attachment.model')
 const {
     studentFacultyCollegeYear,
     validateStudentFacultyCollegeYear
-} = require('../models/student-faculty-college-year/student-faculty-college-year.model')
+} = require('../models/user_faculty_college_year/user_faculty_college_year.model')
 const {
     instructorFacultyCollegeYear,
     validateInstructorFacultyCollegeYear
@@ -80,7 +80,7 @@ const {
 const {
     StudentProgress,
     validateStudentProgress
-} = require('../models/studentProgress/studentProgress.model')
+} = require('../models/user_progress/user_progress.model')
 const {
     Quiz,
     validateQuiz
@@ -88,14 +88,14 @@ const {
 const {
     QuizSubmission,
     validateQuizSubmission
-} = require('../models/quizSubmission/quizSubmission.model')
+} = require('../models/quiz_submission/quiz_submission.model')
 const {
     fileFilter
 } = require('./multer/fileFilter')
 const {
     chatGroup,
     validatechatGroup
-} = require('../models/chat-group/chat-group.model')
+} = require('../models/chat_group/chat_group.model')
 
 const {
     Notification,
@@ -910,6 +910,38 @@ module.exports.streamVideo = async (req, res, path) => {
     });
 }
 
+// generateAuthToken on user login
+module.exports.generateAuthToken = async ({ user }) => {
+    const ONE_DAY = 60 * 60 * 24
+    return this.jwt.sign({
+        _id: user._id,
+        sur_name: user.sur_name,
+        other_names: user.other_names,
+        national_id: user.national_id,
+        gender: user.gender,
+        date_of_birth: user.date_of_birth,
+        phone: user.phone,
+        email: user.email,
+        password: user.password,
+        category: user.category,
+        roles: user.roles,
+        college: user.college,
+        profile: user.profile,
+    }, this.config.get('auth_key'), {
+        expiresIn: ONE_DAY
+    })
+}
+
+// decodeAuthToken
+module.exports.decodeAuthToken = async ({ token }) => {
+    return this.jwt.verify(token, this.config.get('auth_key'))
+}
+
+// all regex expressions
+module.exports.Patterns = {
+    promotionPattern: /\b[y][e][a][r][_][0-9]\b/ // work on these regex staff
+}
+
 // authentication middlewares
 const {
     auth
@@ -936,3 +968,7 @@ module.exports._instructor = instructor
 
 // constant lobal variables
 module.exports.defaulPassword = `Kurious@${new Date().getFullYear()}`
+
+// proper way to define user roles
+// proper way to use jwt
+// proper way to use config

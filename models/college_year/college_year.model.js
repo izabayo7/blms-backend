@@ -5,7 +5,7 @@ const {
     timestamps
 } = require('../../utils/imports')
 
-const collegeYearSchema = new mongoose.Schema({
+const college_year_schema = new mongoose.Schema({
     digit: {
         type: Number,
         unique: true,
@@ -13,19 +13,19 @@ const collegeYearSchema = new mongoose.Schema({
     },
 })
 
-collegeYearSchema.plugin(timestamps)
+college_year_schema.plugin(timestamps)
 
-// validate collegeYear
-function validateCollegeYear(credentials) {
+// validate college_year
+function validate_college_year(credentials) {
     const schema = {
         digit: Joi.number().min(1).required(),
     }
     return Joi.validate(credentials, schema)
 }
 
-// create collegeYears model
-const CollegeYear = mongoose.model('CollegeYear', collegeYearSchema)
+// create college_years model
+const college_year = mongoose.model('college_year', college_year_schema)
 
 // export the model and the validation function
-module.exports.CollegeYear = CollegeYear
-module.exports.validateCollegeYear = validateCollegeYear
+module.exports.college_year = college_year
+module.exports.validate_college_year = validate_college_year

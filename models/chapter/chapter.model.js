@@ -5,7 +5,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const chapterSchema = new mongoose.Schema({
+const chapter_schema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -30,10 +30,10 @@ const chapterSchema = new mongoose.Schema({
     }
 })
 
-chapterSchema.plugin(timestamps)
+chapter_schema.plugin(timestamps)
 
 // validate chapter
-function validateChapter(credentials) {
+function validate_chapter(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
         number: Joi.number().min(1),
@@ -45,8 +45,8 @@ function validateChapter(credentials) {
 }
 
 // create courses model
-const Chapter = mongoose.model('Chapter', chapterSchema)
+const Chapter = mongoose.model('Chapter', chapter_schema)
 
 // export the model and the validation function
 module.exports.Chapter = Chapter
-module.exports.validateChapter = validateChapter
+module.exports.validate_chapter = validate_chapter

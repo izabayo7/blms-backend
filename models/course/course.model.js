@@ -6,7 +6,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const courseSchema = new mongoose.Schema({
+const course_schema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -15,43 +15,43 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    facultyCollegeYear: {
+    faculty_college_year: {
         type: String,
         required: true
     },
     description: {
         type: String,
     },
-    coverPicture: {
+    cover_picture: {
         type: String,
     },
     published: {
         type: Boolean,
         default: false
     },
-    publishedOn: {
+    published_on: {
         type: Date
     }
 })
 
-courseSchema.plugin(timestamps)
+course_schema.plugin(timestamps)
 
 // validate course
-function validateCourse(credentials) {
+function validate_course(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
         instructor: Joi.ObjectId().required(),
-        facultyCollegeYear: Joi.ObjectId().required(),
+        faculty_college_year: Joi.ObjectId().required(),
         description: Joi.string().max(500).min(10),
-        coverPicture: Joi.string(),
+        cover_picture: Joi.string(),
         published: Joi.boolean()
     }
     return Joi.validate(credentials, schema)
 }
 
 // create courses model
-const Course = mongoose.model('Course', courseSchema)
+const course = mongoose.model('course', course_schema)
 
 // export the model and the validation function
-module.exports.Course = Course
-module.exports.validateCourse = validateCourse
+module.exports.course = course
+module.exports.validate_course = validate_course

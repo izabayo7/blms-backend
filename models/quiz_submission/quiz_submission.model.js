@@ -5,7 +5,7 @@ const {
     timestamps,
 } = require('../../utils/imports')
 
-const QuizSubmissionSchema = new mongoose.Schema({
+const quiz_submission_schema = new mongoose.Schema({
     quiz: {
         type: String,
         required: true
@@ -14,7 +14,7 @@ const QuizSubmissionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    usedTime: {
+    used_time: {
         type: Number,
         required: true
     },
@@ -22,11 +22,11 @@ const QuizSubmissionSchema = new mongoose.Schema({
         type: Array,
         required: true
     },
-    totalMarks: {
+    total_marks: {
         type: Number,
         default: 0
     },
-    autoSubmitted: {
+    auto_submitted: {
         type: Boolean,
         default: false
     },
@@ -40,25 +40,25 @@ const QuizSubmissionSchema = new mongoose.Schema({
     }
 })
 
-QuizSubmissionSchema.plugin(timestamps)
+quiz_submission_schema.plugin(timestamps)
 
-// validate QuizSubmission
-function validateQuizSubmission(credentials) {
+// validate quiz_submision
+function validate_quiz_submission(credentials) {
     const schema = {
         quiz: Joi.ObjectId().required(),
-        usedTime: Joi.number().required(),
+        used_time: Joi.number().required(),
         answers: Joi.array().min(1).required(),
         student: Joi.ObjectId().required(),
-        autoSubmitted: Joi.boolean(),
+        auto_submitted: Joi.boolean(),
         marked: Joi.boolean(),
         published: Joi.boolean()
     }
     return Joi.validate(credentials, schema)
 }
 
-// create QuizSubmissions model
-const QuizSubmission = mongoose.model('QuizSubmission', QuizSubmissionSchema)
+// create quiz_submisions model
+const quiz_submision = mongoose.model('quiz_submision', quiz_submission_schema)
 
 // export the model and the validation function
-module.exports.QuizSubmission = QuizSubmission
-module.exports.validateQuizSubmission = validateQuizSubmission
+module.exports.quiz_submision = quiz_submision
+module.exports.validate_quiz_submission = validate_quiz_submission

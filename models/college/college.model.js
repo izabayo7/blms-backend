@@ -1,7 +1,7 @@
 // import dependencies
 const { mongoose, Joi, timestamps } = require('../../utils/imports')
 
-const collegeSchema = new mongoose.Schema({
+const college_schema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -29,7 +29,7 @@ const collegeSchema = new mongoose.Schema({
 })
 
 // validate college
-function validateCollege(credentials) {
+function validate_college(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
         email: Joi.string().required(),
@@ -41,11 +41,11 @@ function validateCollege(credentials) {
     return Joi.validate(credentials, schema)
 }
 
-collegeSchema.plugin(timestamps)
+college_schema.plugin(timestamps)
 
-// create Colleges model
-const College = mongoose.model('College', collegeSchema)
+// create college model
+const college = mongoose.model('college', college_schema)
 
 // export the model and the validation function
-module.exports.College = College
-module.exports.validateCollege = validateCollege
+module.exports.college = college
+module.exports.validate_college = validate_college

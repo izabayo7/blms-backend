@@ -5,16 +5,16 @@ const {
     timestamps
 } = require('../../utils/imports')
 
-const finishedChaptersSchema = new mongoose.Schema({
+const finished_chapter_schema = new mongoose.Schema({
     id: {
         type: String,
         required: true
     }
 })
-finishedChaptersSchema.plugin(timestamps)
+finished_chapter_schema.plugin(timestamps)
 
-const studentProgressSchema = new mongoose.Schema({
-    student: {
+const user_progress_schema = new mongoose.Schema({
+    user: {
         type: String,
         required: true
     },
@@ -22,8 +22,8 @@ const studentProgressSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    finishedChapters: [
-        finishedChaptersSchema
+    finished_chapters: [
+        finished_chapter_schema
     ],
     progress: {
         type: Number,
@@ -32,21 +32,21 @@ const studentProgressSchema = new mongoose.Schema({
     },
 })
 
-studentProgressSchema.plugin(timestamps)
+user_progress_schema.plugin(timestamps)
 
-// validate student
-function validateStudentProgress(credentials, method = 'put') {
+// validate user
+function validate_user_progress(credentials, method = 'put') {
     const schema = {
-        student: Joi.ObjectId().required(),
+        user: Joi.ObjectId().required(),
         course: Joi.ObjectId().required(),
         chapter: method == 'put' ? Joi.ObjectId().required() : Joi.ObjectId(),
     }
     return Joi.validate(credentials, schema)
 }
 
-// create StudentProgress model
-const StudentProgress = mongoose.model('StudentProgress', studentProgressSchema)
+// create user_progress model
+const user_progress = mongoose.model('user_progress', user_progress_schema)
 
 // export the model and the validation function
-module.exports.StudentProgress = StudentProgress
-module.exports.validateStudentProgress = validateStudentProgress
+module.exports.user_progress = user_progress
+module.exports.validate_user_progress = validate_user_progress
