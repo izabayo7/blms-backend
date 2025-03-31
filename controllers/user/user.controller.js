@@ -1022,6 +1022,7 @@ router.post('/', async (req, res) => {
         }
         return res.status(201).send(result)
     } catch (error) {
+        console.log(error)
         return res.send(formatResult(500, error))
     }
 })
@@ -1313,10 +1314,10 @@ router.put('/', auth, async (req, res) => {
             })
 
             if (user) {
-                const phoneFound = req.body.phone == user.phone
-                const national_idFound = req.body.national_id == user.national_id
-                const emailFound = req.body.email == user.email
-                const user_nameFound = req.body.user_name == user.user_name
+                const phoneFound = req.body.phone ? req.body.phone == user.phone : false
+                const national_idFound = req.body.national_id ? req.body.national_id == user.national_id : false
+                const emailFound = req.body.email ? req.body.email == user.email : false
+                const user_nameFound = req.body.user_name ? req.body.user_name == user.user_name : false
                 return res.send(formatResult(403, `User with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : national_idFound ? 'same national_id ' : user_nameFound ? 'same user_name ' : ''} arleady exist`))
             }
         }
@@ -1671,8 +1672,18 @@ async function addUserBill(collegeId, userCategory) {
     collegeId = collegeId.toString()
 
     const college = await College_payment_plans.findOne({college: collegeId, status: 'ACTIVE'});
-
+// akabazo on minuza package
     if (college && !['TRIAL', 'HUGUKA'].includes(college.plan) && (userCategory === 'STUDENT' || college.plan !== 'MINUZA_ACCELERATE')) {
+
+        const admin_category = await findDocument(User_category, {name: "ADMIN"})
+
+        const obj = {
+            college: college.college,
+            category: {$ne: admin_category._id.toString()},
+            "status.deleted": {$ne: 1}
+        }
+        let currentTotalUsers = await countDocuments(User, obj)
+
         const payment = await Account_payments.findOne({
             college: collegeId,
             status: 'ACTIVE'
@@ -1687,10 +1698,12 @@ async function addUserBill(collegeId, userCategory) {
         const payments = await Account_payments.find({
             college: collegeId,
             endingDate: {$gt: new Date(today).toISOString()}
+        }).populate({
+            path: 'collegePaymentPlan'
         })
 
         for (const i in payments) {
-            amount += await calculateAmount(college, payments[i].periodType, payments[i].periodValue, 1)
+            amount += await calculateAmount(payments[i].collegePaymentPlan, payments[i].periodType, payments[i].periodValue, 1, currentTotalUsers)
         }
 
         if (amount !== 0)

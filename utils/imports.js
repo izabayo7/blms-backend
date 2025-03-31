@@ -230,7 +230,17 @@ exports.update_password = async ({password, user_id}) => {
     });
 }
 
-exports.calculateAmount = (collegePlan, periodType, periodValue, total_users) => {
+exports.calculateAmount = async (collegePlan, periodType, periodValue, total_users, currentTotalUsers = undefined) => {
+
+    if (currentTotalUsers && !['HUGUKA', 'JIJUKA', 'MINUZA_ACCELERATE'].includes(collegePlan.plan)) {
+
+        currentTotalUsers--;
+        const maxValue = collegePlan.plan === 'MINUZA_STARTER' ? 10 : 600
+        if (currentTotalUsers > maxValue) {
+            collegePlan = this.simplifyObject(collegePlan)
+            collegePlan.plan = 'JIJUKA'
+        }
+    }
 
     switch (collegePlan.plan) {
         case 'HUGUKA': {

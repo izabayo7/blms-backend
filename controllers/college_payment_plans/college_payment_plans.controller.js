@@ -75,7 +75,7 @@ router.get('/', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegePaymentPlans)
  *       500:
  *         description: Internal Server error
  */
-router.get('/current', filterUsers(["ADMIN", "SUPERADMIN"]), getCollegeCurrentPaymentPlan)
+router.get('/current', getCollegeCurrentPaymentPlan)
 
 /**
  * @swagger
@@ -142,7 +142,7 @@ async function getCollegeCurrentPaymentPlan(req, res) {
         const college_id = req.user.college || req.query.college
         const college = await College.findOne({_id: college_id, status: 1});
         if (!college) return res.send(formatResult(404, 'College not found'));
-        const result = await College_payment_plans.findOne({college: college_id, status: 'ACTIVE'})
+        const result = await College_payment_plans.findOne({college: college_id, status: 'ACTIVE'}).populate('college')
         return res.send(formatResult(u, u, result));
     } catch (err) {
         return res.send(formatResult(500, err));

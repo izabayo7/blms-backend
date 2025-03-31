@@ -99,6 +99,11 @@ const userPaymentsSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    collegePaymentPlan: {
+        type: String,
+        ref: 'college_payment_plans',
+        required: true
+    },
     endingDate: {
         type: Date,
         required: true

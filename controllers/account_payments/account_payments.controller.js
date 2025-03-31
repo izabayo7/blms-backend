@@ -1,4 +1,5 @@
 // import dependencies
+const {simplifyObject} = require("../../utils/imports");
 const {calculateAmount} = require("../../utils/imports");
 const {User_category} = require("../../utils/imports");
 const {findDocument} = require("../../utils/imports");
@@ -187,6 +188,20 @@ async function createPayment(req, res) {
 
         let balance = await calculateAmount(college, req.body.periodType, req.body.periodValue, total_users)
 
+        if (college.plan === 'MINUZA_STARTER' || college.plan === 'MINUZA_GROWTH') {
+            const college_copy = simplifyObject(college)
+            college_copy.plan = 'JIJUKA'
+            if (college.plan === 'MINUZA_STARTER' && total_users > 200) {
+                balance += await calculateAmount(college_copy, req.body.periodType, req.body.periodValue, total_users - 200)
+            }
+            if (college.plan === 'MINUZA_GROWTH' && total_users > 600) {
+                balance += await calculateAmount(college_copy, req.body.periodType, req.body.periodValue, total_users - 600)
+            }
+        }
+
+        if (req.body.amount_paid < balance)
+            return res.send(formatResult(403, `The amount you gave is invalid (you should pay ${balance})`));
+
         const payment = await Account_payments.findOneAndUpdate({
             user: req.user._id,
             status: 'ACTIVE'
@@ -211,6 +226,7 @@ async function createPayment(req, res) {
             total_users: req.body.total_users,
             startingDate,
             endingDate,
+            collegePaymentPlan: college._id.toString(),
             periodType: req.body.periodType,
             periodValue: req.body.periodValue,
         }
@@ -243,6 +259,8 @@ async function getTotalBills(req, res) {
         const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
         if (!college || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
+        let total_users
+
         if (college.plan !== 'HUGUKA') {
             if (req.user.category.name !== 'ADMIN')
                 return res.send(formatResult(403, `Your administration is in charge of the payment process`));
@@ -259,13 +277,24 @@ async function getTotalBills(req, res) {
                 } :
                 {college: college.college, category: {$ne: admin_category._id.toString()}, "status.deleted": {$ne: 1}}
 
-            const total_users = await countDocuments(User, obj)
+            total_users = await countDocuments(User, obj)
 
             if (req.body.total_users < total_users)
                 return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total ${college.plan === 'MINUZA_ACCELERATE' ? 'non admin users' : 'students'} in your college)`));
         }
 
         let amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_users)
+
+        if (college.plan === 'MINUZA_STARTER' || college.plan === 'MINUZA_GROWTH') {
+            const college_copy = simplifyObject(college)
+            college_copy.plan = 'JIJUKA'
+            if (college.plan === 'MINUZA_STARTER' && total_users > 200) {
+                amount += await calculateAmount(college_copy, req.body.periodType, req.body.periodValue, total_users - 200)
+            }
+            if (college.plan === 'MINUZA_GROWTH' && total_users > 600) {
+                amount += await calculateAmount(college_copy, req.body.periodType, req.body.periodValue, total_users - 600)
+            }
+        }
 
         const payment = await Account_payments.findOne({user: req.user._id, status: 'ACTIVE'})
 
@@ -306,7 +335,7 @@ async function getPaymentHistory(req, res) {
 
         if (!college || college.plan === 'TRIAL') return res.send(formatResult(u, u, []));
 
-        const payments = await Account_payments.find({user: req.user._id}).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
+        const payments = await Account_payments.find(["ADMIN", "SUPERADMIN"].includes(req.user.category.name) ? {college: req.user.college} : {user: req.user._id}).sort({_id: -1}).populate('user', ['sur_name', 'other_names', 'user_name'])
 
         return res.send(formatResult(200, u, payments));
     } catch (err) {
