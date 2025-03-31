@@ -30,7 +30,8 @@ const {
   fs,
   upload_multiple,
   Comment,
-  injectFaculty_college_year
+  injectFaculty_college_year,
+  countDocuments
 } = require('../../utils/imports')
 
 // create router
@@ -325,6 +326,12 @@ router.get('/user/:user_name', async (req, res) => {
 
             if (quiz_submissions[k].marked) {
               quizes[i].marking_status += percentage_of_one_submission
+            }
+
+            quiz_submissions[k].total_feedbacks = 0
+
+            for (const l in quiz_submissions[i].answers) {
+              quiz_submissions[k].total_feedbacks += quiz_submissions[k].answers[l].feedback ? 1 : 0;
             }
           }
           quizes[i].submissions = quiz_submissions
