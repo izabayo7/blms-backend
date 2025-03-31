@@ -493,7 +493,7 @@ exports.getConversationMessages = async ({
         return await this.replaceUserIds(messages, user_id)
     }
     else {
-        const announcements = await this.getUserAnnouncements(user)
+        const announcements = await this.getUserAnnouncements(user,false,true)
         return announcements
     }
 }
@@ -546,7 +546,7 @@ exports.injectTarget = async (announcements) => {
     return announcements
 }
 
-exports.getUserAnnouncements = async (user, getOne = false) => {
+exports.getUserAnnouncements = async (user, getOne = false,receivedOnly = false) => {
     const ids = [user.college]
 
     const user_user_group = await User_user_group.find({
@@ -577,10 +577,16 @@ exports.getUserAnnouncements = async (user, getOne = false) => {
     let announcements
     let unreads
     if (getOne) {
-        announcements = await Announcement.findOne({
+        announcements = await Announcement.findOne(receivedOnly ?{
             $or: [
                 { "target.id": { $in: ids } },
-                { sender: { $ne: user._id } },
+                { specific_receivers: user._id.toString() },
+            ],
+            sender:  { $ne: user._id }
+        }:{
+            $or: [
+                { "target.id": { $in: ids } },
+                { sender: user._id },
                 { specific_receivers: user._id.toString() },
             ]
         }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: -1 }).lean()
@@ -590,13 +596,18 @@ exports.getUserAnnouncements = async (user, getOne = false) => {
         unreads = await Announcement.find({
             $or: [
                 { "target.id": { $in: ids } },
-                { sender: user._id },
                 { specific_receivers: user._id.toString() },
             ],
             viewers: { $nin: user._id.toString() }
         }).count()
     } else {
-        announcements = await Announcement.find({
+        announcements = await Announcement.find(receivedOnly ?{
+            $or: [
+                { "target.id": { $in: ids } },
+                { specific_receivers: user._id.toString() },
+            ],
+            sender:  { $ne: user._id }
+        }:{
             $or: [
                 { "target.id": { $in: ids } },
                 { sender: user._id },
@@ -613,7 +624,7 @@ exports.getUserAnnouncements = async (user, getOne = false) => {
 }
 
 exports.injectAnnouncementContact = async (contacts, user) => {
-    const { announcement, unreads } = await this.getUserAnnouncements(user, true)
+    const { announcement, unreads } = await this.getUserAnnouncements(user, true,true)
 
     if (!announcement)
         return contacts
