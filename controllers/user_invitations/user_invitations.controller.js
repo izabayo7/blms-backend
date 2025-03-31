@@ -120,6 +120,9 @@ exports.createUserInvitation = async (req, res) => {
         const {error} = validate_user_invitation(req.body);
         if (error) return res.send(formatResult(400, error.details[0].message));
 
+        if(req.body.category === "ADMIN" && !req.body.user_group)
+            return res.send(formatResult(404, 'UserGroup is required'))
+
         const {emails, category} = req.body
 
         let _college = await College.findOne({

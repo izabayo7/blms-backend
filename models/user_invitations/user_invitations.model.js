@@ -85,7 +85,7 @@ exports.validate_user_invitation = (credentials) => {
     const schema = {
         emails: Joi.array().min(1).items(Joi.string().email().required()).required(),
         user: Joi.ObjectId(),
-        user_group: Joi.string().min(5).required(),
+        user_group: Joi.string().min(5),
         college: Joi.ObjectId(),
         category: Joi.string().min(5).required()
     }

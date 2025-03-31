@@ -1324,7 +1324,7 @@ exports.invitationToSystem = ({
                           top: 99px;
                         "
                     >
-                        <div>${inviter} invited you in ${institution.name} - ${user_group},</div>
+                        <div>${inviter} invited you in ${institution.name} ${user_group ? '- ' + user_group : ''},</div>
                         <div>on Kurious learn! Please click the button below to finish setting up</div>
                         <div>your account.</div>
                     </div>
