@@ -554,7 +554,7 @@ router.get('/user_group/:id/:category', [auth, filterUsers(["ADMIN"])], async (r
                     result.push({
                         ...user_user_groups[j].user,
                         user_user_group_id: user_user_groups[j]._id,
-                        user.date_joined: user_user_groups[j].createdAt
+                        date_joined: user_user_groups[j].createdAt
                     })
                 }
             }
