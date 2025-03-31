@@ -548,7 +548,7 @@ exports.formatContacts = async (messages, user_id) => {
       is_group = true
       name = group.name
       members = await this.injectUser(group.members.filter(member => member.status == true), 'id', 'data')
-      image = group.profile ? `http://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${group.code}/profile/${group.profile}` : undefined
+      image = group.profile ? `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chat_group/${group.code}/profile/${group.profile}` : undefined
       unreadMessagesLength = await this.countDocuments(this.Message, {
         group: message.group,
         receivers: {
@@ -880,7 +880,7 @@ exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => {
         for (const j in quizes[i].questions[k].options.choices) {
           if (quizes[i].questions[k].options.choices[j].src) {
             if (!quizes[i].questions[k].options.choices[j].src.includes('http')) {
-              quizes[i].questions[k].options.choices[j].src = `http://${process.env.HOST}${process.env.BASE_PATH}/quiz/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
+              quizes[i].questions[k].options.choices[j].src = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/quiz/${quizes[i]._id}/attachment/${quizes[i].questions[k].options.choices[j].src}`
             }
           }
           if (removeRightChoice) {
@@ -935,7 +935,7 @@ exports.injectChapters = async (courses) => {
     courses[i].assignmentsLength = 0
     // add course cover picture media path
     if (courses[i].cover_picture && !courses[i].cover_picture.includes('http')) {
-      courses[i].cover_picture = `http://${process.env.HOST}${process.env.BASE_PATH}/course/${courses[i].name}/cover_picture/${courses[i].cover_picture}`
+      courses[i].cover_picture = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/course/${courses[i].name}/cover_picture/${courses[i].cover_picture}`
     }
     let chapters = await this.findDocuments(this.Chapter, {
       course: courses[i]._id
@@ -948,16 +948,16 @@ exports.injectChapters = async (courses) => {
       courses[i].chapters[k].__v = undefined
 
       // add media path of the content
-      courses[i].chapters[k].document = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/document`
+      courses[i].chapters[k].document = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/document`
       // add media path of the video
       if (courses[i].chapters[k].uploaded_video) {
-        courses[i].chapters[k].uploaded_video = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
+        courses[i].chapters[k].uploaded_video = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/video/${courses[i].chapters[k].uploaded_video}`
       }
       if (!courses[i].chapters[k].attachments)
         courses[i].chapters[k].attachments = []
 
       for (const l in courses[i].chapters[k].attachments) {
-        courses[i].chapters[k].attachments[l].download_link = `http://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/attachment/${courses[i].chapters[k].attachments[l].src}/download`
+        courses[i].chapters[k].attachments[l].download_link = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/chapter/${courses[i].chapters[k]._id}/attachment/${courses[i].chapters[k].attachments[l].src}/download`
         courses[i].chapters[k].attachments[l].name = courses[i].chapters[k].attachments[l].src
       }
 
@@ -1004,7 +1004,7 @@ exports.injectUser = async (array, property, newProperty) => {
       // array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
       array[i][`${name}`] = this._.pick(user, ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category"])
       if (array[i][`${name}`].profile) {
-        array[i][`${name}`].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
+        array[i][`${name}`].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${user.user_name}/profile/${user.profile}`
       }
     }
   }
@@ -1330,7 +1330,7 @@ exports.add_user_details = async (users) => {
 
       users[i].college = college
       if (users[i].college.logo) {
-        users[i].college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+        users[i].college.logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
       }
     }
     // add user category
@@ -1343,7 +1343,7 @@ exports.add_user_details = async (users) => {
 
     // add user profile media path
     if (users[i].profile) {
-      users[i].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
+      users[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
     }
   }
   return users
@@ -1437,7 +1437,7 @@ exports.injectFaculty_college_year = async (courses) => {
 
     courses[i].faculty_college_year.faculty_college.college = college
     if (courses[i].faculty_college_year.faculty_college.college.logo) {
-      courses[i].faculty_college_year.faculty_college.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
+      courses[i].faculty_college_year.faculty_college.college.logo = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}/kurious/file/collegeLogo/${college._id}/${college.logo}`
     }
   }
   return courses
