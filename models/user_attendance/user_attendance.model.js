@@ -28,4 +28,4 @@ user_attendance_schema.plugin(timestamps)
 const user_attendance = mongoose.model('user_attendance', user_attendance_schema)
 
 // export the model and the validation function
-module.exports.user_attendance = user_attendance
+module.exports.User_attendance = user_attendance
