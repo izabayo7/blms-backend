@@ -25,7 +25,8 @@ const {
   RTCMultiConnectionServer,
   validate_comment,
   Chapter,
-  Live_session
+  Live_session,
+  MyEmitter
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -37,11 +38,10 @@ module.exports.listen = (app) => {
     RTCMultiConnectionServer.addSocket(socket);
 
     const user_name = socket.handshake.query.user_name
-
-    const user = await findDocument(User, { user_name: user_name })
+    const user = await User.findOne({ user_name: user_name }).populate('category')
     if (!user) {
       socket.error('user not found')
-      // socket.disconnect(true)
+      return socket.disconnect(true)
     }
 
     const id = user._id.toString()
@@ -53,7 +53,15 @@ module.exports.listen = (app) => {
      * messsage events
      */
 
+    if (user.category.name == "ADMIN") {
+      console.log('ready')
+      MyEmitter.on(`new_user_in_${user.college}`, (user) => {
+        socket.emit('res/users/new', {
+          user
+        });
+      });
 
+    }
     socket.on('message/contacts', async () => {
       // get the latest conversations
       const latestMessages = await getLatestMessages(id)

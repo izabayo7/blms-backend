@@ -42,7 +42,8 @@ const {
   validate_chat_group_profile_udpate,
   savedecodedBase64Image,
   addStorageDirectoryToPath,
-  countDocuments
+  countDocuments,
+  MyEmitter
 } = require('../../utils/imports')
 
 // create router
@@ -626,6 +627,9 @@ router.post('/', async (req, res) => {
       category: user_category._id,
       date_of_birth: req.body.date_of_birth
     })
+
+    // notify the admin that a new user joined
+    MyEmitter.emit(`new_user_in_${college._id}`, result.data);
 
     // result = await add_user_details([result])
     // result = result[0]
