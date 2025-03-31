@@ -286,7 +286,7 @@ router.get('/user/:user_name', async (req, res) => {
 
       if (!foundSubmissions.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
-      result = formatResult(u, u, foundSubmissions)
+      result = foundSubmissions
     }
 
     return res.send(formatResult(u, u, result))
@@ -582,10 +582,12 @@ router.put('/:id', async (req, res) => {
       return res.send(formatResult(404, 'quiz_submission not found'))
 
     let user = await findDocument(User, {
-      _id: req.body.user
+      user_name: req.body.user_name
     })
     if (!user)
       return res.send(formatResult(404, 'user not found'))
+
+    req.body.user = user._id
 
     let user_category = await findDocument(User_category, {
       _id: user.category
