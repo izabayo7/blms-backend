@@ -1,4 +1,7 @@
 // import dependencies
+const {User} = require("../../utils/imports");
+const {countDocuments} = require("../../utils/imports");
+const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {validate_account_payments} = require("../../models/account_payments/account_payments.model");
 const {Account_payments} = require("../../models/account_payments/account_payments.model");
 const {
@@ -50,6 +53,41 @@ router.get('/', getPaymentHistory)
  */
 router.get('/status', getPaymentStatus)
 
+/**
+ * @swagger
+ * /account_payments/bill:
+ *   post:
+ *     tags:
+ *       - Account_payments
+ *     description: Return the amount you have to pay according to the parameters you give and the plan your college have
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a Payment
+ *         in: body
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             periodType:
+ *               type: string
+ *               required: true
+ *             periodValue:
+ *               type: string
+ *               required: true
+ *             total_users:
+ *               type: number
+ *               required: true
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal Server error
+ */
+router.post('/bill', getTotalBills)
 
 /**
  * @swagger
@@ -95,7 +133,7 @@ async function createPayment(req, res) {
 
         const {
             error
-        } = validate_account_payments(req.body, 'update')
+        } = validate_account_payments(req.body)
 
         if (error)
             return res.send(formatResult(400, error.details[0].message))
@@ -116,7 +154,6 @@ async function createPayment(req, res) {
             startingDate: req.body.startingDate,
             periodType: req.body.periodType,
             periodValue: req.body.periodValue,
-            college_plans: [{name: college.plan}],
         }
         if (college.plan !== 'HUGUKA')
             obj.college = req.user.college
@@ -128,6 +165,82 @@ async function createPayment(req, res) {
     } catch (err) {
         return res.send(formatResult(500, err));
     }
+}
+
+/**
+ * Create account payment
+ * @param req
+ * @param res
+ */
+async function getTotalBills(req, res) {
+    try {
+
+        const {
+            error
+        } = validate_account_payments(req.body, 'bills')
+
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+
+        const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
+
+        if (college.plan !== 'HUGUKA') {
+            const total_users = await countDocuments(User, {college: college.college})
+            if (req.body.total_students < total_users)
+                return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total students in your college)`));
+        }
+
+        const amount = await calculateAmount(college, req.body.periodType, req.body.periodValue, req.body.total_students)
+
+        return res.send(formatResult(u, u, {amount}));
+    } catch (err) {
+        return res.send(formatResult(500, err));
+    }
+}
+
+async function calculateAmount(collegePlan, periodType, periodValue, total_students) {
+    let amount = 0
+
+    switch (collegePlan.plan) {
+        case 'HUGUKA': {
+            if (periodType === 'MONTH')
+                return 4000 * periodValue
+            else if (periodType === 'YEAR')
+                return ((4000 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue
+        }
+            break;
+        case 'JIJUKA': {
+            if (periodType === 'MONTH')
+                return 2500 * periodValue * total_students
+            else if (periodType === 'YEAR')
+                return ((2500 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+        }
+            break;
+        case 'MINUZA_STARTER': {
+            if (periodType === 'MONTH')
+                return 2299 * periodValue * total_students
+            else if (periodType === 'YEAR')
+                return ((2299 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+        }
+            break;
+        case 'MINUZA_GROWTH': {
+            if (periodType === 'MONTH')
+                return 1899 * periodValue * total_students
+            else if (periodType === 'YEAR')
+                return ((1899 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+        }
+            break;
+        case 'MINUZA_ACCELERATE': {
+            if (periodType === 'MONTH')
+                return 1599 * periodValue * total_students
+            else if (periodType === 'YEAR')
+                return ((1599 * 12) * ((100 - collegePlan.discount) / 100)) * periodValue * total_students
+        }
+            break;
+    }
+
 }
 
 /**

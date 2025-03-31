@@ -39,23 +39,23 @@ const {
 
 const methods = ['MTN_MOMO', 'CARD']
 const statuses = ['ACTIVE', 'INACTIVE']
-const periods = ['MONTH','YEAR']
+const periods = ['MONTH', 'YEAR']
 
 // to trace college plan changes
-const college_payment_plan = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true
-        },
-        status: {
-            type: String,
-            enum: statuses,
-            default: 'ACTIVE'
-        },
-    },
-    {timestamps: true}
-)
+// const college_payment_plan = new mongoose.Schema(
+//     {
+//         name: {
+//             type: String,
+//             required: true
+//         },
+//         status: {
+//             type: String,
+//             enum: statuses,
+//             default: 'ACTIVE'
+//         },
+//     },
+//     {timestamps: true}
+// )
 
 // payment logs
 // ifata payment id na conditions zose yakozwe zihari
@@ -92,7 +92,7 @@ const userPaymentsSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    college_plans: [college_payment_plan],
+    // college_plans: [college_payment_plan],
     status: {
         type: String,
         enum: statuses,
@@ -101,14 +101,19 @@ const userPaymentsSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 // validate user
-exports.validate_account_payments = (credentials) => {
-    const schema = {
+exports.validate_account_payments = (credentials, type = 'payment') => {
+    const schema = type === 'payment' ? {
         method_used: Joi.string().enum(methods).required(),
         amount_paid: Joi.number().min(1).max(100).required(),
         periodType: Joi.string().enum(periods).required(),
         periodValue: Joi.number().min(1).required(),
+        total_users: Joi.number(),
         startingDate: Joi.date().required()
+    } : {
+        periodType: Joi.string().enum(periods).required(),
+        periodValue: Joi.number().min(1).required(),
     }
+
     return Joi.validate(credentials, schema)
 }
 // create users model
