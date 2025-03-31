@@ -217,7 +217,7 @@ exports.deleteInvitation = async (req, res) => {
     if (!(uuidValidate(req.params.token)))
       return res.status(400).send(formatResult(400, 'Invalid invitation token'));
 
-    const result = await User_invitation.findOneAdDelete({ token: req.params.token, user: req.user._id });
+    const result = await User_invitation.findOneAndDelete({ token: req.params.token, user: req.user._id });
     if (!result)
       return res.send(formatResult(404, 'invitation not found'));
 
