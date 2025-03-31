@@ -1364,7 +1364,7 @@ module.exports.random_user_name = async () => {
 // make a new group identifier so that names can be re used in colleges
 module.exports.generateGroupCode = async () => {
   let groupCodeAvailable = false, code
-  while (!groupIdAvailable) {
+  while (!groupCodeAvailable) {
     code = Math.round(Math.random() * 1000000000)
     const group = await this.findDocument(this.Chat_group, { code: code })
     if (!group) groupCodeAvailable = true
