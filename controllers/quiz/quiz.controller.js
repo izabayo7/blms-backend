@@ -20,7 +20,8 @@ const {
   User_category,
   createDocument,
   deleteDocument,
-  simplifyObject
+  simplifyObject,
+  Quiz_submission
 } = require('../../utils/imports')
 const {
   parseInt
@@ -597,21 +598,23 @@ router.delete('/:id', async (req, res) => {
     // check if the quiz is never used
     let quiz_used = false
 
-    if (!user_used) {
+    const submission = await findDocument(Quiz_submission, {
+      quiz: req.params.id
+    })
+    if (submission.data)
+      quiz_used = true
+
+    if (!quiz_used) {
       let user = await findDocument(User, {
-        _id: quiz.user
+        _id: quiz.data.user
       })
 
       let result = await deleteDocument(Quiz, req.params.id)
 
-      let err = undefined
-
-      const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`
+      const path = `./uploads/colleges/${user.data.college}/assignments/${req.params.id}`
       fs.exists(path, (exists) => {
         if (exists) {
-          fs.remove(path, {
-            recursive: true
-          })
+          fs.remove(path)
         }
       })
 
@@ -621,7 +624,7 @@ router.delete('/:id', async (req, res) => {
     const update_quiz = await updateDocument(Quiz, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, 'quiz couldn\'t be deleted because it was used, instead it was disabled', update_user.data))
+    return res.send(formatResult(200, 'quiz couldn\'t be deleted because it was used, instead it was disabled', update_quiz.data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
