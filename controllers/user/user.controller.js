@@ -785,6 +785,8 @@ router.put('/profile', auth, async (req, res) => {
  *     tags:
  *       - User
  *     description: remove User profile
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
@@ -806,7 +808,7 @@ router.put('/profile', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/profile/:file_name', async (req, res) => {
+router.delete('/profile/:file_name', auth, async (req, res) => {
   try {
     const {
       error
