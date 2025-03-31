@@ -281,7 +281,7 @@ router.get('/user/:user_name', async (req, res) => {
 
       for (const i in quizes) {
 
-        if (quiz.target.type !== 'faculty_college_year') {
+        if (quizes[i].target.type !== 'faculty_college_year') {
 
           let chapter, course;
 
@@ -293,7 +293,6 @@ router.get('/user/:user_name', async (req, res) => {
               _id: chapter.course
             })
           }
-
           course = await findDocument(Course, {
             _id: chapter ? chapter.course : quiz.target.id
           })

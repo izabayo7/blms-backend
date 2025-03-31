@@ -3,19 +3,15 @@ const {
     express,
     fs,
     Course,
-    College_year,
     College,
     User,
     validate_course,
     User_faculty_college_year,
     Faculty_college_year,
     Faculty_college,
-    Faculty,
     injectChapters,
     _,
     validateObjectId,
-    StudentProgress,
-    removeDocumentVersion,
     injectUser,
     simplifyObject,
     injectUserProgress,
@@ -32,7 +28,6 @@ const {
     Chapter,
     sendResizedImage,
     upload_single_image,
-    Compress_images,
     injectFaculty_college_year
 } = require('../../utils/imports')
 
