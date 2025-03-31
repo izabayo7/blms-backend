@@ -191,6 +191,8 @@ router.get('/:id/video/:file_name', async (req, res) => {
  *     tags:
  *       - Chapter
  *     description: Returns the files attached to a specified chapter ( use format height and width only when the attachment is a picture)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter's id
