@@ -946,18 +946,6 @@ exports.addAttachedCourse = async (quizes) => {
     }
     return quizes
 }
-exports.injectLiveSessions = async (courses) => {
-    for (const i in courses) {
-        for (const k in courses[i].chapters) {
-            const live_sessions = await this.Live_session.find({
-                "target.type": "chapter",
-                "target.id": courses[i].chapters[k]._id
-            })
-            courses[i].chapters[k].live_sessions = live_sessions;
-        }
-    }
-    return courses;
-}
 // add chapters in their parent courses
 exports.injectChapters = async (courses) => {
     for (const i in courses) {
@@ -1002,6 +990,13 @@ exports.injectChapters = async (courses) => {
                 "target.id": courses[i].chapters[k]._id,
                 reply: undefined
             })
+
+            //    add live sessions
+            const live_sessions = await this.Live_session.find({
+                "target.type": "chapter",
+                "target.id": courses[i].chapters[k]._id
+            })
+            courses[i].chapters[k].live_sessions = live_sessions;
         }
 
         // add assignments attached to course
