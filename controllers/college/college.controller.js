@@ -15,7 +15,6 @@ const {
   validateObjectId,
   sendResizedImage,
   u,
-  Compress_images,
   upload_single_image
 } = require('../../utils/imports')
 

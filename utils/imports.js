@@ -2,7 +2,6 @@
  * dependencies
  */
 const Joi = require('joi')
-const compress_images = require('compress-images')
 const bcrypt = require('bcryptjs')
 Joi.ObjectId = require('joi-objectid')(Joi)
 exports.express = require('express')
@@ -1172,38 +1171,6 @@ exports.sendResizedImage = async (req, res, path) => {
     }
   })
 }
-// compress images
-exports.Compress_images = async (input_path, output_path, formatResult = this.formatResult) => compress_images(input_path + '/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}', output_path + '/', {
-  compress_force: false,
-  statistic: true,
-  autoupdate: true
-}, false, {
-  jpg: {
-    engine: "mozjpeg",
-    command: ["-quality", "60"]
-  }
-}, {
-  png: {
-    engine: "pngquant",
-    command: ["--quality=20-50", "-o"]
-  }
-}, {
-  svg: {
-    engine: "svgo",
-    command: "--multipass"
-  }
-}, {
-  gif: {
-    engine: "gifsicle",
-    command: ["--colors", "64", "--use-col=web"]
-  }
-},
-  function (error) {
-    if (error)
-      return formatResult(500, error)
-  }
-);
-
 
 // send video
 exports.streamVideo = async (req, res, path) => {
