@@ -517,7 +517,6 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         if (!allowed_actions.includes(req.params.action))
             return res.send(formatResult(400, 'invalid action'))
 
-
         const submission = await findDocument(Quiz_submission, {
             _id: req.params.id
         })
@@ -537,7 +536,7 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         for (let i in submission.answers) {
             i = parseInt(i)
             if (quiz.questions[i].type == 'file_upload') {
-                if (submission.answers[i].src == req.params.file_name) {
+                if (submission.answers[i].src == req.params.file_name || submission.answers[i].feedback_src == req.params.file_name ) {
                     file_found = true
                     break
                 }
