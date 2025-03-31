@@ -1091,12 +1091,10 @@ exports.addStorageDirectoryToPath = (path) => {
 // configure multer dynamic storage
 exports.dynamic_storage = this.multer.diskStorage({
   destination: (req, file, cb) => {
-    let {
+    const {
       dir
     } = req.kuriousStorageData
-    dir = this.path.resolve(this.path.join('/', dir))
-    console.log(dir)
-    console.log('aaaaaaaaaaaaaaa')
+
     fs.exists(dir, exist => {
       if (!exist) {
         return fs.mkdir(dir, {
