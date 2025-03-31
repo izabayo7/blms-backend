@@ -266,9 +266,11 @@ router.post('/', async (req, res) => {
     })
 
     if (college) {
-      const phoneFound = req.body.phone == college.phone
+      // const phoneFound = req.body.phone == college.phone
+      const phoneFound = false
       const nameFound = req.body.name == college.name
-      const emailFound = req.body.email == college.email
+      // const emailFound = req.body.email == college.email
+      const emailFound = false
       return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
     }
 
