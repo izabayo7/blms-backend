@@ -35,7 +35,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /faculty-college:
+ * /faculty_college:
  *   get:
  *     tags:
  *       - Faculty_college
@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     let result = await findDocuments(Faculty_college)
 
     if (result.length === 0)
-      return res.send(formatResult(404, 'faculty-college list is empty'))
+      return res.send(formatResult(404, 'faculty_college list is empty'))
 
     // result = await injectDetails(result)
 
@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
 
 /**
  * @swagger
- * /faculty-college:
+ * /faculty_college:
  *   post:
  *     tags:
  *       - Faculty_college
@@ -136,7 +136,7 @@ router.post('/', async (req, res) => {
 
 /**
  * @swagger
- * /faculty-college/{id}:
+ * /faculty_college/{id}:
  *   delete:
  *     tags:
  *       - Faculty_college
