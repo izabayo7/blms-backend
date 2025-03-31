@@ -392,31 +392,18 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         if (!submission)
             return res.send(formatResult(404, 'assignment_submission not found'))
 
-        const assignment = await findDocument(Assignment, {
-            _id: submission.assignment
-        })
-
-        const user = await findDocument(User, {
-            _id: assignment.user
-        })
-
         let file_found = false
 
-        for (let i in submission.answers) {
-            i = parseInt(i)
-            if (assignment.questions[i].type == 'file_upload') {
-                if (submission.answers[i].src == req.params.file_name || submission.answers[i].feedback_src == req.params.file_name) {
-                    file_found = true
-                    break
-                }
-            }
-            if (file_found)
+        for (const i in submission.attachments) {
+            if (submission.attachments[i].src === req.parama.file_name) {
+                file_found = true
                 break
+            }
         }
         if (!file_found)
             return res.send(formatResult(404, 'file not found'))
 
-        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.assignment}/submissions/${submission._id}/${req.params.file_name}`)
+        const file_path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${submission.assignment}/submissions/${submission._id}/${req.params.file_name}`)
 
         const file_type = await findFileType(req.params.file_name)
 
@@ -608,7 +595,7 @@ router.put('/:id', auth, filterUsers(['STUDENT', "INSTRUCTOR"]), async (req, res
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/results_seen', auth,filterUsers(["STUDENT"]), async (req, res) => {
+router.put('/:id/results_seen', auth, filterUsers(["STUDENT"]), async (req, res) => {
     try {
         const {
             error
@@ -664,7 +651,7 @@ router.put('/:id/results_seen', auth,filterUsers(["STUDENT"]), async (req, res) 
  *       500:
  *         description: Internal Server error
  */
-router.post('/:id/attachment', auth,filterUsers(["STUDENT"]), async (req, res) => {
+router.post('/:id/attachment', auth, filterUsers(["STUDENT"]), async (req, res) => {
     try {
         const {
             error
@@ -703,194 +690,6 @@ router.post('/:id/attachment', auth,filterUsers(["STUDENT"]), async (req, res) =
                 return res.send(formatResult(500, err.message))
 
             return res.send(formatResult(u, 'All attachments were successfuly uploaded'))
-        })
-
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
- * /assignment_submission/feedback/{id}/{answer}:
- *   post:
- *     tags:
- *       - Assignment_submission
- *     description: Upload assignment submission feedback attacments
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Assignment_submission id
- *         in: path
- *         required: true
- *         type: string
- *       - name: answer
- *         description: Answer id
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.post('/feedback/:id/:answer', auth, async (req, res) => {
-    try {
-        let {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, "invalid assignment_submission id"))
-
-        error = validateObjectId(req.params.answer)
-        error = error.error
-        if (error)
-            return res.send(formatResult(400, "invalid question id"))
-
-        const assignment_submission = await findDocument(Assignment_submission, {
-            _id: req.params.id
-        })
-        if (!assignment_submission)
-            return res.send(formatResult(404, 'assignment_submission not found'))
-
-        const answer = assignment_submission.answers.filter(e => e._id == req.params.answer)
-        if (!answer.length)
-            return res.send(formatResult(404, 'answer not found'))
-
-        const assignment = await findDocument(Assignment, {
-            _id: assignment_submission.assignment
-        })
-        if (!assignment)
-            return res.send(formatResult(404, 'assignment not found'))
-
-        const user = await findDocument(User, {
-            _id: assignment.user
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assignment._id}/submissions/${req.params.id}`)
-
-        req.kuriousStorageData = {
-            dir: path,
-        }
-
-        const file_found = await fs.exists(`${path}/${answer[0].feedback_src}`)
-        if (file_found)
-            return res.send(formatResult(400, 'feedback for this answer was already uploaded'))
-
-        upload_single(req, res, async (err) => {
-            if (err)
-                return res.send(formatResult(500, err.message))
-
-            assignment_submission.answers[assignment_submission.answers.indexOf(answer[0])].feedback_src = req.file.filename
-
-            await updateDocument(Assignment_submission, req.params.id, {
-                answers: assignment_submission.answers
-            })
-
-            return res.send(formatResult(u, 'Feedback attachment was successfuly uploaded'))
-        })
-
-    } catch (error) {
-        return res.send(formatResult(500, error))
-    }
-})
-
-/**
- * @swagger
- * /assignment_submission/feedback/{id}/{answer}/{file_name}:
- *   delete:
- *     tags:
- *       - Assignment_submission
- *     description: Delete assignment submission feedback attacments
- *     security:
- *       - bearerAuth: -[]
- *     parameters:
- *       - name: id
- *         description: Assignment_submission id
- *         in: path
- *         required: true
- *         type: string
- *       - name: answer
- *         description: Answer id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: File name
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       201:
- *         description: Created
- *       400:
- *         description: Bad request
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.delete('/feedback/:id/:answer/:file_name', auth, async (req, res) => {
-    try {
-        let {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.send(formatResult(400, "invalid assignment_submission id"))
-
-        error = validateObjectId(req.params.answer)
-        error = error.error
-        if (error)
-            return res.send(formatResult(400, "invalid question id"))
-
-        const assignment_submission = await findDocument(Assignment_submission, {
-            _id: req.params.id
-        })
-        if (!assignment_submission)
-            return res.send(formatResult(404, 'assignment_submission not found'))
-
-        const answer = assignment_submission.answers.filter(e => e._id == req.params.answer)
-        if (!answer.length)
-            return res.send(formatResult(404, 'answer not found'))
-
-        if (answer[0].feedback_src != req.params.file_name)
-            return res.send(formatResult(404, 'File not found'))
-
-        const assignment = await findDocument(Assignment, {
-            _id: assignment_submission.assignment
-        })
-        if (!assignment)
-            return res.send(formatResult(404, 'assignment not found'))
-
-        const user = await findDocument(User, {
-            _id: assignment.user
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${assignment._id}/submissions/${req.params.id}/${req.file.file_name}`)
-
-        req.kuriousStorageData = {
-            dir: path,
-        }
-
-        const file_found = await fs.exists(path)
-        if (!file_found)
-            return res.send(formatResult(400, 'File not found'))
-
-        fs.unlink(path, (err) => {
-            if (err)
-                return res.send(formatResult(500, err))
-        })
-
-        assignment_submission.answers[assignment_submission.answers.indexOf(answer[0])].feedback_src = undefined
-
-        await updateDocument(Assignment_submission, req.params.id, {
-            answers: assignment_submission.answers
         })
 
     } catch (error) {
