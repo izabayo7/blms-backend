@@ -42,6 +42,10 @@ const schema = new mongoose.Schema({
         type: String,
         required: true
     },
+    details: {
+        type: String,
+        required: true
+    },
     // percentage which students will be graded on
     passMarks: {
         type: Number,

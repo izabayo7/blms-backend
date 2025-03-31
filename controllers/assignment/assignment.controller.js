@@ -310,6 +310,7 @@ router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
 
         let result = await createDocument(Assignment, {
             title: req.body.title,
+            details: req.body.details,
             dueDate: req.body.dueDate,
             user: req.user._id,
             attachments: req.body.attachments,
@@ -392,6 +393,7 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         // _copy = simplifyObject(assignment)
 
         assignment.title = req.body.title
+        assignment.details = req.body.details
         assignment.passMarks = req.body.passMarks
         assignment.dueDate = req.body.dueDate
         assignment.total_marks = req.body.total_marks
