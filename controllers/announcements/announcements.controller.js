@@ -1,17 +1,18 @@
 // import dependencies
-const {User, getUserAnnouncements} = require("../../utils/imports");
-const {Announcement} = require("../../models/announcements/announcements.model");
-const {validate_announcement} = require("../../models/announcements/announcements.model");
-const {User_user_group} = require("../../models/user_user_group/user_user_group.model");
-const {College} = require("../../utils/imports");
-const {Faculty_college} = require("../../utils/imports");
-const {Course} = require("../../utils/imports");
-const {User_group} = require("../../models/user_group/user_group.model");
-const {filterUsers} = require("../../middlewares/auth.middleware");
+const { User, getUserAnnouncements, injectTarget, Faculty } = require("../../utils/imports");
+const { Announcement } = require("../../models/announcements/announcements.model");
+const { validate_announcement } = require("../../models/announcements/announcements.model");
+const { User_user_group } = require("../../models/user_user_group/user_user_group.model");
+const { College } = require("../../utils/imports");
+const { Faculty_college } = require("../../utils/imports");
+const { Course } = require("../../utils/imports");
+const { User_group } = require("../../models/user_group/user_group.model");
+const { filterUsers } = require("../../middlewares/auth.middleware");
 const {
     express,
     validateObjectId,
     formatResult,
+    MyEmitter,
     findDocument,
     u,
     deleteDocument,
@@ -116,6 +117,8 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
 
         req.body.sender = req.user._id
 
+        let target
+
         if (req.params.receivers === "group") {
 
             req.body.target.type = req.body.target.type.toLowerCase()
@@ -124,8 +127,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
 
             if (!allowedTargets.includes(req.body.target.type))
                 return res.send(formatResult(400, 'invalid announcement target_type'))
-
-            let target
+            
             // TODO check if instructor has access to the target
             switch (req.body.target.type) {
                 case 'course':
@@ -167,7 +169,7 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
 
         } else {
             for (const i in req.body.specific_receivers) {
-                const user = await User.findOne({user_name: req.body.specific_receivers[i]})
+                const user = await User.findOne({ user_name: req.body.specific_receivers[i] })
                 if (!user)
                     return res.send(formatResult(403, `User ${req.body.specific_receivers[i]} not found`))
                 req.body.specific_receivers[i] = user._id
@@ -176,7 +178,55 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
         let result = await createDocument(Announcement, req.body)
         result = simplifyObject(result)
         result.data = await injectUser([result.data], 'sender')
+        result.data = await injectTarget(result.data)
         result.data = result.data[0]
+
+        if (req.params.receivers === "specific_users") {
+            for (const i in req.body.specific_receivers) {
+                MyEmitter.emit('socket_event', {
+                    name: `send_message_${req.body.specific_receivers[i]}`,
+                    data: result.data
+                });
+            }
+        } else {
+            let user_groups = []
+            switch (req.body.target.type) {
+                case 'course':
+                    user_groups.push(target.user_group)
+                    break;
+
+                case 'student_group':
+                    user_groups.push(req.body.target.id)
+                    break;
+
+                case 'faculty':
+                    user_groups = await User_group.distinct("_id", {
+                        faculty: req.body.target.id
+                    })
+                    break;
+
+                case 'college':
+                    {
+                        const faculties = await findDocument(Faculty, {
+                            college: req.body.target.id
+                        })
+                        user_groups = await User_group.distinct("_id", {
+                            faculty: { $in: faculties.map(x => x._id.toString()) }
+                        })
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            const users = await User_user_group.distinct('user', { user_group: { $in: user_groups.map(x => x.toString()) } })
+            for (const i in users) {
+                MyEmitter.emit('socket_event', {
+                    name: `send_message_${users[i]}`,
+                    data: result.data
+                });
+            }
+        }
 
         return res.send(result)
     } catch (error) {
@@ -233,7 +283,7 @@ router.put('/:id', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const announcement = await findDocument(Announcement, {_id: req.params.id})
+        const announcement = await findDocument(Announcement, { _id: req.params.id })
         if (!announcement)
             return res.send(formatResult(404, 'announcement not found'))
 
