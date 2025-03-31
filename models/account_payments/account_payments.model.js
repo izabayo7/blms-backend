@@ -5,6 +5,37 @@ const {
     timestamps
 } = require('../../utils/imports')
 
+/**
+ * @swagger
+ * definitions:
+ *   Account_payments:
+ *     properties:
+ *       method_used:
+ *         type: string
+ *         enum: ['MTN_MOMO', 'CARD']
+ *       user:
+ *         type: string
+ *       college:
+ *         type: string
+ *       amount_paid:
+ *         type: number
+ *       periodType:
+ *         type: string
+ *         enum: ['MONTH','YEAR']
+ *       periodValue:
+ *         type: number
+ *       disabled:
+ *         type: string
+ *       startingDate:
+ *         type: string
+ *         formate: date
+ *       status:
+ *         type: string
+ *         enum: ['ACTIVE', 'INACTIVE']
+ *     required:
+ *       - name
+ *       - email
+ */
 
 const methods = ['MTN_MOMO', 'CARD']
 const statuses = ['ACTIVE', 'INACTIVE']
@@ -49,6 +80,10 @@ const userPaymentsSchema = new mongoose.Schema({
         type: String,
         ref: "college"
     },
+    startingDate: {
+        type: Date,
+        required: true
+    },
     college_plans: [college_payment_plan],
     status: {
         type: String,
@@ -63,7 +98,8 @@ exports.validate_account_payments = (credentials) => {
         method_used: Joi.string().enum(methods).required(),
         amount_paid: Joi.number().min(1).max(100).required(),
         periodType: Joi.string().enum(periods).required(),
-        periodValue: Joi.number().required(),
+        periodValue: Joi.number().min(1).required(),
+        startingDate: Joi.date().required()
     }
     return Joi.validate(credentials, schema)
 }
