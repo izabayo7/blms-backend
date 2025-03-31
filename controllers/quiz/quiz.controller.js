@@ -1,6 +1,6 @@
 // import dependencies
 const {sendReleaseMarskEmail} = require("../email/email.controller");
-const {updateDocument} = require("../../utils/imports");
+const {updateDocument, validateQuestions} = require("../../utils/imports");
 const {
     express,
     fs,
@@ -976,83 +976,6 @@ router.delete('/:id', async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
-
-function validateQuestions(questions) {
-    const allowedQuestionTypes = ['open_ended', 'single_text_select', 'multiple_text_select', 'single_image_select', 'multiple_image_select', 'file_upload']
-    let message = ''
-    let marks = 0
-    for (let i in questions) {
-        i = parseInt(i)
-        if (!allowedQuestionTypes.includes(questions[i].type)) {
-            message = `question type "${questions[i].type}" is not supported`
-            break;
-        }
-        if (questions[i].type.includes('select')) {
-            if (!questions[i].options) {
-                message = `question ${i + 1} must have selection options`
-                break;
-            } else {
-                if (questions[i].options.choices.length < 2) {
-                    message = `question ${i + 1} must have more than one selection choices`
-                    break;
-                }
-                if (!questions[i].options.choices && !questions[i].type.includes('file')) {
-                    message = `question ${i + 1} must have selection choices`
-                    break;
-                }
-                let right_option_found = false
-                for (let k in questions[i].options.choices) {
-                    k = parseInt(k)
-                    let times
-                    if (questions[i].type === 'single_text_select' || questions[i].type === 'multiple_text_select') {
-                        times = questions[i].options.choices.filter(choice => choice.text == questions[i].options.choices[k].text).length
-                        if (!questions[i].options.choices[k].text) {
-                            message = `choice ${k + 1} in question ${i + 1} must have text`
-                            break;
-                        }
-                    }
-                    if (questions[i].type === 'single_image_select' || questions[i].type === 'multiple_image_select') {
-                        times = questions[i].options.choices.filter(choice => choice.src == questions[i].options.choices[k].src).length
-                        if (!questions[i].options.choices[k].src) {
-                            message = `choice ${k + 1} in question ${i + 1} must have attachment src`
-                            break;
-                        }
-                    }
-                    if (questions[i].options.choices[k].right) {
-                        right_option_found = true
-                    }
-                    if (times > 1) {
-                        message = `question ${i + 1} must have identical choices`
-                        break;
-                    }
-                }
-                if (!right_option_found) {
-                    message = `question ${i + 1} must have one right selection choice`
-                    break;
-                }
-            }
-        }
-
-        if (questions[i].type == "file_upload") {
-            if (!questions[i].allowed_files) {
-                message = `question"${i + 1}" must have files that students are allowed to submit`
-            }
-
-            if (!questions[i].allowed_files.length) {
-                message = `question"${i + 1}" must have files that students are allowed to submit`
-            }
-        }
-        marks += parseInt(questions[i].marks)
-        // more validations later
-    }
-    return message === '' ? {
-        status: true,
-        total_marks: marks
-    } : {
-        status: false,
-        error: message
-    }
-}
 
 // export the router
 module.exports = router
