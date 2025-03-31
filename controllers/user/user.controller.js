@@ -424,12 +424,14 @@ router.post('/', async (req, res) => {
     if (!user_category)
       return res.send(formatResult(404, 'category not found'))
 
+    let college
+
     if (user_category.name !== 'SUPER_ADMIN') {
       if (!req.body.college) {
         return res.send(formatResult(400, `${user_category.name.toLowerCase()} must have a college`))
       }
 
-      let college = await findDocument(College, {
+      college = await findDocument(College, {
         name: req.body.college
       })
       if (!college)
@@ -452,7 +454,7 @@ router.post('/', async (req, res) => {
       if (find_super_admin)
         return res.send(formatResult(404, `System can't have more than one super_admin`))
     }
-
+console.log(college)
     let result = await createDocument(User, {
       user_name: req.body.user_name,
       sur_name: req.body.sur_name,
@@ -464,7 +466,7 @@ router.post('/', async (req, res) => {
       phone: req.body.phone,
       password: await hashPassword(req.body.password),
       college: college._id,
-      category: category._id,
+      category: user_category._id,
       date_of_birth: req.body.date_of_birth
     })
 
