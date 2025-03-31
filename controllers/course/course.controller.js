@@ -405,7 +405,7 @@ router.get('/faculty/:id', filterUsers(["ADMIN"]), async (req, res) => {
 
         let foundCourses = []
 
-        let user_groups = await findDocuments(User_group, {faculty: faculty._id})
+        let user_groups = await findDocuments(User_group, {faculty: faculty._id, status:"ACTIVE"})
 
         for (const k in user_groups) {
             let courses = await findDocuments(Course, {
