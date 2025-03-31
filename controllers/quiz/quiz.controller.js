@@ -27,7 +27,7 @@ const {
   streamVideo,
   u,
   upload_multiple_images,
-  Compress_images
+  addQuizTarget
 } = require('../../utils/imports')
 const {
   parseInt
@@ -306,6 +306,7 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
 
     quiz = await addAttachmentMediaPaths([quiz])
     quiz = await addAttachedCourse(quiz)
+    quiz =  await addQuizTarget(quiz)
     quiz = quiz[0]
 
     return res.send(formatResult(u, u, quiz))

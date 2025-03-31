@@ -1493,6 +1493,36 @@ exports.savedecodedBase64Image = (dataString, dir) => {
   }
 }
 
+exports.addQuizTarget = async (quizes) => {
+  for (const i in quizes) {
+    if (quizes[i].target.type !== 'faculty_college_year') {
+
+      let chapter, course;
+
+      if (quizes[i].target.type === 'chapter') {
+        chapter = await this.findDocument(this.Chapter, {
+          _id: quizes[i].target.id
+        }, this.u, true)
+        course = await this.findDocument(this.Course, {
+          _id: chapter.course
+        })
+      }
+      course = await this.findDocument(this.Course, {
+        _id: chapter ? chapter.course : quiz.target.id
+      })
+
+      course = await this.injectFaculty_college_year([course])
+      course = course[0]
+
+      quizes[i].target.course = this._.pick(course, ['name', 'cover_picture', 'createdAt'])
+      quizes[i].target.chapter = chapter ? this._.pick(chapter, ['name', 'createdAt']) : '-'
+      quizes[i].target.faculty_college_year = course.faculty_college_year
+
+    }
+  }
+  return quizes
+}
+
 // proper way to define user roles
 // proper way to use jwt
 // proper way to use config
