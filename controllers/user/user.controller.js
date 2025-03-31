@@ -772,7 +772,7 @@ router.put('/profile', auth, async (req, res) => {
             return res.send(formatResult(500, err))
         })
       }
-      const result = await User.findByIdAndUpdate(user._id, {
+      let result = await User.findByIdAndUpdate(user._id, {
         profile: req.file.filename
       })
       let user_category = await findDocument(User_category, {
@@ -818,7 +818,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
   try {
 
     // check if user exist
-    const user = await findDocument(User, {
+    let user = await findDocument(User, {
       user_name: req.user.user_name
     }, u, false)
     if (!user)
@@ -835,6 +835,11 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
     })
     user.profile = u
     await user.save()
+    let user_category = await findDocument(User_category, {
+      _id: user.category
+    })
+    user = simplifyObject(user)
+    user.category = _.pick(user_category, 'name')
     return res.send(formatResult(200, 'OK', await generateAuthToken(user)))
   } catch (error) {
     return res.send(formatResult(500, error))
