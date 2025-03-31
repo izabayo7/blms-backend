@@ -1053,14 +1053,7 @@ router.put('/:id/cover_picture', async (req, res) => {
         if (!course)
             return res.send(formatResult(404, 'course not found'))
 
-        let faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: course.faculty_college_year
-        })
-
-        let faculty_college = await findDocument(Faculty_college, {
-            _id: faculty_college_year.faculty_college
-        })
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${req.params.id}`)
         req.kuriousStorageData = {
             dir: path,
         }
@@ -1129,15 +1122,7 @@ router.delete('/:id/cover_picture/:file_name', async (req, res) => {
         if (!course.cover_picture || course.cover_picture !== req.params.file_name)
             return res.send(formatResult(404, 'file not found'))
 
-        let faculty_college_year = await findDocument(Faculty_college_year, {
-            _id: course.faculty_college_year
-        })
-
-        let faculty_college = await findDocument(Faculty_college, {
-            _id: faculty_college_year.faculty_college
-        })
-
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${req.params.id}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/courses/${req.params.id}`)
 
 
         fs.unlink(`${path}/${course.cover_picture}`, (err) => {
