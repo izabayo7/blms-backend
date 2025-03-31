@@ -125,10 +125,10 @@ router.get('/:type/:id', async (req, res) => {
       return res.send(formatResult(404, 'live_session target not found'))
 
     const results = await findDocument(Live_session, {
-      target: {
-        type: req.params.type,
-        id: req.params.id
-      }
+      $and: [
+        { "target.type": req.params.type },
+        { "target.id": req.params.id }
+      ]
     })
 
     return res.send(formatResult(u, u, results))
