@@ -809,7 +809,15 @@ exports.formatContacts = async (messages, user_id, user, connected) => {
 exports.addAssignmentTarget = async (assignments) => {
     for (const i in assignments) {
         if (assignments[i].target.type === 'course') {
-            assignments[i].target.course = await this.Course.findOne({_id: assignments[i].target.id}, {name: 1})
+            assignments[i].target.course = await this.Course.findOne({_id: assignments[i].target.id}, {
+                name: 1,
+                user_group: 1
+            }).populate({
+                path: 'user_group', populate: {
+                    path: 'faculty',
+                    model: 'faculty'
+                }
+            })
         } else {
             assignments[i].target.chapter = await this.Chapter.findOne({_id: assignments[i].target.id}, {
                 name: 1,
