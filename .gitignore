@@ -12,3 +12,4 @@ config.json
 *.iml
 *.xml
 .vscode
+/data

@@ -3,7 +3,7 @@ const {
 } = require('../utils/imports')
 const dbHost = process.env.MONGO_URI
 // connect to mongodb server
-mongoose.connect(`mongodb://${dbHost}`, {
+mongoose.connect(dbHost, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   }).then(() => console.log('Successfully connected to Database '))

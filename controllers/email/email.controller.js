@@ -15,7 +15,8 @@ const {
     contactUs,
     requestCallback,
     reset_password,
-    confirmation_email
+    confirmation_email,
+    invitationToUserGroup
 } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
@@ -56,7 +57,7 @@ exports.sendUserGroupInvitationMail = async ({
     names,
                                         email, user_names,
                                         user_group_name,
-                                        user_type
+                                        user_type,
                                     }) => {
     try {
 

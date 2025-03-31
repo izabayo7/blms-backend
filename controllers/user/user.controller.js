@@ -548,10 +548,14 @@ router.get('/user_group/:id/:category', [auth, filterUsers(["ADMIN"])], async (r
                 user_group: user_groups[k]._id,
                 status: "ACTIVE"
             }).populate('user')
+            user_user_groups = await simplifyObject(user_user_groups)
             for (const j in user_user_groups) {
                 if (!user_category || user_user_groups[j].user.category === user_category._id.toString()) {
-                    user_user_groups[j].user.user_user_group_id = user_user_groups[j]._id
-                    result.push(user_user_groups[j].user)
+                    result.push({
+                        ...user_user_groups[j].user,
+                        user_user_group_id: user_user_groups[j]._id,
+                        date_joined: user_user_groups[j].createdAt
+                    })
                 }
             }
         }
@@ -701,6 +705,9 @@ router.get('/current', auth, async (req, res) => {
 
         user = await add_user_details([user])
         user = user[0]
+        user.category = {
+            name: user.category
+        }
 
         return res.send(formatResult(u, u, user))
     } catch (error) {

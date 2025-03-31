@@ -2416,7 +2416,7 @@ exports.invitationToUserGroup = ({
                                   top: 99px;
                                 "
             >
-                Dear ${user_name} <br>
+                Dear ${user_names} <br>
                 You have you have been assigned to ${ user_type === 'INSTRUCTOR' ? 'teach': 'learn'} in :  ${user_group_name},student group. ${ user_type === 'INSTRUCTOR' ? 'You now have this group as a destination when you create courses': 'You can now access courses in this user group'}.
                 <br>
                 <br>

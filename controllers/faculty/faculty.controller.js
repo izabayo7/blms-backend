@@ -233,6 +233,7 @@ async function injectDetails(faculties) {
             all_attendants += attendants
         }
         faculties[i].total_student_groups = user_groups.length
+        faculties[i].student_groups = user_groups
         faculties[i].total_students = all_attendants
         faculties[i].total_courses = total_courses
         faculties[i].attendants = all_attendants

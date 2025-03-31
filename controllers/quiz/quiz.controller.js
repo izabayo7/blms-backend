@@ -29,6 +29,7 @@ const {
     sendResizedImage,
     findFileType,
     streamVideo,
+    ObjectId,
     u,
     upload_multiple_images,
     addQuizTarget,
@@ -487,7 +488,7 @@ router.post('/duplicate/:id', async (req, res) => {
             _id: req.params.id,
             user: req.user._id
         })
-        if (quiz)
+        if (!quiz)
             return res.send(formatResult(404, 'Quiz not found'))
 
         let result = await createDocument(Quiz, {

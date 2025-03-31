@@ -1240,10 +1240,9 @@ exports.addAttachedCourse = async (quizes) => {
                 })
                 courseId = chapter.course
             } else if (quizes[i].target.type == 'live_session') {
-                cosnt
-                live_session = await this.Live_session.findOne({
-                    _id: quizes[i].target.id
-                })
+                const live_session = await this.Live_session.findOne({
+                        _id: quizes[i].target.id
+                    })
                 const chapter = await this.Chapter.findOne({_id: live_session.target.id})
                 courseId = chapter.course
             }
@@ -1781,7 +1780,7 @@ exports.add_user_details = async (users) => {
     for (const i in users) {
         const category = await this.findDocument(this.User_category, {_id: users[i].category})
         users[i].category = category.name
-        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email", "registration_number"])
+        users[i] = this._.pick(users[i], ['_id', 'sur_name', 'other_names', 'user_name', 'gender', 'phone', "profile", "category", "status", "email", "registration_number","user_user_group_id","date_joined"])
         if (users[i].profile) {
             users[i].profile = `http${process.env.NODE_ENV == 'production' ? 's' : ''}://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
         }
