@@ -1,6 +1,10 @@
 // import dependencies
-const {User_group} = require('../../models/user_group/user_group.model')
-const {User_user_group} = require('../../models/user_user_group/user_user_group.model')
+const {
+    User_group
+} = require('../../models/user_group/user_group.model')
+const {
+    User_user_group
+} = require('../../models/user_user_group/user_user_group.model')
 const {
     express,
     findDocuments,
@@ -32,9 +36,13 @@ exports.getFacultyStatistics = async (req, res) => {
         if (req.user.category.name == "SUPERADMIN") {
             total_faculties = await countDocuments(Faculty)
         } else {
-            total_faculties = await countDocuments(Faculty, {college: req.user.college})
+            total_faculties = await countDocuments(Faculty, {
+                college: req.user.college
+            })
         }
-        return res.send(formatResult(u, u, {total_faculties}))
+        return res.send(formatResult(u, u, {
+            total_faculties
+        }))
     } catch (error) {
         return res.send(formatResult(500, error))
     }
@@ -70,12 +78,16 @@ exports.getFaculties = async (req, res) => {
                 college: req.user.college
             } : {
                 _id: req.params.faculty_id,
+            }, u, u, u, true, u, {
+                _id: -1
             })
         } else {
             faculties = await findDocuments(Faculty, req.user.category.name == "ADMIN" ? {
                     college: req.user.college
-                } : {}
-            )
+                } : {},
+                u, u, u, true, u, {
+                    _id: -1
+                })
 
         }
         foundFaculties = await injectDetails(faculties)
@@ -97,11 +109,21 @@ exports.getUserFaculties = async (req, res) => {
         const user_groups = await User_user_group.find({
             user: req.user._id,
             status: "ACTIVE"
-        }, {user_group: 1});
+        }, {
+            user_group: 1
+        });
 
-        let faculties = await User_group.distinct('faculty', {_id: {$in: user_groups.map(x => x.user_group.toString())}}).populate('faculty')
+        let faculties = await User_group.distinct('faculty', {
+            _id: {
+                $in: user_groups.map(x => x.user_group.toString())
+            }
+        }).populate('faculty')
 
-        faculties = await Faculty.find({_id: {$in: faculties}})
+        faculties = await Faculty.find({
+            _id: {
+                $in: faculties
+            }
+        })
         return res.send(formatResult(u, u, faculties))
     } catch (error) {
         return res.send(formatResult(500, error))
@@ -219,7 +241,8 @@ exports.deleteFaculty = async (req, res) => {
 async function injectDetails(faculties) {
     // add head teacher
     for (const i in faculties) {
-        let all_attendants = 0, total_courses = 0;
+        let all_attendants = 0,
+            total_courses = 0;
         const user_groups = await User_group.find({
             faculty: faculties[i]._id,
             status: "ACTIVE"
@@ -229,7 +252,9 @@ async function injectDetails(faculties) {
                 user_group: user_groups[k]._id,
                 status: "ACTIVE"
             }).countDocuments()
-            total_courses += await countDocuments(Course, {user_group: user_groups[k]._id})
+            total_courses += await countDocuments(Course, {
+                user_group: user_groups[k]._id
+            })
             all_attendants += attendants
         }
         faculties[i].total_student_groups = user_groups.length
