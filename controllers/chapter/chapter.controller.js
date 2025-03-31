@@ -581,6 +581,8 @@ router.put('/:id/document', async (req, res) => {
  *     tags:
  *       - Chapter
  *     description: Update chapter video (video upload using swagger is still under construction)
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Chapter id
