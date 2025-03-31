@@ -835,6 +835,7 @@ router.delete('/profile/:file_name', auth, async (req, res) => {
         return res.send(formatResult(500, err))
     })
     user.profile = u
+    user.gender = user.gender.toLowerCase()
     await user.save()
     let user_category = await findDocument(User_category, {
       _id: user.category
