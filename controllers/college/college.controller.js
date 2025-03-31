@@ -499,7 +499,7 @@ router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
         if (error)
             return res.send(formatResult(400, error.details[0].message))
 
-        const {filename} = await savedecodedBase64Image(req.body.logo, path)
+        const {filename} = await savedecodedBase64Image(req.body.profile, path)
 
         if (college.logo) {
             fs.unlink(`${path}/${college.logo}`, (err) => {
