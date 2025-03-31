@@ -9,7 +9,7 @@ const facilitySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-});
+})
 
 // validate facility
 function validateFacility(credentials) {

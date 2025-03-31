@@ -53,11 +53,11 @@ const adminSchema = new mongoose.Schema({
     profile: {
         type: String,
     }
-});
+})
 
 // generate login token
 adminSchema.methods.generateAuthToken = function () {
-    const ONE_DAY = 60 * 60 * 24;
+    const ONE_DAY = 60 * 60 * 24
     return jwt.sign(
         {
             _id: this._id,
@@ -73,8 +73,8 @@ adminSchema.methods.generateAuthToken = function () {
             profile: this.profile,
         }
         , config.get('KuriousKey'), {
-            expiresIn: ONE_DAY
-        })
+        expiresIn: ONE_DAY
+    })
 }
 
 // validate admin
@@ -89,7 +89,7 @@ function validateAdmin(credentials) {
         email: Joi.string().required(),
         phone: Joi.string().max(10).min(10).required(),
         profile: Joi.string(),
-    };
+    }
     return Joi.validate(credentials, schema)
 }
 

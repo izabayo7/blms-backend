@@ -1,33 +1,8 @@
 // import dependencies
-const { express, bcrypt, multer, fs, Instructor, College, validateInstructor, validateUserLogin, hashPassword, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId, checkRequirements } = require('../../utils/imports')
+const { express, bcrypt, fs, Instructor, College, validateInstructor, validateUserLogin, hashPassword, auth, _superAdmin, defaulPassword, _admin, validateObjectId, checkRequirements } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
-
-// configure multer
-const storage = multer.diskStorage({
-    destination: async (req, file, cb) => {
-        dir = `./uploads/schools/${req.body.college}/users/instructors`
-        fs.exists(dir, exist => {
-            if (!exist) {
-                fs.mkdir(dir, error => cb(error, dir))
-            }
-            return cb(null, dir)
-        })
-    },
-    filename: (req, file, cb) => {
-        cb(null, `instructor-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
-    }
-})
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 1024 * 1024 * 5
-    },
-    fileFilter: fileFilter
-})
-
 
 // Get all admins
 router.get('/', async (req, res) => {
@@ -75,7 +50,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // post an instructor
-router.post('/', [auth, _superAdmin], async (req, res) => {
+router.post('/', async (req, res) => {
     const { error } = validateInstructor(req.body)
     if (error)
         return res.send(error.details[0].message).status(400)
@@ -123,7 +98,7 @@ router.post('/login', async (req, res) => {
 })
 
 // updated a instructor
-router.put('/:id', upload.single('profile'), async (req, res) => {
+router.put('/:id', async (req, res) => {
     let { error } = validateObjectId(req.params.id)
     if (error)
         return res.send(error.details[0].message).status(400)
@@ -137,14 +112,6 @@ router.put('/:id', upload.single('profile'), async (req, res) => {
     if (!instructor)
         return res.send(`Instructor with code ${req.params.id} doens't exist`)
 
-    if (req.file && instructor.profile) {
-        fs.unlink(`./uploads/schools/${req.body.college}/users/instructors/${instructor.profile}`, (err) => {
-            if (err)
-                return res.send(err).status(500)
-        })
-    }
-    if (req.file)
-        req.body.profile = req.file.filename
     if (req.body.password)
         req.body.password = await hashPassword(req.body.password)
     const updateDocument = await Instructor.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
@@ -155,7 +122,7 @@ router.put('/:id', upload.single('profile'), async (req, res) => {
 })
 
 // delete a instructor
-router.delete('/:id', [auth, _admin], async (req, res) => {
+router.delete('/:id', async (req, res) => {
     const { error } = validateObjectId(req.params.id)
     if (error)
         return res.send(error.details[0].message).status(400)
@@ -165,11 +132,13 @@ router.delete('/:id', [auth, _admin], async (req, res) => {
     let deleteDocument = await Instructor.findOneAndDelete({ _id: req.params.id })
     if (!deleteDocument)
         return res.send('Instructor Not Deleted').status(500)
-    fs.unlink(`./uploads/schools/${req.body.college}/users/instructors/${instructor.profile}`, (err) => {
-        if (err)
-            return res.send(err).status(500)
-    })
-    return res.send(`Instructor ${deleteDocument._id} Successfully deleted`).status(200)
+    if (instructor.profile) {
+        fs.unlink(`./uploads/colleges/${instructor.college}/users/instructors/${instructor.profile}`, (err) => {
+            if (err)
+                return res.send(err).status(500);
+        })
+    }
+    return res.send(`${instructor.surName} ${instructor.otherNames} was successfully deleted`).status(200)
 })
 
 // export the router

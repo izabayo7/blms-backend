@@ -1,41 +1,19 @@
 // import dependencies
-const { express, bcrypt, multer, fs, SuperAdmin, validateSuperAdmin, validateUserLogin, hashPassword, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword } = require('../../utils/imports');
+const { express, bcrypt, fs, SuperAdmin, validateObjectId, validateSuperAdmin, validateUserLogin, hashPassword, auth, _superAdmin, defaulPassword } = require('../../utils/imports');
 
 // create router
 const router = express.Router();
 
-// configure multer
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    dir = `./uploads/system/superAdmin`
-    fs.exists(dir, exist => {
-      if (!exist) {
-        fs.mkdir(dir, error => cb(error, dir))
-      }
-      return cb(null, dir)
-    })
-  },
-  filename: (req, file, cb) => {
-    cb(null, `superAdmin-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
-  }
-})
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5
-  },
-  fileFilter: fileFilter
-});
 
 
 // Get superAdmin
 router.get('/', async (req, res) => {
-  const superAdmin = await SuperAdmin.findOne();
+  const superAdmin = await SuperAdmin.find();
   try {
     if (!superAdmin)
       return res.send('SuperAdmin not yet registered').status(404);
-    return res.send('SuperAdmin is registered').status(200);
+    return res.send(superAdmin).status(200);
+    // return res.send('SuperAdmin is registered').status(200);
   } catch (error) {
     return res.send(error).status(500);
   }
@@ -90,7 +68,7 @@ router.post('/login', async (req, res) => {
 });
 
 // updated a superAdmin
-router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
@@ -104,14 +82,6 @@ router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, re
   if (!superAdmin)
     return res.send(`SuperAdmin with code ${req.params.id} doens't exist`);
 
-  if (req.file && superAdmin.profile) {
-    fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
-      if (err)
-        return res.send(err).status(500)
-    })
-  }
-  if (req.file)
-    req.body.profile = req.file.filename;
   if (req.body.password)
     req.body.password = await hashPassword(req.body.password);
   const updateDocument = await SuperAdmin.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
@@ -122,7 +92,7 @@ router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, re
 });
 
 // delete a superAdmin
-router.delete('/:id', [auth, _superAdmin], async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
@@ -132,11 +102,13 @@ router.delete('/:id', [auth, _superAdmin], async (req, res) => {
   let deleteDocument = await SuperAdmin.findOneAndDelete({ _id: req.params.id });
   if (!deleteDocument)
     return res.send('SuperAdmin Not Deleted').status(500);
-  fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
-    if (err)
-      return res.send(err).status(500)
-  })
-  return res.send(`SuperAdmin ${deleteDocument._id} Successfully deleted`).status(200)
+  if (superAdmin.profile) {
+    fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
+      if (err)
+        return res.send(err).status(500)
+    })
+  }
+  return res.send(`${superAdmin.surName} ${superAdmin.otherNames} was successfully deleted`).status(200)
 });
 
 // export the router

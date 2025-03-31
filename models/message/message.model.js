@@ -2,7 +2,7 @@
 const {
     mongoose,
     Joi,
-} = require('../../utils/imports');
+} = require('../../utils/imports')
 
 const messageSchema = new mongoose.Schema({
     sender: {
@@ -23,7 +23,7 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-});
+})
 
 // validate message
 function validateMessage(credentials) {

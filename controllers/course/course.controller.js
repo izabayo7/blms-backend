@@ -1,41 +1,8 @@
 // import dependencies
-const { express, multer, fs, Course, getCollege, College, Instructor, validateCourse, FacilityCollegeYear, normaliseDate, fileFilter, auth, _superCourse, defaulPassword, _Course, validateObjectId, _student } = require('../../utils/imports')
+const { express, fs, Course, getCollege, College, Instructor, validateCourse, FacilityCollegeYear, auth, _instructor, validateObjectId, _student } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
-
-// configure multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const college = getCollege(req.body.facilityCollegeYear)
-    let dir = `./uploads/schools/${college}/courses`
-    fs.exists(dir, exist => {
-      if (!exist) {
-        fs.mkdir(dir, error => cb(error, dir))
-      }
-      dir = `./uploads/schools/${req.body.college}/courses/${req.params.id}`
-      fs.exists(dir, exist => {
-        if (!exist) {
-          fs.mkdir(dir, error => cb(error, dir))
-        }
-        return cb(null, dir)
-      })
-
-    })
-  },
-  filename: (req, file, cb) => {
-    cb(null, `course-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
-  }
-})
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5
-  },
-  fileFilter: fileFilter
-})
-
 
 // Get all courses
 router.get('/', async (req, res) => {
@@ -71,7 +38,7 @@ router.get('/college/:id', async (req, res) => {
 router.get('/instructor/:id', async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-    return res.send(error.details[0].message).status(400)
+    return res.status(500).send(error.details[0].message)
   let instructor = await Instructor.findOne({ _id: req.params.id })
   if (!instructor)
     return res.send(`Instructor ${req.params.id} Not Found`)
@@ -145,7 +112,7 @@ router.post('/', async (req, res) => {
 })
 
 // updated a course
-router.put('/:id', upload.single('coverPicture'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
@@ -158,16 +125,6 @@ router.put('/:id', upload.single('coverPicture'), async (req, res) => {
   let course = await Course.findOne({ _id: req.params.id })
   if (!course)
     return res.send(`Course with code ${req.params.id} doens't exist`)
-
-  if (req.file && course.coverPicture) {
-    const college = getCollege(course.facilityCollegeYear)
-    fs.unlink(`./uploads/schools/${college}/courses/${req.params.id}/${course.coverPicture}`, (err) => {
-      if (err)
-        return res.send(err).status(500)
-    })
-  }
-  if (req.file)
-    req.body.coverPicture = req.file.filename
 
   const updateDocument = await Course.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
   if (updateDocument)
@@ -187,13 +144,16 @@ router.delete('/:id', async (req, res) => {
   let deletedCourse = await Course.findOneAndDelete({ _id: req.params.id })
   if (!deletedCourse)
     return res.send('Course Not Deleted').status(500)
-  if (course.coverPicture) {
-    const college = getCollege(course.facilityCollegeYear)
-    fs.unlink(`./uploads/schools/${college}/courses/${req.params.id}/${course.coverPicture}`, (err) => {
+  const college = getCollege(course.facilityCollegeYear)
+  const dir = `./uploads/schools/${college}/courses/${req.params.id}`
+  fs.exists(dir, (err) => {
+    if (err)
+      return res.send(err).status(500)
+    fs.remove(dir, (err) => {
       if (err)
         return res.send(err).status(500)
     })
-  }
+  })
   return res.send(`Course ${deletedCourse._id} Successfully deleted`).status(200)
 })
 

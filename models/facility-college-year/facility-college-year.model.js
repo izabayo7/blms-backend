@@ -13,7 +13,7 @@ const facilityCollegeYearSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-});
+})
 
 // validate facility-collegeYear
 function validateFacilityCollegeYear(credentials) {
@@ -28,5 +28,5 @@ function validateFacilityCollegeYear(credentials) {
 const facilityCollegeYear = mongoose.model('facilityCollegeYear', facilityCollegeYearSchema)
 
 // export the model and the validation function
-module.exports.facilityCollegeYear = facilityCollegeYear 
+module.exports.facilityCollegeYear = facilityCollegeYear
 module.exports.validateFacilityCollegeYear = validateFacilityCollegeYear 

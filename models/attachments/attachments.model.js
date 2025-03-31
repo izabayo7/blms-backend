@@ -9,16 +9,16 @@ const AttachmentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    Attachment: {
+    chapter: {
         type: String,
         required: true
     }
-});
+})
 
 // validate Attachment
 function validateAttachment(credentials) {
     const schema = {
-        name: Joi.string().min(3).required(),
+        name: Joi.string(),
         chapter: Joi.ObjectId().required()
     }
     return Joi.validate(credentials, schema)

@@ -1,5 +1,6 @@
 // modules
 const Joi = require('joi')
+const bcrypt = require('bcryptjs')
 Joi.ObjectId = require('joi-objectid')(Joi)
 module.exports.express = require('express')
 module.exports.cors = require('cors')
@@ -8,8 +9,7 @@ module.exports.mongoose = require('mongoose')
 module.exports.Joi = Joi
 module.exports.jwt = require('jsonwebtoken')
 module.exports.config = require('config')
-module.exports.db = require('../models/mongodb')
-module.exports.bcrypt = require('bcryptjs')
+module.exports.bcrypt = bcrypt
 module.exports.multer = require('multer')
 module.exports.fs = require('fs-extra')
 
@@ -26,8 +26,7 @@ const { CollegeYear, validateCollegeYear } = require('../models/collegeYear/coll
 const { Course, validateCourse } = require('../models/course/course.model')
 const { Chapter, validateChapter } = require('../models/chapter/chapter.model')
 const { Message, validateMessage } = require('../models/message/message.model')
-const { Attachment, validateAttachment} = require('../models/attachments/attachments.model')
-const { hashPassword } = require('./hash')
+const { Attachment, validateAttachment } = require('../models/attachments/attachments.model')
 const { fileFilter } = require('./multer/fileFilter')
 
 module.exports.Admin = Admin
@@ -57,21 +56,28 @@ module.exports.validateMessage = validateMessage
 module.exports.Attachment = Attachment
 module.exports.validateAttachment = validateAttachment
 module.exports.fileFilter = fileFilter
-module.exports.hashPassword = hashPassword
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
+
+module.exports.hashPassword = async (password) => {
+    const salt = await bcrypt.genSalt(10)
+    const hashed = await bcrypt.hash(password, salt)
+    return hashed
+}
+
 module.exports.normaliseDate = (date) => {
     let result = ''
     for (const i in date) { if (date[i] !== ':' && date[i] !== '.' && date[i] !== '-') { result += date[i] } }
     return result
 }
+
 module.exports.validateUserLogin = (credentials) => {
-    const schema =
-    {
+    const schema = {
         email: Joi.string().email().required(),
         password: Joi.string().min(3).max(255).required()
-    };
+    }
     return Joi.validate(credentials, schema)
 }
+
 module.exports.checkRequirements = async (category, body) => {
     let Users = category === 'SuperAdmin' ? SuperAdmin : category === 'Admin' ? Admin : category === 'Instructor' ? Instructor : Student
 
@@ -98,10 +104,13 @@ module.exports.checkRequirements = async (category, body) => {
     return 'alright'
 }
 
-module.exports.FindDocument = {}
+module.exports.findDocument = async (model, id) => {
+    const document = await model.findOne({ _id: id })
+    return document
+}
 
 module.exports.getCollege = async (id, type) => {
-    let course = type === 'chapter' ? await Course.findOne({_id: id}) : undefined
+    let course = type === 'chapter' ? await Course.findOne({ _id: id }) : undefined
     let facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: type === 'chapter' ? course.facilityCollegeYear : id })
     if (!facilityCollegeYear)
         return `facilityCollegeYear ${id} Not Found`
@@ -110,7 +119,7 @@ module.exports.getCollege = async (id, type) => {
 }
 
 module.exports.getCourse = async (id) => {
-    let chapter = await Chapter.findOne({_id: id})
+    let chapter = await Chapter.findOne({ _id: id })
     return chapter.course
 }
 
@@ -129,18 +138,3 @@ module.exports._instructor = instructor
 
 // constant lobal variables
 module.exports.defaulPassword = `Kurious@${new Date().getFullYear()}`
-
-// controllers
-module.exports.superAdminController = require('../controllers/superAdmin/superAdmin.controller')
-module.exports.collegeController = require('../controllers/college/college.controller')
-module.exports.adminController = require('../controllers/admin/admin.controller')
-module.exports.instructorController = require('../controllers/instructor/instructor.controller')
-module.exports.studentController = require('../controllers/student/student.controller')
-module.exports.facilityController = require('../controllers/facility/facility.controller')
-module.exports.facilityCollegeController = require('../controllers/facility-college/facility-college.controller')
-module.exports.collegeYearController = require('../controllers/collegeYear/collegeYear.controller')
-module.exports.facilityCollegeYearController = require('../controllers/facility-college-year/facility-college-year.controller')
-module.exports.courseController = require('../controllers/course/course.controller')
-module.exports.chapterController = require('../controllers/chapter/chapter.controller')
-module.exports.messageController = require('../controllers/message/message.controller')
-module.exports.fileController = require('../controllers/files/files.controller')

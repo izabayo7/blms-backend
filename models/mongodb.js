@@ -3,7 +3,7 @@ const { mongoose } = require('../utils/imports')
 // connect to mongodb server
 mongoose.connect('mongodb://localhost/Kurious', {
   useNewUrlParser: true,
-  useUnifiedTopology: true 
+  useUnifiedTopology: true
 }).then(() => console.log('Successfully connected to Database '))
   .catch(err => console.log('Failed to Connect to Database', err))
 mongoose.set('useFindAndModify', false)

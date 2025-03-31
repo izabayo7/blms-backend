@@ -21,12 +21,11 @@ const chapterSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    document: {
+
+    liveVideo: {
         type: String,
-        // default: 'defult pdf needed'
     }
-    // video staff will be added later
-});
+})
 
 // validate chapter
 function validateChapter(credentials) {
@@ -34,7 +33,7 @@ function validateChapter(credentials) {
         name: Joi.string().min(3).required(),
         number: Joi.number().min(1),
         course: Joi.ObjectId().required(),
-        description: Joi.string().min(10).required(),
+        description: Joi.string().max(500).min(10).required(),
         document: Joi.string()
     }
     return Joi.validate(credentials, schema)

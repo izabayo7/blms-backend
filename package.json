@@ -4,6 +4,7 @@
   "description": "e learning platform",
   "main": "index.js",
   "scripts": {
+    "devStart": "nodemon .\\index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "I.Cedric",

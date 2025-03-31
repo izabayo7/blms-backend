@@ -53,11 +53,11 @@ const instructorSchema = new mongoose.Schema({
     profile: {
         type: String,
     }
-});
+})
 
 // generate login token
 instructorSchema.methods.generateAuthToken = function () {
-    const ONE_DAY = 60 * 60 * 24;
+    const ONE_DAY = 60 * 60 * 24
     return jwt.sign(
         {
             _id: this._id,
@@ -73,8 +73,8 @@ instructorSchema.methods.generateAuthToken = function () {
             profile: this.profile,
         }
         , config.get('KuriousKey'), {
-            expiresIn: ONE_DAY
-        })
+        expiresIn: ONE_DAY
+    })
 }
 
 // validate instructor

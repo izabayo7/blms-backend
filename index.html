@@ -7,6 +7,14 @@
 
 </head>
 <body>
+    <form action="/profile" enctype="multipart/form-data" method="POST">
+        <input type="hidden" name="_METHOD" value="PUT"/>
+        <h4>update school</h4>
+        <input placeholder="email" type="email" name="email" required>
+        <input placeholder="name" type="text" name="name" required>
+        <input type="file" name="profile" required>
+        <button type="submit">Update school</button>
+    </form>
     <form action="/kurious/college" enctype="multipart/form-data" method="PUT">
         <h4>insert school</h4>
         <input placeholder="email" type="email" name="email" required>

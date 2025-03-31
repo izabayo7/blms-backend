@@ -1,44 +1,54 @@
 // import dependencies
-const { 
-    express,
-    cors,
-    auth,
-    fs,
-    bodyparser,
-    superAdminController,
-    adminController,
-    collegeController,
-    instructorController,
-    studentController,
-    facilityController,
-    facilityCollegeController,
-    collegeYearController,
-    facilityCollegeYearController,
-    courseController,
-    chapterController,
-    messageController,
-    fileController
-} = require('./utils/imports')
+const { express, cors, auth, fs, bodyparser } = require('./utils/imports')
 
 // define app
 const app = express()
 
-
 // import models
 require('./models/mongodb')
 
+// import controllers
+const superAdminController = require('./controllers/superAdmin/superAdmin.controller')
+const collegeController = require('./controllers/college/college.controller')
+const adminController = require('./controllers/admin/admin.controller')
+const instructorController = require('./controllers/instructor/instructor.controller')
+const studentController = require('./controllers/student/student.controller')
+const facilityController = require('./controllers/facility/facility.controller')
+const facilityCollegeController = require('./controllers/facility-college/facility-college.controller')
+const collegeYearController = require('./controllers/collegeYear/collegeYear.controller')
+const facilityCollegeYearController = require('./controllers/facility-college-year/facility-college-year.controller')
+const courseController = require('./controllers/course/course.controller')
+const chapterController = require('./controllers/chapter/chapter.controller')
+const messageController = require('./controllers/message/message.controller')
+const fileController = require('./controllers/file/file.controller')
+
 // use middlewares
-app.use(bodyparser.urlencoded({ extended: true }))
-app.use(bodyparser.json())
+// app.use(bodyparser.urlencoded({ extended: true }))
+// app.use(bodyparser.json())
 app.use(cors())
 // for parsing multipart/form-data 
-app.use(express.static('public'));
+// app.use(express.static('public'))
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
     res.send("WELCOME TO Kurious").status(200)
 })
-app.use('/uploadtests', (req, res)=>{ 
+app.use('/uploadtests', (req, res) => {
     return res.sendFile(__dirname + '/index.html')
+})
+
+var multer = require('multer')
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        console.log(req.body)
+        const dir = `./uploads`
+            return cb(null, dir)
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname)
+    }
 })
 
 app.use('/kurious/superAdmin', superAdminController)

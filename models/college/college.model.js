@@ -10,17 +10,22 @@ const collegeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    profile: {
+    logo: {
         type: String,
+    },
+    disabled: {
+        type: Boolean,
+        default: false,
     }
-});
+})
 
 // validate college
 function validateCollege(credentials) {
     const schema = {
         name: Joi.string().min(3).required(),
         email: Joi.string().required(),
-        logo: Joi.string()
+        logo: Joi.string(),
+        disabled: Joi.boolean()
     }
     return Joi.validate(credentials, schema)
 }

@@ -2,7 +2,7 @@
 const {
     mongoose,
     Joi,
-} = require('../../utils/imports');
+} = require('../../utils/imports')
 
 const courseSchema = new mongoose.Schema({
     name: {
@@ -28,7 +28,7 @@ const courseSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-});
+})
 
 // validate course
 function validateCourse(credentials) {
@@ -36,7 +36,7 @@ function validateCourse(credentials) {
         name: Joi.string().min(3).required(),
         instructor: Joi.ObjectId().required(),
         facilityCollegeYear: Joi.ObjectId().required(),
-        description: Joi.string().max(100).min(10).required(),
+        description: Joi.string().max(500).min(10).required(),
         coverPicture: Joi.string(),
         published: Joi.boolean()
     }

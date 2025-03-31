@@ -62,11 +62,11 @@ const studentSchema = new mongoose.Schema({
     profile: {
         type: String,
     }
-});
+})
 
 // generate login token
 studentSchema.methods.generateAuthToken = function () {
-    const ONE_DAY = 60 * 60 * 24;
+    const ONE_DAY = 60 * 60 * 24
     return jwt.sign({
         _id: this._id,
         surName: this.surName,

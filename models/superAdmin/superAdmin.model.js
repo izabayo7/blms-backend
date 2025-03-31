@@ -49,11 +49,11 @@ const superSuperAdminSchema = new mongoose.Schema({
     profile: {
         type: String,
     }
-});
+})
 
 // generate login token
 superSuperAdminSchema.methods.generateAuthToken = function () {
-    const ONE_DAY = 60 * 60 * 24;
+    const ONE_DAY = 60 * 60 * 24
     return jwt.sign(
         {
             _id: this._id,

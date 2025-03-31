@@ -15,7 +15,7 @@ const facilityCollegeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-});
+})
 
 // validate facility-college
 function validateFacilityCollege(credentials) {
@@ -30,5 +30,5 @@ function validateFacilityCollege(credentials) {
 const facilityCollege = mongoose.model('facilityCollege', facilityCollegeSchema)
 
 // export the model and the validation function
-module.exports.facilityCollege = facilityCollege 
+module.exports.facilityCollege = facilityCollege
 module.exports.validateFacilityCollege = validateFacilityCollege 
