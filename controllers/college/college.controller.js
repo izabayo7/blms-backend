@@ -1,4 +1,6 @@
-const {exist} = require('joi')
+const {
+    exist
+} = require('joi')
 // import dependencies
 const {
     express,
@@ -21,10 +23,14 @@ const {
     addStorageDirectoryToPath,
     auth
 } = require('../../utils/imports')
-const {filterUsers} = require("../../middlewares/auth.middleware");
+const {
+    filterUsers
+} = require("../../middlewares/auth.middleware");
 
 // create router
 const router = express.Router()
+
+const pictureTypes = ['logo', 'banner'];
 
 /**
  * @swagger
@@ -142,7 +148,10 @@ router.get('/open/:name', async (req, res) => {
     try {
         let college = await findDocument(College, {
             name: req.params.name
-        }, {name: 1, logo: true})
+        }, {
+            name: 1,
+            logo: true
+        })
         if (!college)
             return res.send(formatResult(404, 'College not found'))
         college = await injectLogoMediaPaths([college])
@@ -222,7 +231,7 @@ router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
 
 /**
  * @swagger
- * /college/{college_name}/logo/{file_name}:
+ * /college/{college_name}/{pictureType}/{file_name}:
  *   get:
  *     tags:
  *       - College
@@ -233,6 +242,12 @@ router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
  *         in: path
  *         required: true
  *         type: string
+ *       - name: pictureType
+ *         description: Type of the picture to get
+ *         in: path
+ *         required: true
+ *         type: string
+ *         enum: [logo, banner]
  *       - name: file_name
  *         description: File name
  *         in: path
@@ -258,8 +273,14 @@ router.get('/checkNameExistance/:college_name', checkCollegeNameExistance)
  *       500:
  *         description: Internal Server error
  */
-router.get('/:college_name/logo/:file_name', async (req, res) => {
+router.get('/:college_name/:pictureType/:file_name', async (req, res) => {
     try {
+
+        const {
+            pictureType
+        } = req.params;
+        if (!pictureTypes.includes(pictureType))
+            return res.send(formatResult(404, 'invalid picture type'))
 
         // check if college exist
         const college = await findDocument(College, {
@@ -268,10 +289,10 @@ router.get('/:college_name/logo/:file_name', async (req, res) => {
         if (!college)
             return res.send(formatResult(404, 'college not found'))
 
-        if (!college.logo || (college.logo !== req.params.file_name))
+        if (!college[pictureType] || (college[pictureType] !== req.params.file_name))
             return res.send(formatResult(404, 'file not found'))
 
-        const path = addStorageDirectoryToPath(`./uploads/colleges/${college._id}/${college.logo}`)
+        const path = addStorageDirectoryToPath(`./uploads/colleges/${college._id}/${college[pictureType]}`)
 
         sendResizedImage(req, res, path)
     } catch (error) {
@@ -395,7 +416,9 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
             return res.send(formatResult(400, error.details[0].message))
 
         // check if college exist
-        let college = await findDocument(College, {_id: req.params.id})
+        let college = await findDocument(College, {
+            _id: req.params.id
+        })
         if (!college)
             return res.send(formatResult(404, `College not found`))
         if (req.params.id !== req.user.college)
@@ -433,7 +456,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
                 return res.send(formatResult(403, `College with ${phoneFound ? 'same phone ' : emailFound ? 'same email ' : nameFound ? 'same name ' : ''} arleady exist`))
             }
         }
-// never go back to trial
+        // never go back to trial
         let result = await updateDocument(College, req.params.id, req.body)
         result.data = await injectLogoMediaPaths([result.data])
         result.data = result.data[0]
@@ -474,7 +497,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
+router.put('/:id/logo', auth, filterUsers(['ADMIN']), async (req, res) => {
     try {
         let {
             error
@@ -622,10 +645,12 @@ router.delete('/:id/logo/:file_name', auth, async (req, res) => {
  *       500:
  *         description: Internal Server error
  */
-router.delete('/:id', auth, filterUsers(['SUPERADMIN']),async (req, res) => {
+router.delete('/:id', auth, filterUsers(['SUPERADMIN']), async (req, res) => {
     try {
 
-        let college = await findDocument(College, {_id: req.params.id})
+        let college = await findDocument(College, {
+            _id: req.params.id
+        })
         if (!college)
             return res.send(formatResult(404, `College with code ${req.params.id} Not Found`))
         // check if the college is never used
@@ -662,9 +687,16 @@ router.delete('/:id', auth, filterUsers(['SUPERADMIN']),async (req, res) => {
  */
 async function checkCollegeNameExistance(req, res) {
     try {
-        const college = await College.findOne({name: req.params.college_name, status: 1});
-        if (college) return res.send(formatResult(200, 'Name Already Taken', {exists: true}));
-        return res.send(formatResult(200, 'Name Available', {exists: false}));
+        const college = await College.findOne({
+            name: req.params.college_name,
+            status: 1
+        });
+        if (college) return res.send(formatResult(200, 'Name Already Taken', {
+            exists: true
+        }));
+        return res.send(formatResult(200, 'Name Available', {
+            exists: false
+        }));
     } catch (err) {
         return res.send(formatResult(500, err));
     }
