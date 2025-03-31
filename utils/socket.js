@@ -59,7 +59,6 @@ module.exports.listen = (app) => {
          */
 
         if (user.category.name == "ADMIN") {
-            console.log('ready')
             MyEmitter.on(`new_user_in_${user.college}`, (user) => {
                 socket.emit('res/users/new', {
                     user
@@ -69,6 +68,15 @@ module.exports.listen = (app) => {
             MyEmitter.on(`user_limit_reached_${user.college}`, () => {
                 socket.emit('user_limit_reached');
             });
+
+
+            socket.on("users/recentlyJoined",async () => {
+                const res = await User.find({
+                    college: user.college
+                },{sur_name: 1, other_names: 1, category: 1, createdAt: 1}).populate('category').limit(3).sort({_id:-1});
+
+                socket.emit('res/users/recentlyJoined', res);
+            })
 
         } else if (user.category.name == "INSTRUCTOR") {
 
