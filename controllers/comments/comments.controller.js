@@ -55,6 +55,8 @@ const router = express.Router()
  *     tags:
  *       - Comment
  *     description: Get all comments
+ *     security:
+ *       - bearerAuth: -[]
  *     responses:
  *       200:
  *         description: OK
