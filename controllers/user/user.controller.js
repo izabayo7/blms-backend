@@ -44,7 +44,8 @@ const {
   savedecodedBase64Image,
   addStorageDirectoryToPath,
   countDocuments,
-  MyEmitter
+  MyEmitter,
+  update_password
 } = require('../../utils/imports')
 
 // create router
@@ -1023,7 +1024,7 @@ router.put('/password', auth, async (req, res) => {
     const validPassword = await compare(req.body.current_password, req.user.password);
     if (!validPassword) return res.send(formatResult(400, 'Invalid password'));
 
-    this.update_password({ password: req.body.new_password, user_id: req.user._id })
+    update_password({ password: req.body.new_password, user_id: req.user._id })
 
     return res.send(formatResult(201, "PASSWORD WAS UPDATED SUCESSFULLY"))
   } catch (error) {

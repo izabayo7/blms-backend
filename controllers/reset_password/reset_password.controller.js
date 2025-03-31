@@ -1,7 +1,6 @@
 const { Reset_password, validatePasswordReset } = require("../../models/reset_password/reset_password.model");
-const { formatResult, User, ONE_DAY } = require("../../utils/imports");
+const { formatResult, User, ONE_DAY, update_password } = require("../../utils/imports");
 const { sendResetPasswordEmail } = require("../email/email.controller");
-const { update_pasxxxxxxsword } = require("../user/user.controller");
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 
 /**
@@ -82,7 +81,7 @@ exports.updatePasswordReset = async (req, res) => {
     if (JSON.stringify(user._id) != JSON.stringify(token.user))
       return res.send(formatResult(403, 'Invalid Token'));
 
-    await xxxxxx({ password: req.body.password, user_id: user._id })
+    await update_password({ password: req.body.password, user_id: user._id })
 
     token.status = 'CLOSED'
 
