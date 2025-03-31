@@ -202,7 +202,7 @@ router.get('/college/:id', async (req, res) => {
  */
 router.get('/search', auth, async (req, res) => {
   try {
-    // add college limit
+
     let {
       data,
       error
@@ -210,6 +210,7 @@ router.get('/search', auth, async (req, res) => {
       email: {
         $ne: req.user.email
       },
+      college: req.user.college,
       $or: [{
         sur_name: {
           $regex: req.query.data,
