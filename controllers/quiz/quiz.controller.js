@@ -372,115 +372,6 @@ router.put('/:id', async (req, res) => {
           }
         }
         if (deleteAll || deletePicture) {
-          console.log(quiz.questions[i].options.choices[j].src)
-          const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
-          // fs.exists(path, (exists) => {
-          //   if (exists) {
-          //     fs.unlink(path, (err) => {
-          //       if (err) {
-          //         return res.status(500).send(err)
-          //       }
-          //     })
-          //   }
-          // })
-        }
-      }
-    }
-  }
-
-  return res.status(201).send(updateDocument)
-
-})
-
-// updated the quiz target
-router.put('/quiz_target/:id', async (req, res) => {
-  let {
-    error
-  } = validateObjectId(req.params.id)
-  if (error)
-    return res.status(400).send(error.details[0].message)
-
-  // check if quiz exist
-  let quiz = await Quiz.findOne({
-    _id: req.params.id
-  })
-  if (!quiz)
-    return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
-
-
-  if (req.body.target) {
-
-    req.body.target.type = req.body.target.type.toLowerCase()
-
-    const allowedTargets = ['chapter', 'course', 'facultycollegeyear']
-
-    if (!allowedTargets.includes(req.body.target.type))
-      return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
-
-    let Target
-
-    switch (req.body.target.type) {
-      case 'chapter':
-        Target = await Chapter.find({
-          _id: req.body.target.id
-        })
-        break;
-
-      case 'course':
-        Target = await Course.find({
-          _id: req.body.target.id
-        })
-        break;
-
-      case 'facultycollegeyear':
-        Target = await FacilityCollegeYear.find({
-          _id: req.body.target.id
-        })
-        break;
-
-      default:
-        break;
-    }
-
-    if (!Target)
-      return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
-
-    const latesTargetedQuiz = await Quiz.findOne({ target: req.body.target })
-    if (latesTargetedQuiz) {
-      latesTargetedQuiz.target = undefined
-      latesTargetedQuiz.save()
-    }
-  }
-
-
-  const updateDocument = await Quiz.findOneAndUpdate({
-    _id: req.params.id
-  }, req.body, {
-    new: true
-  })
-  if (!updateDocument)
-    return res.status(500).send("Error ocurred")
-
-  // delete removed files
-  for (const i in quiz.questions) {
-    if (
-      quiz.questions[i].type.includes("file-select") &&
-      quiz.questions[i].options.choices.length > 0
-    ) {
-      let deleteAll = false
-      if (!req.body.questions[i].type.includes('file-select')) {
-        deleteAll = true
-      }
-      for (const j in quiz.questions[i].options.choices) {
-        let deletePicture = true
-        if (req.body.questions[i].type.includes('file-select')) {
-          for (const k in req.body.questions[i].options.choices) {
-            if (quiz.questions[i].options.choices[j].src === req.body.questions[i].options.choices[k].src) {
-              deletePicture = false
-            }
-          }
-        }
-        if (deleteAll || deletePicture) {
           const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
           fs.exists(path, (exists) => {
             if (exists) {
@@ -499,7 +390,6 @@ router.put('/quiz_target/:id', async (req, res) => {
   return res.status(201).send(updateDocument)
 
 })
-
 
 // delete a quiz
 router.delete('/:id', async (req, res) => {
