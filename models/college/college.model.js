@@ -49,7 +49,8 @@ function validate_college(credentials) {
         email: Joi.string().email(),
         motto: Joi.string(),
         phone: Joi.string().max(15),
-        location: Joi.string()
+        location: Joi.string(),
+        plan: Joi.string().enum(plans)
     }
     return Joi.validate(credentials, schema)
 }

@@ -6,12 +6,24 @@ const {
 } = require('../../utils/imports')
 
 
-// user_id,
-//     method used,
-//     amount paid,
-//     valid until,
-
 const methods = ['MTN_MOMO', 'CARD']
+const statuses = ['ACTIVE', 'INACTIVE']
+
+// to
+const college_payment_plan = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true
+        },
+        status: {
+            type: String,
+            enum: statuses,
+            default: 'ACTIVE'
+        },
+    },
+    {timestamps: true}
+)
 const userPaymentsSchema = new mongoose.Schema({
     method_used: {
         type: String,
@@ -29,7 +41,13 @@ const userPaymentsSchema = new mongoose.Schema({
         type: String,
         ref: "college"
     },
-},{timestamps: true})
+    college_plans: [college_payment_plan],
+    status: {
+        type: String,
+        enum: statuses,
+        default: 'ACTIVE'
+    },
+}, {timestamps: true})
 
 // validate user
 exports.validate_account_payments = (credentials) => {
