@@ -1,4 +1,5 @@
 // import dependencies
+const {Quiz_submission} = require("../../utils/imports");
 const {add_user_details} = require("../../utils/imports");
 const {filterUsers} = require("../../middlewares/auth.middleware");
 const {User_group} = require('../../models/user_group/user_group.model')
@@ -243,15 +244,23 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
         students = await add_user_details(students)
 
 
-
         let chapters = await Chapter.find({course: req.params.id}, {_id: 1, name: 1})
 
-        // let comments = await Comment.find({
-        //     "target.type": 'chapter',
-        //     "target.id": {$in: chapters.map(x => x._id.toString())}
-        // }).populate('sender',
-        //     {sur_name: 1, other_names: 1, user_name: 1, _id: 0}
-        // ).sort({_id: -1}).limit(4)
+        let quiz = await Quiz.find({
+            "target.type": "chapter",
+            "target.id": {$in: chapters.map(x => x._id.toString())}
+        }, {_id: 1})
+
+        const submissions = await Quiz_submission.find({
+            marked: true,
+            quiz: {$in: quiz.map(x => x._id.toString())}
+        }).populate('quiz',
+            {total_marks: 1}
+        ).sort({_id: -1})
+
+
+        let total_required_marks = 0
+        let total_got_marks = 0
 
 
         for (const i in students) {
@@ -261,10 +270,21 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
                     break
                 }
             }
+            for (const iKey in submissions) {
+                if(submissions[iKey].user.toString() === students[i]._id.toString()) {
+                    students[i].perfomance = (submissions[iKey].total_marks / submissions[iKey].quiz.total_marks) * 100
+                    total_required_marks += submissions[iKey].quiz.total_marks
+                    total_got_marks += submissions[iKey].total_marks
+                    break
+                }
+            }
+            if(!students[i].perfomance)
+                students[i].perfomance = 0
         }
 
         return res.send(formatResult(u, u, {
             students: students,
+            total_perfomance: (total_got_marks / total_required_marks) * 100
         }))
     } catch
         (error) {
