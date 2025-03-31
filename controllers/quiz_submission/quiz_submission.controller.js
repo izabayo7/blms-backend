@@ -279,6 +279,36 @@ router.get('/user/:user_name', async (req, res) => {
       let foundSubmissions = []
 
       for (const i in quizes) {
+        let chapter, course;
+
+        if (quizes[i].target.type === 'chapter') {
+          chapter = await findDocument(Chapter, {
+            _id: quizes[i].target.id
+          }, u, true)
+          course = await findDocument(Course, {
+            _id: chapter.course
+          })
+          chapter.course = course
+          quizes[i].target.chapter = chapter
+          // faculty_college_year = course.faculty_college_year
+        } else if (quiz.target.type === 'course') {
+          course = await findDocument(Course, {
+            _id: quiz.target.id
+          })
+          quizes[i].target.course = course
+          // faculty_college_year = course.faculty_college_year
+        }
+
+        // else if (quiz.target.type === 'faculty_college_year') {
+        //   faculty_college_year = quiz.target.id
+        // }
+        // const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+        //   user: user._id,
+        //   faculty_college_year: faculty_college_year
+        // })
+        // if (!user_faculty_college_year)
+        //   return res.send(formatResult(404, 'quiz not found'))
+
         let quiz_submission = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
         })
@@ -287,7 +317,7 @@ router.get('/user/:user_name', async (req, res) => {
           // quiz_submission = await injectQuiz(quiz_submission)
           quiz_submission = await injectUserFeedback(quiz_submission)
 
-          for (const k in quiz_submission) { 
+          for (const k in quiz_submission) {
             quiz_submission[k].quiz = await addAttachmentMediaPaths([quiz_submission[k].quiz])
             quiz_submission[k].quiz = quiz_submission[k].quiz[0]
           }
