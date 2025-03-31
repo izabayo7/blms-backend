@@ -226,16 +226,13 @@ router.get('/user/:user_name', async (req, res) => {
       status: 1
     })
     if (!user_faculty_college_year)
-      return res.send(formatResult(404, 'courses not found'))
+      return res.send(formatResult(200, undefined, []))
 
     let result = await findDocuments(Course, {
       faculty_college_year: user_faculty_college_year.faculty_college_year
     })
 
     // ******* while adding permissions remember to filter data according to the user requesting *******
-
-    if (!result.length)
-      return res.send(formatResult(404, 'courses not found'))
 
     result = simplifyObject(result)
 
