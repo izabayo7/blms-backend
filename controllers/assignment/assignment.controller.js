@@ -308,16 +308,9 @@ router.post('/', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         if (!target)
             return res.send(formatResult(404, 'assignment target not found'))
 
-        let result = await createDocument(Assignment, {
-            title: req.body.title,
-            details: req.body.details,
-            dueDate: req.body.dueDate,
-            user: req.user._id,
-            attachments: req.body.attachments,
-            total_marks: req.body.total_marks,
-            passMarks: req.body.passMarks,
-            target: req.body.target
-        })
+        req.body.user = req.user._id
+
+        let result = await createDocument(Assignment, req.body)
 
         return res.send(result)
     } catch (error) {
@@ -396,6 +389,9 @@ router.put('/:id', filterUsers(["INSTRUCTOR"]), async (req, res) => {
         assignment.details = req.body.details
         assignment.passMarks = req.body.passMarks
         assignment.dueDate = req.body.dueDate
+        assignment.submissionMode = req.body.submissionMode
+        assignment.allowMultipleFilesSubmission = req.body.allowMultipleFilesSubmission
+        assignment.allowed_files = req.body.allowed_files
         assignment.total_marks = req.body.total_marks
         assignment.user = req.user._id
 

@@ -73,23 +73,32 @@ const schema = new mongoose.Schema({
         type: Number,
         default: 100
     },
+    allowed_files: {
+        type: Array,
+    },
     user: {
         type: String,
         required: true
     },
     status: {
         type: String,
-        enum: ["DRAFT","PUBLISHED","RELEASED","DELETED"],
+        enum: ["DRAFT", "PUBLISHED", "RELEASED", "DELETED"],
         default: "DRAFT"
     },
+    submissionMode: {
+        type: String,
+        enum: ["textInput", "fileUpload"],
+        default: "textInput"
+    },
+    allowMultipleFilesSubmission: {
+        type: Boolean,
+        default: false,
+    }
 }, {timestamps: true})
 
 // validate quiz
-function validate_assignment(body, target = false) {
-    const schema = target ? {
-        type: Joi.string().required(),
-        id: Joi.ObjectId().required()
-    } : {
+function validate_assignment(body) {
+    const schema = {
         title: Joi.string().min(3).required(),
         details: Joi.string().required(),
         passMarks: Joi.number().min(1).required(),
@@ -98,7 +107,10 @@ function validate_assignment(body, target = false) {
             id: Joi.ObjectId().required()
         }),
         dueDate: Joi.date().required(),
-        total_marks: Joi.number().required()
+        total_marks: Joi.number().required(),
+        allowMultipleFilesSubmission: Joi.boolean(),
+        submissionMode: Joi.string().valid(["textInput", "fileUpload"]).required(),
+        allowed_files: Joi.array(),
     }
     return Joi.validate(body, schema)
 }
