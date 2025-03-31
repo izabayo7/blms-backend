@@ -28,7 +28,8 @@ const {
   updateDocument,
   deleteDocument,
   User_progress,
-  Quiz
+  Quiz,
+  Chapter
 } = require('../../utils/imports')
 
 // create router
@@ -400,6 +401,12 @@ router.post('/', async (req, res) => {
     if (!faculty_college_year.data)
       return res.send(formatResult(404, 'faculty_college_year not found'))
 
+    let user = await findDocument(User, {
+      _id: req.body.user
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
+
     let course = await findDocument(Course, {
       name: req.body.name
     })
@@ -528,6 +535,12 @@ router.put('/:id', async (req, res) => {
     if (!course.data)
       return res.send(formatResult(404, 'course not found'))
 
+    let user = await findDocument(User, {
+      _id: req.body.user
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
+
     course = await findDocument(Course, {
       _id: {
         $ne: req.params.id
@@ -598,6 +611,16 @@ router.delete('/:id', async (req, res) => {
       course_used = true
 
     if (!course_used) {
+
+
+
+      const chapters = await findDocuments(Chapter, { course: req.params.id })
+
+      if (chapters.data.length) {
+        for (const i in chapters.data) {
+          await deleteDocument(Chapter, chapters.data[i]._id)
+        }
+      }
 
       const result = await deleteDocument(Course, req.params.id)
 

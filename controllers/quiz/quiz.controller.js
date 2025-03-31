@@ -5,16 +5,18 @@ const {
   Quiz,
   Chapter,
   Course,
-  Instructor,
-  validateQuiz,
-  FacilityCollegeYear,
+  validate_quiz,
+  Faculty_college_year,
   validateObjectId,
-  Student,
   _,
-  StudentFacultyCollegeYear,
+  User_faculty_college_year,
   addAttachmentMediaPaths,
   addQuizUsages,
-  addAttachedCourse
+  addAttachedCourse,
+  findDocuments,
+  formatResult,
+  findDocument,
+  User
 } = require('../../utils/imports')
 const {
   parseInt
@@ -28,8 +30,6 @@ const router = express.Router()
  * definitions:
  *   Quiz:
  *     properties:
- *       _id:
- *         type: string
  *       name:
  *         type: string
  *       instructions:
@@ -38,14 +38,41 @@ const router = express.Router()
  *         type: number
  *       totalMarks:
  *         type: number
- *       instructor:
+ *       user:
  *         type: string
  *       published:
  *         type: boolean
+ *       questions  :
+ *         type: array
+ *         items:
+ *            type: object
+ *            properties:
+ *              type:
+ *                type: string
+ *              marks:
+ *                type: number
+ *              details:
+ *                type: string
+ *              options  :
+ *                type: object
+ *                properties:
+ *                  list_style_type:
+ *                    type: string
+ *                  choices:
+ *                    type: array
+ *                    items:
+ *                      type: object
+ *                      properties:
+ *                        text:
+ *                          type: string
+ *                        src:
+ *                          type: string
+ *                        right:
+ *                          type: boolean
  *       target:
  *         type: object
  *         properties:
- *           typer:
+ *           type:
  *             type: string
  *           id:
  *             type: string
@@ -53,8 +80,7 @@ const router = express.Router()
  *         type: string
  *     required:
  *       - name
- *       - instructions
- *       - instructor
+ *       - user
  */
 
 /**
@@ -73,189 +99,260 @@ const router = express.Router()
  *         description: Internal Server error
  */
 router.get('/', async (req, res) => {
-  let quizes = await Quiz.find().lean()
   try {
-    if (quizes.length === 0)
-      return res.status(404).send('Quiz list is empty')
-    quizes = await injectInstructor(quizes)
-    quizes = await addAttachmentMediaPaths(quizes)
-    return res.status(200).send(quizes)
+    let result = await findDocuments(Quiz)
+
+    if (!result.data.length)
+      return res.send(formatResult(404, 'Quiz list is empty'))
+
+    // result.data = await injectInstructor(result.data)
+    // result.data = await addAttachmentMediaPaths(result.data)
+
+    return res.send(result)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
-// Get specified quiz
+/**
+ * @swagger
+ * /quiz/user/{id}:
+ *   get:
+ *     tags:
+ *       - Quiz
+ *     description: Returns quizes of a specified user
+ *     parameters:
+ *       - name: id
+ *         description: User id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id', async (req, res) => {
   try {
     const {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
-    let quiz = await Quiz.findOne({
-      _id: req.params.id
-    }).lean()
+      return res.send(formatResult(400, error.details[0].message))
 
-    if (!quiz)
-      return res.status(404).send(`Quiz ${req.params.id} Not Found`)
-    quiz = await injectInstructor([quiz])
-    quiz = await addAttachmentMediaPaths([quiz])
-    return res.status(200).send(quiz[0])
+    let quiz = await findDocument(Quiz, {
+      _id: req.params.id
+    })
+    if (!quiz.data)
+      return res.send(formatResult(404, 'quiz not found'))
+
+    // quiz.data = await injectInstructor([quiz.data])
+    // quiz.data = await addAttachmentMediaPaths(quiz.data)
+    // quiz.data = quiz.data[0]
+
+    return res.send(quiz)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
-// Get quizes for a specific instructor
-router.get('/instructor/:id', async (req, res) => {
+/**
+ * @swagger
+ * /quiz/user/{id}:
+ *   get:
+ *     tags:
+ *       - Quiz
+ *     description: Returns quizes of a specified user
+ *     parameters:
+ *       - name: id
+ *         description: User id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/user/:id', async (req, res) => {
   try {
     const {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
+      return res.send(formatResult(400, error.details[0].message))
 
-    let instructor = await Instructor.findOne({
+    let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!instructor)
-      return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-    let quizes = await Quiz.find({
-      instructor: req.params.id
-    }).lean()
+    let quiz = await findDocuments(Quiz, {
+      user: req.params.id
+    })
 
-    if (quizes.length < 1)
-      return res.status(404).send(`There are no quizes for instructor ${instructor.surName}`)
+    if (!quiz.data.length)
+      return res.send(formatResult(404, 'quizes not found'))
 
-    quizes = await addAttachmentMediaPaths(quizes)
-    quizes = await addQuizUsages(quizes)
-    quizes = await addAttachedCourse(quizes)
+    // quiz.data = await addAttachmentMediaPaths(quiz.data)
+    // quiz.data = await addQuizUsages(quiz.data)
+    // quiz.data = await addAttachedCourse(quiz.data)
 
-    return res.status(200).send(quizes)
+    return res.send(quiz)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
-// Get quizes for a specific instructor by name
-router.get('/instructor/:id/:quiz_name', async (req, res) => {
+/**
+ * @swagger
+ * /quiz/user/{userId}/{quizName}:
+ *   get:
+ *     tags:
+ *       - Quiz
+ *     description: Returns a quiz with the specified name
+ *     parameters:
+ *       - name: userId
+ *         description: User id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: quizName
+ *         description: Quiz name
+ *         in: path
+ *         required: false
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/user/:id/:quiz_name', async (req, res) => {
   try {
     const {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
+      return res.send(formatResult(400, error.details[0].message))
 
-    let instructor = await Instructor.findOne({
+    let user = await findDocument(User, {
       _id: req.params.id
     })
-    if (!instructor)
-      return res.status(404).send(`Instructor of Code ${req.params.id} Not Found`)
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
-    let quiz = await Quiz.findOne({
-      instructor: req.params.id,
+    let quiz = await findDocument(Quiz, {
       name: req.params.quiz_name
-    }).lean()
-
-    if (!quiz)
-      return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
-
-    quiz = await addAttachmentMediaPaths([quiz])
-    quiz = await addQuizUsages(quiz)
-    quiz = await addAttachedCourse(quiz)
-
-    return res.status(200).send(quiz[0])
-  } catch (error) {
-    return res.status(500).send(error)
-  }
-})
-
-// Get quizes for a specific student by name
-router.get('/student/:id/:quiz_name', async (req, res) => {
-  try {
-    const {
-      error
-    } = validateObjectId(req.params.id)
-    if (error)
-      return res.status(400).send(error.details[0].message)
-
-    let student = await Student.findOne({
-      _id: req.params.id
     })
-    if (!student)
-      return res.status(404).send(`Student with Code ${req.params.id} Not Found`)
 
-    let quiz = await Quiz.findOne({
-      name: req.params.quiz_name
-    }).lean()
+    if (!quiz.data)
+      return res.send(formatResult(404, 'quiz not found'))
 
-
-    if (!quiz)
-      return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
-
-    let facultycollegeyear = ''
+    let faculty_college_year
     let chapter
-    let course = ''
+    let course
 
-    if (quiz.target.type === 'chapter') {
-      chapter = await Chapter.findOne({ _id: quiz.target.id })
-      course = await Course.findOne({ _id: chapter.course })
+    if (quiz.data.target.type === 'chapter') {
+      chapter = await findDocument(Chapter, {
+        _id: quiz.data.target.id
+      })
+      course = await findDocument(Course, {
+        _id: chapter.data.course
+      })
+    } else if (quiz.data.target.type === 'course') {
+      course = await findDocument(Course, {
+        _id: quiz.data.target.id
+      })
+      faculty_college_year = course.data.faculty_college_year
     }
-    else if (quiz.target.type === 'course') {
-      course = await Course.findOne({ _id: quiz.target.id })
-      facultycollegeyear = course.facultycollegeyear
+
+    if (quiz.data.target.type === 'faculty_college_year') {
+      faculty_college_year = quiz.data.target.id
     }
 
-    if (quiz.target.type === 'facultycollegeyear') {
-      facultycollegeyear = quiz.target.id
-    }
+    const user_faculty_college_year = await findDocument(User_faculty_college_year, {
+      user: req.params.id,
+      faculty_college_year: faculty_college_year
+    })
 
-    const studentFacultyCollegeYear = await StudentFacultyCollegeYear({ student: req.params.student, facultycollegeyear: facultycollegeyear })
+    if (!user_faculty_college_year.data)
+      return res.send(formatResult(404, 'quiz not found'))
 
-    if (!studentFacultyCollegeYear)
-      return res.status(404).send(`Student is not allowed to do this quiz`)
+    // quiz.data = await addAttachmentMediaPaths([quiz.data])
+    // quiz.data = await addQuizUsages(quiz.data)
+    // quiz.data = await addAttachedCourse(quiz.data)
+    // quiz.data = quiz.data[0]
 
-    quiz = await addAttachmentMediaPaths([quiz], true)
-
-    return res.status(200).send(quiz[0])
+    return res.send(quiz)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
-// post an quiz
+/**
+ * @swagger
+ * /quiz:
+ *   post:
+ *     tags:
+ *       - Quiz
+ *     description: Create quiz
+ *     parameters:
+ *       - name: body
+ *         description: Fields for a quiz
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/Quiz'
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.post('/', async (req, res) => {
   try {
     const {
       error
-    } = validateQuiz(req.body)
+    } = validate_quiz(req.body)
     if (error)
-      return res.status(400).send(error.details[0].message)
+      return res.send(formatResult(400, error.details[0].message))
 
-    let instructor = await Instructor.findOne({
-      _id: req.body.instructor
+    let user = await findDocument(User, {
+      _id: req.params.id
     })
-    if (!instructor)
-      return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
 
     // check if quizname exist
     let quiz = await Quiz.findOne({
       name: req.body.name
     })
     if (quiz)
-      return res.status(400).send(`Quiz ${req.body.name} arleady exist try another name`)
+      return res.send(formatResult(400, `Quiz ${req.body.name} arleady exist try another name`))
 
     const validQuestions = validateQuestions(req.body.questions)
     if (validQuestions.status !== true)
-      return res.status(400).send(validQuestions.error)
+      return res.send(formatResult(400, validQuestions.error))
 
     let newDocument = new Quiz({
       name: req.body.name,
       duration: req.body.duration,
       instructions: req.body.instructions,
-      instructor: req.body.instructor,
+      user: req.body.user,
       questions: req.body.questions,
       totalMarks: validQuestions.totalMarks
     })
@@ -265,7 +362,7 @@ router.post('/', async (req, res) => {
       return res.status(201).send(saveDocument)
     return res.status(500).send('New Quiz not Registered')
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -275,24 +372,24 @@ router.put('/:id', async (req, res) => {
     error
   } = validateObjectId(req.params.id)
   if (error)
-    return res.status(400).send(error.details[0].message)
-  error = validateQuiz(req.body)
+    return res.send(formatResult(400, error.details[0].message))
+  error = validate_quiz(req.body)
   error = error ? error.error : error
   if (error)
-    return res.status(400).send(error.details[0].message)
+    return res.send(formatResult(400, error.details[0].message))
 
   // check if quiz exist
   let quiz = await Quiz.findOne({
     _id: req.params.id
   })
   if (!quiz)
-    return res.status(404).send(`Quiz with code ${req.params.id} doens't exist`)
+    return res.send(formatResult(404, `Quiz with code ${req.params.id} doens't exist`))
 
-  let instructor = await Instructor.findOne({
-    _id: req.body.instructor
+  let user = await Instructor.findOne({
+    _id: req.body.user
   })
-  if (!instructor)
-    return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+  if (!user)
+    return res.send(formatResult(404, `Instructor of Code ${req.body.user} Not Found`))
 
   // // check if quizname exist
   // let _quiz = await Quiz.findOne({
@@ -300,16 +397,16 @@ router.put('/:id', async (req, res) => {
   //   name: req.body.name
   // })
   // if (_quiz && _quiz._id !== quiz._id)
-  //   return res.status(404).send(`Quiz ${req.body.name} arleady exist try another name`)
+  //   return res.send(formatResult(404,`Quiz ${req.body.name} arleady exist try another name`))
 
   if (req.body.target) {
 
     req.body.target.type = req.body.target.type.toLowerCase()
 
-    const allowedTargets = ['chapter', 'course', 'facultycollegeyear']
+    const allowedTargets = ['chapter', 'course', 'faculty_college_year']
 
     if (!allowedTargets.includes(req.body.target.type))
-      return res.status(404).send(`Quiz target type ${req.body.target.type} doens't exist`)
+      return res.send(formatResult(404, `Quiz target type ${req.body.target.type} doens't exist`))
 
     let Target
 
@@ -326,8 +423,8 @@ router.put('/:id', async (req, res) => {
         })
         break;
 
-      case 'facultycollegeyear':
-        Target = await FacilityCollegeYear.find({
+      case 'faculty_college_year':
+        Target = await Faculty_college_year.find({
           _id: req.body.target.id
         })
         break;
@@ -337,9 +434,11 @@ router.put('/:id', async (req, res) => {
     }
 
     if (!Target)
-      return res.status(400).send(`Quiz target id ${req.body.target.id} doens't exist`)
+      return res.send(formatResult(400, `Quiz target id ${req.body.target.id} doens't exist`))
 
-    const latesTargetedQuiz = await Quiz.findOne({ target: req.body.target })
+    const latesTargetedQuiz = await Quiz.findOne({
+      target: req.body.target
+    })
     if (latesTargetedQuiz) {
       latesTargetedQuiz.target = undefined
       await latesTargetedQuiz.save()
@@ -347,7 +446,7 @@ router.put('/:id', async (req, res) => {
   }
   const validQuestions = validateQuestions(req.body.questions)
   if (validQuestions.status !== true)
-    return res.status(400).send(validQuestions.error)
+    return res.send(formatResult(400, validQuestions.error))
 
   req.body.totalMarks = validQuestions.totalMarks
 
@@ -357,7 +456,7 @@ router.put('/:id', async (req, res) => {
   quiz.duration = req.body.duration
   quiz.questions = req.body.questions
   quiz.totalMarks = req.body.totalMarks
-  quiz.instructor = req.body.instructor
+  quiz.user = req.body.user
   quiz.published = req.body.published
 
   const updateDocument = await quiz.save()
@@ -384,7 +483,7 @@ router.put('/:id', async (req, res) => {
           }
         }
         if (deleteAll || deletePicture) {
-          const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
+          const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}/${quiz.questions[i].options.choices[j].src}`
           fs.exists(path, (exists) => {
             if (exists) {
               fs.unlink(path, (err) => {
@@ -411,18 +510,18 @@ router.delete('/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.status(400).send(error.details[0].message)
+      return res.send(formatResult(400, error.details[0].message))
     let quiz = await Quiz.findOne({
       _id: req.params.id
     })
     if (!quiz)
-      return res.status(404).send(`Quiz of Code ${req.params.id} Not Found`)
+      return res.send(formatResult(404, `Quiz of Code ${req.params.id} Not Found`))
 
-    let instructor = await Instructor.findOne({
-      _id: quiz.instructor
+    let user = await Instructor.findOne({
+      _id: quiz.user
     })
-    if (!instructor)
-      return res.status(404).send(`Instructor of Code ${req.body.instructor} Not Found`)
+    if (!user)
+      return res.send(formatResult(404, `Instructor of Code ${req.body.user} Not Found`))
 
     let deletedQuiz = await Quiz.findOneAndDelete({
       _id: req.params.id
@@ -432,10 +531,12 @@ router.delete('/:id', async (req, res) => {
 
     let err = undefined
 
-    const path = `./uploads/colleges/${instructor.college}/assignments/${req.params.id}`
+    const path = `./uploads/colleges/${user.college}/assignments/${req.params.id}`
     fs.exists(path, (exists) => {
       if (exists) {
-        fs.rmdir(path, { recursive: true }, (err) => {
+        fs.rmdir(path, {
+          recursive: true
+        }, (err) => {
           if (err) {
             err = err
           }
@@ -447,9 +548,9 @@ router.delete('/:id', async (req, res) => {
     if (err)
       return res.status(500).send(err)
 
-    return res.status(200).send(`Quiz ${deletedQuiz._id} Successfully deleted`)
+    return res.send(`Quiz ${deletedQuiz._id} Successfully deleted`)
   } catch (error) {
-    return res.status(500).send(error)
+    return res.send(formatResult(500, error))
   }
 })
 
@@ -497,15 +598,15 @@ function validateQuestions(questions) {
     }
 }
 
-// replace instructor id by the instructor information
+// replace user id by the user information
 async function injectInstructor(quizes) {
   for (const i in quizes) {
-    const instructor = await Instructor.findOne({
-      _id: quizes[i].instructor
+    const user = await Instructor.findOne({
+      _id: quizes[i].user
     })
-    quizes[i].instructor = _.pick(instructor, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
-    if (quizes[i].instructor.profile) {
-      quizes[i].instructor.profile = `${process.env.HOST}/kurious/file/instructorProfile/${instructor._id}`
+    quizes[i].user = _.pick(user, ['_id', 'surName', 'otherNames', 'gender', 'phone', 'profile'])
+    if (quizes[i].user.profile) {
+      quizes[i].user.profile = `${process.env.HOST}/kurious/file/userProfile/${user._id}`
     }
   }
   return quizes

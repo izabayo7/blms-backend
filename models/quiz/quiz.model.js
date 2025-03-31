@@ -59,7 +59,7 @@ const quiz_schema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    instructor: {
+    user: {
         type: String,
         required: true
     },
@@ -96,7 +96,7 @@ function validate_quiz(body) {
             },
         })).required(),
         total_marks: Joi.number(),
-        instructor: Joi.ObjectId().required(),
+        user: Joi.ObjectId().required(),
         published: Joi.boolean()
     }
     return Joi.validate(body, schema)
