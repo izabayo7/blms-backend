@@ -17,7 +17,6 @@ const user_attendance_schema = new mongoose.Schema({
     },
     attendance: {
         type: Number,
-        max: 100,
         default: 0
     },
 })

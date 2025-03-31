@@ -1,4 +1,5 @@
 const socket_io = require('socket.io')
+const {User_attendance} = require("../models/user_attendance/user_attendance.model");
 const {autoMarkSelectionQuestions} = require("./imports");
 const {Quiz_submission} = require("./imports");
 const {User_notification} = require("./imports");
@@ -70,10 +71,15 @@ module.exports.listen = (app) => {
             });
 
 
-            socket.on("users/recentlyJoined",async () => {
+            socket.on("users/recentlyJoined", async () => {
                 const res = await User.find({
                     college: user.college
-                },{sur_name: 1, other_names: 1, category: 1, createdAt: 1}).populate('category').limit(3).sort({_id:-1});
+                }, {
+                    sur_name: 1,
+                    other_names: 1,
+                    category: 1,
+                    createdAt: 1
+                }).populate('category').limit(3).sort({_id: -1});
 
                 socket.emit('res/users/recentlyJoined', res);
             })
@@ -421,8 +427,12 @@ module.exports.listen = (app) => {
             socket.emit('res/comment/new', result)
         })
 
-        // notify members that quiz is released
-        socket.on('live/checkAttendance', async ({receivers}) => {
+        // check student attendance
+        socket.on('live/checkAttendance', async ({receivers, session_id}) => {
+
+            const live_session = await Live_session.findById(session_id)
+            live_session.attendance_check += 1
+            await live_session.save()
 
             // make code
             const code = makeCode(6);
@@ -434,9 +444,25 @@ module.exports.listen = (app) => {
         })
 
         // notify instructor that you are still following
-        socket.on('res/live/checkAttendance', async ({receivers}) => {
+        socket.on('res/live/checkAttendance', async ({receivers, attendance, session_id}) => {
+
+            let user_attendance = await User_attendance.findOne({
+                user: id,
+                live_session: session_id
+            })
+            if (user_attendance) {
+                user_attendance.attendance += attendance
+                await user_attendance.save()
+            } else {
+                await createDocument(User_attendance, {
+                    user: id,
+                    live_session: session_id,
+                    attendance
+                })
+            }
+
             receivers.forEach(receiver => {
-                socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', {id})
+                socket.broadcast.to(receiver.id).emit('res/live/studentAnswered', {id, attendance})
             })
         })
 

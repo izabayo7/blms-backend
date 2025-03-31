@@ -32,6 +32,10 @@ const live_session_schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    attendance_check: {
+        type: Number,
+        default: 0
+    },
     status: {
         type: String,
         enum: ["PENDING","LIVE","FINISHED"],

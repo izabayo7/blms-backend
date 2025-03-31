@@ -267,7 +267,9 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
 
         const attendances = await User_attendance.find({
             live_session: {$in: live_sessions.map(x => x._id.toString())}
-        })
+        }).populate('live_session',
+            {attendance_check: 1, _id: 0}
+        )
 
         let total_required_marks = 0
         let total_got_marks = 0
@@ -304,7 +306,7 @@ router.get('/statistics/course/:id', filterUsers(["INSTRUCTOR"]), async (req, re
 
             for (const iKey in attendances) {
                 if(attendances[iKey].user.toString() === students[i]._id.toString()) {
-                    student_total_attendance += attendances[iKey].attendance
+                    student_total_attendance += (attendances[iKey].attendance / attendances[iKey].live_session.attendance_check)
                     break
                 }
             }
