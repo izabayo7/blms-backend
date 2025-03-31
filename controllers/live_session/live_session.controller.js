@@ -180,6 +180,9 @@ router.get('/:id', async (req, res) => {
             _id: req.params.id
         }).lean()
 
+        if(!result)
+            return res.send(formatResult(404, 'live_session target not found'))
+
         const chapter = await Chapter.findById(result.target.id)
 
         result.course = await Course.findById(chapter.course)
