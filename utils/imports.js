@@ -1280,7 +1280,15 @@ module.exports._instructor = instructor
 
 // constant lobal variables
 module.exports.default_password = `Kurious@${new Date().getFullYear()}`
-module.exports.random_user_name = `user_${Math.round(Math.random() * 1000000)}`
+module.exports.random_user_name = async () => {
+  let user_name_available = false, user_name
+  while (!user_name_available) {
+    user_name = `user_${Math.round(Math.random() * 1000000)}`
+    const user = await this.findDocument(this.User, { user_name: user_name })
+    if (!user) user_name_available = true
+  }
+  return user_name
+}
 
 // proper way to define user roles
 // proper way to use jwt
