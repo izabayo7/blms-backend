@@ -9,6 +9,7 @@ const {
     Quiz_submission,
     Quiz,
     User,
+    date,
     validate_quiz_submission,
     validateObjectId,
     addAttachmentMediaPaths,
@@ -567,6 +568,68 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
         return res.send(formatResult(500, error))
     }
 })
+
+/**
+ * @swagger
+ * /quiz_submission/statistics/submitted:
+ *   get:
+ *     tags:
+ *       - Statistics
+ *     description: Get User statistics of how user attempted quizes
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: start_date
+ *         description: The starting date
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: end_date
+ *         description: The ending date
+ *         in: query
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/statistics/submitted', async (req, res) => {
+    try {
+        const {start_date, end_date} = req.query
+        const student = await User_category.findOne({name: "STUDENT"});
+        const users = await User.find({college: req.user.college,category: student._id},{_id: 1})
+
+        const result = await Quiz_submission.aggregate([
+            {"$match": {createdAt: {$gt: date(start_date), $lte: date(end_date)}}},
+            {"$match": {user: {$in: users.map(x => x._id.toString())}}},
+            {
+                "$group": {
+                    "_id": {
+                        "$subtract": [
+                            "$createdAt",
+                            {
+                                "$mod": [
+                                    {"$subtract": ["$createdAt", date("1970-01-01T00:00:00.000Z")]},
+                                    1000 * 60 * 60 * 24
+                                ]
+                            }
+                        ]
+                    },
+                    "total_submissions": {"$sum": 1}
+                }
+            },
+            {"$sort": {"_id": 1}}
+        ])
+        return res.send(formatResult(u, u, result))
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
 
 /**
  * @swagger
