@@ -32,10 +32,6 @@ const chat_group_schema = new mongoose.Schema({
         required: false
     },
     members: [member_schema],
-    private: {
-        type: Boolean,
-        default: false
-    },
     profile: {
         type: String
     },
@@ -52,21 +48,32 @@ const chat_group_schema = new mongoose.Schema({
 chat_group_schema.plugin(timestamps)
 
 // validate chat_group
-function validate_chat_group(credentials) {
-    const schema = {
-        name: Joi.string().required(),
+function validate_chat_group(credentials, method = 'create') {
+    const schema = method == 'create' ? {
+        name: Joi.string().required(), // regex needed
         members: Joi.array().min(3).items({
             _id: Joi.ObjectId(),
             isCreator: Joi.boolean(),
             status: Joi.boolean(),
             isAdmin: Joi.boolean(),
-            id: Joi.ObjectId().required()
+            user_name: Joi.string().required()
         }).required(),
         desctiption: Joi.string(),
         college: Joi.ObjectId().required(),
-        private: Joi.boolean(),
         status: Joi.number(),
-    }
+    } : method == 'add_members' ? {
+        members: Joi.array().min(1).items({
+            _id: Joi.ObjectId(),
+            isCreator: Joi.boolean(),
+            status: Joi.boolean(),
+            isAdmin: Joi.boolean(),
+            user_name: Joi.string().required()
+        }).required()
+    } : {
+                name: Joi.string().required(), // regex needed
+                desctiption: Joi.string(),
+                status: Joi.number(),
+            }
     return Joi.validate(credentials, schema)
 }
 

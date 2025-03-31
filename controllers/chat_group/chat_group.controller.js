@@ -1,11 +1,9 @@
-// import dependencies
 const {
   express,
   Chat_group,
   validate_chat_group,
   validateObjectId,
   returnUser,
-  removeDocumentVersion,
   injectUser,
   findDocuments,
   formatResult,
@@ -265,8 +263,21 @@ router.get('/:id/profile/:file_name', async (req, res) => {
  *         description: Fields for a chat_group
  *         in: body
  *         required: true
- *         schema:
- *           $ref: '#/definitions/Chat_group'
+ *         type: object
+ *         properties:
+ *           name:
+ *             type: string
+ *           description:
+ *             type: string
+ *           college:
+ *             type: string
+ *           members  :
+ *             type: array
+ *             items:
+ *                type: object
+ *                properties:
+ *                  user_name:
+ *                    type: string
  *     responses:
  *       201:
  *         description: Created
@@ -287,7 +298,7 @@ router.post('/', async (req, res) => {
       return res.send(formatResult(400, error.details[0].message))
 
     let college = await findDocument(College, {
-      _id: req.params.id
+      _id: req.body.college
     })
     if (!college)
       return res.send(formatResult(404, 'college not found'))
@@ -306,19 +317,30 @@ router.post('/', async (req, res) => {
     if (user)
       return res.send(formatResult(403, 'name was taken'))
 
+    let members = []
+
     for (const i in req.body.members) {
       let user = await findDocument(User, {
-        _id: req.body.members[i].id
+        user_name: req.body.members[i].user_name
       })
       if (!user)
-        return res.send(formatResult(400, `member ${parseInt(i) + 1} not found`))
+        return res.send(formatResult(404, `member ${parseInt(i) + 1} not found`))
+
+      const dupplicate = req.body.members.filter(m => m.user_name == user.user_name)
+      if (dupplicate.length > 1)
+        return res.send(formatResult(403, `member ${parseInt(i) + 1} is dupplicated`))
+
+      if (user.college != college._id)
+        return res.send(formatResult(403, `member ${parseInt(i) + 1} can't join this group`))
+
+      members.push({ id: user._id })
     }
 
     let result = await createDocument(Chat_group, {
       name: req.body.name,
       description: req.body.description,
       private: req.body.private,
-      members: req.body.members,
+      members: members,
       college: req.body.college,
     })
 
@@ -344,8 +366,12 @@ router.post('/', async (req, res) => {
  *         description: Fields for a Chat_group
  *         in: body
  *         required: true
- *         schema:
- *           $ref: '#/definitions/Chat_group'
+ *         type: object
+ *         properties:
+ *           name:
+ *             type: string
+ *           description:
+ *             type: string
  *     responses:
  *       201:
  *         description: Created
@@ -364,7 +390,7 @@ router.put('/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].message))
 
-    error = validate_chat_group(req.body)
+    error = validate_chat_group(req.body, 'update')
     error = error.error
     if (error)
       return res.send(formatResult(400, error.details[0].message))
@@ -471,7 +497,224 @@ router.put('/:id/profile', async (req, res) => {
     })
 
   } catch (error) {
-    console.log(error)
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chat_group/{id}/add_members:
+ *   put:
+ *     tags:
+ *       - Chat_group
+ *     description: Add a group member
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         type: string
+ *         description: Chat_group's Id
+ *       - name: body
+ *         description: Fields for a Chat_group
+ *         in: body
+ *         required: true
+ *         type: object
+ *         properties:
+ *           members  :
+ *             type: array
+ *             items:
+ *                type: object
+ *                properties:
+ *                  user_name:
+ *                    type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/add_members', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    error = validate_chat_group(req.body, 'add_members')
+    error = error.error
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if chat_group exist
+    let chat_group = await findDocument(Chat_group, {
+      _id: req.params.id
+    }, u, false)
+    if (!chat_group)
+      return res.send(formatResult(404, 'chat_group not found'))
+
+    for (const i in req.body.members) {
+      let user = await findDocument(User, {
+        user_name: req.body.members[i].user_name
+      })
+      if (!user)
+        return res.send(formatResult(404, `member ${parseInt(i) + 1} not found`))
+
+      const member_exit = chat_group.members.filter(m => m.id == user._id)
+      if (member_exit.length)
+        return res.send(formatResult(403, `member ${parseInt(i) + 1} is already registered`))
+
+      const dupplicate = req.body.members.filter(m => m.user_name == user.user_name)
+      if (dupplicate.length > 1)
+        return res.send(formatResult(403, `member ${parseInt(i) + 1} is dupplicated`))
+
+      if (user.college != chat_group.college)
+        return res.send(formatResult(403, `member ${parseInt(i) + 1} can't join this group`))
+
+      chat_group.members.push({ id: user._id })
+    }
+
+    const updateDocument = await chat_group.save()
+
+    return res.send(formatResult(u, 'UPDATED', updateDocument))
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chat_group/{group_id}/toogle_isAdmin/{member_user_name}:
+ *   put:
+ *     tags:
+ *       - Chat_group
+ *     description: Remove a group member
+ *     parameters:
+ *       - name: group_id
+ *         in: path
+ *         type: string
+ *         description: Chat_group's Id
+ *       - name: member_user_name
+ *         in: path
+ *         type: string
+ *         description: Member's user_name
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:group_id/toogle_isAdmin/:member_user_name', async (req, res) => {
+  try {
+    /** only admins can make members admins or the member him self can change from admin */
+    let {
+      error
+    } = validateObjectId(req.params.group_id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if chat_group exist
+    let chat_group = await findDocument(Chat_group, {
+      _id: req.params.group_id
+    }, u, false)
+    if (!chat_group)
+      return res.send(formatResult(404, 'chat_group not found'))
+
+    let member_found = false
+
+    let user = await findDocument(User, {
+      user_name: req.params.member_user_name
+    })
+    if (!user)
+      return res.send(formatResult(404, 'member not found'))
+
+    for (const i in chat_group.members) {
+      if (chat_group.members[i].id == user._id) {
+        member_found = true
+        chat_group.members[i].isAdmin = !chat_group.members[i].isAdmin
+      }
+    }
+
+    if (!member_found)
+      return res.send(formatResult(403, 'member not found'))
+
+    const updateDocument = await chat_group.save()
+
+    return res.send(formatResult(u, 'UPDATED', updateDocument))
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chat_group/{group_id}/remove_member/{member_user_name}:
+ *   put:
+ *     tags:
+ *       - Chat_group
+ *     description: Remove a group member
+ *     parameters:
+ *       - name: group_id
+ *         in: path
+ *         type: string
+ *         description: Chat_group's Id
+ *       - name: member_user_name
+ *         in: path
+ *         type: string
+ *         description: Member's user_name
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:group_id/remove_member/:member_user_name', async (req, res) => {
+  try {
+    let {
+      error
+    } = validateObjectId(req.params.group_id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    // check if chat_group exist
+    let chat_group = await findDocument(Chat_group, {
+      _id: req.params.group_id
+    }, u, false)
+    if (!chat_group)
+      return res.send(formatResult(404, 'chat_group not found'))
+
+    let user = await findDocument(User, {
+      user_name: req.params.member_user_name
+    })
+    if (!user)
+      return res.send(formatResult(404, 'member not found'))
+
+    const member_exit = chat_group.members.filter(m => m.id == user._id)
+    if (!member_exit.length)
+      return res.send(formatResult(403, 'member not found'))
+
+    const index = chat_group.members.indexOf(member_exit[0])
+
+    chat_group.members.splice(index, 1)
+
+    const updateDocument = await chat_group.save()
+
+    return res.send(formatResult(u, 'UPDATED', updateDocument))
+
+  } catch (error) {
     return res.send(formatResult(500, error))
   }
 })

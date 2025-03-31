@@ -153,7 +153,8 @@ module.exports.validate_quiz_submission = validate_quiz_submission
 
 const {
   chat_group,
-  validate_chat_group
+  validate_chat_group,
+  validate_group_members
 } = require('../models/chat_group/chat_group.model')
 
 module.exports.Chat_group = chat_group

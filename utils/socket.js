@@ -94,7 +94,7 @@ module.exports.listen = (app) => {
       content
     }) => {
 
-      const { error } = validate_message({ sender: user_name, receiver: conversation_id, content: contet })
+      const { error } = validate_message({ sender: user_name, receiver: receiver, content: content })
 
       if (error) {
         socket.error(error)
