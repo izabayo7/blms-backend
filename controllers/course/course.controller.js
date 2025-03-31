@@ -29,7 +29,8 @@ const {
   deleteDocument,
   User_progress,
   Quiz,
-  Chapter
+  Chapter,
+  sendResizedImage
 } = require('../../utils/imports')
 
 // create router
@@ -366,6 +367,76 @@ router.get('/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /course/{course_name}/cover_picture/{file_name}:
+ *   get:
+ *     tags:
+ *       - Course
+ *     description: Returns the cover_picture of a specified course
+ *     parameters:
+ *       - name: course_name
+ *         description: Course name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: format
+ *         description: File format one of (jpeg, jpg, png, webp)
+ *         in: query
+ *         type: string
+ *       - name: height
+ *         description: custom height
+ *         in: query
+ *         type: string
+ *       - name: width
+ *         description: custom width
+ *         in: query
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:course_name/cover_picture/:file_name', async (req, res) => {
+  try {
+
+    // check if college exist
+    const course = await findDocument(Course, {
+      name: req.params.course_name
+    })
+    if (!course.data)
+      return res.send(formatResult(404, 'course not found'))
+
+    if (!course.data.cover_picture)
+      return res.send(formatResult(404, 'file not found'))
+
+    if (course.data.cover_picture !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    let faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.data.faculty_college_year
+    })
+
+    let faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.data.faculty_college
+    })
+
+    const path = `./uploads/colleges/${faculty_college.data.college}/courses/${course.data._id}/${course.data.cover_picture}`
+
+    sendResizedImage(req, res, path)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /course:
  *   post:
  *     tags:
@@ -659,7 +730,7 @@ router.delete('/:id', async (req, res) => {
     const updated_course = await updateDocument(Course, req.params.id, {
       status: 0
     })
-    return res.send(formatResult(200, `Course ${updated_course.data.user_name} couldn't be deleted because it was used, instead it was disabled`, updated_course.data))
+    return res.send(formatResult(200, 'Course couldn\'t be deleted because it was used, instead it was disabled', updated_course.data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }

@@ -25,7 +25,7 @@ const {
   Course,
   User_progress,
   Quiz_submission,
-
+  sendResizedImage,
 } = require('../../utils/imports')
 
 // create router
@@ -273,6 +273,74 @@ router.post('/search', async (req, res) => {
       return res.send(formatResult(400, error))
 
     res.send(formatResult(u, u, data))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /user/{user_name}/profile/{file_name}:
+ *   get:
+ *     tags:
+ *       - User
+ *     description: Returns the profile of a specified user
+ *     parameters:
+ *       - name: user_name
+ *         description: User name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: format
+ *         description: File format one of (jpeg, jpg, png, webp)
+ *         in: query
+ *         type: string
+ *       - name: height
+ *         description: custom height
+ *         in: query
+ *         type: string
+ *       - name: width
+ *         description: custom width
+ *         in: query
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:user_name/profile/:file_name', async (req, res) => {
+  try {
+
+    // check if college exist
+    const user = await findDocument(User, {
+      user_name: req.params.user_name
+    })
+    if (!user.data)
+      return res.send(formatResult(404, 'user not found'))
+
+    if (!user.data.profile)
+      return res.send(formatResult(404, 'file not found'))
+
+    if (user.data.profile !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    let path
+
+    if (user.data.college) {
+      path = `./uploads/colleges/${user.data.data}/users/${user.data.profile}`
+    } else {
+      path = `./uploads/colleges/system/users/${user.data.profile}`
+    }
+
+    sendResizedImage(req, res, path)
   } catch (error) {
     return res.send(formatResult(500, error))
   }

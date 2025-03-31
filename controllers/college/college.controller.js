@@ -12,7 +12,8 @@ const {
   createDocument,
   updateDocument,
   deleteDocument,
-  validateObjectId
+  validateObjectId,
+  sendResizedImage
 } = require('../../utils/imports')
 
 // create router
@@ -142,6 +143,68 @@ router.get('/:id', async (req, res) => {
     result.data = await injectLogoMediaPaths([result.data])
     result.data = result.data[0]
     return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/** 
+ * @swagger
+ * /college/{college_name}/logo/{file_name}:
+ *   get:
+ *     tags:
+ *       - College
+ *     description: Returns the logo of a specified college
+ *     parameters:
+ *       - name: college_name
+ *         description: College name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: File name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: format
+ *         description: File format one of (jpeg, jpg, png, webp)
+ *         in: query
+ *         type: string
+ *       - name: height
+ *         description: custom height
+ *         in: query
+ *         type: string
+ *       - name: width
+ *         description: custom width
+ *         in: query
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:college_name/logo/:file_name', async (req, res) => {
+  try {
+
+    // check if college exist
+    const college = await findDocument(College, {
+      name: req.params.college_name
+    })
+    if (!college.data)
+      return res.send(formatResult(404, 'college not found'))
+
+    if (!college.data.logo)
+      return res.send(formatResult(404, 'file not found'))
+
+    if (college.data.logo !== req.params.file_name)
+      return res.send(formatResult(404, 'file not found'))
+
+    const path = `./uploads/colleges/${college.data._id}/${college.data.logo}`
+
+    sendResizedImage(req, res, path)
   } catch (error) {
     return res.send(formatResult(500, error))
   }

@@ -70,345 +70,10 @@ const uploadPlus = multer({
  *     description: This is not a model. Instead its apis for file uploading
  */
 
-/**
- * @swagger
- * /kurious/file/collegeLogo/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the logo of a specified college
- *     parameters:
- *       - name: id
- *         description: College id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: College logo file name
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/collegeLogo/:id/:file_name', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.status(400).send(error.details[0].message)
-
-        // check if college exist
-        const college = await College.findOne({
-            _id: req.params.id
-        })
-        if (!college)
-            return res.status(404).send(`College with code ${req.params.id} doens't exist`)
-
-        if (!college.logo)
-            return res.status(404).send(`College ${req.params.id} have not yet uploaded their logo`)
-
-        if (college.logo !== req.params.file_name)
-            return res.status(404).send(`${req.params.file_name} was not found`)
-
-        path = `./uploads/colleges/${req.params.id}/${college.logo}`
-
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
-})
 
 /**
  * @swagger
- * /kurious/file/superAdminProfile/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the profilePicture of a SuperAdmin
- *     parameters:
- *       - name: id
- *         description: superAdmin's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: superAdmin's profile filename
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/superAdminProfile/:id/:file_name', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.status(400).send(error.details[0].message)
-
-        // check if superAdmin exist
-        const superAdmin = await SuperAdmin.findOne({
-            _id: req.params.id
-        })
-        if (!superAdmin)
-            return res.status(404).send(`SuperAdmin with code ${req.params.id} doens't exist`)
-
-        if (!superAdmin.profile)
-            return res.status(404).send(`SuperAdmin ${req.params.id} have not yet uploaded ${superAdmin.gender === 'Male' ? 'his' : 'her'} profile`)
-
-        if (superAdmin.profile !== req.params.file_name)
-            return res.status(404).send(`${req.params.file_name} was not found`)
-
-        path = `./uploads/system/superAdmin/${superAdmin.profile}`
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
-})
-
-/**
- * @swagger
- * /kurious/file/adminProfile/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the profilePicture of a specified Admin
- *     parameters:
- *       - name: id
- *         description: Admin's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: Admin's profile filename
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/adminProfile/:id/:file_name', async (req, res) => {
-    try {
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.status(400).send(error.details[0].message)
-
-        // check if admin exist
-        const admin = await Admin.findOne({
-            _id: req.params.id
-        })
-        if (!admin)
-            return res.status(404).send(`Admin with code ${req.params.id} doens't exist`)
-
-        if (!admin.profile)
-            return res.status(404).send(`Admin ${req.params.id} have not yet uploaded ${admin.gender === 'Male' ? 'his' : 'her'} profile`)
-
-        if (admin.profile !== req.params.file_name)
-            return res.status(404).send(`${req.params.file_name} was not found`)
-
-        path = `./uploads/colleges/${admin.college}/users/admin/${admin.profile}`
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
-})
-
-/**
- * @swagger
- * /kurious/file/instructorProfile/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the profilePicture of a specified Instructor
- *     parameters:
- *       - name: id
- *         description: Instructor's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: Instructor's profile filename
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/instructorProfile/:id/:file_name', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.status(400).send(error.details[0].message)
-
-        // check if instructor exist
-        const instructor = await Instructor.findOne({
-            _id: req.params.id
-        })
-        if (!instructor)
-            return res.status(404).send(`Instructor with code ${req.params.id} doens't exist`)
-
-        if (!instructor.profile)
-            return res.status(404).send(`Instructor ${req.params.id} have not yet uploaded ${instructor.gender === 'Male' ? 'his' : 'her'} profile`)
-
-        if (instructor.profile !== req.params.file_name)
-            return res.status(404).send(`${req.params.file_name} was not found`)
-
-        path = `./uploads/colleges/${instructor.college}/users/instructors/${req.params.id}/${instructor.profile}`
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
-})
-/**
- * @swagger
- * /kurious/file/studentProfile/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the profilePicture of a specified Student
- *     parameters:
- *       - name: id
- *         description: Student's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: Student's profile filename
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/studentProfile/:id/:file_name', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.status(400).send(error.details[0].message)
-
-        // check if student exist
-        const student = await Student.findOne({
-            _id: req.params.id
-        })
-        if (!student)
-            return res.status(404).send(`Student with code ${req.params.id} doens't exist`)
-
-        if (!student.profile)
-            return res.status(404).send(`Student ${req.params.id} have not yet uploaded ${student.gender === 'Male' ? 'his' : 'her'} profile`)
-
-        if (student.profile !== req.params.file_name)
-            return res.status(404).send(`${req.params.file_name} was not found`)
-
-        path = `./uploads/colleges/${student.college}/users/students/${student.profile}`
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
-})
-
-/**
- * @swagger
- * /kurious/file/courseCoverPicture/{id}/{file_name}:
- *   get:
- *     tags:
- *       - FileUploading
- *     description: Returns the coverPicture of a specified Course
- *     parameters:
- *       - name: id
- *         description: Course's id
- *         in: path
- *         required: true
- *         type: string
- *       - name: file_name
- *         description: Course's coverPicture filename
- *         in: path
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.get('/courseCoverPicture/:id/:file_name', async (req, res) => {
-    try {
-
-        const {
-            error
-        } = validateObjectId(req.params.id)
-        if (error)
-            return res.status(400).send(error.details[0].message)
-
-        // check if course exist
-        const course = await Course.findOne({
-            _id: req.params.id
-        })
-        if (!course)
-            return res.status(404).send(`Course with code ${req.params.id} doens't exist`)
-
-        if (!course.coverPicture)
-            return res.status(404).send(`Course ${req.params.id} does not have a cover picture`)
-
-        if (course.coverPicture !== req.params.file_name)
-            return res.status(404).send(`${req.params.file_name} was not found`)
-
-        const facultyCollegeYear = await FacultyCollegeYear.findOne({
-            _id: course.facultyCollegeYear
-        })
-        const facultyCollege = await FacultyCollege.findOne({
-            _id: facultyCollegeYear.facultyCollege
-        })
-
-        path = `./uploads/colleges/${facultyCollege.college}/courses/${req.params.id}/${course.coverPicture}`
-        sendResizedImage(req, res, path)
-    } catch (error) {
-        return res.status(500).send(error)
-    }
-})
-
-/**
- * @swagger
- * /kurious/file/groupProfilePicture/{id}/{file_name}:
+ * /file/groupProfilePicture/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -464,7 +129,7 @@ router.get('/groupProfilePicture/:id/:file_name', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/chapterDocument/{id}:
+ * /file/chapterDocument/{id}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -519,7 +184,7 @@ router.get('/chapterDocument/:id', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/chapterMainVideo/{id}/{file_name}:
+ * /file/chapterMainVideo/{id}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -586,7 +251,7 @@ router.get('/chapterMainVideo/:id/:file_name', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/quizAttachedFiles/{quiz}/{file_name}:
+ * /file/quizAttachedFiles/{quiz}/{file_name}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -640,7 +305,7 @@ router.get('/quizAttachedFiles/:quiz/:file_name', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/submissionAttachedFiles/{submission}/{file}:
+ * /file/submissionAttachedFiles/{submission}/{file}:
  *   get:
  *     tags:
  *       - FileUploading
@@ -708,7 +373,7 @@ router.get('/submissionAttachedFiles/:quiz/:file', async (req, res) => {
 
 /**
  * @swagger
- * /kurious/file/getAttachments/{id}:
+ * /file/getAttachments/{id}:
  *   get:
  *     tags:
  *       - FileUploading
