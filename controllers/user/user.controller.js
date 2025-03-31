@@ -8,7 +8,7 @@ const {AcceptCollege} = require("../account_confirmations/account_confirmations.
 const {confirmAccount} = require("../account_confirmations/account_confirmations.controller");
 const {createAccountConfirmation} = require("../account_confirmations/account_confirmations.controller");
 const {sendSubmissionEmail} = require("../email/email.controller");
-const {calculateAmount} = require("../../utils/imports");
+const {calculateAmount, checkCollegePayment} = require("../../utils/imports");
 const {Account_payments} = require("../../models/account_payments/account_payments.model");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
 const {User_attendance} = require("../../models/user_attendance/user_attendance.model");
@@ -392,7 +392,7 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
             name: req.params.category
         })
 
-        let users = await findDocuments(User, req.params.category === 'ALL' ? {
+        let users = await User.find(req.params.category === 'ALL' ? {
             college: req.user.college,
             _id: {$ne: req.user._id},
             "status.deleted": {$ne: 1}
@@ -400,10 +400,18 @@ router.get('/college/:category', [auth, filterUsers(["ADMIN"])], async (req, res
             college: req.user.college,
             category: user_category._id,
             _id: {$ne: req.user._id}
-        })
+        }).sort({category: 1}).lean()
 
         users = await add_user_details(users)
 
+        if (req.params.category !== "INSTRUCTOR") {
+            const college = await College.findOne({_id: req.user.college})
+            if (college.users_verification_link)
+                users = await checkCollegePayment({
+                    users,
+                    link: college.users_verification_link
+                })
+        }
         return res.send(formatResult(u, u, users))
     } catch (error) {
         return res.send(formatResult(500, error))

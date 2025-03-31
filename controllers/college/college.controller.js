@@ -16,6 +16,8 @@ const {
     sendResizedImage,
     u,
     upload_single_image,
+    validate_chat_group_profile_udpate,
+    savedecodedBase64Image,
     addStorageDirectoryToPath,
     auth
 } = require('../../utils/imports')
@@ -474,7 +476,7 @@ router.put('/:id', auth, filterUsers(['ADMIN']), async (req, res) => {
  */
 router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
     try {
-        const {
+        let {
             error
         } = validateObjectId(req.params.id)
         if (error)
@@ -490,26 +492,26 @@ router.put('/:id/logo', auth,filterUsers(['ADMIN']), async (req, res) => {
             return res.send(formatResult(403, `You don't have access`))
 
         const path = addStorageDirectoryToPath(`./uploads/colleges/${req.params.id}`)
-        req.kuriousStorageData = {
-            dir: path,
-        }
-        upload_single_image(req, res, async (err) => {
-            if (err)
-                return res.send(formatResult(500, err.message))
 
-            if (college.logo && college.logo != req.file.filename) {
-                fs.unlink(`${path}/${college.logo}`, (err) => {
-                    if (err)
-                        return res.send(formatResult(500, err))
-                })
-            }
-            const result = await updateDocument(College, req.params.id, {
-                logo: req.file.filename
+
+        error = validate_chat_group_profile_udpate(req.body)
+        error = error.error
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+        const {filename} = await savedecodedBase64Image(req.body.logo, path)
+
+        if (college.logo) {
+            fs.unlink(`${path}/${college.logo}`, (err) => {
+                if (err)
+                    return res.send(formatResult(500, err))
             })
-            result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
-            return res.send(result)
+        }
+        const result = await updateDocument(College, req.params.id, {
+            logo: filename
         })
-
+        result.data.logo = `http://${process.env.HOST}${process.env.BASE_PATH}/college/${college.name}/logo/${result.data.logo}`
+        return res.send(result)
     } catch (error) {
         return res.send(formatResult(500, error))
     }
