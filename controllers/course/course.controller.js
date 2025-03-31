@@ -4,18 +4,23 @@ const {
   fs,
   Course,
   getCollege,
+  CollegeYear,
   College,
   Instructor,
   validateCourse,
   StudentFacilityCollegeYear,
   FacilityCollegeYear,
+  FacilityCollege,
+  Facility,
   Student,
   Attachment,
   _,
   validateObjectId,
   StudentProgress,
+  removeDocumentVersion
 } = require('../../utils/imports')
 const { Chapter } = require('../../models/chapter/chapter.model')
+const { Quiz } = require('../../models/quiz/quiz.model')
 
 // create router
 const router = express.Router()
@@ -179,11 +184,12 @@ router.get('/instructor/:id', async (req, res) => {
       return res.status(404).send(`${instructor.name} have No courses`)
 
     courses = await injectChapters(courses)
-
+    course = await injectFacilityCollegeYear(courses)
     courses = await injectChapters(courses)
 
     return res.status(200).send(courses)
   } catch (error) {
+    console.log(error)
     return res.status(500).send(error)
   }
 })
@@ -235,11 +241,12 @@ router.get('/instructor/:instructorId/:courseName', async (req, res) => {
     }).lean()
     if (courses.length < 1)
       return res.status(404).send(`The requested course was not found`)
-    let course = courses.filter(c => c.name.split(' ').join('.').toLowerCase() == req.params.courseName)
+    let course = courses.filter(c => c.name == req.params.courseName)
     if (course.length < 1) {
       return res.status(404).send(`The requested course was not found`)
     }
     course = await injectChapters(course)
+    course = await injectFacilityCollegeYear(course)
 
     return res.status(200).send(course[0])
   } catch (error) {
@@ -356,7 +363,7 @@ router.get('/student/:studentId/:courseName', async (req, res) => {
     }).lean()
     if (courses.length < 1)
       return res.status(404).send(`The requested course was not found`)
-    let course = courses.filter(c => c.name.split(' ').join('.') == req.params.courseName)
+    let course = courses.filter(c => c.name == req.params.courseName)
     if (course.length < 1) {
       return res.status(404).send(`The requested course was not found`)
     }
@@ -589,6 +596,7 @@ async function injectInstructor(courses) {
 // add chapters in their parent courses
 async function injectChapters(courses) {
   for (const i in courses) {
+    courses[i].assignmentsLength = 0
     // add course cover picture media path
     if (courses[i].coverPicture) {
       courses[i].coverPicture = `http://${process.env.HOST}/kurious/file/courseCoverPicture/${courses[i]._id}`
@@ -608,15 +616,37 @@ async function injectChapters(courses) {
       if (courses[i].chapters[k].mainVideo) {
         courses[i].chapters[k].mainVideo = `http://${process.env.HOST}/kurious/file/chapterMainVideo/${courses[i].chapters[k]._id}`
       }
-      // add chapters
+      // add attachments
       const attachments = await Attachment.find({
         chapter: courses[i].chapters[k]._id
       })
       courses[i].chapters[k].attachments = attachments
+
+      // add assignments attached to chapters
+      const chapterQuiz = await Quiz.find({
+        "target.type": "chapter",
+        "target.id": courses[i].chapters[k]._id
+      })
+      courses[i].chapters[k].quiz = chapterQuiz
+      courses[i].assignmentsLength += chapterQuiz.length
     }
+
+    // add assignments attached to course
+    const courseQuiz = await Quiz.find({
+      "target.type": 'course',
+      "target.id": courses[i]._id
+    })
+    courses[i].quiz = courseQuiz
+    courses[i].assignmentsLength += courseQuiz.length
+
+    // add the students that started the course
+    courses[i].attendedStudents = await StudentProgress.find({
+      course: courses[i]._id
+    }).countDocuments()
   }
   return courses
 }
+
 
 // replace instructor id by the instructor information
 async function injectStudentProgress(courses, studentId) {
@@ -624,7 +654,44 @@ async function injectStudentProgress(courses, studentId) {
     const studentProgress = await StudentProgress.findOne({
       course: courses[i]._id, student: studentId
     })
-    courses[i].progress = studentProgress.progress
+    
+    courses[i].progress = studentProgress ? { progress: studentProgress.progress, dateStarted: studentProgress.createdAt } : undefined
+  }
+  return courses
+}
+
+// inject facility college Year
+async function injectFacilityCollegeYear(courses) {
+  for (const i in courses) {
+    const facilityCollegeYear = await FacilityCollegeYear.findOne({
+      _id: courses[i].facilityCollegeYear
+    }).lean()
+
+    courses[i].facilityCollegeYear = removeDocumentVersion(facilityCollegeYear)
+
+    const collegeYear = await CollegeYear.findOne({
+      _id: facilityCollegeYear.collegeYear
+    }).lean()
+    courses[i].facilityCollegeYear.collegeYear = removeDocumentVersion(collegeYear)
+
+    const facilityCollege = await FacilityCollege.findOne({
+      _id: facilityCollegeYear.facilityCollege
+    }).lean()
+    courses[i].facilityCollegeYear.facilityCollege = removeDocumentVersion(facilityCollege)
+
+    const facility = await Facility.findOne({
+      _id: facilityCollege.facility
+    }).lean()
+    courses[i].facilityCollegeYear.facilityCollege.facility = removeDocumentVersion(facility)
+
+    const college = await College.findOne({
+      _id: facilityCollege.college
+    }).lean()
+
+    courses[i].facilityCollegeYear.facilityCollege.college = removeDocumentVersion(college)
+    if (courses[i].facilityCollegeYear.facilityCollege.college.logo) {
+      courses[i].facilityCollegeYear.facilityCollege.college.logo = `http://${process.env.HOST}/kurious/file/collegeLogo/${college._id}`
+    }
   }
   return courses
 }

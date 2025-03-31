@@ -24,11 +24,11 @@ const studentProgressSchema = new mongoose.Schema({
 studentProgressSchema.plugin(timestamps)
 
 // validate student
-function validateStudentProgress(credentials) {
+function validateStudentProgress(credentials, method = 'put') {
     const schema = {
         student: Joi.ObjectId().required(),
         course: Joi.ObjectId().required(),
-        chapter: Joi.ObjectId().required(),
+        chapter: method == 'put' ? Joi.ObjectId().required() : Joi.ObjectId(),
     }
     return Joi.validate(credentials, schema)
 }

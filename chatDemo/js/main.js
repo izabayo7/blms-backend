@@ -37,7 +37,7 @@ socket.emit('request-unread-messages');
 socket.emit('request_user_contacts');
 
 // Get contacts new style
-socket.on('recieve_user_contacts', ({
+socket.on('receive_user_contacts', ({
   contacts,
 }) => {
   console.log(contacts)
@@ -47,7 +47,7 @@ socket.on('recieve_user_contacts', ({
 socket.emit('request_conversation',{ contactId: '5f46c21651be84339c17455f', lastMessage: '5f5f1a34313e3634d4a258f2'});
 
 // Get messages new style
-socket.on('recieve_conversation', ({
+socket.on('receive_conversation', ({
   conversation,
 }) => {
   console.log(conversation)
@@ -83,7 +83,7 @@ function findMessage(id) {
   return false
 }
 
-// recieve previous messages
+// receive previous messages
 socket.on('previous-messages', (messages) => {
   // add the messages
   for (const i in messages) {

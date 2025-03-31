@@ -38,7 +38,7 @@ module.exports.listen = (app) => {
             const contacts = await formatContacts(latestMessages, id)
 
             // send the messages
-            socket.emit('recieve_user_contacts', { contacts: contacts });
+            socket.emit('receive_user_contacts', { contacts: contacts });
         })
 
         socket.on('request_conversation', async ({ groupId, contactId, lastMessage }) => {
@@ -49,7 +49,7 @@ module.exports.listen = (app) => {
             const formatedMessages = await formatMessages(messages, id)
 
             // send the messages
-            socket.emit('recieve_conversation', { conversation: formatedMessages });
+            socket.emit('receive_conversation', { conversation: formatedMessages });
         })
 
 
@@ -229,7 +229,7 @@ module.exports.listen = (app) => {
             }
         })
 
-        // tell the sender that the message was recieved / read and update the document
+        // tell the sender that the message was received / read and update the document
         socket.on('message_received', async ({
             messageId
         }) => {
