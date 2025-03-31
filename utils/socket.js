@@ -136,6 +136,29 @@ module.exports.listen = (app) => {
                 const contacts = await formatContacts([data])
                 socket.emit('res/message/contacts/new', {contact: contacts[0], redirect: data.content.includes(id)})
             }
+            if (name === `send_message_${id}`) {
+                data = simplifyObject(data)
+
+                // inject sender Info
+                let _user = await injectUser([{id: id}], 'id', 'data')
+                data.sender = _user[0].data
+
+                if (data.group) {
+                    const group = await findDocument(Chat_group, {_id: data.group})
+                    data.group = group.code
+                }
+                // remove receivers
+
+
+                data = injectAttachementsMediaPath(data)
+
+                data.receivers.forEach(reciever => {
+                    // send the message
+                    socket.broadcast.to(reciever.id).emit('res/message/new', data)
+                })
+                // send success mesage
+                socket.emit('res/message/sent', data)
+            }
 
         })
 

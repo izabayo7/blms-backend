@@ -1,4 +1,5 @@
 // import dependencies
+const {MyEmitter} = require("../../utils/imports");
 const {upload_audio} = require("../../utils/imports");
 const {upload_single} = require("../../utils/imports");
 const {fs} = require("../../utils/imports");
@@ -361,7 +362,7 @@ router.put('/voiceNote/:receiver', async (req, res) => {
         if(result.status !== 404)
         {
             const msg = result.data
-            const path = addStorageDirectoryToPath(`./uploakds/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
+            const path = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/chat/${msg.group ? '/groups/' + msg.group : 'userFiles'}/${req.user._id}`)
 
             req.kuriousStorageData = {
                 dir: path,
@@ -371,6 +372,11 @@ router.put('/voiceNote/:receiver', async (req, res) => {
             upload_audio(req, res, async (err) => {
                 if (err)
                     return res.send(formatResult(500, err.message))
+
+                MyEmitter.emit('socket_event', {
+                    name: `send_message_${req.user._id}`,
+                    data: msg
+                });
 
                 return res.send(formatResult(u, 'Happy test bro'))
             })
@@ -463,7 +469,7 @@ router.get('/:id/attachment/:file_name', async (req, res) => {
         } else if (file_type === 'video') {
             streamVideo(req, res, file_path)
         } else {
-            return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+            return res.sendFile(file_path)
         }
 
     } catch
