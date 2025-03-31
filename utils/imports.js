@@ -1443,6 +1443,30 @@ exports.injectFaculty_college_year = async (courses) => {
   return courses
 }
 
+exports.savedecodedBase64Image(dataString, dir) {
+
+  var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
+    response = {};
+
+  if (matches.length !== 3) {
+    return new Error('Invalid input string');
+  }
+
+  fs.exists(dir, exist => {
+    if (!exist) {
+      return fs.mkdir(dir, {
+        recursive: true
+      }, error => cb(error, dir))
+    }
+  })
+
+  response.type = matches[1];
+  response.data = new Buffer(matches[2], 'base64');
+
+  fs.writeFile(dir, imageBuffer.data, function (err) { if (err) return err });
+  return 'Image was saved sucessfully'
+}
+
 // proper way to define user roles
 // proper way to use jwt
 // proper way to use config
