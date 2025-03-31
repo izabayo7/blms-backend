@@ -103,7 +103,7 @@ router.get('/:id/document', async (req, res) => {
       _id: faculty_college_year.faculty_college
     })
 
-    const file_path = `uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/main_content/index.html`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${faculty_college.college}/courses/${chapter.course}/chapters/${chapter._id}/main_content/index.html`)
 
     const exists = await fs.exists(file_path)
     if (!exists)
