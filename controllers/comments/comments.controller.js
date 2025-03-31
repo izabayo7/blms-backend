@@ -100,7 +100,7 @@ router.get('/:target/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(formatResult(400, error.details[0].comment))
+      return res.send(formatResult(400, error.details[0].message))
 
     const allowedTargetTypes = ['chapter', 'live_session']
 
@@ -171,7 +171,7 @@ router.post('/', async (req, res) => {
       error
     } = validate_comment(req.body)
     if (error)
-      return res.send(formatResult(400, error.details[0].comment))
+      return res.send(formatResult(400, error.details[0].message))
 
     req.body.target.type = req.body.target.type.toLowerCase()
 
@@ -245,11 +245,11 @@ router.put('/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(formatResult(400, error.details[0].comment))
+      return res.send(formatResult(400, error.details[0].message))
     error = validate_comment(req.body)
     error = error.error
     if (error)
-      return res.send(formatResult(400, error.details[0].comment))
+      return res.send(formatResult(400, error.details[0].message))
 
     const comment = await findDocument(Comment, { _id: req.params.id })
     if (!comment)
@@ -291,7 +291,7 @@ router.delete('/:id', async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(formatResult(400, error.details[0].comment))
+      return res.send(formatResult(400, error.details[0].message))
 
     const comment = await findDocument(Comment, {
       _id: req.params.id
