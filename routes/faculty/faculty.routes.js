@@ -35,7 +35,7 @@ router.route('/')
      *       500:
      *         description: Internal Server error
      */
-    .post()
+    .post(createFaculty)
 
 router.route('/:faculty_id')
     /**
@@ -61,7 +61,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .get()
+    .get(getFaculties)
     /**
      * @swagger
      * /faculty/{id}:
@@ -99,7 +99,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .put()
+    .put(updateFaculty)
     /**
      * @swagger
      * /faculty/{id}:
@@ -125,7 +125,7 @@ router.route('/:faculty_id')
      *       500:
      *         description: Internal Server error
      */
-    .delete()
+    .delete(deleteFaculty)
 router.route('/statistics')
     /**
      * @swagger
@@ -144,5 +144,5 @@ router.route('/statistics')
      *       500:
      *         description: Internal Server error
      */
-    .get()
+    .get(getFacultyStatistics)
 exports.Faculty_Routes = router
