@@ -15,6 +15,7 @@ const {
   StudentFacultyCollegeYear,
   simplifyObject,
   _,
+  u,
   Notification,
   injectUser,
   Course,
@@ -25,7 +26,8 @@ const {
   findDocument,
   User,
   Create_or_update_message,
-  Chat_group
+  Chat_group,
+  findDocuments
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -148,16 +150,33 @@ module.exports.listen = (app) => {
     })
 
     // mark all messages in a coversation as read
-    socket.on('all_messages_read', async ({
-      sender,
-      groupId
+    socket.on('message/all_messages_read', async ({
+      conversation_id
     }) => {
+
+      if (!conversation_id) return
+
       let documents
+      const chat_group = await findDocument(Chat_group, { name: conversation_id })
+
+      // fetch unread messages in a group
+      if (chat_group) {
+        documents = await findDocuments(Message, {
+          group: chat_group._id,
+          receivers: {
+            $elemMatch: {
+              id: id,
+              read: false
+            }
+          }
+        }, u, u, u, false)
+      }
       // fetch unread messages from the sender
-      if (sender) {
+      else {
+        let sender = await findDocument(User, { user_name: conversation_id })
         // save the message
-        documents = await Message.find({
-          sender: sender,
+        documents = await findDocuments(Message, {
+          sender: sender._id,
           group: undefined,
           receivers: {
             $elemMatch: {
@@ -165,46 +184,29 @@ module.exports.listen = (app) => {
               read: false
             }
           }
-        })
+        }, u, u, u, false)
       }
-      // fetch unread messages in a group
-      else {
-        documents = await Message.find({
-          group: groupId,
-          receivers: {
-            $elemMatch: {
-              id: id,
-              read: false
-            }
-          }
-        })
-      }
+
       for (const i in documents) {
         let allRecieversRead = 1
 
         for (const k in documents[i].receivers) {
           if (documents[i].receivers[k].id == id) {
             documents[i].receivers[k].read = true
-          } else if (!documents[i].receivers[k].read) {
-            allRecieversRead = 0
           }
         }
 
-        if (allRecieversRead) {
-          documents[i].read = true
-        }
-        const updateDocument = await documents[i].save()
-        if (updateDocument) {
-          socket.broadcast.to(documents[i].sender).emit('message-read', {
-            messageId: documents[i]._id,
-            reader: id
-          })
-          socket.emit('all_read', {
-            sender: sender,
-            group: groupId
-          })
-        }
+        await documents[i].save()
+
+        socket.broadcast.to(documents[i].sender).emit('message-read', {
+          messageId: documents[i]._id,
+          reader: id
+        })
       }
+
+      socket.emit('all_read', {
+        conversation_id: conversation_id
+      })
     })
 
     // tell that someone is typing
@@ -228,7 +230,6 @@ module.exports.listen = (app) => {
         }
       }
       receivers.forEach(receiver => {
-        console.log(receiver, conversation_id)
         socket.broadcast.to(receiver.id).emit('message/typing', user_name)
       })
     })

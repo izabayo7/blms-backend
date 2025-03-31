@@ -501,6 +501,7 @@ module.exports.formatContacts = async (messages, user_id) => {
           }
         }
       })
+      console.log(message)
     } else {
       let user = await this.injectUser([{ id: message.sender == user_id ? message.receivers[0].id : message.sender }], 'id', 'data')
       user = user[0].data
