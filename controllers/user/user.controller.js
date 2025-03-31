@@ -189,8 +189,12 @@ router.get('/statistics', [auth, filterUsers(["SUPERADMIN", "ADMIN"])], async (r
                 ]
             })
         } else {
-            total_users = await countDocuments(User, {college: req.user.college,"status.deleted": {$ne: 1}})
-            total_students = await countDocuments(User, {college: req.user.college, category: student_category._id, "status.deleted": {$ne: 1}})
+            total_users = await countDocuments(User, {college: req.user.college, "status.deleted": {$ne: 1}})
+            total_students = await countDocuments(User, {
+                college: req.user.college,
+                category: student_category._id,
+                "status.deleted": {$ne: 1}
+            })
             total_instructors = await countDocuments(User, {
                 college: req.user.college,
                 category: instructor_category._id,
@@ -392,6 +396,7 @@ router.get('/faculty/:id/:category', [auth, filterUsers(["ADMIN"])], async (req,
         for (const k in user_groups) {
             let user_user_groups = await User_user_group.find({
                 user_group: user_groups[k]._id,
+                status: "ACTIVE"
             }).populate('user')
             for (const j in user_user_groups) {
                 if (user_user_groups[j].user.category == user_category._id)
@@ -1378,6 +1383,11 @@ router.delete('/:id', [auth, filterUsers(["ADMIN"])], async (req, res) => {
         if (!user)
             return res.send(formatResult(400, `User not found`))
 
+        //  disable all user_user groups
+        await User_user_group.updateMany({
+            user: req.params.id,
+            status: "ACTIVE"
+        }, {status: "INACTIVE"})
 
         if (user.profile) {
             // delete the profile
