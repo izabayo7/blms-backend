@@ -632,7 +632,7 @@ router.put('/release_marks/:id', async (req, res) => {
             return res.send(formatResult(404, 'quiz not found'))
 
         let unmarked = await countDocuments(Quiz_submission, {
-            exam: req.params.id,
+            quiz: req.params.id,
             marked: false
         })
 
