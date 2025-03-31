@@ -1,5 +1,7 @@
 // import dependencies
-const { quiz } = require('../../models/quiz/quiz.model')
+const {
+  quiz
+} = require('../../models/quiz/quiz.model')
 const {
   express,
   Quiz_submission,
@@ -257,7 +259,9 @@ router.get('/user/:user_name', async (req, res) => {
     if (user_category.name == 'STUDENT') {
       result = simplifyObject(await findDocuments(Quiz_submission, {
         user: user._id
-      }, u, u, u, u, u, { _id: -1 }))
+      }, u, u, u, u, u, {
+        _id: -1
+      }))
       if (!result.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
@@ -278,7 +282,9 @@ router.get('/user/:user_name', async (req, res) => {
         target: {
           $ne: undefined
         }
-      }, u, u, u, u, u, { _id: -1 })
+      }, u, u, u, u, u, {
+        _id: -1
+      })
       if (!quizes.length)
         return res.send(formatResult(404, 'quiz_submissions not found'))
 
@@ -293,7 +299,9 @@ router.get('/user/:user_name', async (req, res) => {
 
         let quiz_submissions = await findDocuments(Quiz_submission, {
           quiz: quizes[i]._id
-        }, u, u, u, u, u, { _id: -1 })
+        }, u, u, u, u, u, {
+          _id: -1
+        })
 
         quizes[i].total_submissions = quiz_submissions.length
 
@@ -404,33 +412,33 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
 })
 
 /**
-* @swagger
-* /quiz_submission/{id}/attachment/{file_name}:
-*   get:
-*     tags:
-*       - Quiz_submission
-*     description: Returns the files attached to the specified quiz_submission
-*     security:
-*       - bearerAuth: -[]
-*     parameters:
-*       - name: id
-*         description: Quiz_submission's id
-*         in: path
-*         required: true
-*         type: string
-*       - name: file_name
-*         description: file's name
-*         in: path
-*         required: true
-*         type: string
-*     responses:
-*       200:
-*         description: OK
-*       404:
-*         description: Not found
-*       500:
-*         description: Internal Server error
-*/
+ * @swagger
+ * /quiz_submission/{id}/attachment/{file_name}:
+ *   get:
+ *     tags:
+ *       - Quiz_submission
+ *     description: Returns the files attached to the specified quiz_submission
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz_submission's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: file's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
 router.get('/:id/attachment/:file_name', async (req, res) => {
   try {
 
@@ -720,7 +728,9 @@ router.put('/:id/results_seen', async (req, res) => {
     if (!quiz_submission)
       return res.send(formatResult(404, 'quiz_submission not found'))
 
-    const result = await updateDocument(Quiz_submission, req.params.id, { results_seen: true })
+    const result = await updateDocument(Quiz_submission, req.params.id, {
+      results_seen: true
+    })
 
     return res.send(result)
   } catch (error) {
@@ -953,6 +963,45 @@ function validateSubmittedAnswers(questions, answers, mode) {
       error: message
     }
 }
+// auto mark selection questions
+function autoMarkSelectionQuestions(questions, answers) {
+  let is_selection_only = true;
+  for (const i in questions) {
+    if (questions[i].type.includes("select")) {
+      if (answers[i].choosed_options.length) {
+        const rightChoices = questions[i].options.choices.filter((choice) => choice.right);
+        if (questions[i].type.includes("single")) {
+          if (questions[i].type.includes("file")) {
+            answers[i].marks = (answers[i].choosed_options[0].src == rightChoices[0].src) ? questions[i].marks : 0;
+          } else {
+            answers[i].marks = (answers[i].choosed_options[0].text == rightChoices[0].text) ? questions[i].marks : 0;
+          }
+        } else {
+          for (const k in answers[i].choosed_options) {
+            if (questions[i].type.includes("file")) {
+              let checkStatus = rightChoices.filter((choice) => choice.src == answers[i].choosed_options[k].src);
+              if (checkStatus.length > 0) {
+                answers[i].marks += questions[i].marks / rightChoices.length;
+              }
+            } else {
+              let checkStatus = rightChoices.filter((choice) => choice.text == answers[i].choosed_options[k].text);
+              if (checkStatus.length > 0) {
+                answers[i].marks += questions[i].marks / rightChoices.length;
+              }
+            }
+          }
+        }
+      }
+    }
+    else {
+      is_selection_only = false
+    }
+  }
+  return {
+    answers: answers,
+    is_selection_only: is_selection_only
+  }
+}
 
 // replace quiz id by the quiz information
 async function injectQuiz(submissions) {
@@ -969,7 +1018,10 @@ async function injectQuiz(submissions) {
 async function injectUserFeedback(submissions) {
   for (const i in submissions) {
     for (const k in submissions[i].answers) {
-      let feedback = await Comment.find({ "target.type": 'quiz_submission_answer', "target.id": submissions[i].answers[k]._id })
+      let feedback = await Comment.find({
+        "target.type": 'quiz_submission_answer',
+        "target.id": submissions[i].answers[k]._id
+      })
       feedback = await injectUser(simplifyObject(feedback), 'sender')
       submissions[i].answers[k].feedback = feedback[0]
     }
