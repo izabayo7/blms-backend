@@ -840,6 +840,8 @@ router.put('/:code/toogle_isAdmin/:member_user_name', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Remove a group member
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         in: path
