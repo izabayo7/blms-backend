@@ -1,17 +1,22 @@
 // import dependencies
-const { express, bcrypt, multer, fs, Admin, College, validateAdmin, validateUserLogin, hashPassword, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId } = require('../../utils/imports')
+const { express, bcrypt, multer, fs, Admin, College, getCollegeName, validateAdmin, validateUserLogin, hashPassword, normaliseDate, fileFilter, auth, _superAdmin, defaulPassword, _admin, validateObjectId } = require('../../utils/imports')
 
 // create router
 const router = express.Router()
 
 // configure multer
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/profiles/admin')
+    destination: async (req, file, cb) => {
+        dir = `./uploads/schools/${req.body.college}/users/admin`
+        fs.exists(dir, exist => {
+            if (!exist) {
+                fs.mkdir(dir, {recursive: true}, error => cb(error, dir))
+            }
+            return cb(null, dir)
+        })
     },
-    filename: function (req, file, cb) {
-        const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-        cb(null, fileName)
+    filename: (req, file, cb) => {
+        cb(null, `admin-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
     }
 })
 
@@ -52,7 +57,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // post an admin
-router.post('/', [auth, _superAdmin], async (req, res) => {
+router.post('/', upload.single('profile'), async (req, res) => {
     const { error } = validateAdmin(req.body)
     if (error)
         return res.send(error.details[0].message).status(400)
@@ -75,7 +80,7 @@ router.post('/', [auth, _superAdmin], async (req, res) => {
 
     admin = await Admin.findOne({ college: req.body.college })
     if (admin)
-        return res.send(`Admin with college ${req.body.college} arleady exist`)
+        return res.send(`Admin of college ${req.body.college} arleady exist`)
 
     let newDocument = new Admin({
         surName: req.body.surName,
@@ -121,6 +126,7 @@ router.put('/:id', [auth, _admin], upload.single('profile'), async (req, res) =>
     if (error)
         return res.send(error.details[0].message).status(400)
     error = validateAdmin(req.body)
+    error = error.error
     if (error)
         return res.send(error.details[0].message).status(400)
 
@@ -130,7 +136,7 @@ router.put('/:id', [auth, _admin], upload.single('profile'), async (req, res) =>
         return res.send(`Admin with code ${req.params.id} doens't exist`)
 
     if (req.file && admin.profile) {
-        fs.unlink(__dirname + '../../uploads/profile/admin/' + admin.profile, (err) => {
+        fs.unlink(`./uploads/schools/${req.body.college}/users/admin/${admin.profile}`, (err) => {
             if (err)
                 return res.send(err).status(500)
         })
@@ -154,10 +160,14 @@ router.delete('/:id', [auth, _superAdmin], async (req, res) => {
     let admin = await Admin.findOne({ _id: req.params.id })
     if (!admin)
         return res.send(`Admin of Code ${req.params.id} Not Found`)
-    let deletedAdmin = await Admin.findOneAndDelete({ _id: req.params.id })
-    if (!deletedAdmin)
+    let deleteDocument = await Admin.findOneAndDelete({ _id: req.params.id })
+    if (!deleteDocument)
         return res.send('Admin Not Deleted').status(500)
-    return res.send(`Admin ${deletedAdmin._id} Successfully deleted`).status(200)
+    fs.unlink(`./uploads/schools/${req.body.college}/users/admin/${admin.profile}`, (err) => {
+        if (err)
+            return res.send(err).status(500)
+    })
+    return res.send(`Admin ${deleteDocument._id} Successfully deleted`).status(200)
 })
 
 // export the router

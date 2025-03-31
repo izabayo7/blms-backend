@@ -40,6 +40,16 @@ const adminSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        stillMember: {
+            type: Boolean,
+            default: true,
+        },
+        active: {
+            type: Boolean,
+            default: false,
+        }
+    },
     profile: {
         type: String,
     }
@@ -59,7 +69,7 @@ adminSchema.methods.generateAuthToken = function () {
             password: this.password,
             email: this.email,
             college: this.college,
-            category: this.type,
+            category: this.category,
             profile: this.profile,
         }
         , config.get('KuriousKey'), {

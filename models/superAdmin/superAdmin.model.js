@@ -36,6 +36,16 @@ const superSuperAdminSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        stillMember: {
+            type: Boolean,
+            default: true,
+        },
+        active: {
+            type: Boolean,
+            default: false,
+        }
+    },
     profile: {
         type: String,
     }
@@ -54,7 +64,7 @@ superSuperAdminSchema.methods.generateAuthToken = function () {
             phone: this.phone,
             email: this.email,
             password: this.password,
-            category: this.type,
+            category: this.category,
             profile: this.profile,
         }
         , config.get('KuriousKey'), {

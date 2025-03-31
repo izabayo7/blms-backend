@@ -25,6 +25,8 @@ const { facilityCollegeYear, validateFacilityCollegeYear } = require('../models/
 const { CollegeYear, validateCollegeYear } = require('../models/collegeYear/collegeYear.model')
 const { Course, validateCourse } = require('../models/course/course.model')
 const { Chapter, validateChapter } = require('../models/chapter/chapter.model')
+const { Message, validateMessage } = require('../models/message/message.model')
+const { Attachment, validateAttachment} = require('../models/attachments/attachments.model')
 const { hashPassword } = require('./hash')
 const { fileFilter } = require('./multer/fileFilter')
 
@@ -39,9 +41,9 @@ module.exports.validateInstructor = validateInstructor
 module.exports.Student = Student
 module.exports.validateStudent = validateStudent
 module.exports.Facility = Facility
-module.exports.validateFacility =  validateFacility
-module.exports.FacilityCollege =  facilityCollege
-module.exports.validateFacilityCollege =  validateFacilityCollege
+module.exports.validateFacility = validateFacility
+module.exports.FacilityCollege = facilityCollege
+module.exports.validateFacilityCollege = validateFacilityCollege
 module.exports.CollegeYear = CollegeYear
 module.exports.validateCollegeYear = validateCollegeYear
 module.exports.FacilityCollegeYear = facilityCollegeYear
@@ -50,6 +52,10 @@ module.exports.Course = Course
 module.exports.validateCourse = validateCourse
 module.exports.Chapter = Chapter
 module.exports.validateChapter = validateChapter
+module.exports.Message = Message
+module.exports.validateMessage = validateMessage
+module.exports.Attachment = Attachment
+module.exports.validateAttachment = validateAttachment
 module.exports.fileFilter = fileFilter
 module.exports.hashPassword = hashPassword
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
@@ -92,6 +98,22 @@ module.exports.checkRequirements = async (category, body) => {
     return 'alright'
 }
 
+module.exports.FindDocument = {}
+
+module.exports.getCollege = async (id, type) => {
+    let course = type === 'chapter' ? await Course.findOne({_id: id}) : undefined
+    let facilityCollegeYear = await FacilityCollegeYear.findOne({ _id: type === 'chapter' ? course.facilityCollegeYear : id })
+    if (!facilityCollegeYear)
+        return `facilityCollegeYear ${id} Not Found`
+    let facilityCollege = await FacilityCollege.findOne({ _id: facilityCollegeYear.facilityCollege })
+    return facilityCollege.college
+}
+
+module.exports.getCourse = async (id) => {
+    let chapter = await Chapter.findOne({_id: id})
+    return chapter.course
+}
+
 // authentication middlewares
 const { auth } = require('../middlewares/auth.middleware')
 const { admin } = require('../middlewares/admin.middleware')
@@ -120,3 +142,5 @@ module.exports.collegeYearController = require('../controllers/collegeYear/colle
 module.exports.facilityCollegeYearController = require('../controllers/facility-college-year/facility-college-year.controller')
 module.exports.courseController = require('../controllers/course/course.controller')
 module.exports.chapterController = require('../controllers/chapter/chapter.controller')
+module.exports.messageController = require('../controllers/message/message.controller')
+module.exports.fileController = require('../controllers/files/files.controller')

@@ -6,12 +6,25 @@ const router = express.Router()
 
 // configure multer
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profiles/student')
+  destination: async (req, file, cb) => {
+    dir = `./uploads/schools/${req.body.college}/users/students`
+    fs.exists(dir, exist => {
+      console.log(exist)
+      if (!exist) {
+        fs.mkdir(dir, {recursive: true},error => {
+          console.log('mad4')
+          if (error){
+            console.log(error)
+            return error
+          }
+          return cb(null, dir)
+        })
+      }
+      
+    })
   },
-  filename: function (req, file, cb) {
-    const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-    cb(null, fileName)
+  filename: (req, file, cb) => {
+    cb(null, `student-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
   }
 })
 
@@ -112,6 +125,7 @@ router.post('/login', async (req, res) => {
 
   // check if passed password is valid
   const validPassword = await bcrypt.compare(req.body.password, student.password)
+
   if (!validPassword)
     return res.send('Invalid Email or Password').status(400)
   // return token
@@ -119,11 +133,14 @@ router.post('/login', async (req, res) => {
 })
 
 // updated a student
-router.put('/:id', [auth, _student], upload.single('profile'), async (req, res) => {
+router.put('/:id', upload.single('profile'), async (req, res) => {
+  console.log(req.body)
   let { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
+
   error = validateStudent(req.body)
+  error = error.error
   if (error)
     return res.send(error.details[0].message).status(400)
 
@@ -133,7 +150,7 @@ router.put('/:id', [auth, _student], upload.single('profile'), async (req, res) 
     return res.send(`Student with code ${req.params.id} doens't exist`)
 
   if (req.file && student.profile) {
-    fs.unlink(__dirname + '../../uploads/profile/student/' + student.profile, (err) => {
+    fs.unlink(`./uploads/schools/${req.body.college}/users/students/${student.profile}`, (err) => {
       if (err)
         return res.send(err).status(500)
     })
@@ -157,10 +174,14 @@ router.delete('/:id', [auth, _admin], async (req, res) => {
   let student = await Student.findOne({ _id: req.params.id })
   if (!student)
     return res.send(`Student of Code ${req.params.id} Not Found`)
-  let deletedAdmin = await Student.findOneAndDelete({ _id: req.params.id })
-  if (!deletedAdmin)
+  let deleteDocument = await Student.findOneAndDelete({ _id: req.params.id })
+  if (!deleteDocument)
     return res.send('Student Not Deleted').status(500)
-  return res.send(`Student ${deletedAdmin._id} Successfully deleted`).status(200)
+  fs.unlink(`./uploads/schools/${req.body.college}/users/students/${student.profile}`, (err) => {
+    if (err)
+      return res.send(err).status(500)
+  })
+  return res.send(`Student ${deleteDocument._id} Successfully deleted`).status(200)
 })
 
 // export the router

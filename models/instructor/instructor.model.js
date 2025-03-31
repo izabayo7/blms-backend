@@ -40,6 +40,16 @@ const instructorSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        stillMember: {
+            type: Boolean,
+            default: true,
+        },
+        active: {
+            type: Boolean,
+            default: false,
+        }
+    },
     profile: {
         type: String,
     }
@@ -58,7 +68,7 @@ instructorSchema.methods.generateAuthToken = function () {
             phone: this.phone,
             password: this.password,
             email: this.email,
-            category: this.type,
+            category: this.category,
             college: this.college,
             profile: this.profile,
         }

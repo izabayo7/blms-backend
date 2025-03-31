@@ -5,23 +5,48 @@ const { express, bcrypt, multer, fs, Chapter, validateChapter, Course, normalise
 const router = express.Router()
 
 // configure multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profiles/chapter')
-  },
-  filename: function (req, file, cb) {
-    const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-    cb(null, fileName)
-  }
-})
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     const college = getCollege(req.body.facilityCollegeYear, 'chapter')
+//     let dir = `./uploads/schools/${college}/courses`
+//     fs.exists(dir, exist => {
+//       if (!exist) {
+//         fs.mkdir(dir, error => cb(error, dir))
+//       }
+//       dir = `./uploads/schools/${college}/courses/${req.body.course}`
+//       fs.exists(dir, exist => {
+//         if (!exist) {
+//           fs.mkdir(dir, error => cb(error, dir))
+//         }
+//         dir = `./uploads/schools/${college}/courses/${req.body.course}/chapters`
+//         fs.exists(dir, exist => {
+//           if (!exist) {
+//             fs.mkdir(dir, error => cb(error, dir))
+//           }
+//           dir = `./uploads/schools/${college}/courses/${req.body.course}/chapters/${req.params.id}`
+//           fs.exists(dir, exist => {
+//             if (!exist) {
+//               fs.mkdir(dir, error => cb(error, dir))
+//             }
+//             return cb(null, dir)
+//           })
+//         })
+//       })
 
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5
-  },
-  fileFilter: fileFilter
-})
+//     })
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, `mainContent-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
+//   }
+// })
+
+// const upload = multer({
+//   storage: storage,
+//   limits: {
+//     fileSize: 1024 * 1024 * 5
+//   },
+//   fileFilter: fileFilter
+// })
 
 // Get all chapters in a specified course
 router.get('/course/:id', async (req, res) => {
@@ -45,7 +70,7 @@ router.get('/course/:id', async (req, res) => {
 })
 
 // post an chapter
-router.post('/', upload.single('chapter'), async (req, res) => {
+router.post('/', async (req, res) => {
 
   const { error } = validateChapter(req.body)
   if (error)
@@ -60,9 +85,9 @@ router.post('/', upload.single('chapter'), async (req, res) => {
 
   let newDocument = new Chapter({
     name: req.body.name,
+    description: req.body.description,
     number: number,
-    course: req.body.course,
-    document: req.file ? req.file.fileName : undefined
+    course: req.body.course
   })
 
   const saveDocument = await newDocument.save()
@@ -73,7 +98,8 @@ router.post('/', upload.single('chapter'), async (req, res) => {
 
 
 // updated a chapter
-router.put('/:id', upload.single('profile'), async (req, res) => {
+// router.put('/:id', upload.single('mainContent'), async (req, res) => {
+router.put('/:id', async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
     return res.send(error.details[0].message).status(400)
@@ -109,10 +135,10 @@ router.delete('/:id', async (req, res) => {
   let chapter = await Chapter.findOne({ _id: req.params.id })
   if (!chapter)
     return res.send(`Chapter of Code ${req.params.id} Not Found`)
-  let deletedAdmin = await Chapter.findOneAndDelete({ _id: req.params.id })
-  if (!deletedAdmin)
+  let deleteDocument = await Chapter.findOneAndDelete({ _id: req.params.id })
+  if (!deleteDocument)
     return res.send('Chapter Not Deleted').status(500)
-  return res.send(`Chapter ${deletedAdmin._id} Successfully deleted`).status(200)
+  return res.send(`Chapter ${deleteDocument._id} Successfully deleted`).status(200)
 })
 
 // export the router

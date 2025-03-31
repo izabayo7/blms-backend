@@ -6,8 +6,8 @@ POST http://localhost:7070/kurious/college
 Content-Type: application/json
 
 {
-    "name": "Kigali Institute blabla",
-    "email": "kist@gmail.com"
+    "name": "Kurious School",
+    "email": "olivier01@live.com"
 }
 
 ###
@@ -20,4 +20,4 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:7070/kurious/college/5efdd646752e750798e84888
+DELETE http://localhost:7070/kurious/college/5f215f132e41912bac8dce48

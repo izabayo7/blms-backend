@@ -6,12 +6,17 @@ const router = express.Router()
 
 // configure multer
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/profiles/instructor')
+    destination: async (req, file, cb) => {
+        dir = `./uploads/schools/${req.body.college}/users/instructors`
+        fs.exists(dir, exist => {
+            if (!exist) {
+                fs.mkdir(dir, error => cb(error, dir))
+            }
+            return cb(null, dir)
+        })
     },
-    filename: function (req, file, cb) {
-        const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-        cb(null, fileName)
+    filename: (req, file, cb) => {
+        cb(null, `instructor-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
     }
 })
 
@@ -123,6 +128,7 @@ router.put('/:id', upload.single('profile'), async (req, res) => {
     if (error)
         return res.send(error.details[0].message).status(400)
     error = validateInstructor(req.body)
+    error = error.error
     if (error)
         return res.send(error.details[0].message).status(400)
 
@@ -132,7 +138,7 @@ router.put('/:id', upload.single('profile'), async (req, res) => {
         return res.send(`Instructor with code ${req.params.id} doens't exist`)
 
     if (req.file && instructor.profile) {
-        fs.unlink(__dirname + '../../uploads/profile/instructor/' + instructor.profile, (err) => {
+        fs.unlink(`./uploads/schools/${req.body.college}/users/instructors/${instructor.profile}`, (err) => {
             if (err)
                 return res.send(err).status(500)
         })
@@ -156,10 +162,14 @@ router.delete('/:id', [auth, _admin], async (req, res) => {
     let instructor = await Instructor.findOne({ _id: req.params.id })
     if (!instructor)
         return res.send(`Instructor of Code ${req.params.id} Not Found`)
-    let deletedAdmin = await Instructor.findOneAndDelete({ _id: req.params.id })
-    if (!deletedAdmin)
+    let deleteDocument = await Instructor.findOneAndDelete({ _id: req.params.id })
+    if (!deleteDocument)
         return res.send('Instructor Not Deleted').status(500)
-    return res.send(`Instructor ${deletedAdmin._id} Successfully deleted`).status(200)
+    fs.unlink(`./uploads/schools/${req.body.college}/users/instructors/${instructor.profile}`, (err) => {
+        if (err)
+            return res.send(err).status(500)
+    })
+    return res.send(`Instructor ${deleteDocument._id} Successfully deleted`).status(200)
 })
 
 // export the router

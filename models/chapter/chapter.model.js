@@ -13,6 +13,10 @@ const chapterSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    description: {
+        type: String,
+        required: true
+    },
     number: {
         type: Number,
         required: true
@@ -30,6 +34,7 @@ function validateChapter(credentials) {
         name: Joi.string().min(3).required(),
         number: Joi.number().min(1),
         course: Joi.ObjectId().required(),
+        description: Joi.string().min(10).required(),
         document: Joi.string()
     }
     return Joi.validate(credentials, schema)

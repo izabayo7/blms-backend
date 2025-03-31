@@ -49,6 +49,16 @@ const studentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    status: {
+        stillMember: {
+            type: Boolean,
+            default: true,
+        },
+        active: {
+            type: Boolean,
+            default: false,
+        }
+    },
     profile: {
         type: String,
     }
@@ -67,7 +77,7 @@ studentSchema.methods.generateAuthToken = function () {
         phone: this.phone,
         email: this.email,
         password: this.password,
-        category: this.type,
+        category: this.category,
         college: this.college,
         profile: this.profile,
     }, config.get('KuriousKey'), {

@@ -6,14 +6,19 @@ const router = express.Router();
 
 // configure multer
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/profiles/superAdmin');
+  destination: async (req, file, cb) => {
+    dir = `./uploads/system/superAdmin`
+    fs.exists(dir, exist => {
+      if (!exist) {
+        fs.mkdir(dir, error => cb(error, dir))
+      }
+      return cb(null, dir)
+    })
   },
-  filename: function (req, file, cb) {
-    const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-    cb(null, fileName);
+  filename: (req, file, cb) => {
+    cb(null, `superAdmin-${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
   }
-});
+})
 
 const upload = multer({
   storage: storage,
@@ -88,8 +93,9 @@ router.post('/login', async (req, res) => {
 router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, res) => {
   let { error } = validateObjectId(req.params.id)
   if (error)
-      return res.send(error.details[0].message).status(400)
+    return res.send(error.details[0].message).status(400)
   error = validateSuperAdmin(req.body);
+  error = error.error
   if (error)
     return res.send(error.details[0].message).status(400);
 
@@ -99,7 +105,7 @@ router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, re
     return res.send(`SuperAdmin with code ${req.params.id} doens't exist`);
 
   if (req.file && superAdmin.profile) {
-    fs.unlink(__dirname + '../../uploads/profile/superAdmin/' + superAdmin.profile, (err) => {
+    fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
       if (err)
         return res.send(err).status(500)
     })
@@ -119,14 +125,18 @@ router.put('/:id', [auth, _superAdmin], upload.single('profile'), async (req, re
 router.delete('/:id', [auth, _superAdmin], async (req, res) => {
   const { error } = validateObjectId(req.params.id)
   if (error)
-      return res.send(error.details[0].message).status(400)
+    return res.send(error.details[0].message).status(400)
   let superAdmin = await SuperAdmin.findOne({ _id: req.params.id });
   if (!superAdmin)
     return res.send(`SuperAdmin of Code ${req.params.id} Not Found`);
-  let deletedAdmin = await SuperAdmin.findOneAndDelete({ _id: req.params.id });
-  if (!deletedAdmin)
+  let deleteDocument = await SuperAdmin.findOneAndDelete({ _id: req.params.id });
+  if (!deleteDocument)
     return res.send('SuperAdmin Not Deleted').status(500);
-  return res.send(`SuperAdmin ${deletedAdmin._id} Successfully deleted`).status(200)
+  fs.unlink(`./uploads/system/superAdmin/${superAdmin.profile}`, (err) => {
+    if (err)
+      return res.send(err).status(500)
+  })
+  return res.send(`SuperAdmin ${deleteDocument._id} Successfully deleted`).status(200)
 });
 
 // export the router

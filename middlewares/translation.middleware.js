@@ -1,7 +1,7 @@
 // import dependencies
 const { jwt, config } = require('../utils/imports')
 
-function auth(req, res, next){
+function translator(req, res, next){
     const token = req.header('authorization');
     if(!token)
         return res.send('No Token Found').status(401)
@@ -15,4 +15,4 @@ function auth(req, res, next){
            res.send('Invalid Token').status(401)
     }
 }
-module.exports.auth = auth;
+module.exports.Translator = translator;

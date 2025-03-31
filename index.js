@@ -2,7 +2,8 @@
 const { 
     express,
     cors,
-    db,
+    auth,
+    fs,
     bodyparser,
     superAdminController,
     adminController,
@@ -14,11 +15,14 @@ const {
     collegeYearController,
     facilityCollegeYearController,
     courseController,
-    chapterController
+    chapterController,
+    messageController,
+    fileController
 } = require('./utils/imports')
 
 // define app
 const app = express()
+
 
 // import models
 require('./models/mongodb')
@@ -27,9 +31,14 @@ require('./models/mongodb')
 app.use(bodyparser.urlencoded({ extended: true }))
 app.use(bodyparser.json())
 app.use(cors())
+// for parsing multipart/form-data 
+app.use(express.static('public'));
 
 app.get("/", (req, res) => {
     res.send("WELCOME TO Kurious").status(200)
+})
+app.use('/uploadtests', (req, res)=>{ 
+    return res.sendFile(__dirname + '/index.html')
 })
 
 app.use('/kurious/superAdmin', superAdminController)
@@ -43,6 +52,8 @@ app.use('/kurious/collegeYear', collegeYearController)
 app.use('/kurious/facility-college-year', facilityCollegeYearController)
 app.use('/kurious/course', courseController)
 app.use('/kurious/chapter', chapterController)
+app.use('/kurious/message', messageController)
+app.use('/kurious/file', fileController)
 
 // define the port
 const port = process.env.PORT || 7070

@@ -6,12 +6,12 @@ const router = express.Router();
 
 // configure multer
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/profiles/colleges');
+    destination: (req, file, cb) => {
+        const dir = `./uploads/schools/${req.params.id}`
+        return cb(null, dir)
     },
-    filename: function (req, file, cb) {
-        const fileName = normaliseDate(new Date().toISOString()) + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]
-        cb(null, fileName);
+    filename: (req, file, cb) => {
+        cb(null, `${normaliseDate(new Date().toISOString())}.${file.originalname.split('.')[file.originalname.split('.').length - 1]}`)
     }
 });
 
@@ -22,7 +22,6 @@ const upload = multer({
     },
     fileFilter: fileFilter
 });
-
 
 // Get college
 router.get('/', async (req, res) => {
@@ -50,25 +49,38 @@ router.get('/:id', async (req, res) => {
 });
 
 // post an college
-router.post('/', [auth, _superAdmin], async (req, res) => {
+router.post('/', async (req, res) => {
     const { error } = validateCollege(req.body);
     if (error)
         return res.send(error.details[0].message).status(400);
 
     let college = await College.findOne({ email: req.body.email });
-    if (!college)
-        return res.send(`College of Code ${req.body.email} arleady exist`);
-
-        // same names ?
+    if (college) {
+        fs.remove('./uploads/schools/' + req.body.name, (err) => {
+            if (err)
+                return res.send(err).status(500)
+        })
+        return res.send(`College with email ${req.body.email} arleady exist`);
+    }
 
     let newDocument = new College({
         name: req.body.name,
         email: req.body.email,
+        profile: req.file === undefined ? undefined : req.file.filename
+
     });
 
     const saveDocument = await newDocument.save();
-    if (saveDocument)
+    if (saveDocument) {
+        const dir = `./uploads/schools/${saveDocument._id}`
+        fs.exists(dir, exist => {
+            if (!exist) {
+                return fs.mkdir(dir, error => cb(error, dir))
+            }
+            return cb(null, dir)
+        })
         return res.send(saveDocument).status(201);
+    }
     return res.send('New College not Registered').status(500);
 });
 
@@ -77,10 +89,10 @@ router.delete('/:id', [auth, _superAdmin], async (req, res) => {
     let college = await College.findOne({ _id: req.params.id });
     if (!college)
         return res.send(`College of Code ${req.params.id} Not Found`);
-    let deletedAdmin = await College.findOneAndDelete({ _id: req.params.id });
-    if (!deletedAdmin)
+    let deleteDocument = await College.findOneAndDelete({ _id: req.params.id });
+    if (!deleteDocument)
         return res.send('College Not Deleted').status(500);
-    return res.send(`College ${deletedAdmin._id} Successfully deleted`).status(200)
+    return res.send(`College ${deleteDocument._id} Successfully deleted`).status(200)
 });
 
 
@@ -96,7 +108,7 @@ router.put('/:id', [auth, _admin], upload.single('profile'), async (req, res) =>
         return res.send(`College with code ${req.params.id} doens't exist`);
 
     if (req.file && college.profile) {
-        fs.unlink(__dirname + '../../uploads/profile/college/' + college.profile, (err) => {
+        fs.unlink(`./uploads/schools/${req.params.id}/${college.profile}`, (err) => {
             if (err)
                 return res.send(err).status(500)
         })
