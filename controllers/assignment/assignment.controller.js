@@ -62,7 +62,7 @@ router.get('/', filterUsers(["INSTRUCTOR", "STUDENT"]), async (req, res) => {
             }, u, u, u, u, u, {_id: -1})
         } else {
             const user_user_groups = await User_user_group.find({user: req.user._id})
-            const courses = await User_user_group.find({
+            const courses = await Course.find({
                 user_group: {$in: user_user_groups.map(x => x.user_group)}
             })
             const ids = courses.map(x=>x._id.toString())
