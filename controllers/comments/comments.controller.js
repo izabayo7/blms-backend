@@ -21,6 +21,8 @@ const {
     simplifyObject,
     Quiz_submission
 } = require('../../utils/imports')
+const {Exam} = require("../../models/exams/exam.model");
+const {Exam_submission} = require("../../models/exam_submission/exam_submission.model");
 
 // create router
 const router = express.Router()
@@ -187,7 +189,7 @@ router.post('/', async (req, res) => {
 
         req.body.target.type = req.body.target.type.toLowerCase()
 
-        const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer', 'assignment_submission']
+        const allowedTargets = ['chapter', 'live_session', 'quiz_submission', 'quiz_submission_answer', 'assignment_submission','exam_submission_answer']
 
         if (!allowedTargets.includes(req.body.target.type))
             return res.send(formatResult(400, 'invalid comment target_type'))
@@ -224,7 +226,11 @@ router.post('/', async (req, res) => {
                     _id: req.body.target.id
                 })
                 break;
-
+            case 'exam_submission_answer':
+                target = await findDocument(Exam_submission, {
+                    "answers._id": req.body.target.id
+                })
+                break;
             default:
                 break;
         }

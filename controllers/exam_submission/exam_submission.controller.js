@@ -157,7 +157,17 @@ router.get('/', auth, async (req, res) => {
                 status: {$in: ['PUBLISHED', 'RELEASED']}
             }).sort({
                 _id: -1
-            }).lean()
+            }).populate({
+                  path: 'course',
+                  model: 'course',
+                  populate: {
+                    path: 'user_group', populate: {
+                      path: 'faculty',
+                      model: 'faculty'
+                    }
+                  }
+                })
+                .lean()
 
             if (!exams.length)
                 return res.send(formatResult(u, u, []))
@@ -355,10 +365,17 @@ router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
         if (!exam)
             return res.send(formatResult(404, 'exam not found'))
 
-        let result = await findDocument(Exam_submission, {
+        let result = await Exam_submission.findOne({
             user: user._id,
             exam: exam._id
+        }).populate({
+            path: 'exam',
+            model: 'exam',
+            populate: {
+                path: 'course',
+            }
         })
+
         if (!result)
             return res.send(formatResult(404, 'submission not found'))
 
@@ -367,15 +384,14 @@ router.get('/user/:user_name/:exam_id', auth, async (req, res) => {
         result = await injectUserFeedback(result)
         result = await injectUser(result, 'user')
         result = result[0]
-        result.exam = await addExamTarget([result.exam])
-        result.exam = await addAttachmentMediaPaths(result.exam)
-        result.exam = simplifyObject(result.exam)
-        result.exam = await injectUser(result.exam, 'user')
+        result.exam = await injectUser([result.exam], 'user')
+        result.exam = await addAttachmentMediaPaths(result.exam,false,true)
         // result = await injectUser(result, 'user')
         result.exam = result.exam[0]
         result = await injectUserFeedback(result)
         return res.send(formatResult(u, u, result))
     } catch (error) {
+        console.log(error)
         return res.send(formatResult(500, error))
     }
 })
