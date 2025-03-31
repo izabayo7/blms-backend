@@ -137,5 +137,16 @@ exports.validateUserPasswordUpdate = (data) => {
     return Joi.validate(data, schema)
 }
 
+exports.validateUserPaymentVerification = (data) => {
+    const schema = {
+        users: Joi.array().min(1).items(
+            Joi.object({
+                registration_number: Joi.string().required(),
+            })
+        ).required()
+    }
+    return Joi.validate(data, schema)
+}
+
 // create users model
 exports.user = mongoose.model('user', userSchema)
