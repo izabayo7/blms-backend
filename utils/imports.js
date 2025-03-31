@@ -357,7 +357,8 @@ module.exports.removeDocumentVersion = (obj) => {
 module.exports.getConversationMessages = async ({
   user_id,
   conversation_id,
-  lastMessage
+  lastMessage,
+  limit
 }) => {
   let messages
 
@@ -374,11 +375,11 @@ module.exports.getConversationMessages = async ({
       group: conversation_id
     }, {
       receivers: 0
-    }) : await this.findDocuments(this.Message, {
+    }, limit) : await this.findDocuments(this.Message, {
       group: conversation_id
     }, {
       receivers: 0
-    })
+    }, limit)
 
   } else {
     const user = await this.findDocument(this.User, { user_name: conversation_id })
@@ -405,7 +406,7 @@ module.exports.getConversationMessages = async ({
       group: undefined
     }, {
       receivers: 0
-    }) : await this.findDocuments(this.Message, {
+    }, limit) : await this.findDocuments(this.Message, {
       $or: [{
         sender: user_id,
         receivers: {
@@ -424,7 +425,7 @@ module.exports.getConversationMessages = async ({
       group: undefined
     }, {
       receivers: 0
-    })
+    }, limit)
   }
   return messages
 }
@@ -603,7 +604,7 @@ module.exports.getLatestMessages = async (user_id) => {
     }, u, 1, u, u, u, {
       _id: -1
     })
-    if (message) {
+    if (message.length) {
       latestMessages.push(message[0])
     }
 

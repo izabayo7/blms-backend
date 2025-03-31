@@ -168,6 +168,92 @@ router.get('/college/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /user/search:
+ *   post:
+ *     tags:
+ *       - User
+ *     description: Search users
+ *     parameters:
+ *       - name: data
+ *         description: search value
+ *         in: query
+ *         type: string
+ *         required: true
+ *       - name: page
+ *         description: page number
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: limit
+ *         description: limit number
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: query
+ *         description: the search query
+ *         in: body
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/search', async (req, res) => {
+  try {
+    let {
+      data,
+      error
+    } = await Search(User, {
+      $or: [{
+        sur_name: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }, {
+        other_names: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }, {
+        user_name: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }, {
+        email: {
+          $regex: req.query.data,
+          $options: '$i'
+        }
+      }]
+    }, {
+      phone: 0,
+      national_id: 0,
+      _id: 0,
+      password: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      status: 0
+    }, req.query.page, req.query.limit)
+
+    if (error)
+      return res.send(formatResult(400, error))
+
+    data = simplifyObject(data)
+
+    data.results = await injectDetails(data.results)
+
+    res.send(formatResult(u, u, data))
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /user/{id}:
  *   get:
  *     tags:
@@ -206,81 +292,6 @@ router.get('/:id', async (req, res) => {
     user = user[0]
 
     return res.send(formatResult(u, u, user))
-  } catch (error) {
-    return res.send(formatResult(500, error))
-  }
-})
-
-/**
- * @swagger
- * /user/search:
- *   post:
- *     tags:
- *       - User
- *     description: Search users
- *     parameters:
- *       - name: page
- *         description: page number
- *         in: query
- *         required: true
- *         type: string
- *       - name: limit
- *         description: limit number
- *         in: query
- *         required: true
- *         type: string
- *       - name: query
- *         description: the search query
- *         in: body
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: OK
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server error
- */
-router.post('/search', async (req, res) => {
-  try {
-    const {
-      data,
-      error
-    } = await Search(User, {
-      $or: [{
-        sur_name: {
-          $regex: req.body.query,
-          $options: '$i'
-        }
-      }, {
-        other_names: {
-          $regex: req.body.query,
-          $options: '$i'
-        }
-      }, {
-        user_name: {
-          $regex: req.body.query,
-          $options: '$i'
-        }
-      }, {
-        email: {
-          $regex: req.body.query,
-          $options: '$i'
-        }
-      }]
-    }, {
-      sur_name: 1,
-      other_names: 1,
-      user_name: 1,
-      profile: 1,
-      email: 1
-    }, req.query.page, req.query.limit)
-
-    if (error)
-      return res.send(formatResult(400, error))
-
-    res.send(formatResult(u, u, data))
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -347,6 +358,7 @@ router.get('/:user_name/profile/:file_name', async (req, res) => {
 
     sendResizedImage(req, res, path)
   } catch (error) {
+    console.log(error)
     return res.send(formatResult(500, error))
   }
 })
@@ -932,7 +944,7 @@ async function injectDetails(users) {
 
     // add user profile media path
     if (users[i].profile) {
-      users[i].profile = `http://${process.env.HOST}/kurious/file/userProfile/${users[i]._id}/${users[i].profile}`
+      users[i].profile = `http://${process.env.HOST}${process.env.BASE_PATH}/user/${users[i].user_name}/profile/${users[i].profile}`
     }
   }
   return users

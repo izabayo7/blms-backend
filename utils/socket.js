@@ -27,7 +27,8 @@ const {
   User,
   Create_or_update_message,
   Chat_group,
-  findDocuments
+  findDocuments,
+  validate_message
 } = require('./imports')
 
 module.exports.listen = (app) => {
@@ -92,7 +93,14 @@ module.exports.listen = (app) => {
       receiver,
       content
     }) => {
-      // remember limiting the message***********************************************************
+
+      const { error } = validate_message({ sender: user_name, receiver: conversation_id, content: contet })
+
+      if (error) {
+        socket.error(error)
+        return
+      }
+
       let result = await Create_or_update_message(user_name, receiver, content)
 
       result = simplifyObject(result)
@@ -108,46 +116,40 @@ module.exports.listen = (app) => {
 
       result.data.receivers.forEach(reciever => {
         // send the message
-        socket.broadcast.to(reciever.id).emit('message/new', result.data)
+        socket.broadcast.to(reciever.id).emit('res/message/new', result.data)
       })
 
       // send success mesage
-      socket.emit('message/sent', result.data)
+      socket.emit('res/message/sent', result.data)
 
     })
 
-    // tell the sender that the message was received / read and update the document
-    socket.on('message_received', async ({
-      messageId
+    // start a new conversation
+    socket.on('message/start_conversation', async ({
+      conversation_id
     }) => {
 
-      // save the message
-      let document = await Message.findOne({
-        _id: messageId
-      })
+      // avoid dupplicate initialisation
+      const conversation_found = await getConversationMessages({ user_id: id, conversation_id: conversation_id, limit: 1 })
 
-      let allRecieversRead = 1
+      if (!conversation_found.length) {
 
-      for (const i in document.receivers) {
-        if (document.receivers[i].id == id) {
-          document.receivers[i].read = true
-        } else if (!document.receivers[i].read) {
-          allRecieversRead = 0
+        const content = 'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh'
+
+        const { error } = validate_message({ sender: user_name, receiver: conversation_id, content: content })
+
+        if (error) {
+          socket.error(error)
+          return
         }
+
+        await Create_or_update_message(user_name, conversation_id, content)
       }
 
-      if (allRecieversRead) {
-        document.read = true
-      }
-      const updateDocument = await document.save()
-
-      if (updateDocument) {
-        socket.broadcast.to(document.sender).emit('message-read', {
-          messageId: document._id,
-          reader: id
-        })
-      }
+      // send success mesage
+      socket.emit('res/message/conversation_created', conversation_id)
     })
+
 
     // mark all messages in a coversation as read
     socket.on('message/all_messages_read', async ({
@@ -230,7 +232,7 @@ module.exports.listen = (app) => {
         }
       }
       receivers.forEach(receiver => {
-        socket.broadcast.to(receiver.id).emit('message/typing', user_name, chat_group ? conversation_id : u)
+        socket.broadcast.to(receiver.id).emit('res/message/typing', user_name, chat_group ? conversation_id : u)
       })
     })
 
