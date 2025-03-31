@@ -653,6 +653,12 @@ router.put('/', auth, async (req, res) => {
 
     let result = await updateDocument(User, user._id, req.body)
 
+    let user_category = await findDocument(User_category, {
+      _id: result.data.category
+    })
+    result.data = simplifyObject(result.data)
+    user.category = _.pick(user_category, 'name')
+
     return res.send(formatResult(200, 'UPDATED', await generateAuthToken(result.data)))
   } catch (error) {
     return res.send(formatResult(500, error))
