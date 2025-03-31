@@ -190,7 +190,6 @@ module.exports.listen = (app) => {
             lastMessage
         }) => {
             // get the messages
-            console.log("ngiyi", conversation_id)
             const messages = await getConversationMessages({
                 user_id: id,
                 user,

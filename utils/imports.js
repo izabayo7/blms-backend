@@ -580,7 +580,7 @@ exports.getUserAnnouncements = async (user, getOne = false) => {
         announcements = await Announcement.findOne({
             $or: [
                 { "target.id": { $in: ids } },
-                { sender: user._id },
+                { sender: { $ne: user._id } },
                 { specific_receivers: user._id.toString() },
             ]
         }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: -1 }).lean()
