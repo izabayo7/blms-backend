@@ -33,7 +33,8 @@ const {
   upload_multiple,
   Comment,
   addQuizTarget,
-  auth
+  auth,
+  addStorageDirectoryToPath
 } = require('../../utils/imports')
 
 // create router
@@ -480,7 +481,7 @@ router.get('/:id/attachment/:file_name', auth, async (req, res) => {
     if (!file_found)
       return res.send(formatResult(404, 'file not found'))
 
-    const file_path = `./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`
+    const file_path = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${submission.quiz}/submissions/${submission._id}/${req.params.file_name}`)
 
     const file_type = await findFileType(req.params.file_name)
 
