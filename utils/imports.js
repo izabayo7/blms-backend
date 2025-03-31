@@ -676,8 +676,28 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
 module.exports.addQuizUsages = async (quizes) => {
     for (const i in quizes) {
         const usages = await this.QuizSubmission.find({ quiz: quizes[i]._id }).countDocuments()
-        console.log(i, usages)
         quizes[i].usage = usages
+    }
+    return quizes
+}
+
+// add the course to which the quiz is attached
+module.exports.addAttachedCourse = async (quizes) => {
+    for (const i in quizes) {
+        if (quizes[i].target) {
+            if (quizes[i].target.type == 'facultyCollegeYear') {
+                quizes[i].course = undefined
+            }
+            let courseId = quizes[i].target.id
+            if (quizes[i].target.type == 'chapter') {
+                const chapter = await this.Chapter.findOneAndDelete({ _id: quizes[i].target.id })
+                courseId = chapter.course
+            }
+            const course = await this.Course.findOne({ _id: courseId })
+            quizes[i].course = course
+        } else {
+            quizes[i].course = undefined
+        }
     }
     return quizes
 }
