@@ -26,6 +26,8 @@ const {
   User_progress,
   Quiz_submission,
   sendResizedImage,
+  simplifyObject,
+  _
 } = require('../../utils/imports')
 
 // create router
@@ -502,7 +504,7 @@ router.post('/login', async (req, res) => {
       }]
     })
 
-    const erroMessage = 'Invalid email, user_name, phone or password'
+    const erroMessage = 'invalid credentials'
 
     if (!user.data)
       return res.send(formatResult(400, erroMessage))
@@ -512,6 +514,13 @@ router.post('/login', async (req, res) => {
 
     if (!validPassword)
       return res.send(formatResult(400, erroMessage))
+
+    let user_category = await findDocument(User_category, {
+      _id: user.data.category
+    })
+    user.data = simplifyObject(user.data)
+    user.data.category = _.pick(user_category.data, 'name')
+console.log(user.data)
     // return token
     return res.send(formatResult(u, u, await generateAuthToken(user.data)))
   } catch (error) {
