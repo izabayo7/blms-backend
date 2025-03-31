@@ -141,7 +141,7 @@ exports.updateFaculty = async (req, res) => {
       error
     } = validateObjectId(req.params.id)
     if (error)
-      return res.send(formatResult(400, error.details[0].message))
+      return res.send(formatResult(400, 'invalid id'))
 
     // check if faculty exist
     let faculty = await findDocument(Faculty, {
@@ -149,6 +149,8 @@ exports.updateFaculty = async (req, res) => {
     })
     if (!faculty)
       return res.send(formatResult(404, 'faculty not found'))
+
+    req.body.name = req.body.name.toLowerCase();
 
     // check if faculty exist
     let _faculty = await findDocument(Faculty, {
