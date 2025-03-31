@@ -613,7 +613,7 @@ exports.getUserAnnouncements = async (user, getOne = false,receivedOnly = false)
                 { sender: user._id },
                 { specific_receivers: user._id.toString() },
             ]
-        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: -1 }).lean()
+        }).populate('viewers', ['sur_name', 'other_names', 'user_name']).populate('specific_receivers', ['sur_name', 'other_names', 'user_name']).sort({ _id: receivedOnly ? 1 : -1 }).lean()
         announcements = await this.injectUser(announcements, 'sender')
     }
 
