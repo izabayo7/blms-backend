@@ -961,7 +961,6 @@ module.exports.listen = (app) => {
             if (!submission_id)
                 return
             try {
-console.log('twahageze')
                 const dir = addStorageDirectoryToPath(`./uploads/colleges/${user.college}/assignments/${exam_id}/submissions/${submission_id}`)
 
                 !fs.existsSync(dir) && fs.mkdirSync(dir, { recursive: true })
@@ -975,7 +974,6 @@ console.log('twahageze')
                 }
                 socket.emit('exam-video-saved',{saved: true});
             } catch (error) {
-                console.log(error)
                 socket.emit('exam-video-saved',{saved: false});
             }
         });

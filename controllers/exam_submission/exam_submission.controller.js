@@ -496,6 +496,42 @@ router.get('/:id/attachment/:file_name/:action', auth, async (req, res) => {
     }
 })
 
+router.post('/:id/video', filterUsers(["STUDENT"]), auth, async (req, res) => {
+    try {
+
+        const {
+            error
+        } = validateObjectId(req.params.id)
+        if (error)
+            return res.send(formatResult(400, error.details[0].message))
+
+
+        const submission = await findDocument(Exam_submission, {
+            _id: req.params.id,
+            user: req.user._id
+        })
+        if (!submission)
+            return res.send(formatResult(404, 'submission not found'))
+
+        const dir = addStorageDirectoryToPath(`./uploads/colleges/${req.user.college}/assignments/${submission.exam}/submissions/${submission._id}`)
+
+        !fs.existsSync(dir) && fs.mkdirSync(dir, {recursive: true})
+
+        const path = `${dir}/video.webm`
+        const dataBuffer = new Buffer(req.body.data, 'base64');
+        const fileStream = fs.createWriteStream(path, {flags: 'a'});
+        fileStream.write(dataBuffer);
+        if (!submission.hasVideo)
+            await Exam_submission.updateOne({_id: req.params.id}, {hasVideo: true})
+
+        return res.send({saved: true});
+
+    } catch (error) {
+        return res.send(formatResult(500, error))
+    }
+})
+
+
 router.get('/:id/video', filterUsers(["INSTRUCTOR"]), auth, async (req, res) => {
     try {
 
