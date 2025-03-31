@@ -8,10 +8,12 @@ const {
 const quiz_submission_schema = new mongoose.Schema({
     quiz: {
         type: String,
+        ref: 'quiz',
         required: true
     },
     user: {
         type: String,
+        ref: 'user',
         required: true
     },
     used_time: {

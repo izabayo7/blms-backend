@@ -656,7 +656,9 @@ router.get('/statistics/user', async (req, res) => {
             "target.id": {$in: chapters.map(x => x._id.toString())}
         }, {_id: 1, passMarks: 1, total_marks: 1})
 
-        const result = await Quiz_submission.find({quiz: {$in: quiz.map(x => x._id.toString())}}).sort({_id: -1})
+        const result = await Quiz_submission.find({quiz: {$in: quiz.map(x => x._id.toString())}}).populate('user',
+            {sur_name: 1, other_names: 1, user_name: 1,_id:0}
+        ).sort({_id: -1})
         const total_submissions = result.length
         let marked = result.filter(e => e.marked)
 
