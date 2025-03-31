@@ -12,7 +12,8 @@ const {
   Create_or_update_comment,
   deleteDocument,
   Live_session,
-  createDocument
+  createDocument,
+  updateDocument
 } = require('../../utils/imports')
 
 // create router
@@ -253,8 +254,12 @@ router.put('/:id', async (req, res) => {
     if (error)
       return res.send(formatResult(400, error.details[0].comment))
 
-    const result = await Create_or_update_comment(req.body.sender, req.body.receiver, req.body.content, req.params.id)
+    const comment = await findDocument(Comment, { _id: req.params.id })
 
+    if (!comment)
+      return res.send(formatResult(404, 'comment not found'))
+
+    const result = await updateDocument(Comment, req.params.id, req.body)
     return res.send(result)
   } catch (error) {
     return res.send(formatResult(500, error))
