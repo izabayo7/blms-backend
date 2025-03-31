@@ -1,5 +1,9 @@
 // import dependencies
-const { mongoose, Joi, timestamps } = require('../../utils/imports')
+const {
+    mongoose,
+    Joi,
+    timestamps
+} = require('../../utils/imports')
 
 const college_schema = new mongoose.Schema({
     name: {

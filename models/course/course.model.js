@@ -1,4 +1,6 @@
-const { date } = require('joi')
+const {
+    date
+} = require('joi')
 // import dependencies
 const {
     mongoose,

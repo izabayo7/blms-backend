@@ -1,4 +1,6 @@
-// modules
+/**
+ * dependencies
+ */
 const Joi = require('joi')
 const bcrypt = require('bcryptjs')
 Joi.ObjectId = require('joi-objectid')(Joi)
@@ -16,7 +18,10 @@ module.exports.timestamps = require('mongoose-timestamp');
 module.exports._ = require('lodash')
 module.exports.path = require('path')
 
-// models & functions
+
+/**
+ * models & their functions
+ */
 const {
     SuperAdmin,
     validateSuperAdmin
@@ -150,6 +155,11 @@ module.exports.Notification = Notification
 module.exports.validateNotification = validateNotification
 module.exports.UserNotification = UserNotification
 module.exports.validateUserNotification = validateUserNotification
+
+
+/**
+ * other functions
+ */
 
 // validate mongoIds
 module.exports.validateObjectId = (id) => Joi.validate(id, Joi.ObjectId().required())
@@ -311,7 +321,12 @@ module.exports.getPreviousMessagesInGroup = async (groupId, lastMessage) => {
 }
 
 // get histroy conversations between a user and his contact
-module.exports.getConversationMessages = async ({ userId, groupId, contactId, lastMessage }) => {
+module.exports.getConversationMessages = async ({
+    userId,
+    groupId,
+    contactId,
+    lastMessage
+}) => {
     let messages
     if (groupId) {
         messages = lastMessage ? await Message.find({
@@ -396,7 +411,10 @@ function removeDuplicateDiscussions(sentMessages, receivedMessages) {
         }
     }
 
-    return { sent: sentMessages, received: receivedMessages }
+    return {
+        sent: sentMessages,
+        received: receivedMessages
+    }
 }
 
 // format contacts
@@ -406,10 +424,16 @@ module.exports.formatContacts = async (messages, userId) => {
         let id = ''
         let name = ""
         let image = ''
-        let last_message = { time: message.createdAt, content: message.content, sender: message.sender }
+        let last_message = {
+            time: message.createdAt,
+            content: message.content,
+            sender: message.sender
+        }
         let unreadMessagesLength = 0
         if (message.group) {
-            const group = await chatGroup.findOne({ _id: message.group })
+            const group = await chatGroup.findOne({
+                _id: message.group
+            })
             id = message.group
             name = group.name
             image = group.profile ? `http://${process.env.HOST}/kurious/file/groupProfilePicture/${group._id}/${group.profile}` : undefined
@@ -516,78 +540,78 @@ module.exports.getLatestMessages = async (userId) => {
         /** 2 get all latest messages sent to us */
         // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
         let receivedMessages = await Message.aggregate([{
-            $sort: {
-                _id: -1
-            }
-        },
-        {
-            $match: {
-                receivers: {
-                    $elemMatch: {
-                        id: userId
+                $sort: {
+                    _id: -1
+                }
+            },
+            {
+                $match: {
+                    receivers: {
+                        $elemMatch: {
+                            id: userId
+                        }
+                    },
+                    group: undefined
+                }
+            }, {
+                $group: {
+                    _id: "$sender",
+                    realId: {
+                        $first: "$_id"
+                    },
+                    receivers: {
+                        $first: "$receivers"
+                    },
+                    sender: {
+                        $first: "$sender"
+                    },
+                    content: {
+                        $first: "$content"
+                    },
+                    createdAt: {
+                        $first: "$createdAt"
+                    },
+                    read: {
+                        $first: "$read"
                     }
-                },
-                group: undefined
-            }
-        }, {
-            $group: {
-                _id: "$sender",
-                realId: {
-                    $first: "$_id"
-                },
-                receivers: {
-                    $first: "$receivers"
-                },
-                sender: {
-                    $first: "$sender"
-                },
-                content: {
-                    $first: "$content"
-                },
-                createdAt: {
-                    $first: "$createdAt"
-                },
-                read: {
-                    $first: "$read"
                 }
             }
-        }
         ])
         /** 3 get all latest messages we sent */
         // const receivedMessages = await Message.find({group: undefined, receivers: { $elemMatch: { id: userId } }}).sort({_id: -1}).limit(1)
         let sentMessages = await Message.aggregate([{
-            $sort: {
-                _id: -1
-            }
-        },
-        {
-            $match: {
-                sender: userId,
-                group: undefined
-            }
-        }, {
-            $group: {
-                _id: "$receivers.id",
-                receivers: {
-                    $first: "$receivers"
-                },
-                realId: {
-                    $first: "$_id"
-                },
-                sender: {
-                    $first: "$sender"
-                },
-                content: {
-                    $first: "$content"
-                },
-                createdAt: {
-                    $first: "$createdAt"
-                },
-                read: {
-                    $first: "$read"
+                $sort: {
+                    _id: -1
+                }
+            },
+            {
+                $match: {
+                    sender: userId,
+                    group: undefined
+                }
+            }, {
+                $group: {
+                    _id: "$receivers.id",
+                    receivers: {
+                        $first: "$receivers"
+                    },
+                    realId: {
+                        $first: "$_id"
+                    },
+                    sender: {
+                        $first: "$sender"
+                    },
+                    content: {
+                        $first: "$content"
+                    },
+                    createdAt: {
+                        $first: "$createdAt"
+                    },
+                    read: {
+                        $first: "$read"
+                    }
                 }
             }
-        }
         ])
         if (sentMessages.length > 0 && receivedMessages.length > 0) {
             soltedMessages = removeDuplicateDiscussions(sentMessages, receivedMessages)
@@ -675,7 +699,9 @@ module.exports.addAttachmentMediaPaths = (quizes, removeRightChoice = false) => 
 // add the number of students who did the quiz
 module.exports.addQuizUsages = async (quizes) => {
     for (const i in quizes) {
-        const usages = await this.QuizSubmission.find({ quiz: quizes[i]._id }).countDocuments()
+        const usages = await this.QuizSubmission.find({
+            quiz: quizes[i]._id
+        }).countDocuments()
         quizes[i].usage = usages
     }
     return quizes
@@ -690,10 +716,14 @@ module.exports.addAttachedCourse = async (quizes) => {
             }
             let courseId = quizes[i].target.id
             if (quizes[i].target.type == 'chapter') {
-                const chapter = await this.Chapter.findOne({ _id: quizes[i].target.id })
+                const chapter = await this.Chapter.findOne({
+                    _id: quizes[i].target.id
+                })
                 courseId = chapter.course
             }
-            const course = await this.Course.findOne({ _id: courseId })
+            const course = await this.Course.findOne({
+                _id: courseId
+            })
             quizes[i].course = course
         } else {
             quizes[i].course = undefined
@@ -788,7 +818,9 @@ module.exports.injectDoer = async (notification) => {
 module.exports.injectNotification = async (array) => {
     for (const i in array) {
         for (const k in array[i].notifications) {
-            let notification = await this.Notification.findOne({ _id: array[i].notifications[k].id }).lean()
+            let notification = await this.Notification.findOne({
+                _id: array[i].notifications[k].id
+            }).lean()
             notification = await this.injectDoer(notification)
             array[i].notifications[k].id = undefined
             array[i].notifications[k].notification = notification
@@ -801,10 +833,16 @@ module.exports.injectNotification = async (array) => {
 module.exports.injectStudentProgress = async (courses, studentId) => {
     for (const i in courses) {
         const studentProgress = await StudentProgress.findOne({
-            course: courses[i]._id, student: studentId
+            course: courses[i]._id,
+            student: studentId
         })
 
-        courses[i].progress = studentProgress ? { id: studentProgress._id, progress: studentProgress.progress, dateStarted: studentProgress.createdAt, lastUpdated: studentProgress.updatedAt } : undefined
+        courses[i].progress = studentProgress ? {
+            id: studentProgress._id,
+            progress: studentProgress.progress,
+            dateStarted: studentProgress.createdAt,
+            lastUpdated: studentProgress.updatedAt
+        } : undefined
     }
     return courses
 }
@@ -833,9 +871,13 @@ module.exports.Search = async (model, search_query, projected_fields, _page, _li
     }
     try {
         results.results = await model.find(search_query, projected_fields).limit(limit).skip(startIndex).exec()
-        return { data: results }
+        return {
+            data: results
+        }
     } catch (e) {
-        return { error: e.message }
+        return {
+            error: e.message
+        }
     }
 }
 
@@ -911,7 +953,9 @@ module.exports.streamVideo = async (req, res, path) => {
 }
 
 // generateAuthToken on user login
-module.exports.generateAuthToken = async ({ user }) => {
+module.exports.generateAuthToken = async ({
+    user
+}) => {
     const ONE_DAY = 60 * 60 * 24
     return this.jwt.sign({
         _id: user._id,
@@ -933,7 +977,9 @@ module.exports.generateAuthToken = async ({ user }) => {
 }
 
 // decodeAuthToken
-module.exports.decodeAuthToken = async ({ token }) => {
+module.exports.decodeAuthToken = async ({
+    token
+}) => {
     return this.jwt.verify(token, this.config.get('auth_key'))
 }
 

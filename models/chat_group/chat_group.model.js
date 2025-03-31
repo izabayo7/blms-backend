@@ -55,7 +55,13 @@ chat_group_schema.plugin(timestamps)
 function validate_chat_group(credentials) {
     const schema = {
         name: Joi.string().required(),
-        members: Joi.array().min(1).items({ _id: Joi.ObjectId(), isCreator: Joi.boolean(), status: Joi.boolean(), isAdmin: Joi.boolean(), id: Joi.ObjectId().required() }),
+        members: Joi.array().min(1).items({
+            _id: Joi.ObjectId(),
+            isCreator: Joi.boolean(),
+            status: Joi.boolean(),
+            isAdmin: Joi.boolean(),
+            id: Joi.ObjectId().required()
+        }),
         desctiption: Joi.string(),
         college: Joi.ObjectId().required(),
         private: Joi.boolean(),

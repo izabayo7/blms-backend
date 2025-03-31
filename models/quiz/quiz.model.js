@@ -26,12 +26,33 @@ const quiz_schema = new mongoose.Schema({
         required: true
     },
     questions: [{
-        type: { type: String, required: true },
-        marks: { type: Number, required: true },
-        details: { type: String, require: true },
+        type: {
+            type: String,
+            required: true
+        },
+        marks: {
+            type: Number,
+            required: true
+        },
+        details: {
+            type: String,
+            require: true
+        },
         options: {
-            list_style_type: { type: String },
-            choices: [{ text: { type: String }, src: { type: String }, right: {type: Boolean} }],
+            list_style_type: {
+                type: String
+            },
+            choices: [{
+                text: {
+                    type: String
+                },
+                src: {
+                    type: String
+                },
+                right: {
+                    type: Boolean
+                }
+            }],
         },
     }],
     total_marks: {
@@ -66,7 +87,12 @@ function validate_quiz(body) {
             details: Joi.string().min(5).required(),
             options: {
                 list_style_type: Joi.string(),
-                choices: Joi.array().items(Joi.object({ _id: Joi.ObjectId(), text: Joi.string(), src: Joi.string(), right: Joi.boolean() })).required(),
+                choices: Joi.array().items(Joi.object({
+                    _id: Joi.ObjectId(),
+                    text: Joi.string(),
+                    src: Joi.string(),
+                    right: Joi.boolean()
+                })).required(),
             },
         })).required(),
         total_marks: Joi.number(),

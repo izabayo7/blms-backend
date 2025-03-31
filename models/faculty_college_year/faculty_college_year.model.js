@@ -42,7 +42,11 @@ function validate_faculty_college_year(credentials) {
     const schema = {
         faculty_college: Joi.ObjectId().required(),
         college_year: Joi.ObjectId().required(),
-        leader: Joi.object({ id: Joi.ObjectId().required(), start_date: Joi.date().required(), end_date: Joi.date().required() })
+        leader: Joi.object({
+            id: Joi.ObjectId().required(),
+            start_date: Joi.date().required(),
+            end_date: Joi.date().required()
+        })
     }
     return Joi.validate(credentials, schema)
 }
@@ -52,4 +56,4 @@ const faculty_college_year = mongoose.model('faculty_college_year', faculty_coll
 
 // export the model and the validation function
 module.exports.faculty_college_year = faculty_college_year
-module.exports.validate_faculty_college_year = validate_faculty_college_year 
+module.exports.validate_faculty_college_year = validate_faculty_college_year

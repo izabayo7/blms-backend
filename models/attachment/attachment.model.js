@@ -14,7 +14,10 @@ const attachment_schema = new mongoose.Schema({
         }
     },
     files: [{
-        file_name: { type: String, required: true },
+        file_name: {
+            type: String,
+            required: true
+        },
     }],
 
 })
@@ -26,7 +29,9 @@ function validate_attachment(credentials) {
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
         }),
-        files: Joi.array().items(Joi.object({ file_name: Joi.string().required() })).required(),
+        files: Joi.array().items(Joi.object({
+            file_name: Joi.string().required()
+        })).required(),
     }
     return Joi.validate(credentials, schema)
 }

@@ -6,7 +6,10 @@ const {
 } = require('../../utils/imports')
 
 const role_schema = new mongoose.Schema({
-    id: { type: String, required: true },
+    id: {
+        type: String,
+        required: true
+    },
     // role status 1(active) 0(inactive)
     status: {
         type: Number,
@@ -96,7 +99,10 @@ function validate_user(credentials) {
         date_of_birth: Joi.date().required(),
         college: Joi.ObjectId().required(),
         category: Joi.ObjectId().required(),
-        roles: Joi.array().items({ id: Joi.ObjectId().required(), status: Joi.number().min(0).max(1) })
+        roles: Joi.array().items({
+            id: Joi.ObjectId().required(),
+            status: Joi.number().min(0).max(1)
+        })
     }
     return Joi.validate(credentials, schema)
 }
