@@ -1463,8 +1463,12 @@ exports.savedecodedBase64Image = (dataString, dir) => {
   response.type = matches[1];
   response.data = new Buffer(matches[2], 'base64');
 
-  fs.writeFile(dir, imageBuffer.data, function (err) { if (err) return err });
-  return 'Image was saved sucessfully'
+  const filename = `profile_${new Date().getTime()}`
+
+  fs.writeFile(`${dir}/${filename}`, imageBuffer.data, function (err) { if (err) return err });
+  return {
+    filename: filename
+  }
 }
 
 // proper way to define user roles
