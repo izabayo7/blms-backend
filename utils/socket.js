@@ -31,7 +31,7 @@ module.exports.listen = (app) => {
 
   io.on('connection', async (socket) => {
 
-// console.log(socket)
+    // console.log(socket)
 
     RTCMultiConnectionServer.addSocket(socket);
 
@@ -56,10 +56,10 @@ module.exports.listen = (app) => {
     socket.on('message/contacts', async () => {
       // get the latest conversations
       const latestMessages = await getLatestMessages(id)
-console.log(latestMessages)
+      console.log(latestMessages)
       // format the contacts
       const contacts = await formatContacts(latestMessages, id)
-console.log(contacts)
+      console.log(contacts)
       // send the contacts
       socket.emit('res/message/contacts', {
         contacts: contacts
@@ -144,7 +144,7 @@ console.log(contacts)
         }
 
         const result = await Create_or_update_message('SYSTEM', conversation_id.toLowerCase(), content, u, id)
-        console.log(id,result)
+        console.log(id, result)
       }
 
       // send success mesage
@@ -214,9 +214,9 @@ console.log(contacts)
     socket.on('message/typing', async ({
       conversation_id
     }) => {
-      let receivers = []
-      const chat_group = await findDocument(Chat_group, { code: conversation_id })
-      if (chat_group) {
+      let receivers = [], chat_group
+      if (typeof conversation_id !== 'string') {
+        chat_group = await findDocument(Chat_group, { code: conversation_id })
         for (const i in chat_group.members) {
           if (chat_group.members[i].id != id)
             receivers.push({
