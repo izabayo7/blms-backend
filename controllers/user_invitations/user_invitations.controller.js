@@ -115,10 +115,10 @@ exports.createUserInvitation = async (req, res) => {
     const { error } = validate_user_invitation(req.body);
     if (error) return res.send(formatResult(400, error.details[0].message));
 
-    const { emails, category, college } = req.body
+    const { emails, category } = req.body
 
     let _college = await College.findOne({
-      _id: college
+      _id: req.user.college
     })
     if (!_college)
       return res.send(formatResult(404, 'UserCategory not found'))
@@ -164,7 +164,7 @@ exports.createUserInvitation = async (req, res) => {
         user: req.user._id,
         email: email,
         category: user_category._id,
-        college: college,
+        college: req.user.college,
         token: token,
         user_group: user_group._id,
         expiration_date: expiration_date,
