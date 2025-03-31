@@ -1,7 +1,7 @@
 const { User_invitation, validate_user_invitation } = require('../../models/user_invitations/user_invitations.model');
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 const {
-  formatResult, u, User_category, College, ONE_DAY, updateDocument, User
+  formatResult, u, User_category, College, ONE_DAY, updateDocument, User, validateObjectId
 } = require('../../utils/imports');
 const { sendInvitationMail } = require('../email/email.controller');
 const { Post } = require('../../models/posts/posts.model');
@@ -90,7 +90,7 @@ exports.createUserAPost = async (req, res) => {
     const { error } = validate_post(req.body);
     if (error) return res.send(formatResult(400, error.details[0].message));
 
-    const newDocument = new User_invitation({
+    const newDocument = new Post({
       creator: req.user._id,
       title: req.body.title,
       content: req.body.content
@@ -105,18 +105,18 @@ exports.createUserAPost = async (req, res) => {
 }
 
 /***
- *  delete invitation
+ *  delete post
  * @param req
  * @param res
  */
-exports.deleteInvitation = async (req, res) => {
+exports.deletePost = async (req, res) => {
   try {
-    if (!(uuidValidate(req.params.token)))
-      return res.status(400).send(formatResult(400, 'Invalid invitation token'));
+    if (!(validateObjectId(req.params.id)))
+      return res.status(400).send(formatResult(400, 'Invalid id'));
 
-    const result = await User_invitation.findOneAndDelete({ token: req.params.token, user: req.user._id });
+    const result = await Post.findOneAndDelete({ _id: req.params.id, creator: req.user._id });
     if (!result)
-      return res.send(formatResult(404, 'invitation not found'));
+      return res.send(formatResult(404, 'post not found'));
 
     return res.send(formatResult(200, 'DELETED'));
   } catch
