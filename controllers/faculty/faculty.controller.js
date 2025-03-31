@@ -231,6 +231,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - Faculty
  *     description: Create Faculty
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: body
  *         description: Fields for a Faculty
