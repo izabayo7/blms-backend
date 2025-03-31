@@ -482,7 +482,7 @@ exports.requestCallback = ({
                   line-height: 24px;
                   letter-spacing: 0em;
                   text-align: left;
-                  height: 96px;
+                  min-height: 96px;
                   width: 379px;
                   left: 39px;
                   top: 99px;
@@ -612,7 +612,7 @@ exports.contactUs = ({
                   line-height: 24px;
                   letter-spacing: 0em;
                   text-align: left;
-                  height: 96px;
+                  min-height: 96px;
                   width: 379px;
                   left: 39px;
                   top: 99px;
@@ -628,7 +628,7 @@ exports.contactUs = ({
                   line-height: 24px;
                   letter-spacing: 0em;
                   text-align: left;
-                  height: 96px;
+                  min-height: 96px;
                   width: 379px;
                   left: 39px;
                   top: 99px;
@@ -764,7 +764,7 @@ exports.invitationToSystem = ({
                   line-height: 24px;
                   letter-spacing: 0em;
                   text-align: left;
-                  height: 96px;
+                  min-height: 96px;
                   width: 379px;
                   left: 39px;
                   top: 99px;
