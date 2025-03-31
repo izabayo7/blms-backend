@@ -264,6 +264,8 @@ router.get('/:code/profile/:file_name', async (req, res) => {
  *     tags:
  *       - Chat_group
  *     description: Search users
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: code
  *         description: Group's code
