@@ -16,5 +16,13 @@ function decodeBase64Image(dataString) {
 }
 
 var imageBuffer = decodeBase64Image(data);
-console.log(imageBuffer);
-fs.writeFile('test.jpg', imageBuffer.data, function (err) { console.log(err) });
+const dir = './abana'
+fs.exists(dir, exist => {
+    if (!exist) {
+        console.log('creating dir')
+        fs.mkdirSync(dir, {
+            recursive: true
+        })
+    }
+    fs.writeFile(dir + '/test.jpg', imageBuffer.data, function (err) { console.log(err) });
+})

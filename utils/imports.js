@@ -1443,7 +1443,7 @@ exports.injectFaculty_college_year = async (courses) => {
   return courses
 }
 
-exports.savedecodedBase64Image = (dataString, dir) => {
+exports. = async (dataString, dir) => {
 
   var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
     response = {};
@@ -1452,13 +1452,7 @@ exports.savedecodedBase64Image = (dataString, dir) => {
     return new Error('Invalid input string');
   }
 
-  fs.exists(dir, exist => {
-    if (!exist) {
-      return fs.mkdirSync(dir, {
-        recursive: true
-      })
-    }
-  })
+
 
   response.type = matches[1];
   response.data = new Buffer(matches[2], 'base64');
@@ -1480,7 +1474,20 @@ exports.savedecodedBase64Image = (dataString, dir) => {
 
   const filename = `profile_${new Date().getTime()}${extension}`
 
-  fs.writeFile(`${dir}/${filename}`, response.data, function (err) { if (err) return err });
+  fs.exists(dir, exist => {
+    if (!exist) {
+      console.log('creating dir')
+      fs.mkdirSync(dir, {
+        recursive: true
+      })
+    }
+    fs.writeFile(`${dir}/${filename}`, response.data, function (err) {
+      if (err) {
+        return err
+      }
+    });
+  })
+
   return {
     filename: filename
   }
