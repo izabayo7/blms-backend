@@ -7,7 +7,13 @@ const {
 
 const paginate = require('mongoose-paginate-v2')
 
-const dailyLogSchema = new mongoose.Schema({
+const user_log_schema = new mongoose.Schema({
+    user: {
+        type: String,
+        ref: 'user',
+        unique: true,
+        required: true
+    },
     online: {
         type: Boolean,
         default: false
@@ -21,17 +27,6 @@ const dailyLogSchema = new mongoose.Schema({
         ref: 'live_session',
     }],
 },{timestamps: true})
-
-const user_log_schema = new mongoose.Schema({
-    user: {
-        type: String,
-        ref: 'user',
-        unique: true,
-        required: true
-    },
-    // handle online status, course access, liveclass attendance for user every day
-    logs: [dailyLogSchema],
-}, { timestamps: true })
 
 user_log_schema.plugin(paginate)
 
