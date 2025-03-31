@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const { formatResult } = require('../../utils/imports');
-const { invitationToSystem, contactUs, requestCallback } = require('../../utils/emailGenerator');
+const { invitationToSystem, contactUs, requestCallback, reset_password } = require('../../utils/emailGenerator');
 // const ProtonMail = require('protonmail-api');
 
 
@@ -59,7 +59,6 @@ exports.sendInvitationMail = async ({ email, token, names, institution }) => {
 
     }
     catch (err) {
-        console.log(err)
         return {
             err: err
         }
@@ -100,7 +99,6 @@ exports.sendContactUsEmail = async ({ user_name, user_email, message }) => {
 
     }
     catch (err) {
-        console.log(err)
         return {
             err: err
         }
@@ -141,10 +139,48 @@ exports.sendRequestCallback = async ({ user_name, institution_name, role_at_inst
 
     }
     catch (err) {
-        console.log(err)
         return {
             err: err
         }
     }
 };
 
+exports.sendResetPasswordEmail = async ({ email, token, names, institution_name }) => {
+    try {
+
+        const mail = reset_password({ user_name: names, institution_name, token })
+
+        const message = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: 'Reset your password',
+            html: mail,
+        };
+
+        /*
+            {
+                "college": "5f8f38ad558d86f96186daf0",
+                "category": "STUDENT",
+                "emails": [
+                    "nadibire08@gmail.com"
+                ]
+            }
+        */
+
+        // transporter = await ProtonMail.connect({
+        //     username: process.env.EMAIL,
+        //     password: process.env.PASSWORD
+        // })
+
+        return {
+            sent: await transporter.sendMail(message)
+            // sent: await transporter.sendEmail(message)
+        }
+
+    }
+    catch (err) {
+        return {
+            err: err
+        }
+    }
+};
