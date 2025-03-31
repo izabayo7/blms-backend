@@ -123,7 +123,7 @@ router.post('/bill', getTotalBills)
  *               type: string
  *               required: true
  *             amount_paid:
- *               type: string
+ *               type: number
  *               required: true
  *     responses:
  *       201:
@@ -152,12 +152,30 @@ async function createPayment(req, res) {
             return res.send(formatResult(400, error.details[0].message))
 
 
-        const college = await College.findOne({_id: req.user.college, status: 1});
+        const college = await College_payment_plans.findOne({college: req.user.college, status: 'ACTIVE'});
+        if (!college || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
 
-        if (!college.plan || college.plan === 'TRIAL') return res.send(formatResult(403, 'College must have a payment plan'));
+        if (college.plan !== 'HUGUKA') {
+            if (req.user.category.name !== 'ADMIN')
+                return res.send(formatResult(403, `Your administration is in charge of the payment process`));
 
-        if (college.plan !== 'HUGUKA' && req.user.category.name !== 'ADMIN')
-            return res.send(formatResult(403, `Your administration is in charge of the payment process`));
+            const admin_category = await findDocument(User_category, {name: "ADMIN"})
+            const student_category = await findDocument(User_category, {name: "STUDENT"})
+            const instructor_category = await findDocument(User_category, {name: "INSTRUCTOR"})
+
+            const obj = college.plan === 'MINUZA_ACCELERATE' ?
+                {
+                    college: college.college,
+                    $or: [{category: student_category._id.toString()}, {category: instructor_category._id.toString()}],
+                    "status.deleted": {$ne: 1}
+                } :
+                {college: college.college, category: {$ne: admin_category._id.toString()}, "status.deleted": {$ne: 1}}
+
+            const total_users = await countDocuments(User, obj)
+
+            if (req.body.total_users < total_users)
+                return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total ${college.plan === 'MINUZA_ACCELERATE' ? 'non admin users' : 'students'} in your college)`));
+        }
 
         let balance = req.body.amount_paid
 
@@ -169,19 +187,24 @@ async function createPayment(req, res) {
         if (payment)
             balance -= payment.balance
 
+        const startingDate = findPaymentStartingTime(payment)
+
+        // subtract the current months user value directly
+
         const obj = {
             method_used: req.body.method_used,
             user: req.user._id,
             amount_paid: req.body.amount_paid,
             balance,
-            startingDate: req.body.startingDate,
+            total_users: req.body.total_users,
+            startingDate,
             periodType: req.body.periodType,
             periodValue: req.body.periodValue,
         }
         if (college.plan !== 'HUGUKA')
             obj.college = req.user.college
 
-        let result = await createDocument(College, obj)
+        let result = await createDocument(Account_payments, obj)
         return res.send(result);
     } catch (err) {
         return res.send(formatResult(500, err));
@@ -233,12 +256,32 @@ async function getTotalBills(req, res) {
 
         const payment = await Account_payments.findOne({user: req.user._id, status: 'ACTIVE'})
 
-        if (payment)
-            amount -= payment.balance
+        const startingDate = findPaymentStartingTime(payment)
 
-        return res.send(formatResult(u, u, {amount}));
+        if (payment) {
+            amount -= payment.balance
+        }
+
+        return res.send(formatResult(u, u, {amount, startingDate}));
     } catch (err) {
         return res.send(formatResult(500, err));
+    }
+}
+
+function findPaymentStartingTime(previousPayment) {
+    const today = new Date()
+
+    if (!previousPayment)
+        return today.toISOString()
+
+    const endDate = new Date(previousPayment.startingDate)
+    switch (previousPayment.periodType) {
+        case 'MONTH': {
+            return new Date(endDate.setMonth(endDate.getMonth() + previousPayment.periodValue)).toISOString()
+        }
+        case 'YEAR': {
+            return new Date(endDate.setFullYear(endDate.getFullYear() + previousPayment.periodValue)).toISOString()
+        }
     }
 }
 

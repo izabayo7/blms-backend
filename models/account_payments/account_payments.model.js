@@ -77,6 +77,10 @@ const userPaymentsSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    total_users: {
+        type: Number,
+        default: 0
+    },
     periodType: {
         type: String,
         enum: periods
@@ -104,11 +108,10 @@ const userPaymentsSchema = new mongoose.Schema({
 exports.validate_account_payments = (credentials, type = 'payment') => {
     const schema = type === 'payment' ? {
         method_used: Joi.string().valid(methods).required(),
-        amount_paid: Joi.number().min(1).max(100).required(),
+        amount_paid: Joi.number().min(1).required(),
         periodType: Joi.string().valid(periods).required(),
         periodValue: Joi.number().min(1).required(),
-        total_users: Joi.number(),
-        startingDate: Joi.date().required()
+        total_users: Joi.number().required()
     } : {
         periodType: Joi.string().valid(periods).required(),
         total_users: Joi.number(),
