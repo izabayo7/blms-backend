@@ -192,7 +192,7 @@ router.get('/student/:id/:quiz_name', async (req, res) => {
     }).lean()
 
 
-    if (!quiz.target)
+    if (!quiz)
       return res.status(404).send(`Quiz ${req.params.quiz_name} was not found`)
 
     let facultycollegeyear = ''
