@@ -169,6 +169,8 @@ router.get('/:id', async (req, res) => {
  *     tags:
  *       - Quiz_submission
  *     description: Returns quiz_submissions of the specified quiz
+ *     security:
+ *       - bearerAuth: -[]
  *     parameters:
  *       - name: id
  *         description: Quiz id
