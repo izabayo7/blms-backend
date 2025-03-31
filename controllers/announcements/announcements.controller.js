@@ -114,6 +114,9 @@ router.get('/user', async (req, res) => {
  *             content:
  *               type: string
  *               required: true
+ *             title:
+ *               type: string
+ *               required: true
  *             target:
  *               type: object
  *               properties:
@@ -240,6 +243,9 @@ router.post('/:receivers', filterUsers(["ADMIN", "INSTRUCTOR"]), async (req, res
  *           type: object
  *           properties:
  *             content:
+ *               type: string
+ *               required: true
+ *             title:
  *               type: string
  *               required: true
  *     responses:

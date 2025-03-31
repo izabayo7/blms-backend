@@ -13,6 +13,8 @@ const {
  *     properties:
  *       sender:
  *         type: string
+ *       title:
+ *         type: string
  *       target  :
  *         type: object
  *         properties:
@@ -52,6 +54,10 @@ const announcement_schema = new mongoose.Schema({
         type: String,
         required: true
     },
+    title: {
+        type: String,
+        required: true
+    },
     viewers: [{
         type: String,
         ref: 'user'
@@ -65,15 +71,18 @@ const announcement_schema = new mongoose.Schema({
 // validate announcement
 function validate_announcement(credentials, action = 'create', type) {
     const schema = action === 'create' ? type === 'specific_users' ? {
+        title: Joi.string().required(),
         content: Joi.string().max(9000).required(),
         specific_receivers: Joi.array().min(1).items(Joi.string())
     } : {
+        title: Joi.string().required(),
         target: Joi.object({
             type: Joi.string().required(),
             id: Joi.ObjectId().required()
         }).required(),
         content: Joi.string().max(9000).required()
     } : {
+        title: Joi.string().required(),
         content: Joi.string().max(9000).required()
     }
     return Joi.validate(credentials, schema)
