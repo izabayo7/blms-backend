@@ -27,6 +27,12 @@ const chapter_schema = new mongoose.Schema({
     recorded_video: {
         type: String,
     },
+    attachments: [{
+        src: {
+            type: String,
+            required: true
+        }
+    }],
     status: {
         type: Number,
         default: 1
@@ -43,6 +49,10 @@ function validate_chapter(credentials) {
         course: Joi.ObjectId().required(),
         description: Joi.string().max(500).min(10),
         document: Joi.string(),
+        attachments: Joi.array().items(Joi.object({
+            _id: Joi.ObjectId(),
+            src: Joi.string().required()
+        })),
         status: Joi.number().min(0).max(1)
     }
     return Joi.validate(credentials, schema)

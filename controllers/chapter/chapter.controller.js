@@ -19,6 +19,7 @@ const {
   u,
   path,
   streamVideo,
+  findFileType,
 } = require('../../utils/imports')
 
 // create router
@@ -97,8 +98,9 @@ router.get('/:id/document', async (req, res) => {
       _id: faculty_college_year.data.faculty_college
     })
 
-    file_path = `uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/main_content/index.html`
+    const file_path = `uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/main_content/index.html`
     return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -159,9 +161,170 @@ router.get('/:id/video/:file_name', async (req, res) => {
       _id: faculty_college_year.data.faculty_college
     })
 
-    file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/video/${chapter.data.uploaded_video}`
-
+    const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/video/${chapter.data.uploaded_video}`
     streamVideo(req, res, file_path)
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chapter/{id}/attachment/{file_name}:
+ *   get:
+ *     tags:
+ *       - Chapter
+ *     description: Returns the files attached to a specified chapter ( use format height and width only when the attachment is a picture)
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: file's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: format
+ *         description: File format one of (jpeg, jpg, png, webp)
+ *         in: query
+ *         type: string
+ *       - name: height
+ *         description: custom height
+ *         in: query
+ *         type: string
+ *       - name: width
+ *         description: custom width
+ *         in: query
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/attachment/:file_name', async (req, res) => {
+  try {
+
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    let file_found = false
+
+    for (const i in chapter.data.attachments) {
+      if (chapter.data.attachments[i].src == req.params.file_name) {
+        file_found = true
+        break
+      }
+    }
+    if (!file_found)
+      return res.send(formatResult(404, 'file not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.data.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.data.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.data.faculty_college
+    })
+
+    const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/attachments/${req.params.file_name}`
+
+    const file_type = await findFileType(req.params.file_name)
+
+    if (file_type === 'image') {
+      sendResizedImage(req, res, file_path)
+    } else if (file_type == 'video') {
+      streamVideo(req, res, file_path)
+    } else {
+      return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+    }
+
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
+ * /chapter/{id}/attachment/{file_name}/download:
+ *   get:
+ *     tags:
+ *       - Chapter
+ *     description: downloads the files attached to a specified chapter 
+ *     parameters:
+ *       - name: id
+ *         description: Chapter's id
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: file_name
+ *         description: file's name
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.get('/:id/attachment/:file_name/download', async (req, res) => {
+  try {
+
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const chapter = await findDocument(Chapter, {
+      _id: req.params.id
+    })
+    if (!chapter.data)
+      return res.send(formatResult(404, 'chapter not found'))
+
+    let file_found = false
+
+    for (const i in chapter.data.attachments) {
+      if (chapter.data.attachments[i].src == req.params.file_name) {
+        file_found = true
+        break
+      }
+    }
+    if (!file_found)
+      return res.send(formatResult(404, 'file not found'))
+
+    const course = await findDocument(Course, {
+      _id: chapter.data.course
+    })
+    const faculty_college_year = await findDocument(Faculty_college_year, {
+      _id: course.data.faculty_college_year
+    })
+    const faculty_college = await findDocument(Faculty_college, {
+      _id: faculty_college_year.data.faculty_college
+    })
+
+    const file_path = `./uploads/colleges/${faculty_college.data.college}/courses/${chapter.data.course}/chapters/${chapter.data._id}/attachments/${req.params.file_name}`
+
+    return res.download(file_path)
 
   } catch (error) {
     return res.send(formatResult(500, error))

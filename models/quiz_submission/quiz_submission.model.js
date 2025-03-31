@@ -66,7 +66,7 @@ function validate_quiz_submission(credentials) {
             _id: Joi.ObjectId(),
             text: Joi.string(),
             marks: Joi.number(),
-            src: Joi.number(),
+            src: Joi.string(),
             choosed_options: Joi.array().items(Joi.object({
                 text: Joi.string(),
                 src: Joi.string()

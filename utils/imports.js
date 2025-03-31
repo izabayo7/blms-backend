@@ -331,6 +331,27 @@ module.exports.countDocuments = async (model, query) => {
     return await model.find(query).countDocuments().exec()
 }
 
+/**
+ *  check's if the passed file is a picture, video, or other file
+ * @param {String} model File_name
+ * @returns File_type
+ */
+module.exports.findFileType = async (file_name) => {
+    const file_types = [{
+        name: 'image',
+        extensions: ['jpeg', 'jpg', 'png', 'webp']
+    }, {
+        name: 'video',
+        extensions: ['mp4']
+    }]
+
+    const extension = file_name.split('.')[file_name.split('.').length - 1]
+
+    let file_type = file_types.filter(type => type.extensions.includes(extension.toLowerCase()))
+    console.log(file_type)
+    return file_type.length ? file_type[0].name : null
+}
+
 module.exports.getCourse = async (id) => {
     let chapter = await Chapter.findOne({
         _id: id
@@ -569,7 +590,9 @@ module.exports.formatMessages = async (messages, userId) => {
                 let image = undefined
                 let matchingMessages = []
                 if (message.sender != userId) {
-                    const user = await this.findDocument(this.User, { _id: message.sender == userId ? message.receivers[0].id : message.sender })
+                    const user = await this.findDocument(this.User, {
+                        _id: message.sender == userId ? message.receivers[0].id : message.sender
+                    })
                     from = `${user.surName} ${user.otherNames}`
                     if (user.profile) {
                         image = `http://${process.env.HOST}/kurious/file/${user.category == 'SuperAdmin' ? 'superAdmin' : user.category.toLowerCase()}Profile/${students[i]._id}/${user.profile}`
@@ -855,7 +878,9 @@ module.exports.injectChapters = async (courses) => {
 module.exports.injectUser = async (array, property, newProperty) => {
     let name = newProperty ? newProperty : property
     for (const i in array) {
-        const user = await this.findDocument(this.User, { _id: array[i][`${property}`] })
+        const user = await this.findDocument(this.User, {
+            _id: array[i][`${property}`]
+        })
 
         array[i][`${name}`] = this._.pick(user.data, ['_id', 'surName', 'otherNames', 'gender', 'phone', "profile"])
         if (array[i][`${name}`].profile) {

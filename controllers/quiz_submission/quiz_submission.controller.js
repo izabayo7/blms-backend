@@ -20,7 +20,11 @@ const {
   User_faculty_college_year,
   Faculty_college_year,
   Course,
-  deleteDocument
+  deleteDocument,
+  findFileType,
+  sendResizedImage,
+  streamVideo,
+  path
 } = require('../../utils/imports')
 
 // create router
@@ -258,7 +262,7 @@ router.get('/user/:id', async (req, res) => {
       //   }
       // }
     } else {
-      // check if there are quizes made by the instructor
+      // check if there are quizes made by the user
       let quizes = await findDocuments(Quiz, {
         user: req.params.id
       })
@@ -268,7 +272,6 @@ router.get('/user/:id', async (req, res) => {
       let foundSubmissions = []
 
       for (const i in quizes.data) {
-        console.log(quizes.data[i]._id, i)
         let quiz_submission = await findDocuments(Quiz_submission, {
           quiz: quizes.data[i]._id
         })
@@ -351,6 +354,88 @@ router.get('/user/:user_name/:quiz_name', async (req, res) => {
     // result.data = result.data[0]
 
     return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+* @swagger
+* /quiz_submission/{id}/attachment/{file_name}:
+*   get:
+*     tags:
+*       - Quiz_submission
+*     description: Returns the files attached to the specified quiz_submission
+*     parameters:
+*       - name: id
+*         description: Quiz_submission's id
+*         in: path
+*         required: true
+*         type: string
+*       - name: file_name
+*         description: file's name
+*         in: path
+*         required: true
+*         type: string
+*     responses:
+*       200:
+*         description: OK
+*       404:
+*         description: Not found
+*       500:
+*         description: Internal Server error
+*/
+router.get('/:id/attachment/:file_name', async (req, res) => {
+  try {
+
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    const submission = await findDocument(Quiz_submission, {
+      _id: req.params.id
+    })
+    if (!submission.data)
+      return res.send(formatResult(404, 'quiz_submission not found'))
+
+    const quiz = await findDocument(Quiz, {
+      _id: submission.data.quiz
+    })
+
+    const user = await findDocument(User, {
+      _id: quiz.data.user
+    })
+
+    let file_found = false
+
+    for (let i in submission.data.answers) {
+      i = parseInt(i)
+      if (quiz.data.questions[i].type == 'file_upload') {
+        if (submission.data.answers[i].src == req.params.file_name) {
+          file_found = true
+          break
+        }
+      }
+      if (file_found)
+        break
+    }
+    if (!file_found)
+      return res.send(formatResult(404, 'file not found'))
+
+    const file_path = `./uploads/colleges/${user.data.college}/assignments/${submission.data.quiz}/submissions/${submission.data._id}/${req.params.file_name}`
+
+    const file_type = await findFileType(req.params.file_name)
+
+    if (file_type === 'image') {
+      sendResizedImage(req, res, file_path)
+    } else if (file_type == 'video') {
+      streamVideo(req, res, file_path)
+    } else {
+      return res.sendFile(path.normalize(__dirname + '../../../' + file_path))
+    }
+
   } catch (error) {
     return res.send(formatResult(500, error))
   }
@@ -631,12 +716,20 @@ function validateSubmittedAnswers(questions, answers, mode) {
               break;
             }
           }
-          for (const k in questions[i].choosed_options) {
+          for (let k in answers[i].choosed_options) {
+            k = parseInt(k)
             if (questions[i].type.includes('text') && !answers[i].choosed_options[k].text) {
-              message = `choosedOption ${k + 1} in answer ${i + 1} must contain text`
+              message = `choosed_option ${k + 1} in answer ${i + 1} must contain text`
               break;
             } else if (questions[i].type.includes('file') && !answers[i].choosed_options[k].src) {
-              message = `choosedOption ${k + 1} in answer ${i + 1} must contain choosed file src`
+              message = `choosed_option ${k + 1} in answer ${i + 1} must contain choosed file src`
+              break;
+            }
+            if (questions[i].type.includes('text') && answers[i].choosed_options[k].src) {
+              message = `choosed_option ${k + 1} in answer ${i + 1} must not contain src`
+              break;
+            } else if (questions[i].type.includes('file') && answers[i].choosed_options[k].text) {
+              message = `choosed_option ${k + 1} in answer ${i + 1} must not contain text`
               break;
             }
           }
@@ -645,10 +738,16 @@ function validateSubmittedAnswers(questions, answers, mode) {
         if (!answers[i].text) {
           message = `question ${i + 1} must have text answer`
           break;
+        } else if (answers[i].src) {
+          message = `answer ${i + 1} must not contain src`
+          break;
         }
       } else if (questions[i].type === 'file_upload') {
         if (!answers[i].src) {
           message = `question ${i + 1} must have src of the uploaded file`
+          break;
+        } else if (answers[i].text) {
+          message = `answer ${i + 1} must not contain text`
           break;
         }
       }
@@ -682,7 +781,6 @@ async function get_faculty_college_year(quiz_id) {
   let quiz = await findDocument(Quiz, {
     _id: quiz_id
   })
-  console.log(quiz.data.target)
   let course
 
   if (quiz.data.target.type == 'chapter') {
@@ -692,7 +790,6 @@ async function get_faculty_college_year(quiz_id) {
     course = await findDocument(Course, {
       _id: chapter.data.course
     })
-    console.log(1, course.data.faculty_college_year)
     return await findDocument(Faculty_college_year, {
       _id: course.data.faculty_college_year
     })
@@ -700,7 +797,6 @@ async function get_faculty_college_year(quiz_id) {
     course = await findDocument(Course, {
       _id: quiz.data.target.id
     })
-    console.log(2, course.data.faculty_college_year)
     return await findDocument(Faculty_college_year, {
       _id: course.data.faculty_college_year
     })
