@@ -105,8 +105,8 @@ exports.validate_user = (credentials, method = 'create') => {
 
 exports.validateUserPasswordUpdate = (data) => {
     const schema = {
-        current_password: Joi.string().min(8).required(),
-        new_password: Joi.string().min(8).required()
+        current_password: Joi.string().max(100).regex(PasswordRegex).required(),
+        new_password: Joi.string().max(100).regex(PasswordRegex).required()
     }
     return Joi.validate(data, schema)
 }
