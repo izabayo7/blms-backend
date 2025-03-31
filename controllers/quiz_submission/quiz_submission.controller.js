@@ -587,7 +587,6 @@ router.post('/', auth, async (req, res) => {
       total_marks: total_marks,
       marked: is_selection_only
     })
-
     result = simplifyObject(result)
     result.data = await injectQuiz([result.data])
     result.data = {
@@ -978,6 +977,7 @@ function autoMarkSelectionQuestions(questions, answers) {
   let is_selection_only = true, total_marks = 0;
   for (const i in questions) {
     if (questions[i].type.includes("select")) {
+      answers[i].marks = 0
       if (answers[i].choosed_options.length) {
         const rightChoices = questions[i].options.choices.filter((choice) => choice.right);
         if (questions[i].type.includes("single")) {
