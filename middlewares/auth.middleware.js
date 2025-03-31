@@ -1,5 +1,5 @@
 // import dependencies
-const { jwt, config, formatResult, User } = require('../utils/imports')
+const {jwt, config, formatResult, User} = require('../utils/imports')
 
 async function auth(req, res, next) {
     const header = req.header('authorization')
@@ -15,9 +15,19 @@ async function auth(req, res, next) {
             return res.send(formatResult(401, 'Invalid Token'))
         req.user = user
         next()
-    }
-    catch (err) {
+    } catch (err) {
         res.send(formatResult(401, 'Invalid Token', err))
     }
 }
-module.exports.auth = auth
+
+function filterUsers(allowed_users) {
+    return (req, res, next) => {
+        if (!allowed_users.includes(req.user.category.name)) return res.send(formatResult(403, "You have no access ..."))
+        next()
+    }
+}
+
+module.exports = {
+    auth,
+    filterUsers
+}

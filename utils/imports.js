@@ -1372,25 +1372,7 @@ const {
     auth
 } = require('../middlewares/auth.middleware')
 
-const {
-    admin
-} = require('../middlewares/admin.middleware')
-const {
-    instructor
-} = require('../middlewares/instructor.middleware')
-const {
-    student
-} = require('../middlewares/student.middleware')
-const {
-    superAdmin
-} = require('../middlewares/superAdmin.middleware')
-
-
 exports.auth = auth
-exports._admin = admin
-exports._superAdmin = superAdmin
-exports._student = student
-exports._instructor = instructor
 
 // constant lobal variables
 exports.default_password = `Kurious@${new Date().getFullYear()}`
