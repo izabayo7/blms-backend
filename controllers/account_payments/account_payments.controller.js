@@ -1,4 +1,6 @@
 // import dependencies
+const {User_category} = require("../../utils/imports");
+const {findDocument} = require("../../utils/imports");
 const {User} = require("../../utils/imports");
 const {countDocuments} = require("../../utils/imports");
 const {College_payment_plans} = require("../../models/college_payment_plans/college_payment_plans.model");
@@ -205,7 +207,19 @@ async function getTotalBills(req, res) {
             if (req.user.category.name !== 'ADMIN')
                 return res.send(formatResult(403, `Your administration is in charge of the payment process`));
 
-            const total_users = await countDocuments(User, {college: college.college})
+            const admin_category = await findDocument(User_category, {name: "ADMIN"})
+            const student_category = await findDocument(User_category, {name: "STUDENT"})
+            const instructor_category = await findDocument(User_category, {name: "INSTRUCTOR"})
+
+            const obj = college.plan === 'MINUZA_ACCELERATE' ?
+                {
+                    college: college.college,
+                    $or: [{category: student_category._id.toString()}, {category: instructor_category._id.toString()}],
+                    "status.deleted": {$ne: 1}
+                } :
+                {college: college.college, category: {$ne: admin_category._id.toString()}, "status.deleted": {$ne: 1}}
+
+            const total_users = await countDocuments(User, obj)
 
             if (req.body.total_users < total_users)
                 return res.send(formatResult(403, `The users to pay for must be greater or equal to ${total_users} (total students in your college)`));
