@@ -212,6 +212,13 @@ exports.date = (date) => {
   return new Date(date)
 }
 
+exports.update_password = async ({ password, user_id }) => {
+  const hashedPassword = await hashPassword(password);
+  await this.updateDocument(this.User, user_id, {
+    password: hashedPassword
+  });
+}
+
 /**
  *  returns a formatted result (made to avoid console errors caused by statuses and to utilise the results we give)
  * @param {Number} status  Status code

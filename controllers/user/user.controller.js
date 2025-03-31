@@ -1031,13 +1031,6 @@ router.put('/password', auth, async (req, res) => {
   }
 })
 
-exports.update_password = async ({ password, user_id }) => {
-  const hashedPassword = await hashPassword(req.body.new_password);
-  await updateDocument(User, user._id, {
-    password: hashedPassword
-  });
-}
-
 /**
  * @swagger
  * /user/profile:

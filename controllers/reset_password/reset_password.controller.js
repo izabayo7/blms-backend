@@ -1,7 +1,7 @@
 const { Reset_password, validatePasswordReset } = require("../../models/reset_password/reset_password.model");
 const { formatResult, User, ONE_DAY } = require("../../utils/imports");
 const { sendResetPasswordEmail } = require("../email/email.controller");
-const { update_password } = require("../user/user.controller");
+const { update_pasxxxxxxsword } = require("../user/user.controller");
 const { v4: uuid, validate: uuidValidate } = require('uuid');
 
 /**
@@ -79,10 +79,10 @@ exports.updatePasswordReset = async (req, res) => {
     if (token.expiration < Date.now())
       return res.send(formatResult(400, 'PasswordReset Token has expired'))
 
-    if (JSON.stringify(user._id) == JSON.stringify(token.user))
+    if (JSON.stringify(user._id) != JSON.stringify(token.user))
       return res.send(formatResult(403, 'Invalid Token'));
 
-    await update_password({ password: req.body.password, user_id: user._id })
+    await xxxxxx({ password: req.body.password, user_id: user._id })
 
     token.status = 'CLOSED'
 
