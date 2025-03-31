@@ -683,6 +683,53 @@ router.put('/:id', async (req, res) => {
 
 /**
  * @swagger
+ * /quiz_submission/{id}/results_seen:
+ *   put:
+ *     tags:
+ *       - Quiz_submission
+ *     description: Indicate that student saw quiz_results
+ *     security:
+ *       - bearerAuth: -[]
+ *     parameters:
+ *       - name: id
+ *         description: Quiz_submission id
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server error
+ */
+router.put('/:id/results_seen', async (req, res) => {
+  try {
+    const {
+      error
+    } = validateObjectId(req.params.id)
+    if (error)
+      return res.send(formatResult(400, error.details[0].message))
+
+    let quiz_submission = await findDocument(Quiz_submission, {
+      _id: req.params.id
+    })
+    if (!quiz_submission)
+      return res.send(formatResult(404, 'quiz_submission not found'))
+
+    const result = await updateDocument(Quiz_submission, req.params.id, { results_seen: true })
+
+    return res.send(result)
+  } catch (error) {
+    return res.send(formatResult(500, error))
+  }
+})
+
+/**
+ * @swagger
  * /quiz_submission/{id}/attachment:
  *   post:
  *     tags:
