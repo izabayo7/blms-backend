@@ -92,7 +92,7 @@ exports.confirmAccount = async (req, res) => {
 
         const confirmation = await Account_confirmation.findOne({token: req.params.token, status: "CONFIRMED"});
         if (confirmation)
-            return res.send(formatResult(403, 'account onfirmation has already been closed'));
+            return res.send(formatResult(403, 'account confirmation has already been closed'));
 
         const _confirmation = await Account_confirmation.findOne({
             token: req.params.token,
@@ -115,7 +115,7 @@ exports.confirmAccount = async (req, res) => {
 
         await _confirmation.save()
 
-        return res.redirect(`https://elearning.rw?institution=${_confirmation.user.college.name}`)
+        return res.redirect(`https://elearning.rw/login?institution=${_confirmation.user.college.name}`)
 
     } catch (err) {
         return res.send(formatResult(500, err));
